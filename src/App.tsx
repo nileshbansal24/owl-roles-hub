@@ -6,9 +6,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import Index from "./pages/Index";
-import Auth from "./pages/Auth";
-import Dashboard from "./pages/Dashboard";
-import EmployerDashboard from "./pages/EmployerDashboard";
+import CandidateDashboard from "./pages/CandidateDashboard";
+import RecruiterDashboard from "./pages/RecruiterDashboard";
 import PostJob from "./pages/PostJob";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "@/components/ProtectedRoute";
@@ -25,20 +24,19 @@ const App = () => (
           <BrowserRouter>
             <Routes>
               <Route path="/" element={<Index />} />
-              <Route path="/auth" element={<Auth />} />
               <Route
-                path="/dashboard"
+                path="/candidate-dashboard"
                 element={
                   <ProtectedRoute>
-                    <Dashboard />
+                    <CandidateDashboard />
                   </ProtectedRoute>
                 }
               />
               <Route
-                path="/employer"
+                path="/recruiter-dashboard"
                 element={
                   <ProtectedRoute>
-                    <EmployerDashboard />
+                    <RecruiterDashboard />
                   </ProtectedRoute>
                 }
               />

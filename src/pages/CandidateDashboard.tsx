@@ -646,15 +646,15 @@ const CandidateDashboard = () => {
         profile={profile}
         open={editModalOpen}
         onOpenChange={setEditModalOpen}
-        onUpdate={handleProfileUpdate}
+        onProfileUpdate={handleProfileUpdate}
       />
 
       <SectionEditModal
         section={editingSection}
         open={sectionEditOpen}
         onOpenChange={setSectionEditOpen}
-        onUpdate={handleSectionUpdate}
-        currentData={
+        onSave={handleSectionUpdate}
+        data={
           editingSection === "experience" ? experienceTimeline :
           editingSection === "research" ? researchPapers :
           editingSection === "skills" ? skills :
