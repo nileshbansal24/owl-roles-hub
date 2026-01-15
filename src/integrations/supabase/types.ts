@@ -53,6 +53,13 @@ export type Database = {
             referencedRelation: "jobs"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "job_applications_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       jobs: {
@@ -165,6 +172,42 @@ export type Database = {
       }
     }
     Views: {
+      jobs_public: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string | null
+          institute: string | null
+          job_type: string | null
+          location: string | null
+          salary_range: string | null
+          tags: string[] | null
+          title: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string | null
+          institute?: string | null
+          job_type?: string | null
+          location?: string | null
+          salary_range?: string | null
+          tags?: string[] | null
+          title?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string | null
+          institute?: string | null
+          job_type?: string | null
+          location?: string | null
+          salary_range?: string | null
+          tags?: string[] | null
+          title?: string | null
+        }
+        Relationships: []
+      }
       profiles_public: {
         Row: {
           avatar_url: string | null
@@ -215,7 +258,7 @@ export type Database = {
       }
     }
     Functions: {
-      [_ in never]: never
+      is_recruiter: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never

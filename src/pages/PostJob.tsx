@@ -46,10 +46,12 @@ const PostJob = () => {
     setLoading(true);
 
     try {
+      // Validate and sanitize tags: max 10 tags, each max 50 characters
       const tagsArray = formData.tags
         .split(",")
-        .map((tag) => tag.trim())
-        .filter((tag) => tag.length > 0);
+        .map((tag) => tag.trim().slice(0, 50)) // Limit each tag to 50 chars
+        .filter((tag) => tag.length > 0 && /^[\w\s\-\.]+$/.test(tag)) // Only alphanumeric, spaces, hyphens, dots
+        .slice(0, 10); // Max 10 tags
 
       const { error } = await supabase.from("jobs").insert({
         title: formData.title,
