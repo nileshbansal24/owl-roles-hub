@@ -26,6 +26,7 @@ import {
 import { formatDistanceToNow } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import { jobApplicationSchema } from "@/lib/validations";
 
 interface Job {
   id: string;
@@ -69,12 +70,23 @@ const JobDetailModal = ({ job, open, onOpenChange }: JobDetailModalProps) => {
       return;
     }
 
+    // Validate cover letter
+    const validation = jobApplicationSchema.safeParse({ cover_letter: coverLetter });
+    if (!validation.success) {
+      toast({
+        title: "Validation Error",
+        description: validation.error.errors[0].message,
+        variant: "destructive",
+      });
+      return;
+    }
+
     setApplying(true);
     try {
       const { error } = await supabase.from("job_applications").insert({
         job_id: job.id,
         applicant_id: user.id,
-        cover_letter: coverLetter || null,
+        cover_letter: validation.data.cover_letter || null,
       });
 
       if (error) {

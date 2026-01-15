@@ -7,13 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, ArrowLeft } from "lucide-react";
-import { z } from "zod";
-
-const authSchema = z.object({
-  email: z.string().email("Please enter a valid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
-  fullName: z.string().optional(),
-});
+import { authSchema } from "@/lib/validations";
 
 const Auth = () => {
   const [searchParams] = useSearchParams();

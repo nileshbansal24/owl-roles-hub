@@ -126,18 +126,39 @@ const RecruiterDashboard = () => {
 
       setJobs(jobsData || []);
 
-      // Fetch applications for recruiter's jobs
-      const { data: appsData } = await supabase
+      // Fetch applications for recruiter's jobs with applicant profiles
+      // Note: RLS policy allows recruiters to view profiles of applicants to their jobs
+      const { data: appsData, error: appsError } = await supabase
         .from("job_applications")
         .select(`
           *,
-          jobs!inner(title, institute, created_by),
-          profiles(*)
+          jobs!inner(title, institute, created_by)
         `)
         .eq("jobs.created_by", user.id)
         .order("created_at", { ascending: false });
 
-      setApplications(appsData as unknown as Application[] || []);
+      if (appsError) {
+        console.error("Error fetching applications:", appsError);
+      }
+
+      // Fetch applicant profiles separately for each application
+      const applicationsWithProfiles: Application[] = [];
+      if (appsData) {
+        for (const app of appsData) {
+          const { data: profileData } = await supabase
+            .from("profiles")
+            .select("id, full_name, avatar_url, university, role, bio, years_experience, location, headline, skills, user_type")
+            .eq("id", app.applicant_id)
+            .maybeSingle();
+          
+          applicationsWithProfiles.push({
+            ...app,
+            profiles: profileData,
+          } as unknown as Application);
+        }
+      }
+
+      setApplications(applicationsWithProfiles);
 
       // Fetch all candidate profiles for Resdex (using public view that excludes sensitive data)
       const { data: candidatesData } = await supabase

@@ -17,8 +17,9 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, ArrowLeft, Briefcase } from "lucide-react";
 import { Link } from "react-router-dom";
+import { jobPostingSchema, sanitizeTags } from "@/lib/validations";
 
-const jobTypes = ["Full Time", "Part Time", "Contract", "Visiting"];
+const jobTypes = ["Full Time", "Part Time", "Contract", "Visiting"] as const;
 
 const PostJob = () => {
   const { user } = useAuth();
@@ -46,20 +47,28 @@ const PostJob = () => {
     setLoading(true);
 
     try {
-      // Validate and sanitize tags: max 10 tags, each max 50 characters
-      const tagsArray = formData.tags
-        .split(",")
-        .map((tag) => tag.trim().slice(0, 50)) // Limit each tag to 50 chars
-        .filter((tag) => tag.length > 0 && /^[\w\s\-\.]+$/.test(tag)) // Only alphanumeric, spaces, hyphens, dots
-        .slice(0, 10); // Max 10 tags
+      // Validate form data with Zod
+      const validation = jobPostingSchema.safeParse(formData);
+      if (!validation.success) {
+        toast({
+          title: "Validation Error",
+          description: validation.error.errors[0].message,
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+
+      // Sanitize tags
+      const tagsArray = sanitizeTags(formData.tags);
 
       const { error } = await supabase.from("jobs").insert({
-        title: formData.title,
-        institute: formData.institute,
-        location: formData.location,
-        description: formData.description,
-        salary_range: formData.salary_range || null,
-        job_type: formData.job_type,
+        title: validation.data.title,
+        institute: validation.data.institute,
+        location: validation.data.location,
+        description: validation.data.description || null,
+        salary_range: validation.data.salary_range || null,
+        job_type: validation.data.job_type,
         tags: tagsArray,
         created_by: user.id,
       });

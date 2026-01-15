@@ -14,6 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Camera, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { profileEditSchema } from "@/lib/validations";
 
 interface Profile {
   id: string;
@@ -123,17 +124,28 @@ const ProfileEditModal = ({
     e.preventDefault();
     if (!user) return;
 
+    // Validate form data with Zod
+    const validation = profileEditSchema.safeParse(formData);
+    if (!validation.success) {
+      toast({
+        title: "Validation Error",
+        description: validation.error.errors[0].message,
+        variant: "destructive",
+      });
+      return;
+    }
+
     setSaving(true);
 
     try {
       const { data, error } = await supabase
         .from("profiles")
         .update({
-          full_name: formData.full_name || null,
-          university: formData.university || null,
-          role: formData.role || null,
-          bio: formData.bio || null,
-          years_experience: formData.years_experience || null,
+          full_name: validation.data.full_name || null,
+          university: validation.data.university || null,
+          role: validation.data.role || null,
+          bio: validation.data.bio || null,
+          years_experience: validation.data.years_experience || null,
           avatar_url: avatarUrl || null,
         })
         .eq("id", user.id)
