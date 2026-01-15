@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
+import ApplicantDetailModal from "@/components/ApplicantDetailModal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -39,6 +40,8 @@ import {
   CheckCircle2,
   XCircle,
   MessageSquare,
+  Award,
+  User,
 } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
@@ -109,6 +112,8 @@ const RecruiterDashboard = () => {
   const [selectedJobFilter, setSelectedJobFilter] = useState<string>("all");
   const [selectedStatusFilter, setSelectedStatusFilter] = useState<string>("all");
   const [activeTab, setActiveTab] = useState("resdex");
+  const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
+  const [showApplicantModal, setShowApplicantModal] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -237,6 +242,81 @@ const RecruiterDashboard = () => {
       title: "Opening resume",
       description: `Opening resume for ${applicantName}`,
     });
+  };
+
+  const getCandidateCategory = (profile: Profile | null) => {
+    if (!profile) return "fresher";
+    
+    const role = profile.role?.toLowerCase() || "";
+    const headline = profile.headline?.toLowerCase() || "";
+    const experience = profile.years_experience || 0;
+    const combinedText = `${role} ${headline}`;
+    
+    // Gold: HOD, Dean, VC, PVC
+    const goldKeywords = ["hod", "head of department", "dean", "vice chancellor", "vc", "pvc", "pro vice chancellor", "director", "principal", "registrar"];
+    if (goldKeywords.some(keyword => combinedText.includes(keyword))) {
+      return "gold";
+    }
+    
+    // Silver: Professors, Managers
+    const silverKeywords = ["professor", "manager", "senior lecturer", "associate professor", "coordinator", "lead", "head"];
+    if (silverKeywords.some(keyword => combinedText.includes(keyword)) && !combinedText.includes("assistant")) {
+      return "silver";
+    }
+    
+    // Bronze: Assistant Professor
+    const bronzeKeywords = ["assistant professor", "lecturer", "instructor", "teaching assistant", "research associate"];
+    if (bronzeKeywords.some(keyword => combinedText.includes(keyword))) {
+      return "bronze";
+    }
+    
+    if (experience >= 10) return "silver";
+    if (experience >= 3) return "bronze";
+    
+    return "fresher";
+  };
+
+  const getCategoryBadge = (category: string) => {
+    switch (category) {
+      case "gold":
+        return (
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold bg-gradient-to-r from-yellow-400 to-amber-500 text-yellow-900">
+            <Award className="h-3 w-3" />
+            Gold
+          </span>
+        );
+      case "silver":
+        return (
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold bg-gradient-to-r from-gray-300 to-slate-400 text-gray-900">
+            <Star className="h-3 w-3" />
+            Silver
+          </span>
+        );
+      case "bronze":
+        return (
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold bg-gradient-to-r from-orange-400 to-amber-600 text-orange-900">
+            <Briefcase className="h-3 w-3" />
+            Bronze
+          </span>
+        );
+      default:
+        return (
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold bg-gradient-to-r from-gray-700 to-gray-900 text-white">
+            <User className="h-3 w-3" />
+            Fresher
+          </span>
+        );
+    }
+  };
+
+  const handleViewApplicant = (app: Application) => {
+    setSelectedApplication(app);
+    setShowApplicantModal(true);
+  };
+
+  const handleModalStatusUpdate = (appId: string, status: string) => {
+    updateApplicationStatus(appId, status);
+    setShowApplicantModal(false);
   };
 
   const getStatusColor = (status: string) => {
@@ -595,9 +675,12 @@ const RecruiterDashboard = () => {
                           <div className="flex-1">
                             <div className="flex items-start justify-between gap-4">
                               <div>
-                                <h4 className="font-heading font-semibold text-foreground">
-                                  {app.profiles?.full_name || "Anonymous"}
-                                </h4>
+                                <div className="flex items-center gap-2">
+                                  <h4 className="font-heading font-semibold text-foreground">
+                                    {app.profiles?.full_name || "Anonymous"}
+                                  </h4>
+                                  {getCategoryBadge(getCandidateCategory(app.profiles))}
+                                </div>
                                 <p className="text-sm text-muted-foreground">
                                   Applied for <span className="text-primary font-medium">{app.jobs.title}</span> at {app.jobs.institute}
                                 </p>
@@ -616,6 +699,12 @@ const RecruiterDashboard = () => {
                                 <div className="flex items-center gap-1">
                                   <GraduationCap className="h-4 w-4" />
                                   <span>{app.profiles.university}</span>
+                                </div>
+                              )}
+                              {app.profiles?.role && (
+                                <div className="flex items-center gap-1">
+                                  <Briefcase className="h-4 w-4" />
+                                  <span>{app.profiles.role}</span>
                                 </div>
                               )}
                             </div>
@@ -641,10 +730,11 @@ const RecruiterDashboard = () => {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => updateApplicationStatus(app.id, "reviewed")}
+                                className="gap-1"
+                                onClick={() => handleViewApplicant(app)}
                               >
-                                <Eye className="h-4 w-4 mr-1" />
-                                Mark Reviewed
+                                <Eye className="h-4 w-4" />
+                                View Profile
                               </Button>
                               <Button
                                 variant="outline"
@@ -739,6 +829,14 @@ const RecruiterDashboard = () => {
           </Tabs>
         </div>
       </main>
+
+      {/* Applicant Detail Modal */}
+      <ApplicantDetailModal
+        application={selectedApplication}
+        open={showApplicantModal}
+        onOpenChange={setShowApplicantModal}
+        onStatusUpdate={handleModalStatusUpdate}
+      />
     </div>
   );
 };
