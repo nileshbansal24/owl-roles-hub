@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -94,6 +94,7 @@ const CandidateDashboard = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const resumeInputRef = useRef<HTMLInputElement>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
@@ -101,6 +102,7 @@ const CandidateDashboard = () => {
   const [sectionEditOpen, setSectionEditOpen] = useState(false);
   const [editingSection, setEditingSection] = useState<string>("");
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [uploadingResume, setUploadingResume] = useState(false);
 
   // Editable data
   const [experienceTimeline, setExperienceTimeline] = useState<ExperienceItem[]>([
@@ -201,6 +203,121 @@ const CandidateDashboard = () => {
     }
   };
 
+  const handleResumeUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !user) return;
+
+    // Validate file type
+    const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+    if (!allowedTypes.includes(file.type)) {
+      toast({
+        title: "Invalid file type",
+        description: "Please upload a PDF or Word document.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Please upload a file smaller than 10MB.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setUploadingResume(true);
+
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `resume.${fileExt}`;
+      const filePath = `${user.id}/${fileName}`;
+
+      // Upload file to storage
+      const { error: uploadError } = await supabase.storage
+        .from('resumes')
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('resumes')
+        .getPublicUrl(filePath);
+
+      // Add timestamp to bust cache
+      const resumeUrl = `${publicUrl}?t=${Date.now()}`;
+
+      // Update profile with resume URL
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ resume_url: resumeUrl })
+        .eq('id', user.id);
+
+      if (updateError) throw updateError;
+
+      setProfile(prev => prev ? { ...prev, resume_url: resumeUrl } : null);
+      
+      toast({
+        title: "Resume uploaded!",
+        description: "Your resume has been uploaded successfully.",
+      });
+    } catch (error: any) {
+      console.error("Error uploading resume:", error);
+      toast({
+        title: "Upload failed",
+        description: error.message || "Failed to upload resume.",
+        variant: "destructive",
+      });
+    } finally {
+      setUploadingResume(false);
+      // Reset input
+      if (resumeInputRef.current) {
+        resumeInputRef.current.value = '';
+      }
+    }
+  };
+
+  const handleDeleteResume = async () => {
+    if (!user || !profile?.resume_url) return;
+
+    try {
+      // Extract file path from URL
+      const urlParts = profile.resume_url.split('/resumes/');
+      if (urlParts.length > 1) {
+        const filePath = urlParts[1].split('?')[0];
+        
+        // Delete from storage
+        await supabase.storage
+          .from('resumes')
+          .remove([filePath]);
+      }
+
+      // Update profile
+      const { error } = await supabase
+        .from('profiles')
+        .update({ resume_url: null })
+        .eq('id', user.id);
+
+      if (error) throw error;
+
+      setProfile(prev => prev ? { ...prev, resume_url: null } : null);
+      
+      toast({
+        title: "Resume deleted",
+        description: "Your resume has been removed.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Delete failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleProfileUpdate = (updatedProfile: Profile) => {
     setProfile(updatedProfile);
   };
@@ -255,13 +372,14 @@ const CandidateDashboard = () => {
 
   const profileCompleteness = () => {
     let score = 0;
-    if (profile?.full_name) score += 20;
-    if (profile?.avatar_url) score += 15;
+    if (profile?.full_name) score += 15;
+    if (profile?.avatar_url) score += 10;
     if (profile?.bio) score += 15;
     if (profile?.university) score += 15;
     if (profile?.role) score += 15;
     if (profile?.skills && profile.skills.length > 0) score += 10;
     if (profile?.years_experience) score += 10;
+    if (profile?.resume_url) score += 10;
     return score;
   };
 
@@ -362,10 +480,26 @@ const CandidateDashboard = () => {
                     <Edit2 className="h-4 w-4 mr-1" />
                     Edit Profile
                   </Button>
-                  <Button size="sm" className="gap-1">
-                    <Upload className="h-4 w-4" />
-                    Upload Resume
+                  <Button 
+                    size="sm" 
+                    className="gap-1 relative"
+                    disabled={uploadingResume}
+                    onClick={() => resumeInputRef.current?.click()}
+                  >
+                    {uploadingResume ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Upload className="h-4 w-4" />
+                    )}
+                    {profile?.resume_url ? "Update Resume" : "Upload Resume"}
                   </Button>
+                  <input
+                    ref={resumeInputRef}
+                    type="file"
+                    accept=".pdf,.doc,.docx"
+                    onChange={handleResumeUpload}
+                    className="hidden"
+                  />
                 </div>
               </div>
             </div>
@@ -494,6 +628,84 @@ const CandidateDashboard = () => {
                         </span>
                       </div>
                     </div>
+                  </motion.div>
+
+                  {/* Resume Section */}
+                  <motion.div variants={itemVariants} className="card-elevated p-6">
+                    <h3 className="font-heading font-semibold text-foreground mb-4">Your Resume</h3>
+                    {profile?.resume_url ? (
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-3 p-3 rounded-lg bg-green-500/10 border border-green-500/20">
+                          <div className="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center">
+                            <FileText className="h-5 w-5 text-green-600" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-foreground text-sm">Resume uploaded</p>
+                            <p className="text-xs text-muted-foreground">PDF or Word document</p>
+                          </div>
+                          <CheckCircle2 className="h-5 w-5 text-green-600 shrink-0" />
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="flex-1 gap-1"
+                            onClick={() => window.open(profile.resume_url!, "_blank")}
+                          >
+                            <Download className="h-4 w-4" />
+                            View
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="flex-1 gap-1"
+                            onClick={() => resumeInputRef.current?.click()}
+                            disabled={uploadingResume}
+                          >
+                            {uploadingResume ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Upload className="h-4 w-4" />
+                            )}
+                            Update
+                          </Button>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="w-full text-destructive hover:text-destructive hover:bg-destructive/10"
+                          onClick={handleDeleteResume}
+                        >
+                          <XCircle className="h-4 w-4 mr-1" />
+                          Remove Resume
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="text-center py-4">
+                        <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-3">
+                          <FileText className="h-6 w-6 text-muted-foreground" />
+                        </div>
+                        <p className="text-sm text-muted-foreground mb-3">
+                          Upload your resume to apply for jobs faster
+                        </p>
+                        <Button
+                          size="sm"
+                          className="gap-1"
+                          onClick={() => resumeInputRef.current?.click()}
+                          disabled={uploadingResume}
+                        >
+                          {uploadingResume ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Upload className="h-4 w-4" />
+                          )}
+                          Upload Resume
+                        </Button>
+                        <p className="text-xs text-muted-foreground mt-2">
+                          PDF or Word (max 10MB)
+                        </p>
+                      </div>
+                    )}
                   </motion.div>
 
                   {/* AI Suggested Salary */}
