@@ -108,10 +108,16 @@ export type Database = {
           bio: string | null
           created_at: string
           full_name: string | null
+          headline: string | null
           id: string
+          location: string | null
+          phone: string | null
+          resume_url: string | null
           role: string | null
+          skills: string[] | null
           university: string | null
           updated_at: string
+          user_type: string | null
           years_experience: number | null
         }
         Insert: {
@@ -119,10 +125,16 @@ export type Database = {
           bio?: string | null
           created_at?: string
           full_name?: string | null
+          headline?: string | null
           id: string
+          location?: string | null
+          phone?: string | null
+          resume_url?: string | null
           role?: string | null
+          skills?: string[] | null
           university?: string | null
           updated_at?: string
+          user_type?: string | null
           years_experience?: number | null
         }
         Update: {
@@ -130,10 +142,16 @@ export type Database = {
           bio?: string | null
           created_at?: string
           full_name?: string | null
+          headline?: string | null
           id?: string
+          location?: string | null
+          phone?: string | null
+          resume_url?: string | null
           role?: string | null
+          skills?: string[] | null
           university?: string | null
           updated_at?: string
+          user_type?: string | null
           years_experience?: number | null
         }
         Relationships: []
