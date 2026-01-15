@@ -41,8 +41,9 @@ const Index = () => {
 
   useEffect(() => {
     const fetchJobs = async () => {
+      // Use jobs_public view which excludes created_by for privacy
       const { data, error } = await supabase
-        .from("jobs")
+        .from("jobs_public")
         .select("*")
         .order("created_at", { ascending: false });
 
