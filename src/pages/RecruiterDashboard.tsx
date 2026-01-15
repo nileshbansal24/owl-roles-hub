@@ -55,6 +55,7 @@ interface Profile {
   headline: string | null;
   skills: string[] | null;
   user_type: string | null;
+  resume_url?: string | null;
 }
 
 interface Job {
@@ -106,6 +107,7 @@ const RecruiterDashboard = () => {
   const [locationFilter, setLocationFilter] = useState("");
   const [experienceFilter, setExperienceFilter] = useState("");
   const [selectedJobFilter, setSelectedJobFilter] = useState<string>("all");
+  const [selectedStatusFilter, setSelectedStatusFilter] = useState<string>("all");
   const [activeTab, setActiveTab] = useState("resdex");
 
   useEffect(() => {
@@ -147,7 +149,7 @@ const RecruiterDashboard = () => {
         for (const app of appsData) {
           const { data: profileData } = await supabase
             .from("profiles")
-            .select("id, full_name, avatar_url, university, role, bio, years_experience, location, headline, skills, user_type")
+            .select("id, full_name, avatar_url, university, role, bio, years_experience, location, headline, skills, user_type, resume_url")
             .eq("id", app.applicant_id)
             .maybeSingle();
           
@@ -224,9 +226,18 @@ const RecruiterDashboard = () => {
   });
 
   const filteredApplications = applications.filter((app) => {
-    if (selectedJobFilter === "all") return true;
-    return app.job_id === selectedJobFilter;
+    const matchesJob = selectedJobFilter === "all" || app.job_id === selectedJobFilter;
+    const matchesStatus = selectedStatusFilter === "all" || app.status === selectedStatusFilter;
+    return matchesJob && matchesStatus;
   });
+
+  const handleDownloadResume = (resumeUrl: string, applicantName: string) => {
+    window.open(resumeUrl, "_blank");
+    toast({
+      title: "Opening resume",
+      description: `Opening resume for ${applicantName}`,
+    });
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -525,10 +536,10 @@ const RecruiterDashboard = () => {
                 animate="visible"
                 className="space-y-6"
               >
-                {/* Filter by Job */}
-                <motion.div variants={itemVariants} className="flex items-center gap-4">
+                {/* Filters */}
+                <motion.div variants={itemVariants} className="flex flex-wrap items-center gap-4">
                   <Select value={selectedJobFilter} onValueChange={setSelectedJobFilter}>
-                    <SelectTrigger className="w-[300px]">
+                    <SelectTrigger className="w-[250px]">
                       <SelectValue placeholder="Filter by job" />
                     </SelectTrigger>
                     <SelectContent className="bg-popover">
@@ -538,8 +549,22 @@ const RecruiterDashboard = () => {
                       ))}
                     </SelectContent>
                   </Select>
+                  
+                  <Select value={selectedStatusFilter} onValueChange={setSelectedStatusFilter}>
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Filter by status" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-popover">
+                      <SelectItem value="all">All Statuses</SelectItem>
+                      <SelectItem value="pending">Pending</SelectItem>
+                      <SelectItem value="reviewed">Reviewed</SelectItem>
+                      <SelectItem value="shortlisted">Shortlisted</SelectItem>
+                      <SelectItem value="rejected">Rejected</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  
                   <p className="text-sm text-muted-foreground">
-                    {filteredApplications.length} applications
+                    {filteredApplications.length} application{filteredApplications.length !== 1 ? "s" : ""}
                   </p>
                 </motion.div>
 
@@ -547,7 +572,7 @@ const RecruiterDashboard = () => {
                 {filteredApplications.length === 0 ? (
                   <motion.div variants={itemVariants} className="card-elevated p-12 text-center">
                     <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <p className="text-muted-foreground">No applications yet.</p>
+                    <p className="text-muted-foreground">No applications found.</p>
                   </motion.div>
                 ) : (
                   <motion.div variants={itemVariants} className="grid gap-4">
@@ -601,7 +626,18 @@ const RecruiterDashboard = () => {
                               </p>
                             )}
 
-                            <div className="flex items-center gap-2 mt-4 pt-4 border-t">
+                            <div className="flex flex-wrap items-center gap-2 mt-4 pt-4 border-t">
+                              {app.profiles?.resume_url && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="gap-1"
+                                  onClick={() => handleDownloadResume(app.profiles!.resume_url!, app.profiles?.full_name || "Applicant")}
+                                >
+                                  <Download className="h-4 w-4" />
+                                  Resume
+                                </Button>
+                              )}
                               <Button
                                 variant="outline"
                                 size="sm"
@@ -613,7 +649,7 @@ const RecruiterDashboard = () => {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                className="text-green-600 hover:bg-green-50"
+                                className="text-green-600 hover:bg-green-50 dark:hover:bg-green-950"
                                 onClick={() => updateApplicationStatus(app.id, "shortlisted")}
                               >
                                 <CheckCircle2 className="h-4 w-4 mr-1" />
@@ -622,7 +658,7 @@ const RecruiterDashboard = () => {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                className="text-red-600 hover:bg-red-50"
+                                className="text-red-600 hover:bg-red-50 dark:hover:bg-red-950"
                                 onClick={() => updateApplicationStatus(app.id, "rejected")}
                               >
                                 <XCircle className="h-4 w-4 mr-1" />
