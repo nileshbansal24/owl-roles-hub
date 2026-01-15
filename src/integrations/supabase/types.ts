@@ -100,6 +100,13 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "jobs_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       profiles: {
@@ -158,7 +165,54 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      profiles_public: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          created_at: string | null
+          full_name: string | null
+          headline: string | null
+          id: string | null
+          location: string | null
+          role: string | null
+          skills: string[] | null
+          university: string | null
+          updated_at: string | null
+          user_type: string | null
+          years_experience: number | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          headline?: string | null
+          id?: string | null
+          location?: string | null
+          role?: string | null
+          skills?: string[] | null
+          university?: string | null
+          updated_at?: string | null
+          user_type?: string | null
+          years_experience?: number | null
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          headline?: string | null
+          id?: string | null
+          location?: string | null
+          role?: string | null
+          skills?: string[] | null
+          university?: string | null
+          updated_at?: string | null
+          user_type?: string | null
+          years_experience?: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       [_ in never]: never

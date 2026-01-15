@@ -139,11 +139,10 @@ const RecruiterDashboard = () => {
 
       setApplications(appsData as unknown as Application[] || []);
 
-      // Fetch all candidate profiles for Resdex
+      // Fetch all candidate profiles for Resdex (using public view that excludes sensitive data)
       const { data: candidatesData } = await supabase
-        .from("profiles")
+        .from("profiles_public")
         .select("*")
-        .eq("user_type", "candidate")
         .order("updated_at", { ascending: false });
 
       setCandidates(candidatesData || []);
