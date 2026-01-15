@@ -8,14 +8,40 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Moon, Sun, LogOut, User, Plus, Briefcase } from "lucide-react";
+import { Moon, Sun, LogOut, User, Plus, Briefcase, Search, LayoutDashboard } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
-const Navbar = () => {
+interface NavbarProps {
+  onLoginClick?: () => void;
+  onSignupClick?: () => void;
+}
+
+const Navbar = ({ onLoginClick, onSignupClick }: NavbarProps) => {
   const { user, signOut } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
+  const [userType, setUserType] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchUserType = async () => {
+      if (!user) return;
+      
+      const { data } = await supabase
+        .from("profiles")
+        .select("user_type")
+        .eq("id", user.id)
+        .maybeSingle();
+      
+      if (data) {
+        setUserType(data.user_type);
+      }
+    };
+
+    fetchUserType();
+  }, [user]);
 
   const handleSignOut = async () => {
     await signOut();
@@ -24,6 +50,13 @@ const Navbar = () => {
 
   const getInitials = (email: string) => {
     return email.slice(0, 2).toUpperCase();
+  };
+
+  const getDashboardLink = () => {
+    if (userType === "recruiter") {
+      return "/recruiter-dashboard";
+    }
+    return "/candidate-dashboard";
   };
 
   return (
@@ -46,13 +79,19 @@ const Navbar = () => {
               to="/"
               className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
             >
-              Home
+              Jobs
             </Link>
             <Link
               to="/"
               className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
             >
-              Browse Jobs
+              Companies
+            </Link>
+            <Link
+              to="/"
+              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Services
             </Link>
           </nav>
 
@@ -73,12 +112,14 @@ const Navbar = () => {
 
             {user ? (
               <>
-                <Link to="/post-job">
-                  <Button className="hidden sm:flex gap-2">
-                    <Plus className="h-4 w-4" />
-                    Post Job
-                  </Button>
-                </Link>
+                {userType === "recruiter" && (
+                  <Link to="/post-job">
+                    <Button className="hidden sm:flex gap-2">
+                      <Plus className="h-4 w-4" />
+                      Post Job
+                    </Button>
+                  </Link>
+                )}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="relative h-9 w-9 rounded-full">
@@ -94,21 +135,32 @@ const Navbar = () => {
                     <div className="flex items-center justify-start gap-2 p-2">
                       <div className="flex flex-col space-y-1 leading-none">
                         <p className="font-medium text-sm">{user.email}</p>
+                        <p className="text-xs text-muted-foreground capitalize">{userType} Account</p>
                       </div>
                     </div>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
-                      <Link to="/dashboard" className="cursor-pointer">
-                        <User className="mr-2 h-4 w-4" />
+                      <Link to={getDashboardLink()} className="cursor-pointer">
+                        <LayoutDashboard className="mr-2 h-4 w-4" />
                         Dashboard
                       </Link>
                     </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link to="/post-job" className="cursor-pointer sm:hidden">
-                        <Briefcase className="mr-2 h-4 w-4" />
-                        Post Job
-                      </Link>
-                    </DropdownMenuItem>
+                    {userType === "recruiter" && (
+                      <DropdownMenuItem asChild>
+                        <Link to="/post-job" className="cursor-pointer sm:hidden">
+                          <Briefcase className="mr-2 h-4 w-4" />
+                          Post Job
+                        </Link>
+                      </DropdownMenuItem>
+                    )}
+                    {userType === "candidate" && (
+                      <DropdownMenuItem asChild>
+                        <Link to="/candidate-dashboard" className="cursor-pointer">
+                          <User className="mr-2 h-4 w-4" />
+                          My Profile
+                        </Link>
+                      </DropdownMenuItem>
+                    )}
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer">
                       <LogOut className="mr-2 h-4 w-4" />
@@ -119,14 +171,12 @@ const Navbar = () => {
               </>
             ) : (
               <>
-                <Link to="/auth">
-                  <Button variant="ghost" size="sm">
-                    Login
-                  </Button>
-                </Link>
-                <Link to="/auth?mode=signup">
-                  <Button size="sm">Post Job</Button>
-                </Link>
+                <Button variant="ghost" size="sm" onClick={onLoginClick}>
+                  Login
+                </Button>
+                <Button size="sm" onClick={onSignupClick}>
+                  Register
+                </Button>
               </>
             )}
           </div>
