@@ -235,6 +235,45 @@ export type Database = {
           },
         ]
       }
+      saved_candidates: {
+        Row: {
+          candidate_id: string
+          created_at: string
+          id: string
+          notes: string | null
+          recruiter_id: string
+        }
+        Insert: {
+          candidate_id: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          recruiter_id: string
+        }
+        Update: {
+          candidate_id?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          recruiter_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saved_candidates_candidate_id_fkey"
+            columns: ["candidate_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "saved_candidates_candidate_id_fkey"
+            columns: ["candidate_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       jobs_public: {

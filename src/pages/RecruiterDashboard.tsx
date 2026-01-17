@@ -41,6 +41,8 @@ import {
   Download,
   Eye,
   Star,
+  Bookmark,
+  BookmarkCheck,
   Clock,
   Users,
   FileText,
@@ -164,6 +166,7 @@ const RecruiterDashboard = () => {
   const [selectedAppIds, setSelectedAppIds] = useState<Set<string>>(new Set());
   const [selectedCandidate, setSelectedCandidate] = useState<Profile | null>(null);
   const [showCandidateModal, setShowCandidateModal] = useState(false);
+  const [savedCandidateIds, setSavedCandidateIds] = useState<Set<string>>(new Set());
   const [bulkActionLoading, setBulkActionLoading] = useState(false);
   const [showRejectConfirm, setShowRejectConfirm] = useState(false);
 
@@ -253,6 +256,16 @@ const RecruiterDashboard = () => {
 
       setCandidates((candidatesData as unknown as Profile[]) || []);
 
+      // Fetch saved candidates
+      const { data: savedData } = await supabase
+        .from("saved_candidates")
+        .select("candidate_id")
+        .eq("recruiter_id", user.id);
+
+      if (savedData) {
+        setSavedCandidateIds(new Set(savedData.map(s => s.candidate_id)));
+      }
+
       setLoading(false);
     };
 
@@ -302,6 +315,62 @@ const RecruiterDashboard = () => {
         description: `${candidate.full_name || "This candidate"} has not added their email to their profile yet.`,
         variant: "destructive",
       });
+    }
+  };
+
+  // Save/unsave candidate
+  const handleSaveCandidate = async (candidateId: string) => {
+    if (!user) return;
+    
+    const isSaved = savedCandidateIds.has(candidateId);
+    
+    if (isSaved) {
+      // Remove from saved
+      const { error } = await supabase
+        .from("saved_candidates")
+        .delete()
+        .eq("recruiter_id", user.id)
+        .eq("candidate_id", candidateId);
+      
+      if (error) {
+        toast({
+          title: "Error",
+          description: "Failed to remove candidate from saved list",
+          variant: "destructive",
+        });
+      } else {
+        setSavedCandidateIds(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(candidateId);
+          return newSet;
+        });
+        toast({
+          title: "Removed",
+          description: "Candidate removed from saved list",
+        });
+      }
+    } else {
+      // Add to saved
+      const { error } = await supabase
+        .from("saved_candidates")
+        .insert({
+          recruiter_id: user.id,
+          candidate_id: candidateId,
+        });
+      
+      if (error) {
+        toast({
+          title: "Error",
+          description: "Failed to save candidate",
+          variant: "destructive",
+        });
+      } else {
+        setSavedCandidateIds(prev => new Set([...prev, candidateId]));
+        toast({
+          title: "Saved",
+          description: "Candidate added to your saved list",
+        });
+      }
     }
   };
 
@@ -738,6 +807,10 @@ const RecruiterDashboard = () => {
                 <Search className="h-4 w-4" />
                 Search
               </TabsTrigger>
+              <TabsTrigger value="saved" className="gap-2">
+                <Bookmark className="h-4 w-4" />
+                Saved ({savedCandidateIds.size})
+              </TabsTrigger>
               <TabsTrigger value="applications" className="gap-2">
                 <FileText className="h-4 w-4" />
                 Applications ({applications.length})
@@ -836,6 +909,18 @@ const RecruiterDashboard = () => {
                                 </p>
                               </div>
                               <div className="flex gap-2 shrink-0">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="gap-1"
+                                  onClick={() => handleSaveCandidate(candidate.id)}
+                                >
+                                  {savedCandidateIds.has(candidate.id) ? (
+                                    <BookmarkCheck className="h-4 w-4 text-primary" />
+                                  ) : (
+                                    <Bookmark className="h-4 w-4" />
+                                  )}
+                                </Button>
                                 <Button 
                                   variant="outline" 
                                   size="sm" 
@@ -901,6 +986,132 @@ const RecruiterDashboard = () => {
                     ))
                   )}
                 </motion.div>
+              </motion.div>
+            </TabsContent>
+
+            {/* Saved Candidates Tab */}
+            <TabsContent value="saved">
+              <motion.div
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+                className="space-y-6"
+              >
+                <motion.div variants={itemVariants} className="card-elevated p-6">
+                  <h3 className="font-heading font-semibold text-lg mb-4 flex items-center gap-2">
+                    <BookmarkCheck className="h-5 w-5 text-primary" />
+                    Saved Candidates ({savedCandidateIds.size})
+                  </h3>
+                  <p className="text-muted-foreground text-sm">
+                    Candidates you've bookmarked for later review
+                  </p>
+                </motion.div>
+
+                {candidates.filter(c => savedCandidateIds.has(c.id)).length === 0 ? (
+                  <motion.div variants={itemVariants} className="text-center py-12">
+                    <Bookmark className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                    <h3 className="font-heading font-semibold text-lg mb-2">No saved candidates</h3>
+                    <p className="text-muted-foreground">
+                      Browse the Search tab and click the bookmark icon to save interesting profiles
+                    </p>
+                  </motion.div>
+                ) : (
+                  <div className="grid gap-4">
+                    {candidates.filter(c => savedCandidateIds.has(c.id)).map((candidate, index) => (
+                      <motion.div
+                        key={candidate.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.05 }}
+                        className="card-elevated p-5 hover:shadow-lg transition-shadow"
+                      >
+                        <div className="flex flex-col md:flex-row gap-4">
+                          <Avatar className="h-16 w-16 shrink-0">
+                            <AvatarImage src={candidate.avatar_url || ""} />
+                            <AvatarFallback className="bg-primary text-primary-foreground text-lg font-heading font-bold">
+                              {candidate.full_name?.slice(0, 2).toUpperCase() || "U"}
+                            </AvatarFallback>
+                          </Avatar>
+
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-start justify-between gap-4">
+                              <div>
+                                <h4 className="font-heading font-semibold text-lg text-foreground">
+                                  {candidate.full_name || "Anonymous"}
+                                </h4>
+                                <p className="text-primary font-medium">
+                                  {candidate.role || candidate.headline || "Academic Professional"}
+                                </p>
+                              </div>
+                              <div className="flex gap-2 shrink-0">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="gap-1 text-destructive hover:text-destructive"
+                                  onClick={() => handleSaveCandidate(candidate.id)}
+                                >
+                                  <BookmarkCheck className="h-4 w-4" />
+                                  Remove
+                                </Button>
+                                <Button 
+                                  variant="outline" 
+                                  size="sm" 
+                                  className="gap-1"
+                                  onClick={() => handleViewCandidate(candidate)}
+                                >
+                                  <Eye className="h-4 w-4" />
+                                  View
+                                </Button>
+                                <Button 
+                                  size="sm" 
+                                  className="gap-1"
+                                  onClick={() => handleContactCandidate(candidate)}
+                                >
+                                  <Mail className="h-4 w-4" />
+                                  Contact
+                                </Button>
+                              </div>
+                            </div>
+
+                            <div className="flex flex-wrap items-center gap-4 mt-3 text-sm text-muted-foreground">
+                              {candidate.university && (
+                                <div className="flex items-center gap-1">
+                                  <GraduationCap className="h-4 w-4" />
+                                  <span>{candidate.university}</span>
+                                </div>
+                              )}
+                              {candidate.location && (
+                                <div className="flex items-center gap-1">
+                                  <MapPin className="h-4 w-4" />
+                                  <span>{candidate.location}</span>
+                                </div>
+                              )}
+                              {candidate.years_experience !== null && (
+                                <div className="flex items-center gap-1">
+                                  <Briefcase className="h-4 w-4" />
+                                  <span>{candidate.years_experience} Years Exp</span>
+                                </div>
+                              )}
+                            </div>
+
+                            {candidate.skills && candidate.skills.length > 0 && (
+                              <div className="flex flex-wrap gap-2 mt-3">
+                                {candidate.skills.slice(0, 5).map((skill) => (
+                                  <Badge key={skill} variant="secondary">
+                                    {skill}
+                                  </Badge>
+                                ))}
+                                {candidate.skills.length > 5 && (
+                                  <Badge variant="outline">+{candidate.skills.length - 5} more</Badge>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                )}
               </motion.div>
             </TabsContent>
 
