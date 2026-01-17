@@ -59,8 +59,11 @@ import {
   CheckSquare,
   Square,
   X,
+  Edit3,
+  Save,
 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Textarea } from "@/components/ui/textarea";
 import { formatDistanceToNow, format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 
@@ -167,6 +170,10 @@ const RecruiterDashboard = () => {
   const [selectedCandidate, setSelectedCandidate] = useState<Profile | null>(null);
   const [showCandidateModal, setShowCandidateModal] = useState(false);
   const [savedCandidateIds, setSavedCandidateIds] = useState<Set<string>>(new Set());
+  const [savedCandidateNotes, setSavedCandidateNotes] = useState<Record<string, string>>({});
+  const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
+  const [editingNoteText, setEditingNoteText] = useState("");
+  const [savingNote, setSavingNote] = useState(false);
   const [bulkActionLoading, setBulkActionLoading] = useState(false);
   const [showRejectConfirm, setShowRejectConfirm] = useState(false);
 
@@ -256,14 +263,21 @@ const RecruiterDashboard = () => {
 
       setCandidates((candidatesData as unknown as Profile[]) || []);
 
-      // Fetch saved candidates
+      // Fetch saved candidates with notes
       const { data: savedData } = await supabase
         .from("saved_candidates")
-        .select("candidate_id")
+        .select("candidate_id, notes")
         .eq("recruiter_id", user.id);
 
       if (savedData) {
         setSavedCandidateIds(new Set(savedData.map(s => s.candidate_id)));
+        const notesMap: Record<string, string> = {};
+        savedData.forEach(s => {
+          if (s.notes) {
+            notesMap[s.candidate_id] = s.notes;
+          }
+        });
+        setSavedCandidateNotes(notesMap);
       }
 
       setLoading(false);
@@ -372,6 +386,46 @@ const RecruiterDashboard = () => {
         });
       }
     }
+  };
+
+  // Save/update note for a saved candidate
+  const handleSaveNote = async (candidateId: string) => {
+    if (!user) return;
+    
+    setSavingNote(true);
+    
+    const { error } = await supabase
+      .from("saved_candidates")
+      .update({ notes: editingNoteText.trim() || null })
+      .eq("recruiter_id", user.id)
+      .eq("candidate_id", candidateId);
+    
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to save note",
+        variant: "destructive",
+      });
+    } else {
+      setSavedCandidateNotes(prev => ({
+        ...prev,
+        [candidateId]: editingNoteText.trim(),
+      }));
+      setEditingNoteId(null);
+      setEditingNoteText("");
+      toast({
+        title: "Note saved",
+        description: "Your private note has been saved",
+      });
+    }
+    
+    setSavingNote(false);
+  };
+
+  // Start editing a note
+  const handleStartEditNote = (candidateId: string) => {
+    setEditingNoteId(candidateId);
+    setEditingNoteText(savedCandidateNotes[candidateId] || "");
   };
 
   // Bulk actions
@@ -1120,6 +1174,81 @@ const RecruiterDashboard = () => {
                                 )}
                               </div>
                             )}
+
+                            {/* Private Notes Section */}
+                            <div className="mt-4 pt-4 border-t border-border/50">
+                              {editingNoteId === candidate.id ? (
+                                <div className="space-y-2">
+                                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                    <MessageSquare className="h-4 w-4" />
+                                    <span className="font-medium">Private Note</span>
+                                  </div>
+                                  <Textarea
+                                    placeholder="Add a private note about this candidate..."
+                                    value={editingNoteText}
+                                    onChange={(e) => setEditingNoteText(e.target.value)}
+                                    className="min-h-[80px] text-sm"
+                                  />
+                                  <div className="flex gap-2 justify-end">
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => {
+                                        setEditingNoteId(null);
+                                        setEditingNoteText("");
+                                      }}
+                                      disabled={savingNote}
+                                    >
+                                      Cancel
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      onClick={() => handleSaveNote(candidate.id)}
+                                      disabled={savingNote}
+                                      className="gap-1"
+                                    >
+                                      {savingNote ? (
+                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                      ) : (
+                                        <Save className="h-4 w-4" />
+                                      )}
+                                      Save Note
+                                    </Button>
+                                  </div>
+                                </div>
+                              ) : savedCandidateNotes[candidate.id] ? (
+                                <div className="space-y-2">
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                      <MessageSquare className="h-4 w-4" />
+                                      <span className="font-medium">Private Note</span>
+                                    </div>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="gap-1 h-7"
+                                      onClick={() => handleStartEditNote(candidate.id)}
+                                    >
+                                      <Edit3 className="h-3 w-3" />
+                                      Edit
+                                    </Button>
+                                  </div>
+                                  <p className="text-sm text-foreground bg-muted/50 p-3 rounded-md">
+                                    {savedCandidateNotes[candidate.id]}
+                                  </p>
+                                </div>
+                              ) : (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="gap-2 text-muted-foreground hover:text-foreground"
+                                  onClick={() => handleStartEditNote(candidate.id)}
+                                >
+                                  <MessageSquare className="h-4 w-4" />
+                                  Add private note
+                                </Button>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </motion.div>
