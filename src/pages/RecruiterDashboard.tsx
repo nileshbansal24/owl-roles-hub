@@ -161,6 +161,8 @@ const RecruiterDashboard = () => {
   const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
   const [showApplicantModal, setShowApplicantModal] = useState(false);
   const [selectedAppIds, setSelectedAppIds] = useState<Set<string>>(new Set());
+  const [selectedCandidate, setSelectedCandidate] = useState<Profile | null>(null);
+  const [showCandidateModal, setShowCandidateModal] = useState(false);
   const [bulkActionLoading, setBulkActionLoading] = useState(false);
   const [showRejectConfirm, setShowRejectConfirm] = useState(false);
 
@@ -279,6 +281,21 @@ const RecruiterDashboard = () => {
         description: `Application marked as ${newStatus}`,
       });
     }
+  };
+
+  // Handle viewing a candidate from Search tab
+  const handleViewCandidate = (candidate: Profile) => {
+    setSelectedCandidate(candidate);
+    setShowCandidateModal(true);
+  };
+
+  // Handle contacting a candidate
+  const handleContactCandidate = (candidate: Profile) => {
+    // For now, show toast since we don't have email in the public profile
+    toast({
+      title: "Contact Request",
+      description: `To contact ${candidate.full_name || "this candidate"}, please view their full profile or wait for them to apply to your job postings.`,
+    });
   };
 
   // Bulk actions
@@ -712,7 +729,7 @@ const RecruiterDashboard = () => {
             <TabsList className="bg-secondary/50">
               <TabsTrigger value="resdex" className="gap-2">
                 <Search className="h-4 w-4" />
-                Resdex Search
+                Search
               </TabsTrigger>
               <TabsTrigger value="applications" className="gap-2">
                 <FileText className="h-4 w-4" />
@@ -812,11 +829,20 @@ const RecruiterDashboard = () => {
                                 </p>
                               </div>
                               <div className="flex gap-2 shrink-0">
-                                <Button variant="outline" size="sm" className="gap-1">
+                                <Button 
+                                  variant="outline" 
+                                  size="sm" 
+                                  className="gap-1"
+                                  onClick={() => handleViewCandidate(candidate)}
+                                >
                                   <Eye className="h-4 w-4" />
                                   View
                                 </Button>
-                                <Button size="sm" className="gap-1">
+                                <Button 
+                                  size="sm" 
+                                  className="gap-1"
+                                  onClick={() => handleContactCandidate(candidate)}
+                                >
                                   <Mail className="h-4 w-4" />
                                   Contact
                                 </Button>
@@ -1204,6 +1230,26 @@ const RecruiterDashboard = () => {
         open={showApplicantModal}
         onOpenChange={setShowApplicantModal}
         onStatusUpdate={handleModalStatusUpdate}
+      />
+
+      {/* Candidate Detail Modal (for Search tab) */}
+      <ApplicantDetailModal
+        application={selectedCandidate ? {
+          id: `search-${selectedCandidate.id}`,
+          job_id: "",
+          applicant_id: selectedCandidate.id,
+          cover_letter: null,
+          status: "viewing",
+          created_at: new Date().toISOString(),
+          jobs: {
+            title: "Profile View",
+            institute: "Search Results",
+          },
+          profiles: selectedCandidate,
+        } : null}
+        open={showCandidateModal}
+        onOpenChange={setShowCandidateModal}
+        onStatusUpdate={() => {}}
       />
 
       {/* Bulk Reject Confirmation Dialog */}
