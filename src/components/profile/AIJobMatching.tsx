@@ -64,11 +64,14 @@ export const AIJobMatching = ({
   const [loading, setLoading] = React.useState(false);
   const [matches, setMatches] = React.useState<JobMatch[]>([]);
   const [hasAttempted, setHasAttempted] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+  const [isRateLimited, setIsRateLimited] = React.useState(false);
 
   const fetchJobMatches = React.useCallback(async () => {
-    if (!profile) return;
+    if (!profile || isRateLimited) return;
 
     setLoading(true);
+    setError(null);
     try {
       const { data, error } = await supabase.functions.invoke("match-jobs", {
         body: {
@@ -90,23 +93,48 @@ export const AIJobMatching = ({
       }
 
       if (data.error) {
-        throw new Error(data.error);
+        // Check for specific error types
+        if (data.error.includes("credits exhausted") || data.error.includes("402")) {
+          setError("AI credits exhausted. Please try again later.");
+          setIsRateLimited(true);
+        } else if (data.error.includes("Rate limit") || data.error.includes("429")) {
+          setError("Too many requests. Please wait a moment.");
+          setIsRateLimited(true);
+          // Auto-reset rate limit after 30 seconds
+          setTimeout(() => setIsRateLimited(false), 30000);
+        } else {
+          throw new Error(data.error);
+        }
+        return;
       }
 
       setMatches(data.matches || []);
       setHasAttempted(true);
     } catch (error: any) {
       console.error("Failed to fetch job matches:", error);
-      toast({
-        title: "Couldn't find job matches",
-        description: error.message || "Please try again later.",
-        variant: "destructive",
-      });
+      const errorMessage = error.message || "Please try again later.";
+      
+      // Check error message for rate limit / credits issues
+      if (errorMessage.includes("credits") || errorMessage.includes("402")) {
+        setError("AI credits exhausted. Please try again later.");
+        setIsRateLimited(true);
+      } else if (errorMessage.includes("Rate limit") || errorMessage.includes("429")) {
+        setError("Too many requests. Please wait a moment.");
+        setIsRateLimited(true);
+        setTimeout(() => setIsRateLimited(false), 30000);
+      } else {
+        setError(errorMessage);
+        toast({
+          title: "Couldn't find job matches",
+          description: errorMessage,
+          variant: "destructive",
+        });
+      }
       setHasAttempted(true);
     } finally {
       setLoading(false);
     }
-  }, [profile, toast]);
+  }, [profile, toast, isRateLimited]);
 
   // Auto-fetch on mount if profile has data
   React.useEffect(() => {
@@ -293,18 +321,20 @@ export const AIJobMatching = ({
             </motion.div>
           ))}
         </motion.div>
-      ) : hasAttempted ? (
+      ) : error || (hasAttempted && matches.length === 0) ? (
         <div className="text-center py-8">
           <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-3">
             <Briefcase className="h-6 w-6 text-muted-foreground" />
           </div>
           <p className="text-sm text-muted-foreground mb-3">
-            No matching jobs found based on your profile
+            {error || "No matching jobs found based on your profile"}
           </p>
-          <Button size="sm" variant="outline" onClick={fetchJobMatches}>
-            <RefreshCw className="h-4 w-4 mr-1.5" />
-            Try Again
-          </Button>
+          {!isRateLimited && (
+            <Button size="sm" variant="outline" onClick={fetchJobMatches}>
+              <RefreshCw className="h-4 w-4 mr-1.5" />
+              Try Again
+            </Button>
+          )}
         </div>
       ) : (
         <div className="text-center py-8">

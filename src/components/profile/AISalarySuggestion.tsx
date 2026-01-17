@@ -34,11 +34,14 @@ export const AISalarySuggestion = ({ profile, className }: AISalarySuggestionPro
   const [loading, setLoading] = React.useState(false);
   const [salaryData, setSalaryData] = React.useState<SalaryData | null>(null);
   const [hasAttempted, setHasAttempted] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+  const [isRateLimited, setIsRateLimited] = React.useState(false);
 
   const fetchSalarySuggestion = React.useCallback(async () => {
-    if (!profile) return;
+    if (!profile || isRateLimited) return;
 
     setLoading(true);
+    setError(null);
     try {
       const { data, error } = await supabase.functions.invoke("suggest-salary", {
         body: {
@@ -58,23 +61,46 @@ export const AISalarySuggestion = ({ profile, className }: AISalarySuggestionPro
       }
 
       if (data.error) {
-        throw new Error(data.error);
+        // Check for specific error types
+        if (data.error.includes("credits exhausted") || data.error.includes("402")) {
+          setError("AI credits exhausted. Please try again later.");
+          setIsRateLimited(true);
+        } else if (data.error.includes("Rate limit") || data.error.includes("429")) {
+          setError("Too many requests. Please wait a moment.");
+          setIsRateLimited(true);
+          setTimeout(() => setIsRateLimited(false), 30000);
+        } else {
+          throw new Error(data.error);
+        }
+        return;
       }
 
       setSalaryData(data);
       setHasAttempted(true);
     } catch (error: any) {
       console.error("Failed to fetch salary suggestion:", error);
-      toast({
-        title: "Couldn't generate salary estimate",
-        description: error.message || "Please try again later.",
-        variant: "destructive",
-      });
+      const errorMessage = error.message || "Please try again later.";
+      
+      if (errorMessage.includes("credits") || errorMessage.includes("402")) {
+        setError("AI credits exhausted. Please try again later.");
+        setIsRateLimited(true);
+      } else if (errorMessage.includes("Rate limit") || errorMessage.includes("429")) {
+        setError("Too many requests. Please wait a moment.");
+        setIsRateLimited(true);
+        setTimeout(() => setIsRateLimited(false), 30000);
+      } else {
+        setError(errorMessage);
+        toast({
+          title: "Couldn't generate salary estimate",
+          description: errorMessage,
+          variant: "destructive",
+        });
+      }
       setHasAttempted(true);
     } finally {
       setLoading(false);
     }
-  }, [profile, toast]);
+  }, [profile, toast, isRateLimited]);
 
   // Auto-fetch on mount if profile has data
   React.useEffect(() => {
@@ -153,6 +179,24 @@ export const AISalarySuggestion = ({ profile, className }: AISalarySuggestionPro
             <RefreshCw className="h-3 w-3 mr-1" />
             Refresh
           </Button>
+        </div>
+      ) : error ? (
+        <div className="text-center py-2">
+          <p className="text-sm text-muted-foreground mb-3">
+            {error}
+          </p>
+          {!isRateLimited && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={fetchSalarySuggestion}
+              disabled={loading}
+              className="gap-1.5"
+            >
+              <RefreshCw className="h-3.5 w-3.5" />
+              Try Again
+            </Button>
+          )}
         </div>
       ) : (
         <div className="text-center py-2">
