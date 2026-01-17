@@ -63,7 +63,7 @@ interface Profile {
   skills: string[] | null;
   user_type: string | null;
   resume_url?: string | null;
-  phone?: string | null;
+  // Note: phone field intentionally excluded for recruiter privacy
   experience?: ExperienceItem[] | null;
   education?: EducationItem[] | null;
   research_papers?: ResearchPaper[] | null;
@@ -72,6 +72,14 @@ interface Profile {
   teaching_philosophy?: string | null;
   professional_summary?: string | null;
 }
+
+// HTML escape function to prevent XSS attacks
+const escapeHtml = (text: string | null | undefined): string => {
+  if (!text) return '';
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+};
 
 interface Application {
   id: string;
@@ -199,8 +207,23 @@ const ApplicantDetailModal = ({
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
 
-    const candidateName = profile?.full_name || 'Candidate';
-    const role = profile?.role || profile?.headline || 'Academic Professional';
+    // Escape all user-controlled data to prevent XSS
+    const candidateName = escapeHtml(profile?.full_name) || 'Candidate';
+    const role = escapeHtml(profile?.role || profile?.headline) || 'Academic Professional';
+    const avatarInitials = escapeHtml(profile?.full_name?.slice(0, 2).toUpperCase()) || 'U';
+    
+    // Validate avatar URL - only allow http/https URLs
+    const isValidUrl = (url: string | null | undefined): boolean => {
+      if (!url) return false;
+      try {
+        const parsed = new URL(url);
+        return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+      } catch {
+        return false;
+      }
+    };
+    
+    const safeAvatarUrl = isValidUrl(profile?.avatar_url) ? profile?.avatar_url : null;
 
     printWindow.document.write(`
       <!DOCTYPE html>
@@ -305,38 +328,38 @@ const ApplicantDetailModal = ({
           </style>
         </head>
         <body>
-          <div class="category category-${category}">${categoryStyles.label} • ${categoryStyles.description}</div>
+          <div class="category category-${category}">${escapeHtml(categoryStyles.label)} • ${escapeHtml(categoryStyles.description)}</div>
           
           <div class="header">
             <div class="avatar">
-              ${profile?.avatar_url ? `<img src="${profile.avatar_url}" />` : (profile?.full_name?.slice(0, 2).toUpperCase() || 'U')}
+              ${safeAvatarUrl ? `<img src="${safeAvatarUrl}" />` : avatarInitials}
             </div>
             <div>
               <div class="name">${candidateName}</div>
               <div class="role">${role}</div>
               <div class="meta">
-                ${profile?.university ? `🎓 ${profile.university} • ` : ''}
-                ${profile?.location ? `📍 ${profile.location} • ` : ''}
+                ${profile?.university ? `🎓 ${escapeHtml(profile.university)} • ` : ''}
+                ${profile?.location ? `📍 ${escapeHtml(profile.location)} • ` : ''}
                 ${profile?.years_experience ? `💼 ${profile.years_experience} Years Experience` : ''}
               </div>
             </div>
           </div>
 
           <div class="applied-for">
-            <strong>Applied For:</strong> ${application.jobs.title} at ${application.jobs.institute}
+            <strong>Applied For:</strong> ${escapeHtml(application.jobs.title)} at ${escapeHtml(application.jobs.institute)}
           </div>
 
           ${(profile?.bio || profile?.professional_summary) ? `
             <div class="section">
               <div class="section-title">Professional Summary</div>
-              <div class="section-content">${profile.professional_summary || profile.bio}</div>
+              <div class="section-content">${escapeHtml(profile.professional_summary || profile.bio)}</div>
             </div>
           ` : ''}
 
           ${profile?.teaching_philosophy ? `
             <div class="section">
               <div class="section-title">Teaching Philosophy</div>
-              <div class="section-content">${profile.teaching_philosophy}</div>
+              <div class="section-content">${escapeHtml(profile.teaching_philosophy)}</div>
             </div>
           ` : ''}
 
@@ -345,10 +368,10 @@ const ApplicantDetailModal = ({
               <div class="section-title">Work Experience</div>
               ${profile.experience.map((exp: any) => `
                 <div class="timeline-item">
-                  <div class="timeline-role">${exp.role}</div>
-                  <div class="timeline-institution">${exp.institution}</div>
-                  <div class="timeline-year">${exp.year}${exp.isCurrent ? ' (Current)' : ''}</div>
-                  ${exp.description ? `<div class="timeline-desc">${exp.description}</div>` : ''}
+                  <div class="timeline-role">${escapeHtml(exp.role)}</div>
+                  <div class="timeline-institution">${escapeHtml(exp.institution)}</div>
+                  <div class="timeline-year">${escapeHtml(exp.year)}${exp.isCurrent ? ' (Current)' : ''}</div>
+                  ${exp.description ? `<div class="timeline-desc">${escapeHtml(exp.description)}</div>` : ''}
                 </div>
               `).join('')}
             </div>
@@ -359,9 +382,9 @@ const ApplicantDetailModal = ({
               <div class="section-title">Education</div>
               ${profile.education.map((edu: any) => `
                 <div class="edu-item">
-                  <strong>${edu.degree}</strong><br/>
-                  <span style="color: #3b82f6">${edu.institution}</span><br/>
-                  <span style="color: #9ca3af; font-size: 12px">${edu.years}</span>
+                  <strong>${escapeHtml(edu.degree)}</strong><br/>
+                  <span style="color: #3b82f6">${escapeHtml(edu.institution)}</span><br/>
+                  <span style="color: #9ca3af; font-size: 12px">${escapeHtml(edu.years)}</span>
                 </div>
               `).join('')}
             </div>
@@ -372,9 +395,9 @@ const ApplicantDetailModal = ({
               <div class="section-title">Research Papers (${profile.research_papers.length})</div>
               ${profile.research_papers.map((paper: any) => `
                 <div class="paper-item">
-                  <strong>${paper.title}</strong><br/>
-                  <span style="color: #6b7280; font-size: 12px">${paper.authors}</span><br/>
-                  <span style="color: #3b82f6; font-size: 12px">${paper.date}</span>
+                  <strong>${escapeHtml(paper.title)}</strong><br/>
+                  <span style="color: #6b7280; font-size: 12px">${escapeHtml(paper.authors)}</span><br/>
+                  <span style="color: #3b82f6; font-size: 12px">${escapeHtml(paper.date)}</span>
                 </div>
               `).join('')}
             </div>
@@ -386,7 +409,7 @@ const ApplicantDetailModal = ({
               ${profile.achievements.map((a: string) => `
                 <div class="achievement-item">
                   <span class="achievement-icon">🏆</span>
-                  <span>${a}</span>
+                  <span>${escapeHtml(a)}</span>
                 </div>
               `).join('')}
             </div>
@@ -395,21 +418,21 @@ const ApplicantDetailModal = ({
           ${Array.isArray(profile?.subjects) && profile.subjects.length > 0 ? `
             <div class="section">
               <div class="section-title">Subjects Taught</div>
-              <div>${profile.subjects.map((s: string) => `<span class="badge">${s}</span>`).join('')}</div>
+              <div>${profile.subjects.map((s: string) => `<span class="badge">${escapeHtml(s)}</span>`).join('')}</div>
             </div>
           ` : ''}
 
           ${Array.isArray(profile?.skills) && profile.skills.length > 0 ? `
             <div class="section">
               <div class="section-title">Skills</div>
-              <div>${profile.skills.map((s: string) => `<span class="badge">${s}</span>`).join('')}</div>
+              <div>${profile.skills.map((s: string) => `<span class="badge">${escapeHtml(s)}</span>`).join('')}</div>
             </div>
           ` : ''}
 
           ${application.cover_letter ? `
             <div class="section">
               <div class="section-title">Cover Letter</div>
-              <div class="section-content" style="white-space: pre-wrap;">${application.cover_letter}</div>
+              <div class="section-content" style="white-space: pre-wrap;">${escapeHtml(application.cover_letter)}</div>
             </div>
           ` : ''}
 
