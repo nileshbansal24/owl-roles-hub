@@ -307,10 +307,24 @@ const ApplicantDetailModal = ({
   const category = getCandidateCategory(profile);
   const categoryStyles = getCategoryStyles(category);
 
-  const handleDownloadResume = () => {
-    if (profile?.resume_url) {
-      window.open(profile.resume_url, "_blank");
+  const handleDownloadResume = async () => {
+    if (!profile?.resume_url) return;
+    
+    // Generate signed URL for private bucket (1 hour expiry)
+    const { data, error } = await supabase.storage
+      .from("resumes")
+      .createSignedUrl(profile.resume_url, 3600);
+    
+    if (error || !data?.signedUrl) {
+      toast({
+        title: "Error",
+        description: "Failed to generate resume download link",
+        variant: "destructive",
+      });
+      return;
     }
+    
+    window.open(data.signedUrl, "_blank");
   };
 
   const handlePrintProfile = () => {

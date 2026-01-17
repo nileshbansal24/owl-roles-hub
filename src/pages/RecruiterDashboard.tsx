@@ -592,8 +592,22 @@ const RecruiterDashboard = () => {
   }, [activeTab, filteredApplications, selectedAppIds, handleBulkAction, clearSelection, toast]);
 
 
-  const handleDownloadResume = (resumeUrl: string, applicantName: string) => {
-    window.open(resumeUrl, "_blank");
+  const handleDownloadResume = async (resumePath: string, applicantName: string) => {
+    // Generate signed URL for private bucket (1 hour expiry)
+    const { data, error } = await supabase.storage
+      .from("resumes")
+      .createSignedUrl(resumePath, 3600);
+    
+    if (error || !data?.signedUrl) {
+      toast({
+        title: "Error",
+        description: "Failed to generate resume download link",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    window.open(data.signedUrl, "_blank");
     toast({
       title: "Opening resume",
       description: `Opening resume for ${applicantName}`,

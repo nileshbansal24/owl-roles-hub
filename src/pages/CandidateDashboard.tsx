@@ -283,20 +283,17 @@ const CandidateDashboard = () => {
 
       if (uploadError) throw uploadError;
 
-      const {
-        data: { publicUrl },
-      } = supabase.storage.from("resumes").getPublicUrl(filePath);
-
-      const resumeUrl = `${publicUrl}?t=${Date.now()}`;
+      // Store just the file path (not public URL) since bucket is private
+      const resumePath = filePath;
 
       const { error: updateError } = await supabase
         .from("profiles")
-        .update({ resume_url: resumeUrl })
+        .update({ resume_url: resumePath })
         .eq("id", user.id);
 
       if (updateError) throw updateError;
 
-      setProfile((prev) => (prev ? { ...prev, resume_url: resumeUrl } : null));
+      setProfile((prev) => (prev ? { ...prev, resume_url: resumePath } : null));
       toast({ title: "Resume uploaded!", description: "Your resume has been uploaded successfully." });
     } catch (error: any) {
       console.error("Error uploading resume:", error);
@@ -453,7 +450,17 @@ const CandidateDashboard = () => {
             fileName={profile?.full_name ? `${profile.full_name}_CV.pdf` : "Resume.pdf"}
             fileSize="PDF"
             onUpload={() => resumeInputRef.current?.click()}
-            onView={() => profile?.resume_url && window.open(profile.resume_url, "_blank")}
+            onView={async () => {
+              if (!profile?.resume_url) return;
+              const { data, error } = await supabase.storage
+                .from("resumes")
+                .createSignedUrl(profile.resume_url, 3600);
+              if (data?.signedUrl) {
+                window.open(data.signedUrl, "_blank");
+              } else {
+                toast({ title: "Error", description: "Failed to open resume", variant: "destructive" });
+              }
+            }}
             uploading={uploadingResume}
           />
         </SidebarCard>
