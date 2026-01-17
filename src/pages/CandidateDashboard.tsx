@@ -356,6 +356,21 @@ const CandidateDashboard = () => {
       animate="visible"
       className="space-y-4"
     >
+      {/* AI Suggested Salary */}
+      <motion.div variants={itemVariants}>
+        <SidebarCard title="AI-Suggested Salary" collapsible={false}>
+          <AISalarySuggestion
+            profile={{
+              role: profile?.role,
+              headline: profile?.headline,
+              yearsExperience: profile?.years_experience,
+              location: profile?.location,
+              skills: profile?.skills,
+              university: profile?.university,
+            }}
+          />
+        </SidebarCard>
+      </motion.div>
 
       {/* Resume */}
       <motion.div variants={itemVariants}>
@@ -447,6 +462,24 @@ const CandidateDashboard = () => {
       animate="visible"
       className="space-y-4 md:space-y-5"
     >
+      {/* AI Job Recommendations */}
+      <motion.div variants={itemVariants}>
+        <ProfileCard title="" className="overflow-hidden">
+          <AIJobMatching
+            profile={{
+              role: profile?.role,
+              headline: profile?.headline,
+              yearsExperience: profile?.years_experience,
+              location: profile?.location,
+              skills: profile?.skills,
+              university: profile?.university,
+              bio: profile?.bio,
+            }}
+            onViewJob={(jobId) => navigate(`/?job=${jobId}`)}
+          />
+        </ProfileCard>
+      </motion.div>
+
       {/* Professional Summary */}
       <motion.div variants={itemVariants}>
         <ProfileCard
