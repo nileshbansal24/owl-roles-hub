@@ -79,7 +79,7 @@ interface Profile {
   skills: string[] | null;
   user_type: string | null;
   resume_url?: string | null;
-  phone?: string | null;
+  // Note: phone field intentionally excluded for recruiter privacy
   experience?: ExperienceItem[] | null;
   education?: EducationItem[] | null;
   research_papers?: ResearchPaper[] | null;
@@ -177,12 +177,13 @@ const RecruiterDashboard = () => {
       }
 
       // Fetch applicant profiles separately for each application
+      // Note: phone field is intentionally excluded for privacy - recruiters should not access contact info directly
       const applicationsWithProfiles: Application[] = [];
       if (appsData) {
         for (const app of appsData) {
           const { data: profileData } = await supabase
             .from("profiles")
-            .select("id, full_name, avatar_url, university, role, bio, years_experience, location, headline, skills, user_type, resume_url, phone, experience, education, research_papers, achievements, subjects, teaching_philosophy, professional_summary")
+            .select("id, full_name, avatar_url, university, role, bio, years_experience, location, headline, skills, user_type, resume_url, experience, education, research_papers, achievements, subjects, teaching_philosophy, professional_summary")
             .eq("id", app.applicant_id)
             .maybeSingle();
           
