@@ -11,6 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -139,9 +141,35 @@ const RecruiterDashboard = () => {
   const [experienceFilter, setExperienceFilter] = useState("");
   const [selectedJobFilter, setSelectedJobFilter] = useState<string>("all");
   const [selectedStatusFilter, setSelectedStatusFilter] = useState<string>("all");
+  const [completenessFilter, setCompletenessFilter] = useState(false);
   const [activeTab, setActiveTab] = useState("resdex");
   const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
   const [showApplicantModal, setShowApplicantModal] = useState(false);
+
+  // Calculate profile completeness
+  const calculateCompleteness = (profile: Profile | null): number => {
+    if (!profile) return 0;
+    const experience = Array.isArray(profile.experience) ? profile.experience : [];
+    const education = Array.isArray(profile.education) ? profile.education : [];
+    const researchPapers = Array.isArray(profile.research_papers) ? profile.research_papers : [];
+    const achievements = Array.isArray(profile.achievements) ? profile.achievements : [];
+    
+    const fields = [
+      !!profile.full_name,
+      !!profile.avatar_url,
+      !!(profile.role || profile.headline),
+      !!profile.university,
+      !!profile.location,
+      !!(profile.bio || profile.professional_summary),
+      experience.length > 0,
+      education.length > 0,
+      (profile.skills?.length || 0) > 0,
+      !!profile.resume_url,
+      researchPapers.length > 0,
+      achievements.length > 0,
+    ];
+    return Math.round((fields.filter(Boolean).length / fields.length) * 100);
+  };
 
   useEffect(() => {
     if (!user) {
@@ -262,7 +290,8 @@ const RecruiterDashboard = () => {
   const filteredApplications = applications.filter((app) => {
     const matchesJob = selectedJobFilter === "all" || app.job_id === selectedJobFilter;
     const matchesStatus = selectedStatusFilter === "all" || app.status === selectedStatusFilter;
-    return matchesJob && matchesStatus;
+    const matchesCompleteness = !completenessFilter || calculateCompleteness(app.profiles) >= 80;
+    return matchesJob && matchesStatus && matchesCompleteness;
   });
 
   const handleDownloadResume = (resumeUrl: string, applicantName: string) => {
@@ -672,6 +701,17 @@ const RecruiterDashboard = () => {
                     </SelectContent>
                   </Select>
                   
+                  <div className="flex items-center space-x-2 bg-secondary/50 px-3 py-1.5 rounded-lg">
+                    <Switch
+                      id="completeness-filter"
+                      checked={completenessFilter}
+                      onCheckedChange={setCompletenessFilter}
+                    />
+                    <Label htmlFor="completeness-filter" className="text-sm cursor-pointer whitespace-nowrap">
+                      80%+ Complete
+                    </Label>
+                  </div>
+                  
                   <p className="text-sm text-muted-foreground">
                     {filteredApplications.length} application{filteredApplications.length !== 1 ? "s" : ""}
                   </p>
@@ -704,11 +744,22 @@ const RecruiterDashboard = () => {
                           <div className="flex-1">
                             <div className="flex items-start justify-between gap-4">
                               <div>
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-2 flex-wrap">
                                   <h4 className="font-heading font-semibold text-foreground">
                                     {app.profiles?.full_name || "Anonymous"}
                                   </h4>
                                   {getCategoryBadge(getCandidateCategory(app.profiles))}
+                                  {(() => {
+                                    const completeness = calculateCompleteness(app.profiles);
+                                    const color = completeness >= 80 ? "text-green-600 bg-green-500/10" : 
+                                                  completeness >= 50 ? "text-amber-600 bg-amber-500/10" : 
+                                                  "text-red-600 bg-red-500/10";
+                                    return (
+                                      <span className={`text-xs px-1.5 py-0.5 rounded ${color}`}>
+                                        {completeness}%
+                                      </span>
+                                    );
+                                  })()}
                                 </div>
                                 <p className="text-sm text-muted-foreground">
                                   Applied for <span className="text-primary font-medium">{app.jobs.title}</span> at {app.jobs.institute}
