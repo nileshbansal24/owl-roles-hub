@@ -119,6 +119,7 @@ interface Application {
   id: string;
   job_id: string;
   applicant_id: string;
+  applicant_email: string | null;
   cover_letter: string | null;
   status: string;
   created_at: string;
@@ -320,7 +321,7 @@ const RecruiterDashboard = () => {
     // CSV headers
     const headers = [
       "Name",
-      "Applicant ID",
+      "Email",
       "Role",
       "University",
       "Location",
@@ -339,7 +340,7 @@ const RecruiterDashboard = () => {
       const completeness = calculateCompleteness(profile);
       return [
         profile?.full_name || "N/A",
-        app.applicant_id || "N/A",
+        app.applicant_email || "N/A",
         profile?.role || "N/A",
         profile?.university || "N/A",
         profile?.location || "N/A",

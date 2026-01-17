@@ -80,6 +80,7 @@ const QuickApplyModal = ({
       const { error } = await supabase.from("job_applications").insert({
         job_id: job.id,
         applicant_id: user.id,
+        applicant_email: user.email || null,
         cover_letter: coverLetter || null,
         resume_url: resumeUrl || null,
         status: "pending",
