@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   Dialog,
@@ -202,7 +202,6 @@ const ApplicantDetailModal = ({
   onOpenChange,
   onStatusUpdate,
 }: ApplicantDetailModalProps) => {
-  const printRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
   const { toast } = useToast();
   
@@ -312,9 +311,6 @@ const ApplicantDetailModal = ({
   };
 
   const handlePrintProfile = () => {
-    const printContent = printRef.current;
-    if (!printContent) return;
-
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
 
@@ -704,13 +700,13 @@ const ApplicantDetailModal = ({
               </div>
             )}
 
-            {/* Work Experience */}
-            {experience.length > 0 && (
-              <div>
-                <h4 className="font-heading font-semibold text-foreground mb-3 flex items-center gap-2">
-                  <Briefcase className="h-4 w-4 text-primary" />
-                  Work Experience
-                </h4>
+            {/* Work Experience - Always show */}
+            <div>
+              <h4 className="font-heading font-semibold text-foreground mb-3 flex items-center gap-2">
+                <Briefcase className="h-4 w-4 text-primary" />
+                Work Experience
+              </h4>
+              {experience.length > 0 ? (
                 <div className="space-y-4">
                   {experience.map((exp, index) => (
                     <div key={index} className="relative pl-6 pb-4 border-l-2 border-primary/20 last:pb-0">
@@ -735,16 +731,18 @@ const ApplicantDetailModal = ({
                     </div>
                   ))}
                 </div>
-              </div>
-            )}
+              ) : (
+                <p className="text-sm text-muted-foreground italic">Not provided by candidate</p>
+              )}
+            </div>
 
-            {/* Education */}
-            {education.length > 0 && (
-              <div>
-                <h4 className="font-heading font-semibold text-foreground mb-3 flex items-center gap-2">
-                  <GraduationCap className="h-4 w-4 text-primary" />
-                  Education
-                </h4>
+            {/* Education - Always show */}
+            <div>
+              <h4 className="font-heading font-semibold text-foreground mb-3 flex items-center gap-2">
+                <GraduationCap className="h-4 w-4 text-primary" />
+                Education
+              </h4>
+              {education.length > 0 ? (
                 <div className="space-y-3">
                   {education.map((edu, index) => (
                     <div key={index} className="p-3 rounded-lg bg-muted/50 border">
@@ -754,16 +752,18 @@ const ApplicantDetailModal = ({
                     </div>
                   ))}
                 </div>
-              </div>
-            )}
+              ) : (
+                <p className="text-sm text-muted-foreground italic">Not provided by candidate</p>
+              )}
+            </div>
 
-            {/* Research Papers */}
-            {researchPapers.length > 0 && (
-              <div>
-                <h4 className="font-heading font-semibold text-foreground mb-3 flex items-center gap-2">
-                  <BookOpen className="h-4 w-4 text-primary" />
-                  Research Papers ({researchPapers.length})
-                </h4>
+            {/* Research Papers - Always show */}
+            <div>
+              <h4 className="font-heading font-semibold text-foreground mb-3 flex items-center gap-2">
+                <BookOpen className="h-4 w-4 text-primary" />
+                Research Papers {researchPapers.length > 0 && `(${researchPapers.length})`}
+              </h4>
+              {researchPapers.length > 0 ? (
                 <div className="space-y-3">
                   {researchPapers.map((paper, index) => (
                     <div key={index} className="p-3 rounded-lg bg-muted/50 border">
@@ -773,16 +773,18 @@ const ApplicantDetailModal = ({
                     </div>
                   ))}
                 </div>
-              </div>
-            )}
+              ) : (
+                <p className="text-sm text-muted-foreground italic">Not provided by candidate</p>
+              )}
+            </div>
 
-            {/* Achievements */}
-            {achievements.length > 0 && (
-              <div>
-                <h4 className="font-heading font-semibold text-foreground mb-3 flex items-center gap-2">
-                  <Trophy className="h-4 w-4 text-primary" />
-                  Achievements & Awards
-                </h4>
+            {/* Achievements - Always show */}
+            <div>
+              <h4 className="font-heading font-semibold text-foreground mb-3 flex items-center gap-2">
+                <Trophy className="h-4 w-4 text-primary" />
+                Achievements & Awards
+              </h4>
+              {achievements.length > 0 ? (
                 <ul className="space-y-2">
                   {achievements.map((achievement, index) => (
                     <li key={index} className="flex items-start gap-2 text-sm text-muted-foreground">
@@ -791,16 +793,18 @@ const ApplicantDetailModal = ({
                     </li>
                   ))}
                 </ul>
-              </div>
-            )}
+              ) : (
+                <p className="text-sm text-muted-foreground italic">Not provided by candidate</p>
+              )}
+            </div>
 
-            {/* Subjects Taught */}
-            {subjects.length > 0 && (
-              <div>
-                <h4 className="font-heading font-semibold text-foreground mb-2 flex items-center gap-2">
-                  <Tag className="h-4 w-4 text-primary" />
-                  Subjects Taught
-                </h4>
+            {/* Subjects Taught - Always show */}
+            <div>
+              <h4 className="font-heading font-semibold text-foreground mb-2 flex items-center gap-2">
+                <Tag className="h-4 w-4 text-primary" />
+                Subjects Taught
+              </h4>
+              {subjects.length > 0 ? (
                 <div className="flex flex-wrap gap-2">
                   {subjects.map((subject, index) => (
                     <Badge key={index} variant="outline" className="bg-primary/5">
@@ -808,16 +812,18 @@ const ApplicantDetailModal = ({
                     </Badge>
                   ))}
                 </div>
-              </div>
-            )}
+              ) : (
+                <p className="text-sm text-muted-foreground italic">Not provided by candidate</p>
+              )}
+            </div>
 
-            {/* Skills */}
-            {profile?.skills && profile.skills.length > 0 && (
-              <div>
-                <h4 className="font-heading font-semibold text-foreground mb-2 flex items-center gap-2">
-                  <Star className="h-4 w-4 text-primary" />
-                  Skills
-                </h4>
+            {/* Skills - Always show */}
+            <div>
+              <h4 className="font-heading font-semibold text-foreground mb-2 flex items-center gap-2">
+                <Star className="h-4 w-4 text-primary" />
+                Skills
+              </h4>
+              {profile?.skills && profile.skills.length > 0 ? (
                 <div className="flex flex-wrap gap-2">
                   {profile.skills.map((skill, index) => (
                     <Badge key={index} variant="secondary">
@@ -825,8 +831,10 @@ const ApplicantDetailModal = ({
                     </Badge>
                   ))}
                 </div>
-              </div>
-            )}
+              ) : (
+                <p className="text-sm text-muted-foreground italic">Not provided by candidate</p>
+              )}
+            </div>
 
             {/* Cover Letter */}
             {application.cover_letter && (
