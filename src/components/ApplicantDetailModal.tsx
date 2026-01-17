@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   Dialog,
@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Textarea } from "@/components/ui/textarea";
 import {
   MapPin,
   GraduationCap,
@@ -27,8 +28,23 @@ import {
   Lightbulb,
   Tag,
   Printer,
+  MessageSquare,
+  Plus,
+  Trash2,
+  Loader2,
+  StickyNote,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
+
+interface RecruiterNote {
+  id: string;
+  note: string;
+  created_at: string;
+  updated_at: string;
+}
 
 interface ExperienceItem {
   year: string;
@@ -187,6 +203,101 @@ const ApplicantDetailModal = ({
   onStatusUpdate,
 }: ApplicantDetailModalProps) => {
   const printRef = useRef<HTMLDivElement>(null);
+  const { user } = useAuth();
+  const { toast } = useToast();
+  
+  // Notes state
+  const [notes, setNotes] = useState<RecruiterNote[]>([]);
+  const [newNote, setNewNote] = useState("");
+  const [loadingNotes, setLoadingNotes] = useState(false);
+  const [savingNote, setSavingNote] = useState(false);
+  const [deletingNoteId, setDeletingNoteId] = useState<string | null>(null);
+  
+  // Fetch notes when modal opens
+  useEffect(() => {
+    const fetchNotes = async () => {
+      if (!application || !open || !user) return;
+      
+      setLoadingNotes(true);
+      const { data, error } = await supabase
+        .from("recruiter_notes")
+        .select("id, note, created_at, updated_at")
+        .eq("application_id", application.id)
+        .eq("recruiter_id", user.id)
+        .order("created_at", { ascending: false });
+      
+      if (error) {
+        console.error("Error fetching notes:", error);
+      } else {
+        setNotes((data as RecruiterNote[]) || []);
+      }
+      setLoadingNotes(false);
+    };
+    
+    fetchNotes();
+  }, [application?.id, open, user]);
+  
+  // Reset state when modal closes
+  useEffect(() => {
+    if (!open) {
+      setNewNote("");
+    }
+  }, [open]);
+  
+  const handleAddNote = async () => {
+    if (!newNote.trim() || !application || !user) return;
+    
+    setSavingNote(true);
+    const { data, error } = await supabase
+      .from("recruiter_notes")
+      .insert({
+        recruiter_id: user.id,
+        applicant_id: application.applicant_id,
+        application_id: application.id,
+        note: newNote.trim(),
+      })
+      .select("id, note, created_at, updated_at")
+      .single();
+    
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to save note",
+        variant: "destructive",
+      });
+    } else if (data) {
+      setNotes([data as RecruiterNote, ...notes]);
+      setNewNote("");
+      toast({
+        title: "Note saved",
+        description: "Your private note has been added.",
+      });
+    }
+    setSavingNote(false);
+  };
+  
+  const handleDeleteNote = async (noteId: string) => {
+    setDeletingNoteId(noteId);
+    const { error } = await supabase
+      .from("recruiter_notes")
+      .delete()
+      .eq("id", noteId);
+    
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete note",
+        variant: "destructive",
+      });
+    } else {
+      setNotes(notes.filter(n => n.id !== noteId));
+      toast({
+        title: "Note deleted",
+        description: "Your note has been removed.",
+      });
+    }
+    setDeletingNoteId(null);
+  };
   
   if (!application) return null;
 
@@ -758,6 +869,80 @@ const ApplicantDetailModal = ({
                 <div className="p-4 rounded-lg bg-muted/50 border border-dashed text-center">
                   <FileText className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
                   <p className="text-sm text-muted-foreground">No resume uploaded</p>
+                </div>
+              )}
+            </div>
+
+            <Separator />
+
+            {/* Private Notes Section */}
+            <div>
+              <h4 className="font-heading font-semibold text-foreground mb-3 flex items-center gap-2">
+                <StickyNote className="h-4 w-4 text-primary" />
+                Private Notes
+                <Badge variant="secondary" className="text-xs ml-2">Only visible to you</Badge>
+              </h4>
+              
+              {/* Add new note */}
+              <div className="space-y-2 mb-4">
+                <Textarea
+                  placeholder="Add a private note about this applicant..."
+                  value={newNote}
+                  onChange={(e) => setNewNote(e.target.value)}
+                  className="min-h-[80px] resize-none"
+                />
+                <Button 
+                  onClick={handleAddNote} 
+                  disabled={!newNote.trim() || savingNote}
+                  size="sm"
+                  className="gap-2"
+                >
+                  {savingNote ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Plus className="h-4 w-4" />
+                  )}
+                  Add Note
+                </Button>
+              </div>
+              
+              {/* Notes list */}
+              {loadingNotes ? (
+                <div className="flex items-center justify-center py-4">
+                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                </div>
+              ) : notes.length === 0 ? (
+                <div className="p-4 rounded-lg bg-muted/50 border border-dashed text-center">
+                  <MessageSquare className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                  <p className="text-sm text-muted-foreground">No notes yet. Add your first note above.</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {notes.map((note) => (
+                    <div key={note.id} className="p-3 rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800">
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="text-sm text-foreground whitespace-pre-wrap flex-1">
+                          {note.note}
+                        </p>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive shrink-0"
+                          onClick={() => handleDeleteNote(note.id)}
+                          disabled={deletingNoteId === note.id}
+                        >
+                          {deletingNoteId === note.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Trash2 className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-2">
+                        {formatDistanceToNow(new Date(note.created_at), { addSuffix: true })}
+                      </p>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
