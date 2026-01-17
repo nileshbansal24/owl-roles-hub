@@ -191,6 +191,44 @@ export type Database = {
         }
         Relationships: []
       }
+      recruiter_notes: {
+        Row: {
+          applicant_id: string
+          application_id: string
+          created_at: string
+          id: string
+          note: string
+          recruiter_id: string
+          updated_at: string
+        }
+        Insert: {
+          applicant_id: string
+          application_id: string
+          created_at?: string
+          id?: string
+          note: string
+          recruiter_id: string
+          updated_at?: string
+        }
+        Update: {
+          applicant_id?: string
+          application_id?: string
+          created_at?: string
+          id?: string
+          note?: string
+          recruiter_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recruiter_notes_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "job_applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       jobs_public: {
