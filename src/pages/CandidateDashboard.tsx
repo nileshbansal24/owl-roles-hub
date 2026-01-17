@@ -113,44 +113,15 @@ const CandidateDashboard = () => {
   const [uploadingResume, setUploadingResume] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
 
-  // Editable placeholder data
-  const [experienceTimeline, setExperienceTimeline] = useState<ExperienceItem[]>([
-    {
-      year: "Aug 2020 - Present",
-      role: "Position Title Placeholder",
-      institution: "Institution Name Placeholder",
-      description: "Role description placeholder. Add details about your responsibilities and achievements.",
-      isCurrent: true,
-    },
-  ]);
-
+  // Editable data (empty by default - users fill in their own info)
+  const [experienceTimeline, setExperienceTimeline] = useState<ExperienceItem[]>([]);
   const [researchPapers, setResearchPapers] = useState<ResearchPaper[]>([]);
-
-  const [education, setEducation] = useState<EducationItem[]>([
-    {
-      degree: "Degree Placeholder",
-      institution: "University Placeholder",
-      years: "Year - Year",
-    },
-  ]);
-
-  const [subjects, setSubjects] = useState<string[]>([
-    "Subject 1", "Subject 2", "Subject 3", "Subject 4"
-  ]);
-
-  const [skills, setSkills] = useState<string[]>([
-    "Skill 1", "Skill 2", "Skill 3", "Skill 4"
-  ]);
-
+  const [education, setEducation] = useState<EducationItem[]>([]);
+  const [subjects, setSubjects] = useState<string[]>([]);
+  const [skills, setSkills] = useState<string[]>([]);
   const [achievements, setAchievements] = useState<string[]>([]);
-
-  const [professionalSummary, setProfessionalSummary] = useState(
-    "Professional summary placeholder. Describe your academic background, research interests, and career objectives here."
-  );
-
-  const [teachingPhilosophy, setTeachingPhilosophy] = useState(
-    "Teaching/Working philosophy placeholder. Share your approach to education, mentorship, and professional practice here."
-  );
+  const [professionalSummary, setProfessionalSummary] = useState("");
+  const [teachingPhilosophy, setTeachingPhilosophy] = useState("");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -306,6 +277,9 @@ const CandidateDashboard = () => {
       case "research":
         setResearchPapers(data);
         break;
+      case "education":
+        setEducation(data);
+        break;
       case "skills":
         setSkills(data);
         break;
@@ -343,6 +317,8 @@ const CandidateDashboard = () => {
         return experienceTimeline;
       case "research":
         return researchPapers;
+      case "education":
+        return education;
       case "skills":
         return skills;
       case "achievements":
@@ -570,7 +546,20 @@ const CandidateDashboard = () => {
 
       {/* Education */}
       <motion.div variants={itemVariants}>
-        <ProfileCard title="Education" onEdit={() => {}}>
+        <ProfileCard
+          title="Education"
+          headerAction={
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 px-2"
+              onClick={() => openSectionEdit("education")}
+            >
+              <Plus className="h-4 w-4 mr-1" />
+              <span className="hidden sm:inline">Add</span>
+            </Button>
+          }
+        >
           <EducationList items={education} />
         </ProfileCard>
       </motion.div>
