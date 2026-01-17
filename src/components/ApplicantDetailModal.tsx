@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   MapPin,
   GraduationCap,
@@ -16,13 +17,36 @@ import {
   Clock,
   Download,
   FileText,
-  Mail,
   Award,
   Star,
   User,
   Building2,
+  BookOpen,
+  Trophy,
+  Lightbulb,
+  Tag,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+
+interface ExperienceItem {
+  year: string;
+  role: string;
+  institution: string;
+  description: string;
+  isCurrent: boolean;
+}
+
+interface EducationItem {
+  degree: string;
+  institution: string;
+  years: string;
+}
+
+interface ResearchPaper {
+  title: string;
+  authors: string;
+  date: string;
+}
 
 interface Profile {
   id: string;
@@ -37,6 +61,14 @@ interface Profile {
   skills: string[] | null;
   user_type: string | null;
   resume_url?: string | null;
+  phone?: string | null;
+  experience?: ExperienceItem[] | null;
+  education?: EducationItem[] | null;
+  research_papers?: ResearchPaper[] | null;
+  achievements?: string[] | null;
+  subjects?: string[] | null;
+  teaching_philosophy?: string | null;
+  professional_summary?: string | null;
 }
 
 interface Application {
@@ -171,180 +203,321 @@ const ApplicantDetailModal = ({
     }
   };
 
+  // Parse JSON fields safely
+  const experience: ExperienceItem[] = Array.isArray(profile?.experience) ? profile.experience : [];
+  const education: EducationItem[] = Array.isArray(profile?.education) ? profile.education : [];
+  const researchPapers: ResearchPaper[] = Array.isArray(profile?.research_papers) ? profile.research_papers : [];
+  const achievements: string[] = Array.isArray(profile?.achievements) ? profile.achievements : [];
+  const subjects: string[] = Array.isArray(profile?.subjects) ? profile.subjects : [];
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-3xl max-h-[90vh] p-0 overflow-hidden">
+        <DialogHeader className="px-6 pt-6 pb-2">
           <DialogTitle className="font-heading text-xl">Applicant Profile</DialogTitle>
         </DialogHeader>
 
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-          className="space-y-6"
-        >
-          {/* Category Badge */}
-          <div className="flex justify-center">
-            <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full ${categoryStyles.bg} ${categoryStyles.text} shadow-lg`}>
-              {categoryStyles.icon}
-              <span className="font-bold">{categoryStyles.label}</span>
-              <span className="text-sm opacity-80">• {categoryStyles.description}</span>
+        <ScrollArea className="h-[calc(90vh-100px)] px-6 pb-6">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+            className="space-y-6"
+          >
+            {/* Category Badge */}
+            <div className="flex justify-center">
+              <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full ${categoryStyles.bg} ${categoryStyles.text} shadow-lg`}>
+                {categoryStyles.icon}
+                <span className="font-bold">{categoryStyles.label}</span>
+                <span className="text-sm opacity-80">• {categoryStyles.description}</span>
+              </div>
             </div>
-          </div>
 
-          {/* Profile Header */}
-          <div className="flex items-start gap-4">
-            <Avatar className="h-20 w-20 border-4 border-background shadow-lg">
-              <AvatarImage src={profile?.avatar_url || ""} />
-              <AvatarFallback className="bg-primary text-primary-foreground text-2xl font-heading font-bold">
-                {profile?.full_name?.slice(0, 2).toUpperCase() || "U"}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex-1">
-              <div className="flex items-start justify-between">
-                <div>
-                  <h3 className="font-heading font-bold text-xl text-foreground">
-                    {profile?.full_name || "Anonymous"}
-                  </h3>
-                  <p className="text-primary font-medium">
-                    {profile?.role || profile?.headline || "Academic Professional"}
-                  </p>
+            {/* Profile Header */}
+            <div className="flex items-start gap-4">
+              <Avatar className="h-20 w-20 border-4 border-background shadow-lg">
+                <AvatarImage src={profile?.avatar_url || ""} />
+                <AvatarFallback className="bg-primary text-primary-foreground text-2xl font-heading font-bold">
+                  {profile?.full_name?.slice(0, 2).toUpperCase() || "U"}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h3 className="font-heading font-bold text-xl text-foreground">
+                      {profile?.full_name || "Anonymous"}
+                    </h3>
+                    <p className="text-primary font-medium">
+                      {profile?.role || profile?.headline || "Academic Professional"}
+                    </p>
+                  </div>
+                  <Badge className={getStatusColor(application.status)}>
+                    {application.status}
+                  </Badge>
                 </div>
-                <Badge className={getStatusColor(application.status)}>
-                  {application.status}
-                </Badge>
-              </div>
-              
-              <div className="flex flex-wrap items-center gap-3 mt-2 text-sm text-muted-foreground">
-                {profile?.university && (
-                  <div className="flex items-center gap-1">
-                    <GraduationCap className="h-4 w-4" />
-                    <span>{profile.university}</span>
-                  </div>
-                )}
-                {profile?.location && (
-                  <div className="flex items-center gap-1">
-                    <MapPin className="h-4 w-4" />
-                    <span>{profile.location}</span>
-                  </div>
-                )}
-                {profile?.years_experience !== null && profile?.years_experience !== undefined && (
-                  <div className="flex items-center gap-1">
-                    <Briefcase className="h-4 w-4" />
-                    <span>{profile.years_experience} Years Experience</span>
-                  </div>
-                )}
+                
+                <div className="flex flex-wrap items-center gap-3 mt-2 text-sm text-muted-foreground">
+                  {profile?.university && (
+                    <div className="flex items-center gap-1">
+                      <GraduationCap className="h-4 w-4" />
+                      <span>{profile.university}</span>
+                    </div>
+                  )}
+                  {profile?.location && (
+                    <div className="flex items-center gap-1">
+                      <MapPin className="h-4 w-4" />
+                      <span>{profile.location}</span>
+                    </div>
+                  )}
+                  {profile?.years_experience !== null && profile?.years_experience !== undefined && (
+                    <div className="flex items-center gap-1">
+                      <Briefcase className="h-4 w-4" />
+                      <span>{profile.years_experience} Years Experience</span>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
 
-          <Separator />
+            <Separator />
 
-          {/* Applied For */}
-          <div className="p-4 rounded-lg bg-secondary/50">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
-              <Building2 className="h-4 w-4" />
-              Applied For
-            </div>
-            <p className="font-medium text-foreground">{application.jobs.title}</p>
-            <p className="text-sm text-muted-foreground">{application.jobs.institute}</p>
-            <p className="text-xs text-muted-foreground mt-1">
-              <Clock className="h-3 w-3 inline mr-1" />
-              {formatDistanceToNow(new Date(application.created_at), { addSuffix: true })}
-            </p>
-          </div>
-
-          {/* Bio */}
-          {profile?.bio && (
-            <div>
-              <h4 className="font-heading font-semibold text-foreground mb-2">About</h4>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                {profile.bio}
+            {/* Applied For */}
+            <div className="p-4 rounded-lg bg-secondary/50">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
+                <Building2 className="h-4 w-4" />
+                Applied For
+              </div>
+              <p className="font-medium text-foreground">{application.jobs.title}</p>
+              <p className="text-sm text-muted-foreground">{application.jobs.institute}</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                <Clock className="h-3 w-3 inline mr-1" />
+                {formatDistanceToNow(new Date(application.created_at), { addSuffix: true })}
               </p>
             </div>
-          )}
 
-          {/* Skills */}
-          {profile?.skills && profile.skills.length > 0 && (
-            <div>
-              <h4 className="font-heading font-semibold text-foreground mb-2">Skills</h4>
-              <div className="flex flex-wrap gap-2">
-                {profile.skills.map((skill, index) => (
-                  <Badge key={index} variant="secondary">
-                    {skill}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Cover Letter */}
-          {application.cover_letter && (
-            <div>
-              <h4 className="font-heading font-semibold text-foreground mb-2">Cover Letter</h4>
-              <div className="p-4 rounded-lg bg-muted/50 border">
-                <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
-                  {application.cover_letter}
+            {/* Professional Summary / Bio */}
+            {(profile?.bio || profile?.professional_summary) && (
+              <div>
+                <h4 className="font-heading font-semibold text-foreground mb-2 flex items-center gap-2">
+                  <User className="h-4 w-4 text-primary" />
+                  Professional Summary
+                </h4>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  {profile.professional_summary || profile.bio}
                 </p>
               </div>
-            </div>
-          )}
+            )}
 
-          {/* Resume Section */}
-          <div>
-            <h4 className="font-heading font-semibold text-foreground mb-2">Resume</h4>
-            {profile?.resume_url ? (
-              <div className="p-4 rounded-lg bg-primary/5 border border-primary/20 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <FileText className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <p className="font-medium text-foreground">Resume Available</p>
-                    <p className="text-xs text-muted-foreground">Click to view or download</p>
-                  </div>
-                </div>
-                <Button onClick={handleDownloadResume} className="gap-2">
-                  <Download className="h-4 w-4" />
-                  Download
-                </Button>
-              </div>
-            ) : (
-              <div className="p-4 rounded-lg bg-muted/50 border border-dashed text-center">
-                <FileText className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-                <p className="text-sm text-muted-foreground">No resume uploaded</p>
+            {/* Teaching Philosophy */}
+            {profile?.teaching_philosophy && (
+              <div>
+                <h4 className="font-heading font-semibold text-foreground mb-2 flex items-center gap-2">
+                  <Lightbulb className="h-4 w-4 text-primary" />
+                  Teaching Philosophy
+                </h4>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  {profile.teaching_philosophy}
+                </p>
               </div>
             )}
-          </div>
 
-          <Separator />
+            {/* Work Experience */}
+            {experience.length > 0 && (
+              <div>
+                <h4 className="font-heading font-semibold text-foreground mb-3 flex items-center gap-2">
+                  <Briefcase className="h-4 w-4 text-primary" />
+                  Work Experience
+                </h4>
+                <div className="space-y-4">
+                  {experience.map((exp, index) => (
+                    <div key={index} className="relative pl-6 pb-4 border-l-2 border-primary/20 last:pb-0">
+                      <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-primary/20 border-2 border-primary" />
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <h5 className="font-medium text-foreground">{exp.role}</h5>
+                          <p className="text-sm text-primary">{exp.institution}</p>
+                          {exp.description && (
+                            <p className="text-sm text-muted-foreground mt-1">{exp.description}</p>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded">
+                            {exp.year}
+                          </span>
+                          {exp.isCurrent && (
+                            <Badge variant="secondary" className="text-xs">Current</Badge>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
-          {/* Action Buttons */}
-          <div className="flex flex-wrap gap-2">
-            <Button
-              variant="outline"
-              onClick={() => onStatusUpdate(application.id, "reviewed")}
-              disabled={application.status === "reviewed"}
-            >
-              Mark Reviewed
-            </Button>
-            <Button
-              className="bg-green-600 hover:bg-green-700 text-white"
-              onClick={() => onStatusUpdate(application.id, "shortlisted")}
-              disabled={application.status === "shortlisted"}
-            >
-              Shortlist
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={() => onStatusUpdate(application.id, "rejected")}
-              disabled={application.status === "rejected"}
-            >
-              Reject
-            </Button>
-          </div>
-        </motion.div>
+            {/* Education */}
+            {education.length > 0 && (
+              <div>
+                <h4 className="font-heading font-semibold text-foreground mb-3 flex items-center gap-2">
+                  <GraduationCap className="h-4 w-4 text-primary" />
+                  Education
+                </h4>
+                <div className="space-y-3">
+                  {education.map((edu, index) => (
+                    <div key={index} className="p-3 rounded-lg bg-muted/50 border">
+                      <h5 className="font-medium text-foreground">{edu.degree}</h5>
+                      <p className="text-sm text-primary">{edu.institution}</p>
+                      <p className="text-xs text-muted-foreground">{edu.years}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Research Papers */}
+            {researchPapers.length > 0 && (
+              <div>
+                <h4 className="font-heading font-semibold text-foreground mb-3 flex items-center gap-2">
+                  <BookOpen className="h-4 w-4 text-primary" />
+                  Research Papers ({researchPapers.length})
+                </h4>
+                <div className="space-y-3">
+                  {researchPapers.map((paper, index) => (
+                    <div key={index} className="p-3 rounded-lg bg-muted/50 border">
+                      <h5 className="font-medium text-foreground text-sm">{paper.title}</h5>
+                      <p className="text-xs text-muted-foreground">{paper.authors}</p>
+                      <p className="text-xs text-primary mt-1">{paper.date}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Achievements */}
+            {achievements.length > 0 && (
+              <div>
+                <h4 className="font-heading font-semibold text-foreground mb-3 flex items-center gap-2">
+                  <Trophy className="h-4 w-4 text-primary" />
+                  Achievements & Awards
+                </h4>
+                <ul className="space-y-2">
+                  {achievements.map((achievement, index) => (
+                    <li key={index} className="flex items-start gap-2 text-sm text-muted-foreground">
+                      <Award className="h-4 w-4 text-amber-500 flex-shrink-0 mt-0.5" />
+                      <span>{achievement}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Subjects Taught */}
+            {subjects.length > 0 && (
+              <div>
+                <h4 className="font-heading font-semibold text-foreground mb-2 flex items-center gap-2">
+                  <Tag className="h-4 w-4 text-primary" />
+                  Subjects Taught
+                </h4>
+                <div className="flex flex-wrap gap-2">
+                  {subjects.map((subject, index) => (
+                    <Badge key={index} variant="outline" className="bg-primary/5">
+                      {subject}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Skills */}
+            {profile?.skills && profile.skills.length > 0 && (
+              <div>
+                <h4 className="font-heading font-semibold text-foreground mb-2 flex items-center gap-2">
+                  <Star className="h-4 w-4 text-primary" />
+                  Skills
+                </h4>
+                <div className="flex flex-wrap gap-2">
+                  {profile.skills.map((skill, index) => (
+                    <Badge key={index} variant="secondary">
+                      {skill}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Cover Letter */}
+            {application.cover_letter && (
+              <div>
+                <h4 className="font-heading font-semibold text-foreground mb-2 flex items-center gap-2">
+                  <FileText className="h-4 w-4 text-primary" />
+                  Cover Letter
+                </h4>
+                <div className="p-4 rounded-lg bg-muted/50 border">
+                  <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                    {application.cover_letter}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Resume Section */}
+            <div>
+              <h4 className="font-heading font-semibold text-foreground mb-2 flex items-center gap-2">
+                <FileText className="h-4 w-4 text-primary" />
+                Resume
+              </h4>
+              {profile?.resume_url ? (
+                <div className="p-4 rounded-lg bg-primary/5 border border-primary/20 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <FileText className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-foreground">Resume Available</p>
+                      <p className="text-xs text-muted-foreground">Click to view or download</p>
+                    </div>
+                  </div>
+                  <Button onClick={handleDownloadResume} className="gap-2">
+                    <Download className="h-4 w-4" />
+                    Download
+                  </Button>
+                </div>
+              ) : (
+                <div className="p-4 rounded-lg bg-muted/50 border border-dashed text-center">
+                  <FileText className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                  <p className="text-sm text-muted-foreground">No resume uploaded</p>
+                </div>
+              )}
+            </div>
+
+            <Separator />
+
+            {/* Action Buttons */}
+            <div className="flex flex-wrap gap-2 sticky bottom-0 bg-background py-2">
+              <Button
+                variant="outline"
+                onClick={() => onStatusUpdate(application.id, "reviewed")}
+                disabled={application.status === "reviewed"}
+              >
+                Mark Reviewed
+              </Button>
+              <Button
+                className="bg-green-600 hover:bg-green-700 text-white"
+                onClick={() => onStatusUpdate(application.id, "shortlisted")}
+                disabled={application.status === "shortlisted"}
+              >
+                Shortlist
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => onStatusUpdate(application.id, "rejected")}
+                disabled={application.status === "rejected"}
+              >
+                Reject
+              </Button>
+            </div>
+          </motion.div>
+        </ScrollArea>
       </DialogContent>
     </Dialog>
   );

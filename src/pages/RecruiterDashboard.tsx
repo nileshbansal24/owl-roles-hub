@@ -46,6 +46,26 @@ import {
 import { formatDistanceToNow, format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 
+interface ExperienceItem {
+  year: string;
+  role: string;
+  institution: string;
+  description: string;
+  isCurrent: boolean;
+}
+
+interface EducationItem {
+  degree: string;
+  institution: string;
+  years: string;
+}
+
+interface ResearchPaper {
+  title: string;
+  authors: string;
+  date: string;
+}
+
 interface Profile {
   id: string;
   full_name: string | null;
@@ -59,6 +79,14 @@ interface Profile {
   skills: string[] | null;
   user_type: string | null;
   resume_url?: string | null;
+  phone?: string | null;
+  experience?: ExperienceItem[] | null;
+  education?: EducationItem[] | null;
+  research_papers?: ResearchPaper[] | null;
+  achievements?: string[] | null;
+  subjects?: string[] | null;
+  teaching_philosophy?: string | null;
+  professional_summary?: string | null;
 }
 
 interface Job {
@@ -154,7 +182,7 @@ const RecruiterDashboard = () => {
         for (const app of appsData) {
           const { data: profileData } = await supabase
             .from("profiles")
-            .select("id, full_name, avatar_url, university, role, bio, years_experience, location, headline, skills, user_type, resume_url")
+            .select("id, full_name, avatar_url, university, role, bio, years_experience, location, headline, skills, user_type, resume_url, phone, experience, education, research_papers, achievements, subjects, teaching_philosophy, professional_summary")
             .eq("id", app.applicant_id)
             .maybeSingle();
           
@@ -173,7 +201,7 @@ const RecruiterDashboard = () => {
         .select("*")
         .order("updated_at", { ascending: false });
 
-      setCandidates(candidatesData || []);
+      setCandidates((candidatesData as unknown as Profile[]) || []);
 
       setLoading(false);
     };
