@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -356,6 +356,58 @@ const RecruiterDashboard = () => {
     const matchesCompleteness = !completenessFilter || calculateCompleteness(app.profiles) >= 80;
     return matchesJob && matchesStatus && matchesCompleteness;
   });
+
+  // Keyboard shortcuts for bulk actions
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Only work when on applications tab
+      if (activeTab !== "applications") return;
+      
+      // Don't trigger if user is typing in an input
+      const target = e.target as HTMLElement;
+      if (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable) {
+        return;
+      }
+
+      // Ctrl/Cmd + A: Select all
+      if ((e.ctrlKey || e.metaKey) && e.key === "a") {
+        e.preventDefault();
+        if (filteredApplications.length > 0) {
+          setSelectedAppIds(new Set(filteredApplications.map(a => a.id)));
+          toast({
+            title: "All selected",
+            description: `${filteredApplications.length} applicant(s) selected`,
+          });
+        }
+      }
+
+      // Delete or Backspace: Reject selected
+      if ((e.key === "Delete" || e.key === "Backspace") && selectedAppIds.size > 0) {
+        e.preventDefault();
+        handleBulkAction("rejected");
+      }
+
+      // Escape: Clear selection
+      if (e.key === "Escape" && selectedAppIds.size > 0) {
+        e.preventDefault();
+        clearSelection();
+        toast({
+          title: "Selection cleared",
+          description: "All applicants deselected",
+        });
+      }
+
+      // S key: Shortlist selected
+      if (e.key === "s" && !e.ctrlKey && !e.metaKey && selectedAppIds.size > 0) {
+        e.preventDefault();
+        handleBulkAction("shortlisted");
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [activeTab, filteredApplications, selectedAppIds, handleBulkAction, clearSelection, toast]);
+
 
   const handleDownloadResume = (resumeUrl: string, applicantName: string) => {
     window.open(resumeUrl, "_blank");
@@ -798,10 +850,14 @@ const RecruiterDashboard = () => {
                         </div>
                         <Button variant="ghost" size="sm" onClick={clearSelection} className="gap-1 text-muted-foreground">
                           <X className="h-4 w-4" />
-                          Clear
+                          Clear <kbd className="ml-1 px-1 py-0.5 text-[10px] bg-muted rounded">Esc</kbd>
                         </Button>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-3">
+                        <div className="hidden md:flex items-center gap-2 text-xs text-muted-foreground">
+                          <kbd className="px-1.5 py-0.5 bg-muted rounded">S</kbd> Shortlist
+                          <kbd className="px-1.5 py-0.5 bg-muted rounded">Del</kbd> Reject
+                        </div>
                         <Button
                           size="sm"
                           className="bg-green-600 hover:bg-green-700 text-white gap-1"
@@ -828,15 +884,18 @@ const RecruiterDashboard = () => {
 
                 {/* Select All Toggle */}
                 {filteredApplications.length > 0 && (
-                  <motion.div variants={itemVariants} className="flex items-center gap-2">
-                    <Checkbox
-                      id="select-all"
-                      checked={selectedAppIds.size === filteredApplications.length && filteredApplications.length > 0}
-                      onCheckedChange={selectAllFiltered}
-                    />
-                    <Label htmlFor="select-all" className="text-sm cursor-pointer text-muted-foreground">
-                      Select all {filteredApplications.length} applicants
-                    </Label>
+                  <motion.div variants={itemVariants} className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        id="select-all"
+                        checked={selectedAppIds.size === filteredApplications.length && filteredApplications.length > 0}
+                        onCheckedChange={selectAllFiltered}
+                      />
+                      <Label htmlFor="select-all" className="text-sm cursor-pointer text-muted-foreground">
+                        Select all {filteredApplications.length} applicants
+                      </Label>
+                      <kbd className="hidden md:inline-block ml-2 px-1.5 py-0.5 text-[10px] bg-muted text-muted-foreground rounded">Ctrl+A</kbd>
+                    </div>
                   </motion.div>
                 )}
 
