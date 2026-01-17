@@ -53,6 +53,8 @@ const SectionEditModal = ({
       ]);
     } else if (section === "research") {
       setFormData([...formData, { title: "", authors: "", date: "" }]);
+    } else if (section === "education") {
+      setFormData([...formData, { degree: "", institution: "", years: "" }]);
     } else if (section === "subjects" || section === "skills" || section === "achievements") {
       setFormData([...formData, ""]);
     }
@@ -76,6 +78,7 @@ const SectionEditModal = ({
     switch (section) {
       case "experience": return "Edit Work Experience";
       case "research": return "Edit Research Papers";
+      case "education": return "Edit Education";
       case "subjects": return "Edit Subjects Taught";
       case "skills": return "Edit Skills";
       case "achievements": return "Edit Achievements";
@@ -221,6 +224,61 @@ const SectionEditModal = ({
           <Button variant="outline" onClick={addItem} className="w-full gap-2">
             <Plus className="h-4 w-4" />
             Add Paper
+          </Button>
+        </div>
+      );
+    }
+
+    if (section === "education") {
+      return (
+        <div className="space-y-6 max-h-[60vh] overflow-y-auto pr-2">
+          {formData.map((item: any, index: number) => (
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="p-4 rounded-lg bg-secondary/30 space-y-3"
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-foreground">Education {index + 1}</span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => removeItem(index)}
+                  className="text-destructive hover:text-destructive"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+              <div className="space-y-2">
+                <Label>Degree</Label>
+                <Input
+                  value={item.degree}
+                  onChange={(e) => updateItem(index, "degree", e.target.value)}
+                  placeholder="Ph.D. in Computer Science"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Institution</Label>
+                <Input
+                  value={item.institution}
+                  onChange={(e) => updateItem(index, "institution", e.target.value)}
+                  placeholder="Stanford University"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Years</Label>
+                <Input
+                  value={item.years}
+                  onChange={(e) => updateItem(index, "years", e.target.value)}
+                  placeholder="2018 - 2022"
+                />
+              </div>
+            </motion.div>
+          ))}
+          <Button variant="outline" onClick={addItem} className="w-full gap-2">
+            <Plus className="h-4 w-4" />
+            Add Education
           </Button>
         </div>
       );
