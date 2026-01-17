@@ -5,6 +5,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import ApplicantDetailModal from "@/components/ApplicantDetailModal";
+import InterviewScheduleModal from "@/components/InterviewScheduleModal";
+import InterviewCard from "@/components/InterviewCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -61,6 +63,8 @@ import {
   X,
   Edit3,
   Save,
+  CalendarDays,
+  Video,
 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
@@ -176,6 +180,11 @@ const RecruiterDashboard = () => {
   const [savingNote, setSavingNote] = useState(false);
   const [bulkActionLoading, setBulkActionLoading] = useState(false);
   const [showRejectConfirm, setShowRejectConfirm] = useState(false);
+  
+  // Interview scheduling state
+  const [interviews, setInterviews] = useState<any[]>([]);
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [schedulingApplication, setSchedulingApplication] = useState<Application | null>(null);
 
   // Calculate profile completeness
   const calculateCompleteness = (profile: Profile | null): number => {
@@ -280,6 +289,29 @@ const RecruiterDashboard = () => {
         setSavedCandidateNotes(notesMap);
       }
 
+      // Fetch scheduled interviews
+      const { data: interviewsData } = await supabase
+        .from("interviews")
+        .select("*")
+        .eq("recruiter_id", user.id)
+        .order("created_at", { ascending: false });
+
+      if (interviewsData) {
+        // Enrich interviews with job and candidate info
+        const enrichedInterviews = await Promise.all(
+          interviewsData.map(async (interview) => {
+            const app = applicationsWithProfiles.find(a => a.id === interview.application_id);
+            return {
+              ...interview,
+              job_title: app?.jobs?.title || "Unknown Job",
+              institute: app?.jobs?.institute || "",
+              candidate_name: app?.profiles?.full_name || "Candidate",
+            };
+          })
+        );
+        setInterviews(enrichedInterviews);
+      }
+
       setLoading(false);
     };
 
@@ -328,6 +360,35 @@ const RecruiterDashboard = () => {
       if (app) {
         sendStatusNotification(appId, newStatus, app.jobs.title, app.jobs.institute);
       }
+    }
+  };
+
+  // Handle scheduling interview
+  const handleScheduleInterview = (application: Application) => {
+    setSchedulingApplication(application);
+    setShowScheduleModal(true);
+    setShowApplicantModal(false);
+  };
+
+  const handleInterviewScheduled = async () => {
+    // Refresh interviews
+    if (!user) return;
+    const { data } = await supabase
+      .from("interviews")
+      .select("*")
+      .eq("recruiter_id", user.id)
+      .order("created_at", { ascending: false });
+    if (data) {
+      const enriched = data.map((interview) => {
+        const app = applications.find(a => a.id === interview.application_id);
+        return {
+          ...interview,
+          job_title: app?.jobs?.title || "Unknown Job",
+          institute: app?.jobs?.institute || "",
+          candidate_name: app?.profiles?.full_name || "Candidate",
+        };
+      });
+      setInterviews(enriched);
     }
   };
 
@@ -907,6 +968,10 @@ const RecruiterDashboard = () => {
                 <Bookmark className="h-4 w-4" />
                 Saved ({savedCandidateIds.size})
               </TabsTrigger>
+              <TabsTrigger value="interviews" className="gap-2">
+                <CalendarDays className="h-4 w-4" />
+                Interviews ({interviews.length})
+              </TabsTrigger>
               <TabsTrigger value="applications" className="gap-2">
                 <FileText className="h-4 w-4" />
                 Applications ({applications.length})
@@ -1286,6 +1351,43 @@ const RecruiterDashboard = () => {
               </motion.div>
             </TabsContent>
 
+            {/* Interviews Tab */}
+            <TabsContent value="interviews">
+              <motion.div
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+                className="space-y-6"
+              >
+                <motion.div variants={itemVariants} className="card-elevated p-6">
+                  <h3 className="font-heading font-semibold text-lg mb-4 flex items-center gap-2">
+                    <CalendarDays className="h-5 w-5 text-primary" />
+                    Scheduled Interviews ({interviews.length})
+                  </h3>
+                  {interviews.length === 0 ? (
+                    <div className="text-center py-8">
+                      <Video className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                      <p className="text-muted-foreground">No interviews scheduled yet.</p>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Schedule interviews from the Applications tab.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="grid gap-4 md:grid-cols-2">
+                      {interviews.map((interview) => (
+                        <InterviewCard
+                          key={interview.id}
+                          interview={interview}
+                          variant="recruiter"
+                          onViewDetails={() => {}}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </motion.div>
+              </motion.div>
+            </TabsContent>
+
             {/* Applications Tab */}
             <TabsContent value="applications">
               <motion.div
@@ -1619,6 +1721,15 @@ const RecruiterDashboard = () => {
         open={showApplicantModal}
         onOpenChange={setShowApplicantModal}
         onStatusUpdate={handleModalStatusUpdate}
+        onScheduleInterview={handleScheduleInterview}
+      />
+
+      {/* Interview Schedule Modal */}
+      <InterviewScheduleModal
+        application={schedulingApplication}
+        open={showScheduleModal}
+        onOpenChange={setShowScheduleModal}
+        onScheduled={handleInterviewScheduled}
       />
 
       {/* Candidate Detail Modal (for Search tab) */}

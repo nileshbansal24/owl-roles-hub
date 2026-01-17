@@ -7,6 +7,8 @@ import Navbar from "@/components/Navbar";
 import ProfileEditModal from "@/components/ProfileEditModal";
 import SectionEditModal from "@/components/SectionEditModal";
 import QuickApplyModal from "@/components/QuickApplyModal";
+import InterviewResponseModal from "@/components/InterviewResponseModal";
+import InterviewCard from "@/components/InterviewCard";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -33,6 +35,7 @@ import {
   Building2,
   MapPin,
   Upload,
+  CalendarDays,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
@@ -123,6 +126,9 @@ const CandidateDashboard = () => {
     salary_range: string | null;
   } | null>(null);
   const [quickApplyOpen, setQuickApplyOpen] = useState(false);
+  const [interviews, setInterviews] = useState<any[]>([]);
+  const [selectedInterview, setSelectedInterview] = useState<any>(null);
+  const [showInterviewModal, setShowInterviewModal] = useState(false);
 
   // Handle quick apply from job recommendations
   const handleQuickApply = async (jobId: string) => {

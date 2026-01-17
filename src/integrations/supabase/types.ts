@@ -14,6 +14,68 @@ export type Database = {
   }
   public: {
     Tables: {
+      interviews: {
+        Row: {
+          application_id: string
+          candidate_id: string
+          confirmed_time: string | null
+          created_at: string
+          id: string
+          interview_type: string | null
+          job_id: string
+          location: string | null
+          meeting_link: string | null
+          notes: string | null
+          proposed_times: Json
+          recruiter_id: string
+          recruiter_notes: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          application_id: string
+          candidate_id: string
+          confirmed_time?: string | null
+          created_at?: string
+          id?: string
+          interview_type?: string | null
+          job_id: string
+          location?: string | null
+          meeting_link?: string | null
+          notes?: string | null
+          proposed_times?: Json
+          recruiter_id: string
+          recruiter_notes?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          application_id?: string
+          candidate_id?: string
+          confirmed_time?: string | null
+          created_at?: string
+          id?: string
+          interview_type?: string | null
+          job_id?: string
+          location?: string | null
+          meeting_link?: string | null
+          notes?: string | null
+          proposed_times?: Json
+          recruiter_id?: string
+          recruiter_notes?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "interviews_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "job_applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       job_applications: {
         Row: {
           applicant_email: string | null
