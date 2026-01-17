@@ -86,6 +86,7 @@ const JobDetailModal = ({ job, open, onOpenChange }: JobDetailModalProps) => {
       const { error } = await supabase.from("job_applications").insert({
         job_id: job.id,
         applicant_id: user.id,
+        applicant_email: user.email || null,
         cover_letter: validation.data.cover_letter || null,
       });
 

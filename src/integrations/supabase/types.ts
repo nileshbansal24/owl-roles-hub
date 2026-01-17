@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       job_applications: {
         Row: {
+          applicant_email: string | null
           applicant_id: string
           cover_letter: string | null
           created_at: string
@@ -26,6 +27,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          applicant_email?: string | null
           applicant_id: string
           cover_letter?: string | null
           created_at?: string
@@ -36,6 +38,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          applicant_email?: string | null
           applicant_id?: string
           cover_letter?: string | null
           created_at?: string
