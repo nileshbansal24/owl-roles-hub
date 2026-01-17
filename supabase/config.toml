@@ -1,1 +1,4 @@
 project_id = "cxvfoijklbwzzondmwuw"
+
+[functions.suggest-salary]
+verify_jwt = false
