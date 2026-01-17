@@ -305,6 +305,84 @@ const RecruiterDashboard = () => {
     setSelectedAppIds(new Set());
   };
 
+  const exportSelectedToCSV = () => {
+    const selectedApps = applications.filter(app => selectedAppIds.has(app.id));
+    
+    if (selectedApps.length === 0) {
+      toast({
+        title: "No applicants selected",
+        description: "Please select applicants to export",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // CSV headers
+    const headers = [
+      "Name",
+      "Applicant ID",
+      "Role",
+      "University",
+      "Location",
+      "Years Experience",
+      "Skills",
+      "Job Applied",
+      "Institute",
+      "Application Status",
+      "Applied Date",
+      "Profile Completeness"
+    ];
+
+    // Build CSV rows
+    const rows = selectedApps.map(app => {
+      const profile = app.profiles;
+      const completeness = calculateCompleteness(profile);
+      return [
+        profile?.full_name || "N/A",
+        app.applicant_id || "N/A",
+        profile?.role || "N/A",
+        profile?.university || "N/A",
+        profile?.location || "N/A",
+        profile?.years_experience?.toString() || "N/A",
+        profile?.skills?.join("; ") || "N/A",
+        app.jobs?.title || "N/A",
+        app.jobs?.institute || "N/A",
+        app.status || "pending",
+        app.created_at ? format(new Date(app.created_at), "yyyy-MM-dd") : "N/A",
+        `${completeness}%`
+      ];
+    });
+
+    // Escape CSV values
+    const escapeCSV = (val: string) => {
+      if (val.includes(",") || val.includes('"') || val.includes("\n")) {
+        return `"${val.replace(/"/g, '""')}"`;
+      }
+      return val;
+    };
+
+    const csvContent = [
+      headers.map(escapeCSV).join(","),
+      ...rows.map(row => row.map(escapeCSV).join(","))
+    ].join("\n");
+
+    // Create and download file
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `applicants_export_${format(new Date(), "yyyy-MM-dd")}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    toast({
+      title: "Export successful",
+      description: `${selectedApps.length} applicant(s) exported to CSV`,
+    });
+  };
+
   const handleBulkAction = async (newStatus: string) => {
     if (selectedAppIds.size === 0) return;
     
@@ -887,6 +965,15 @@ const RecruiterDashboard = () => {
                         >
                           {bulkActionLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <XCircle className="h-4 w-4" />}
                           Reject All
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="gap-1"
+                          onClick={exportSelectedToCSV}
+                        >
+                          <Download className="h-4 w-4" />
+                          Export CSV
                         </Button>
                       </div>
                     </motion.div>
