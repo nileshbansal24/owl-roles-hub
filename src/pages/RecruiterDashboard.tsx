@@ -286,7 +286,22 @@ const RecruiterDashboard = () => {
     fetchData();
   }, [user, navigate]);
 
+  const sendStatusNotification = async (applicationId: string, newStatus: string, jobTitle: string, instituteName: string) => {
+    try {
+      const { error } = await supabase.functions.invoke("send-status-notification", {
+        body: { applicationId, newStatus, jobTitle, instituteName },
+      });
+      if (error) {
+        console.error("Failed to send notification:", error);
+      }
+    } catch (err) {
+      console.error("Email notification error:", err);
+    }
+  };
+
   const updateApplicationStatus = async (appId: string, newStatus: string) => {
+    const app = applications.find((a) => a.id === appId);
+    
     const { error } = await supabase
       .from("job_applications")
       .update({ status: newStatus })
@@ -300,14 +315,19 @@ const RecruiterDashboard = () => {
       });
     } else {
       setApplications((prev) =>
-        prev.map((app) =>
-          app.id === appId ? { ...app, status: newStatus } : app
+        prev.map((a) =>
+          a.id === appId ? { ...a, status: newStatus } : a
         )
       );
       toast({
         title: "Status updated",
         description: `Application marked as ${newStatus}`,
       });
+      
+      // Send email notification in background
+      if (app) {
+        sendStatusNotification(appId, newStatus, app.jobs.title, app.jobs.institute);
+      }
     }
   };
 
@@ -549,6 +569,9 @@ const RecruiterDashboard = () => {
         variant: "destructive",
       });
     } else {
+      // Get the affected applications for notifications
+      const affectedApps = applications.filter((app) => selectedAppIds.has(app.id));
+      
       setApplications((prev) =>
         prev.map((app) =>
           selectedAppIds.has(app.id) ? { ...app, status: newStatus } : app
@@ -559,6 +582,11 @@ const RecruiterDashboard = () => {
         description: `${selectedAppIds.size} application(s) marked as ${newStatus}`,
       });
       setSelectedAppIds(new Set());
+      
+      // Send email notifications in background for all affected applications
+      affectedApps.forEach((app) => {
+        sendStatusNotification(app.id, newStatus, app.jobs.title, app.jobs.institute);
+      });
     }
     setBulkActionLoading(false);
   };
