@@ -126,6 +126,7 @@ export type Database = {
           bio: string | null
           created_at: string
           education: Json | null
+          email: string | null
           experience: Json | null
           full_name: string | null
           headline: string | null
@@ -150,6 +151,7 @@ export type Database = {
           bio?: string | null
           created_at?: string
           education?: Json | null
+          email?: string | null
           experience?: Json | null
           full_name?: string | null
           headline?: string | null
@@ -174,6 +176,7 @@ export type Database = {
           bio?: string | null
           created_at?: string
           education?: Json | null
+          email?: string | null
           experience?: Json | null
           full_name?: string | null
           headline?: string | null
@@ -272,63 +275,48 @@ export type Database = {
       }
       profiles_public: {
         Row: {
-          achievements: string[] | null
           avatar_url: string | null
           bio: string | null
-          created_at: string | null
-          education: Json | null
-          experience: Json | null
+          email: string | null
           full_name: string | null
           headline: string | null
           id: string | null
           location: string | null
-          research_papers: Json | null
+          professional_summary: string | null
           role: string | null
           skills: string[] | null
-          subjects: string[] | null
-          teaching_philosophy: string | null
           university: string | null
           updated_at: string | null
           user_type: string | null
           years_experience: number | null
         }
         Insert: {
-          achievements?: string[] | null
           avatar_url?: string | null
           bio?: string | null
-          created_at?: string | null
-          education?: Json | null
-          experience?: Json | null
+          email?: string | null
           full_name?: string | null
           headline?: string | null
           id?: string | null
           location?: string | null
-          research_papers?: Json | null
+          professional_summary?: string | null
           role?: string | null
           skills?: string[] | null
-          subjects?: string[] | null
-          teaching_philosophy?: string | null
           university?: string | null
           updated_at?: string | null
           user_type?: string | null
           years_experience?: number | null
         }
         Update: {
-          achievements?: string[] | null
           avatar_url?: string | null
           bio?: string | null
-          created_at?: string | null
-          education?: Json | null
-          experience?: Json | null
+          email?: string | null
           full_name?: string | null
           headline?: string | null
           id?: string | null
           location?: string | null
-          research_papers?: Json | null
+          professional_summary?: string | null
           role?: string | null
           skills?: string[] | null
-          subjects?: string[] | null
-          teaching_philosophy?: string | null
           university?: string | null
           updated_at?: string | null
           user_type?: string | null
