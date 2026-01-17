@@ -27,6 +27,92 @@ interface Job {
   tags: string[] | null;
 }
 
+// Helper function to call AI with retry logic
+async function callAIWithRetry(
+  apiKey: string,
+  messages: { role: string; content: string }[],
+  maxRetries = 3
+): Promise<{ content: string } | { error: string; status: number }> {
+  let lastError: Error | null = null;
+  
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      console.log(`AI call attempt ${attempt}/${maxRetries}`);
+      
+      const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "google/gemini-3-flash-preview",
+          messages,
+          temperature: 0.3,
+        }),
+      });
+
+      // Handle rate limits and payment issues - don't retry these
+      if (response.status === 429) {
+        return { error: "Rate limit exceeded. Please try again later.", status: 429 };
+      }
+      if (response.status === 402) {
+        return { error: "AI credits exhausted. Please add credits to continue.", status: 402 };
+      }
+
+      // Retry on 5xx errors
+      if (response.status >= 500) {
+        const errorText = await response.text();
+        console.error(`AI gateway error (attempt ${attempt}):`, response.status, errorText);
+        lastError = new Error(`AI gateway error: ${response.status}`);
+        
+        if (attempt < maxRetries) {
+          // Exponential backoff: 1s, 2s, 4s
+          const delay = Math.pow(2, attempt - 1) * 1000;
+          console.log(`Retrying in ${delay}ms...`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+          continue;
+        }
+        throw lastError;
+      }
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("AI gateway error:", response.status, errorText);
+        throw new Error(`AI gateway error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const content = data.choices?.[0]?.message?.content;
+
+      if (!content) {
+        console.error("Empty AI response, attempt:", attempt);
+        lastError = new Error("No response from AI");
+        
+        if (attempt < maxRetries) {
+          const delay = Math.pow(2, attempt - 1) * 1000;
+          console.log(`Empty response, retrying in ${delay}ms...`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+          continue;
+        }
+        throw lastError;
+      }
+
+      return { content };
+    } catch (error) {
+      console.error(`AI call attempt ${attempt} failed:`, error);
+      lastError = error instanceof Error ? error : new Error(String(error));
+      
+      if (attempt < maxRetries) {
+        const delay = Math.pow(2, attempt - 1) * 1000;
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+  }
+  
+  throw lastError || new Error("AI call failed after retries");
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -135,45 +221,17 @@ Analyze and return the best job matches for this candidate.`;
 
     console.log("Calling AI for job matching...");
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
-        ],
-        temperature: 0.3,
-      }),
-    });
+    const aiResult = await callAIWithRetry(LOVABLE_API_KEY, [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: userPrompt },
+    ]);
 
-    if (!response.ok) {
-      if (response.status === 429) {
-        return new Response(
-          JSON.stringify({ error: "Rate limit exceeded. Please try again later." }),
-          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-      if (response.status === 402) {
-        return new Response(
-          JSON.stringify({ error: "AI credits exhausted. Please add credits to continue." }),
-          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-      const errorText = await response.text();
-      console.error("AI gateway error:", response.status, errorText);
-      throw new Error(`AI gateway error: ${response.status}`);
-    }
-
-    const data = await response.json();
-    const content = data.choices?.[0]?.message?.content;
-
-    if (!content) {
-      throw new Error("No response from AI");
+    // Check for rate limit / payment errors
+    if ("error" in aiResult) {
+      return new Response(
+        JSON.stringify({ error: aiResult.error }),
+        { status: aiResult.status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     console.log("AI response received, parsing...");
@@ -181,14 +239,14 @@ Analyze and return the best job matches for this candidate.`;
     // Parse AI response
     let matchData;
     try {
-      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      const jsonMatch = aiResult.content.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         matchData = JSON.parse(jsonMatch[0]);
       } else {
         throw new Error("No JSON found in response");
       }
     } catch (parseError) {
-      console.error("Failed to parse AI response:", content);
+      console.error("Failed to parse AI response:", aiResult.content);
       matchData = { matches: [] };
     }
 
