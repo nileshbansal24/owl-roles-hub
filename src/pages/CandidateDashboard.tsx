@@ -178,6 +178,14 @@ const CandidateDashboard = () => {
       } else if (profileData) {
         setProfile(profileData);
         if (profileData.skills) setSkills(profileData.skills);
+        // Load extended profile data from database
+        if (profileData.experience) setExperienceTimeline(profileData.experience as unknown as ExperienceItem[]);
+        if (profileData.education) setEducation(profileData.education as unknown as EducationItem[]);
+        if (profileData.research_papers) setResearchPapers(profileData.research_papers as unknown as ResearchPaper[]);
+        if (profileData.achievements) setAchievements(profileData.achievements);
+        if (profileData.subjects) setSubjects(profileData.subjects);
+        if (profileData.teaching_philosophy) setTeachingPhilosophy(profileData.teaching_philosophy);
+        if (profileData.professional_summary) setProfessionalSummary(profileData.professional_summary);
       }
 
       const { data: appsData, error: appsError } = await supabase
@@ -309,30 +317,54 @@ const CandidateDashboard = () => {
     setSectionEditOpen(true);
   };
 
-  const handleSectionUpdate = (section: string, data: any) => {
+  const handleSectionUpdate = async (section: string, data: any) => {
+    // Update local state
+    let updateField: string = "";
     switch (section) {
       case "experience":
         setExperienceTimeline(data);
+        updateField = "experience";
         break;
       case "research":
         setResearchPapers(data);
+        updateField = "research_papers";
         break;
       case "education":
         setEducation(data);
+        updateField = "education";
         break;
       case "skills":
         setSkills(data);
+        updateField = "skills";
         break;
       case "achievements":
         setAchievements(data);
+        updateField = "achievements";
         break;
       case "teaching":
         setTeachingPhilosophy(data);
+        updateField = "teaching_philosophy";
         break;
       case "subjects":
         setSubjects(data);
+        updateField = "subjects";
         break;
     }
+
+    // Save to database
+    if (user && updateField) {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ [updateField]: data })
+        .eq("id", user.id);
+
+      if (error) {
+        console.error("Error saving section:", error);
+        toast({ title: "Error", description: "Failed to save changes.", variant: "destructive" });
+        return;
+      }
+    }
+
     toast({ title: "Updated", description: "Your changes have been saved." });
   };
 
