@@ -382,7 +382,16 @@ const CandidateDashboard = () => {
       {/* AI Suggested Salary */}
       <motion.div variants={itemVariants}>
         <SidebarCard title="AI-Suggested Salary" collapsible={false}>
-          <AISalarySuggestion salaryRange="₹25L - ₹30L p.a." dataPoints={1200} />
+          <AISalarySuggestion
+            profile={{
+              role: profile?.role,
+              headline: profile?.headline,
+              yearsExperience: profile?.years_experience,
+              location: profile?.location,
+              skills: profile?.skills,
+              university: profile?.university,
+            }}
+          />
         </SidebarCard>
       </motion.div>
 
