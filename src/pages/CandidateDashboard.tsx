@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import ProfileEditModal from "@/components/ProfileEditModal";
 import SectionEditModal from "@/components/SectionEditModal";
+import QuickApplyModal from "@/components/QuickApplyModal";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -112,6 +113,45 @@ const CandidateDashboard = () => {
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [uploadingResume, setUploadingResume] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
+  const [quickApplyJob, setQuickApplyJob] = useState<{
+    id: string;
+    title: string;
+    institute: string;
+    location: string;
+    job_type: string | null;
+    salary_range: string | null;
+  } | null>(null);
+  const [quickApplyOpen, setQuickApplyOpen] = useState(false);
+
+  // Handle quick apply from job recommendations
+  const handleQuickApply = async (jobId: string) => {
+    // Fetch job details
+    const { data: job } = await supabase
+      .from("jobs")
+      .select("id, title, institute, location, job_type, salary_range")
+      .eq("id", jobId)
+      .single();
+    
+    if (job) {
+      setQuickApplyJob(job);
+      setQuickApplyOpen(true);
+    }
+  };
+
+  const handleApplicationSuccess = async () => {
+    // Refresh applications list
+    if (user) {
+      const { data: appsData } = await supabase
+        .from("job_applications")
+        .select(`*, jobs(title, institute, location)`)
+        .eq("applicant_id", user.id)
+        .order("created_at", { ascending: false });
+      
+      if (appsData) {
+        setApplications((appsData as unknown as Application[]) || []);
+      }
+    }
+  };
 
   // Editable data (empty by default - users fill in their own info)
   const [experienceTimeline, setExperienceTimeline] = useState<ExperienceItem[]>([]);
@@ -476,6 +516,7 @@ const CandidateDashboard = () => {
               bio: profile?.bio,
             }}
             onViewJob={(jobId) => navigate(`/?job=${jobId}`)}
+            onApply={handleQuickApply}
           />
         </ProfileCard>
       </motion.div>
@@ -854,6 +895,14 @@ const CandidateDashboard = () => {
         section={editingSection}
         data={getSectionData(editingSection)}
         onSave={handleSectionUpdate}
+      />
+
+      <QuickApplyModal
+        open={quickApplyOpen}
+        onOpenChange={setQuickApplyOpen}
+        job={quickApplyJob}
+        resumeUrl={profile?.resume_url}
+        onSuccess={handleApplicationSuccess}
       />
     </div>
   );
