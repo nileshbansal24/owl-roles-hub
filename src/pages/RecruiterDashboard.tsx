@@ -44,7 +44,11 @@ import {
   MessageSquare,
   Award,
   User,
+  CheckSquare,
+  Square,
+  X,
 } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { formatDistanceToNow, format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 
@@ -145,6 +149,8 @@ const RecruiterDashboard = () => {
   const [activeTab, setActiveTab] = useState("resdex");
   const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
   const [showApplicantModal, setShowApplicantModal] = useState(false);
+  const [selectedAppIds, setSelectedAppIds] = useState<Set<string>>(new Set());
+  const [bulkActionLoading, setBulkActionLoading] = useState(false);
 
   // Calculate profile completeness
   const calculateCompleteness = (profile: Profile | null): number => {
@@ -261,6 +267,63 @@ const RecruiterDashboard = () => {
         description: `Application marked as ${newStatus}`,
       });
     }
+  };
+
+  // Bulk actions
+  const toggleSelectApp = (appId: string) => {
+    setSelectedAppIds(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(appId)) {
+        newSet.delete(appId);
+      } else {
+        newSet.add(appId);
+      }
+      return newSet;
+    });
+  };
+
+  const selectAllFiltered = () => {
+    if (selectedAppIds.size === filteredApplications.length) {
+      setSelectedAppIds(new Set());
+    } else {
+      setSelectedAppIds(new Set(filteredApplications.map(a => a.id)));
+    }
+  };
+
+  const clearSelection = () => {
+    setSelectedAppIds(new Set());
+  };
+
+  const handleBulkAction = async (newStatus: string) => {
+    if (selectedAppIds.size === 0) return;
+    
+    setBulkActionLoading(true);
+    const idsArray = Array.from(selectedAppIds);
+    
+    const { error } = await supabase
+      .from("job_applications")
+      .update({ status: newStatus })
+      .in("id", idsArray);
+
+    if (error) {
+      toast({
+        title: "Bulk update failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else {
+      setApplications((prev) =>
+        prev.map((app) =>
+          selectedAppIds.has(app.id) ? { ...app, status: newStatus } : app
+        )
+      );
+      toast({
+        title: "Bulk update successful",
+        description: `${selectedAppIds.size} application(s) marked as ${newStatus}`,
+      });
+      setSelectedAppIds(new Set());
+    }
+    setBulkActionLoading(false);
   };
 
   const filteredCandidates = candidates.filter((candidate) => {
@@ -717,6 +780,66 @@ const RecruiterDashboard = () => {
                   </p>
                 </motion.div>
 
+                {/* Bulk Actions Bar */}
+                <AnimatePresence>
+                  {selectedAppIds.size > 0 && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className="card-elevated p-4 flex items-center justify-between gap-4 border-primary/30 bg-primary/5"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2">
+                          <CheckSquare className="h-5 w-5 text-primary" />
+                          <span className="font-medium text-foreground">
+                            {selectedAppIds.size} selected
+                          </span>
+                        </div>
+                        <Button variant="ghost" size="sm" onClick={clearSelection} className="gap-1 text-muted-foreground">
+                          <X className="h-4 w-4" />
+                          Clear
+                        </Button>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          size="sm"
+                          className="bg-green-600 hover:bg-green-700 text-white gap-1"
+                          onClick={() => handleBulkAction("shortlisted")}
+                          disabled={bulkActionLoading}
+                        >
+                          {bulkActionLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+                          Shortlist All
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          className="gap-1"
+                          onClick={() => handleBulkAction("rejected")}
+                          disabled={bulkActionLoading}
+                        >
+                          {bulkActionLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <XCircle className="h-4 w-4" />}
+                          Reject All
+                        </Button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* Select All Toggle */}
+                {filteredApplications.length > 0 && (
+                  <motion.div variants={itemVariants} className="flex items-center gap-2">
+                    <Checkbox
+                      id="select-all"
+                      checked={selectedAppIds.size === filteredApplications.length && filteredApplications.length > 0}
+                      onCheckedChange={selectAllFiltered}
+                    />
+                    <Label htmlFor="select-all" className="text-sm cursor-pointer text-muted-foreground">
+                      Select all {filteredApplications.length} applicants
+                    </Label>
+                  </motion.div>
+                )}
+
                 {/* Applications List */}
                 {filteredApplications.length === 0 ? (
                   <motion.div variants={itemVariants} className="card-elevated p-12 text-center">
@@ -731,15 +854,22 @@ const RecruiterDashboard = () => {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.05 }}
-                        className="card-elevated p-5"
+                        className={`card-elevated p-5 transition-colors ${selectedAppIds.has(app.id) ? 'ring-2 ring-primary/50 bg-primary/5' : ''}`}
                       >
                         <div className="flex flex-col md:flex-row gap-4">
-                          <Avatar className="h-14 w-14 shrink-0">
-                            <AvatarImage src={app.profiles?.avatar_url || ""} />
-                            <AvatarFallback className="bg-primary text-primary-foreground font-heading font-bold">
-                              {app.profiles?.full_name?.slice(0, 2).toUpperCase() || "U"}
-                            </AvatarFallback>
-                          </Avatar>
+                          <div className="flex items-start gap-3">
+                            <Checkbox
+                              checked={selectedAppIds.has(app.id)}
+                              onCheckedChange={() => toggleSelectApp(app.id)}
+                              className="mt-1"
+                            />
+                            <Avatar className="h-14 w-14 shrink-0">
+                              <AvatarImage src={app.profiles?.avatar_url || ""} />
+                              <AvatarFallback className="bg-primary text-primary-foreground font-heading font-bold">
+                                {app.profiles?.full_name?.slice(0, 2).toUpperCase() || "U"}
+                              </AvatarFallback>
+                            </Avatar>
+                          </div>
 
                           <div className="flex-1">
                             <div className="flex items-start justify-between gap-4">
