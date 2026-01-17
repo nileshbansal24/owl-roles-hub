@@ -51,6 +51,7 @@ interface Profile {
   skills: string[] | null;
   resume_url: string | null;
   phone: string | null;
+  email?: string | null;
 }
 
 interface Application {

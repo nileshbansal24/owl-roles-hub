@@ -37,6 +37,7 @@ interface Profile {
   role: string | null;
   bio: string | null;
   years_experience: number | null;
+  email?: string | null;
 }
 
 interface ExperienceItem {

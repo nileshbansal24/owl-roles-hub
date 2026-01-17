@@ -95,6 +95,7 @@ interface Profile {
   skills: string[] | null;
   user_type: string | null;
   resume_url?: string | null;
+  email?: string | null;
   // Note: phone field intentionally excluded for recruiter privacy
   experience?: ExperienceItem[] | null;
   education?: EducationItem[] | null;
@@ -289,13 +290,19 @@ const RecruiterDashboard = () => {
     setShowCandidateModal(true);
   };
 
-  // Handle contacting a candidate
+  // Handle contacting a candidate via email
   const handleContactCandidate = (candidate: Profile) => {
-    // For now, show toast since we don't have email in the public profile
-    toast({
-      title: "Contact Request",
-      description: `To contact ${candidate.full_name || "this candidate"}, please view their full profile or wait for them to apply to your job postings.`,
-    });
+    if (candidate.email) {
+      const subject = encodeURIComponent(`Opportunity from ${user?.email || "Recruiter"}`);
+      const body = encodeURIComponent(`Dear ${candidate.full_name || "Candidate"},\n\nI came across your profile and would like to discuss a potential opportunity.\n\nBest regards`);
+      window.open(`mailto:${candidate.email}?subject=${subject}&body=${body}`, "_blank");
+    } else {
+      toast({
+        title: "Email not available",
+        description: `${candidate.full_name || "This candidate"} has not added their email to their profile yet.`,
+        variant: "destructive",
+      });
+    }
   };
 
   // Bulk actions
