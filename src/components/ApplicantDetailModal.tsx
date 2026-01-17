@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { motion } from "framer-motion";
 import {
   Dialog,
@@ -25,6 +26,7 @@ import {
   Trophy,
   Lightbulb,
   Tag,
+  Printer,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
@@ -176,6 +178,8 @@ const ApplicantDetailModal = ({
   onOpenChange,
   onStatusUpdate,
 }: ApplicantDetailModalProps) => {
+  const printRef = useRef<HTMLDivElement>(null);
+  
   if (!application) return null;
 
   const profile = application.profiles;
@@ -186,6 +190,242 @@ const ApplicantDetailModal = ({
     if (profile?.resume_url) {
       window.open(profile.resume_url, "_blank");
     }
+  };
+
+  const handlePrintProfile = () => {
+    const printContent = printRef.current;
+    if (!printContent) return;
+
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    const candidateName = profile?.full_name || 'Candidate';
+    const role = profile?.role || profile?.headline || 'Academic Professional';
+
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>${candidateName} - Profile</title>
+          <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body { 
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+              padding: 40px;
+              color: #1a1a1a;
+              line-height: 1.6;
+            }
+            .header { 
+              display: flex; 
+              align-items: center; 
+              gap: 20px; 
+              margin-bottom: 30px;
+              padding-bottom: 20px;
+              border-bottom: 2px solid #e5e7eb;
+            }
+            .avatar { 
+              width: 80px; 
+              height: 80px; 
+              border-radius: 50%; 
+              background: #3b82f6;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              color: white;
+              font-size: 28px;
+              font-weight: bold;
+            }
+            .avatar img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+            .name { font-size: 24px; font-weight: bold; color: #1a1a1a; }
+            .role { color: #3b82f6; font-size: 16px; margin-top: 4px; }
+            .meta { color: #6b7280; font-size: 14px; margin-top: 8px; }
+            .category { 
+              display: inline-block;
+              padding: 4px 12px;
+              border-radius: 20px;
+              font-size: 12px;
+              font-weight: 600;
+              margin-bottom: 20px;
+            }
+            .category-gold { background: #fbbf24; color: #78350f; }
+            .category-silver { background: #d1d5db; color: #1f2937; }
+            .category-bronze { background: #fb923c; color: #7c2d12; }
+            .category-fresher { background: #374151; color: white; }
+            .section { margin-bottom: 25px; }
+            .section-title { 
+              font-size: 16px; 
+              font-weight: 600; 
+              color: #1a1a1a; 
+              margin-bottom: 12px;
+              padding-bottom: 6px;
+              border-bottom: 1px solid #e5e7eb;
+            }
+            .section-content { color: #4b5563; font-size: 14px; }
+            .badge { 
+              display: inline-block; 
+              background: #f3f4f6; 
+              padding: 4px 10px; 
+              border-radius: 6px; 
+              margin: 2px;
+              font-size: 12px;
+            }
+            .timeline-item { 
+              padding-left: 16px; 
+              border-left: 2px solid #e5e7eb; 
+              margin-bottom: 16px;
+              padding-bottom: 8px;
+            }
+            .timeline-role { font-weight: 600; color: #1a1a1a; }
+            .timeline-institution { color: #3b82f6; font-size: 14px; }
+            .timeline-year { color: #9ca3af; font-size: 12px; }
+            .timeline-desc { color: #6b7280; font-size: 13px; margin-top: 4px; }
+            .edu-item, .paper-item { 
+              background: #f9fafb; 
+              padding: 12px; 
+              border-radius: 8px; 
+              margin-bottom: 10px;
+            }
+            .achievement-item { 
+              display: flex; 
+              align-items: flex-start; 
+              gap: 8px; 
+              margin-bottom: 8px; 
+              font-size: 14px;
+            }
+            .achievement-icon { color: #f59e0b; }
+            .applied-for {
+              background: #f3f4f6;
+              padding: 12px;
+              border-radius: 8px;
+              margin-bottom: 20px;
+            }
+            @media print {
+              body { padding: 20px; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="category category-${category}">${categoryStyles.label} • ${categoryStyles.description}</div>
+          
+          <div class="header">
+            <div class="avatar">
+              ${profile?.avatar_url ? `<img src="${profile.avatar_url}" />` : (profile?.full_name?.slice(0, 2).toUpperCase() || 'U')}
+            </div>
+            <div>
+              <div class="name">${candidateName}</div>
+              <div class="role">${role}</div>
+              <div class="meta">
+                ${profile?.university ? `🎓 ${profile.university} • ` : ''}
+                ${profile?.location ? `📍 ${profile.location} • ` : ''}
+                ${profile?.years_experience ? `💼 ${profile.years_experience} Years Experience` : ''}
+              </div>
+            </div>
+          </div>
+
+          <div class="applied-for">
+            <strong>Applied For:</strong> ${application.jobs.title} at ${application.jobs.institute}
+          </div>
+
+          ${(profile?.bio || profile?.professional_summary) ? `
+            <div class="section">
+              <div class="section-title">Professional Summary</div>
+              <div class="section-content">${profile.professional_summary || profile.bio}</div>
+            </div>
+          ` : ''}
+
+          ${profile?.teaching_philosophy ? `
+            <div class="section">
+              <div class="section-title">Teaching Philosophy</div>
+              <div class="section-content">${profile.teaching_philosophy}</div>
+            </div>
+          ` : ''}
+
+          ${Array.isArray(profile?.experience) && profile.experience.length > 0 ? `
+            <div class="section">
+              <div class="section-title">Work Experience</div>
+              ${profile.experience.map((exp: any) => `
+                <div class="timeline-item">
+                  <div class="timeline-role">${exp.role}</div>
+                  <div class="timeline-institution">${exp.institution}</div>
+                  <div class="timeline-year">${exp.year}${exp.isCurrent ? ' (Current)' : ''}</div>
+                  ${exp.description ? `<div class="timeline-desc">${exp.description}</div>` : ''}
+                </div>
+              `).join('')}
+            </div>
+          ` : ''}
+
+          ${Array.isArray(profile?.education) && profile.education.length > 0 ? `
+            <div class="section">
+              <div class="section-title">Education</div>
+              ${profile.education.map((edu: any) => `
+                <div class="edu-item">
+                  <strong>${edu.degree}</strong><br/>
+                  <span style="color: #3b82f6">${edu.institution}</span><br/>
+                  <span style="color: #9ca3af; font-size: 12px">${edu.years}</span>
+                </div>
+              `).join('')}
+            </div>
+          ` : ''}
+
+          ${Array.isArray(profile?.research_papers) && profile.research_papers.length > 0 ? `
+            <div class="section">
+              <div class="section-title">Research Papers (${profile.research_papers.length})</div>
+              ${profile.research_papers.map((paper: any) => `
+                <div class="paper-item">
+                  <strong>${paper.title}</strong><br/>
+                  <span style="color: #6b7280; font-size: 12px">${paper.authors}</span><br/>
+                  <span style="color: #3b82f6; font-size: 12px">${paper.date}</span>
+                </div>
+              `).join('')}
+            </div>
+          ` : ''}
+
+          ${Array.isArray(profile?.achievements) && profile.achievements.length > 0 ? `
+            <div class="section">
+              <div class="section-title">Achievements & Awards</div>
+              ${profile.achievements.map((a: string) => `
+                <div class="achievement-item">
+                  <span class="achievement-icon">🏆</span>
+                  <span>${a}</span>
+                </div>
+              `).join('')}
+            </div>
+          ` : ''}
+
+          ${Array.isArray(profile?.subjects) && profile.subjects.length > 0 ? `
+            <div class="section">
+              <div class="section-title">Subjects Taught</div>
+              <div>${profile.subjects.map((s: string) => `<span class="badge">${s}</span>`).join('')}</div>
+            </div>
+          ` : ''}
+
+          ${Array.isArray(profile?.skills) && profile.skills.length > 0 ? `
+            <div class="section">
+              <div class="section-title">Skills</div>
+              <div>${profile.skills.map((s: string) => `<span class="badge">${s}</span>`).join('')}</div>
+            </div>
+          ` : ''}
+
+          ${application.cover_letter ? `
+            <div class="section">
+              <div class="section-title">Cover Letter</div>
+              <div class="section-content" style="white-space: pre-wrap;">${application.cover_letter}</div>
+            </div>
+          ` : ''}
+
+          <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; color: #9ca3af; font-size: 12px; text-align: center;">
+            Generated from Candidate Profile • ${new Date().toLocaleDateString()}
+          </div>
+        </body>
+      </html>
+    `);
+    
+    printWindow.document.close();
+    printWindow.focus();
+    
+    setTimeout(() => {
+      printWindow.print();
+    }, 250);
   };
 
   const getStatusColor = (status: string) => {
@@ -213,8 +453,17 @@ const ApplicantDetailModal = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-3xl max-h-[90vh] p-0 overflow-hidden">
-        <DialogHeader className="px-6 pt-6 pb-2">
+        <DialogHeader className="px-6 pt-6 pb-2 flex flex-row items-center justify-between">
           <DialogTitle className="font-heading text-xl">Applicant Profile</DialogTitle>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handlePrintProfile}
+            className="gap-2 mr-8"
+          >
+            <Printer className="h-4 w-4" />
+            Export PDF
+          </Button>
         </DialogHeader>
 
         <ScrollArea className="h-[calc(90vh-100px)] px-6 pb-6">
