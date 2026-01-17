@@ -12,6 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
+import { Progress } from "@/components/ui/progress";
 import {
   MapPin,
   GraduationCap,
@@ -33,6 +34,8 @@ import {
   Trash2,
   Loader2,
   StickyNote,
+  CheckCircle2,
+  Circle,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
@@ -580,6 +583,36 @@ const ApplicantDetailModal = ({
   const achievements: string[] = Array.isArray(profile?.achievements) ? profile.achievements : [];
   const subjects: string[] = Array.isArray(profile?.subjects) ? profile.subjects : [];
 
+  // Calculate profile completeness
+  const profileFields = [
+    { name: "Full Name", filled: !!profile?.full_name },
+    { name: "Photo", filled: !!profile?.avatar_url },
+    { name: "Role/Headline", filled: !!(profile?.role || profile?.headline) },
+    { name: "University", filled: !!profile?.university },
+    { name: "Location", filled: !!profile?.location },
+    { name: "Professional Summary", filled: !!(profile?.bio || profile?.professional_summary) },
+    { name: "Work Experience", filled: experience.length > 0 },
+    { name: "Education", filled: education.length > 0 },
+    { name: "Skills", filled: (profile?.skills?.length || 0) > 0 },
+    { name: "Resume", filled: !!profile?.resume_url },
+    { name: "Research Papers", filled: researchPapers.length > 0 },
+    { name: "Achievements", filled: achievements.length > 0 },
+  ];
+  const filledFields = profileFields.filter(f => f.filled).length;
+  const completenessPercent = Math.round((filledFields / profileFields.length) * 100);
+  
+  const getCompletenessColor = (percent: number) => {
+    if (percent >= 80) return "text-green-600";
+    if (percent >= 50) return "text-amber-600";
+    return "text-red-600";
+  };
+  
+  const getProgressColor = (percent: number) => {
+    if (percent >= 80) return "bg-green-500";
+    if (percent >= 50) return "bg-amber-500";
+    return "bg-red-500";
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-3xl max-h-[90vh] p-0 overflow-hidden">
@@ -603,6 +636,38 @@ const ApplicantDetailModal = ({
             transition={{ duration: 0.3 }}
             className="space-y-6"
           >
+            {/* Profile Completeness Indicator */}
+            <div className="p-4 rounded-lg bg-muted/50 border">
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="text-sm font-medium text-foreground">Profile Completeness</h4>
+                <span className={`text-lg font-bold ${getCompletenessColor(completenessPercent)}`}>
+                  {completenessPercent}%
+                </span>
+              </div>
+              <div className="h-2 bg-muted rounded-full overflow-hidden mb-3">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${completenessPercent}%` }}
+                  transition={{ duration: 0.5, ease: "easeOut" }}
+                  className={`h-full rounded-full ${getProgressColor(completenessPercent)}`}
+                />
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {profileFields.map((field) => (
+                  <div key={field.name} className="flex items-center gap-1.5 text-xs">
+                    {field.filled ? (
+                      <CheckCircle2 className="h-3.5 w-3.5 text-green-500 flex-shrink-0" />
+                    ) : (
+                      <Circle className="h-3.5 w-3.5 text-muted-foreground/50 flex-shrink-0" />
+                    )}
+                    <span className={field.filled ? "text-foreground" : "text-muted-foreground"}>
+                      {field.name}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
             {/* Category Badge */}
             <div className="flex justify-center">
               <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full ${categoryStyles.bg} ${categoryStyles.text} shadow-lg`}>
