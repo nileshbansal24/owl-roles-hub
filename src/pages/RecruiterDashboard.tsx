@@ -14,6 +14,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -151,6 +161,7 @@ const RecruiterDashboard = () => {
   const [showApplicantModal, setShowApplicantModal] = useState(false);
   const [selectedAppIds, setSelectedAppIds] = useState<Set<string>>(new Set());
   const [bulkActionLoading, setBulkActionLoading] = useState(false);
+  const [showRejectConfirm, setShowRejectConfirm] = useState(false);
 
   // Calculate profile completeness
   const calculateCompleteness = (profile: Profile | null): number => {
@@ -381,10 +392,10 @@ const RecruiterDashboard = () => {
         }
       }
 
-      // Delete or Backspace: Reject selected
+      // Delete or Backspace: Show reject confirmation
       if ((e.key === "Delete" || e.key === "Backspace") && selectedAppIds.size > 0) {
         e.preventDefault();
-        handleBulkAction("rejected");
+        setShowRejectConfirm(true);
       }
 
       // Escape: Clear selection
@@ -871,7 +882,7 @@ const RecruiterDashboard = () => {
                           size="sm"
                           variant="destructive"
                           className="gap-1"
-                          onClick={() => handleBulkAction("rejected")}
+                          onClick={() => setShowRejectConfirm(true)}
                           disabled={bulkActionLoading}
                         >
                           {bulkActionLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <XCircle className="h-4 w-4" />}
@@ -1106,6 +1117,31 @@ const RecruiterDashboard = () => {
         onOpenChange={setShowApplicantModal}
         onStatusUpdate={handleModalStatusUpdate}
       />
+
+      {/* Bulk Reject Confirmation Dialog */}
+      <AlertDialog open={showRejectConfirm} onOpenChange={setShowRejectConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Reject {selectedAppIds.size} applicant{selectedAppIds.size !== 1 ? 's' : ''}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action will mark {selectedAppIds.size} application{selectedAppIds.size !== 1 ? 's' : ''} as rejected. 
+              The applicants will be notified of this decision. This action cannot be easily undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                handleBulkAction("rejected");
+                setShowRejectConfirm(false);
+              }}
+            >
+              Yes, reject all
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
