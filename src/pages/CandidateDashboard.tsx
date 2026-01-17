@@ -21,6 +21,7 @@ import {
   ResumeCard,
   AISalarySuggestion,
   AchievementsList,
+  AIJobMatching,
 } from "@/components/profile";
 import {
   Edit2,
@@ -485,6 +486,24 @@ const CandidateDashboard = () => {
       animate="visible"
       className="space-y-4 md:space-y-5"
     >
+      {/* AI Job Recommendations */}
+      <motion.div variants={itemVariants}>
+        <ProfileCard title="" className="overflow-hidden">
+          <AIJobMatching
+            profile={{
+              role: profile?.role,
+              headline: profile?.headline,
+              yearsExperience: profile?.years_experience,
+              location: profile?.location,
+              skills: profile?.skills,
+              university: profile?.university,
+              bio: profile?.bio,
+            }}
+            onViewJob={(jobId) => navigate(`/?job=${jobId}`)}
+          />
+        </ProfileCard>
+      </motion.div>
+
       {/* Professional Summary */}
       <motion.div variants={itemVariants}>
         <ProfileCard

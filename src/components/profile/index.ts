@@ -8,3 +8,4 @@ export { TagsDisplay } from "./TagsDisplay";
 export { ResumeCard } from "./ResumeCard";
 export { AISalarySuggestion } from "./AISalarySuggestion";
 export { AchievementsList } from "./AchievementsList";
+export { AIJobMatching } from "./AIJobMatching";
