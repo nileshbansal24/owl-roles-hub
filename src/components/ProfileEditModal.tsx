@@ -24,6 +24,7 @@ interface Profile {
   role: string | null;
   bio: string | null;
   years_experience: number | null;
+  email?: string | null;
 }
 
 interface ProfileEditModalProps {
@@ -49,6 +50,7 @@ const ProfileEditModal = ({
     role: profile?.role || "",
     bio: profile?.bio || "",
     years_experience: profile?.years_experience || 0,
+    email: profile?.email || "",
   });
   const [avatarUrl, setAvatarUrl] = useState(profile?.avatar_url || "");
   const [uploading, setUploading] = useState(false);
@@ -147,6 +149,7 @@ const ProfileEditModal = ({
           bio: validation.data.bio || null,
           years_experience: validation.data.years_experience || null,
           avatar_url: avatarUrl || null,
+          email: formData.email || null,
         })
         .eq("id", user.id)
         .select()
@@ -279,6 +282,22 @@ const ProfileEditModal = ({
                   })
                 }
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="email">Contact Email (visible to recruiters)</Label>
+              <Input
+                id="email"
+                type="email"
+                value={formData.email}
+                onChange={(e) =>
+                  setFormData({ ...formData, email: e.target.value })
+                }
+                placeholder="your.email@example.com"
+              />
+              <p className="text-xs text-muted-foreground">
+                This email will be visible to recruiters searching for candidates
+              </p>
             </div>
 
             <div className="space-y-2">
