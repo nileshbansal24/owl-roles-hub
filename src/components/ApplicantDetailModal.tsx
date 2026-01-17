@@ -35,6 +35,7 @@ import {
   Loader2,
   StickyNote,
   CheckCircle2,
+  CalendarDays,
   Circle,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
@@ -119,6 +120,7 @@ interface ApplicantDetailModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onStatusUpdate: (appId: string, status: string) => void;
+  onScheduleInterview?: (application: Application) => void;
 }
 
 type CategoryType = "gold" | "silver" | "bronze" | "fresher";
@@ -204,6 +206,7 @@ const ApplicantDetailModal = ({
   open,
   onOpenChange,
   onStatusUpdate,
+  onScheduleInterview,
 }: ApplicantDetailModalProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -1045,6 +1048,16 @@ const ApplicantDetailModal = ({
               >
                 Mark Reviewed
               </Button>
+              {onScheduleInterview && application.status !== "viewing" && (
+                <Button
+                  variant="outline"
+                  className="gap-2"
+                  onClick={() => onScheduleInterview(application)}
+                >
+                  <CalendarDays className="h-4 w-4" />
+                  Schedule Interview
+                </Button>
+              )}
               <Button
                 className="bg-green-600 hover:bg-green-700 text-white"
                 onClick={() => onStatusUpdate(application.id, "shortlisted")}
