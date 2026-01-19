@@ -207,6 +207,33 @@ const CandidateDashboard = () => {
         setApplications((appsData as unknown as Application[]) || []);
       }
 
+      // Fetch interviews for this candidate
+      const { data: interviewsData, error: interviewsError } = await supabase
+        .from("interviews")
+        .select("*")
+        .eq("candidate_id", user.id)
+        .order("created_at", { ascending: false });
+
+      if (interviewsError) {
+        console.error("Error fetching interviews:", interviewsError);
+      } else if (interviewsData) {
+        // Enrich with job info
+        const enrichedInterviews = await Promise.all(
+          interviewsData.map(async (interview) => {
+            const { data: jobData } = await supabase
+              .from("jobs_public")
+              .select("title, institute, location")
+              .eq("id", interview.job_id)
+              .maybeSingle();
+            return {
+              ...interview,
+              job: jobData || { title: "Unknown Position", institute: "Unknown", location: "" },
+            };
+          })
+        );
+        setInterviews(enrichedInterviews);
+      }
+
       setLoading(false);
     };
 
@@ -705,6 +732,81 @@ const CandidateDashboard = () => {
     </motion.div>
   );
 
+  // Handle interview response
+  const handleInterviewClick = (interview: any) => {
+    setSelectedInterview(interview);
+    setShowInterviewModal(true);
+  };
+
+  const handleInterviewResponse = async () => {
+    // Refresh interviews list after response
+    if (user) {
+      const { data: interviewsData } = await supabase
+        .from("interviews")
+        .select("*")
+        .eq("candidate_id", user.id)
+        .order("created_at", { ascending: false });
+
+      if (interviewsData) {
+        const enrichedInterviews = await Promise.all(
+          interviewsData.map(async (interview) => {
+            const { data: jobData } = await supabase
+              .from("jobs_public")
+              .select("title, institute, location")
+              .eq("id", interview.job_id)
+              .maybeSingle();
+            return {
+              ...interview,
+              job: jobData || { title: "Unknown Position", institute: "Unknown", location: "" },
+            };
+          })
+        );
+        setInterviews(enrichedInterviews);
+      }
+    }
+    setShowInterviewModal(false);
+    setSelectedInterview(null);
+  };
+
+  // Interviews content
+  const InterviewsContent = () => (
+    <motion.div
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+      className="space-y-4"
+    >
+      {interviews.length === 0 ? (
+        <motion.div variants={itemVariants}>
+          <ProfileCard title="My Interviews">
+            <div className="text-center py-8">
+              <CalendarDays className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <p className="text-muted-foreground mb-4">No interviews scheduled yet.</p>
+              <p className="text-sm text-muted-foreground">
+                When recruiters schedule interviews for your applications, they'll appear here.
+              </p>
+            </div>
+          </ProfileCard>
+        </motion.div>
+      ) : (
+        interviews.map((interview) => (
+          <motion.div key={interview.id} variants={itemVariants}>
+            <InterviewCard
+              interview={{
+                ...interview,
+                job_title: interview.job?.title || "Unknown Position",
+                institute: interview.job?.institute || "Unknown",
+              }}
+              variant="candidate"
+              onRespond={() => handleInterviewClick(interview)}
+              onViewDetails={() => handleInterviewClick(interview)}
+            />
+          </motion.div>
+        ))
+      )}
+    </motion.div>
+  );
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -782,6 +884,18 @@ const CandidateDashboard = () => {
                   >
                     Achievements
                   </TabsTrigger>
+                  <TabsTrigger
+                    value="interviews"
+                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 py-3"
+                  >
+                    <CalendarDays className="h-4 w-4 mr-1.5" />
+                    Interviews
+                    {interviews.filter(i => i.status === 'pending').length > 0 && (
+                      <Badge variant="secondary" className="ml-1.5 h-5 px-1.5 text-xs">
+                        {interviews.filter(i => i.status === 'pending').length}
+                      </Badge>
+                    )}
+                  </TabsTrigger>
                 </TabsList>
               </div>
 
@@ -812,6 +926,18 @@ const CandidateDashboard = () => {
                       className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 py-3 text-sm"
                     >
                       Achievements
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="interviews"
+                      className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 py-3 text-sm"
+                    >
+                      <CalendarDays className="h-4 w-4 mr-1" />
+                      Interviews
+                      {interviews.filter(i => i.status === 'pending').length > 0 && (
+                        <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
+                          {interviews.filter(i => i.status === 'pending').length}
+                        </Badge>
+                      )}
                     </TabsTrigger>
                   </TabsList>
                   <ScrollBar orientation="horizontal" />
@@ -923,6 +1049,13 @@ const CandidateDashboard = () => {
                 </ProfileCard>
               </div>
             </TabsContent>
+
+            {/* Interviews Tab */}
+            <TabsContent value="interviews" className="mt-6">
+              <div className="max-w-4xl">
+                <InterviewsContent />
+              </div>
+            </TabsContent>
           </Tabs>
         </div>
       </main>
@@ -949,6 +1082,17 @@ const CandidateDashboard = () => {
         job={quickApplyJob}
         resumeUrl={profile?.resume_url}
         onSuccess={handleApplicationSuccess}
+      />
+
+      <InterviewResponseModal
+        open={showInterviewModal}
+        onOpenChange={setShowInterviewModal}
+        interview={selectedInterview ? {
+          ...selectedInterview,
+          job_title: selectedInterview.job?.title || "Unknown Position",
+          institute: selectedInterview.job?.institute || "Unknown",
+        } : null}
+        onResponded={handleInterviewResponse}
       />
     </div>
   );
