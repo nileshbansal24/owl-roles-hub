@@ -35,6 +35,8 @@ import {
   X,
   Loader2,
   Send,
+  Sparkles,
+  User,
 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -216,197 +218,278 @@ const InterviewScheduleModal = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="font-heading text-xl">
-            Schedule Interview
-          </DialogTitle>
-        </DialogHeader>
+      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto p-0">
+        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b px-6 py-4">
+          <DialogHeader>
+            <DialogTitle className="font-heading text-xl flex items-center gap-2">
+              <motion.div
+                initial={{ rotate: -20, scale: 0 }}
+                animate={{ rotate: 0, scale: 1 }}
+                transition={{ type: "spring", stiffness: 200 }}
+              >
+                <CalendarDays className="h-5 w-5 text-primary" />
+              </motion.div>
+              Schedule Interview
+            </DialogTitle>
+          </DialogHeader>
+        </div>
 
         <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="space-y-6"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="space-y-6 px-6 py-4 pb-6"
         >
           {/* Candidate Info */}
-          <div className="p-4 rounded-lg bg-secondary/50 border">
-            <p className="text-sm text-muted-foreground">Scheduling for</p>
-            <p className="font-medium text-foreground">
-              {application.profiles?.full_name || "Candidate"}
-            </p>
-            <p className="text-sm text-muted-foreground">
-              {application.jobs.title} at {application.jobs.institute}
-            </p>
-          </div>
+          <motion.div 
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="p-4 rounded-xl bg-gradient-to-br from-secondary/50 to-secondary/30 border border-border/50 backdrop-blur-sm"
+          >
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                <User className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground uppercase tracking-wide">Scheduling for</p>
+                <p className="font-heading font-semibold text-foreground">
+                  {application.profiles?.full_name || "Candidate"}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {application.jobs.title} at {application.jobs.institute}
+                </p>
+              </div>
+            </div>
+          </motion.div>
 
           {/* Interview Type */}
-          <div className="space-y-2">
-            <Label>Interview Type</Label>
+          <motion.div 
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15 }}
+            className="space-y-2"
+          >
+            <Label className="text-sm font-medium">Interview Type</Label>
             <Select value={interviewType} onValueChange={setInterviewType}>
-              <SelectTrigger>
+              <SelectTrigger className="h-11 transition-all hover:border-primary/50 focus:ring-2 focus:ring-primary/20">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="video">
-                  <div className="flex items-center gap-2">
-                    <Video className="h-4 w-4" />
-                    Video Call
+                <SelectItem value="video" className="cursor-pointer">
+                  <div className="flex items-center gap-2 py-1">
+                    <div className="p-1.5 rounded-md bg-primary/10 text-primary">
+                      <Video className="h-4 w-4" />
+                    </div>
+                    <span>Video Call</span>
                   </div>
                 </SelectItem>
-                <SelectItem value="phone">
-                  <div className="flex items-center gap-2">
-                    <Phone className="h-4 w-4" />
-                    Phone Call
+                <SelectItem value="phone" className="cursor-pointer">
+                  <div className="flex items-center gap-2 py-1">
+                    <div className="p-1.5 rounded-md bg-accent text-accent-foreground">
+                      <Phone className="h-4 w-4" />
+                    </div>
+                    <span>Phone Call</span>
                   </div>
                 </SelectItem>
-                <SelectItem value="in_person">
-                  <div className="flex items-center gap-2">
-                    <MapPin className="h-4 w-4" />
-                    In Person
+                <SelectItem value="in_person" className="cursor-pointer">
+                  <div className="flex items-center gap-2 py-1">
+                    <div className="p-1.5 rounded-md bg-secondary text-secondary-foreground">
+                      <MapPin className="h-4 w-4" />
+                    </div>
+                    <span>In Person</span>
                   </div>
                 </SelectItem>
               </SelectContent>
             </Select>
-          </div>
+          </motion.div>
 
           {/* Meeting Link / Location */}
-          {interviewType === "video" && (
-            <div className="space-y-2">
-              <Label htmlFor="meetingLink">Meeting Link</Label>
-              <Input
-                id="meetingLink"
-                value={meetingLink}
-                onChange={(e) => setMeetingLink(e.target.value)}
-                placeholder="https://zoom.us/j/... or Google Meet link"
-              />
-            </div>
-          )}
+          <AnimatePresence mode="wait">
+            {interviewType === "video" && (
+              <motion.div
+                key="video-link"
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="space-y-2 overflow-hidden"
+              >
+                <Label htmlFor="meetingLink" className="text-sm font-medium">Meeting Link</Label>
+                <div className="relative">
+                  <Video className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="meetingLink"
+                    value={meetingLink}
+                    onChange={(e) => setMeetingLink(e.target.value)}
+                    placeholder="https://zoom.us/j/... or Google Meet link"
+                    className="pl-10 h-11 transition-all hover:border-primary/50 focus:ring-2 focus:ring-primary/20"
+                  />
+                </div>
+              </motion.div>
+            )}
 
-          {interviewType === "in_person" && (
-            <div className="space-y-2">
-              <Label htmlFor="location">Location</Label>
-              <Input
-                id="location"
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                placeholder="Office address or room number"
-              />
-            </div>
-          )}
+            {interviewType === "in_person" && (
+              <motion.div
+                key="location"
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="space-y-2 overflow-hidden"
+              >
+                <Label htmlFor="location" className="text-sm font-medium">Location</Label>
+                <div className="relative">
+                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="location"
+                    value={location}
+                    onChange={(e) => setLocation(e.target.value)}
+                    placeholder="Office address or room number"
+                    className="pl-10 h-11 transition-all hover:border-primary/50 focus:ring-2 focus:ring-primary/20"
+                  />
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Proposed Times */}
-          <div className="space-y-3">
+          <motion.div 
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="space-y-3"
+          >
             <div className="flex items-center justify-between">
-              <Label>Proposed Time Slots</Label>
+              <Label className="text-sm font-medium">Proposed Time Slots</Label>
               {proposedTimes.length < 5 && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={addTimeSlot}
-                  className="h-8 gap-1"
-                >
-                  <Plus className="h-3 w-3" />
-                  Add Slot
-                </Button>
+                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={addTimeSlot}
+                    className="h-8 gap-1.5 text-xs hover:border-primary/50 hover:bg-primary/5"
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                    Add Slot
+                  </Button>
+                </motion.div>
               )}
             </div>
 
-            <AnimatePresence mode="popLayout">
-              {proposedTimes.map((slot, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="flex items-center gap-2"
-                >
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          "flex-1 justify-start text-left font-normal",
-                          !slot.date && "text-muted-foreground"
-                        )}
-                      >
-                        <CalendarDays className="mr-2 h-4 w-4" />
-                        {slot.date ? format(slot.date, "PP") : "Pick a date"}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={slot.date}
-                        onSelect={(date) =>
-                          date && updateTimeSlot(index, "date", date)
+            <div className="space-y-2">
+              <AnimatePresence mode="popLayout">
+                {proposedTimes.map((slot, index) => (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, x: -20, height: 0 }}
+                    animate={{ opacity: 1, x: 0, height: "auto" }}
+                    exit={{ opacity: 0, x: 20, height: 0 }}
+                    layout
+                    className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 p-3 rounded-lg bg-muted/30 border border-border/50"
+                  >
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "flex-1 justify-start text-left font-normal h-10 transition-all hover:border-primary/50",
+                            !slot.date && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarDays className="mr-2 h-4 w-4 text-primary" />
+                          {slot.date ? format(slot.date, "PP") : "Pick a date"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={slot.date}
+                          onSelect={(date) =>
+                            date && updateTimeSlot(index, "date", date)
+                          }
+                          disabled={(date) => date < new Date()}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+
+                    <div className="relative flex-shrink-0">
+                      <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        type="time"
+                        value={slot.time}
+                        onChange={(e) =>
+                          updateTimeSlot(index, "time", e.target.value)
                         }
-                        disabled={(date) => date < new Date()}
-                        initialFocus
+                        className="pl-10 w-full sm:w-32 h-10 transition-all hover:border-primary/50"
                       />
-                    </PopoverContent>
-                  </Popover>
+                    </div>
 
-                  <div className="relative">
-                    <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      type="time"
-                      value={slot.time}
-                      onChange={(e) =>
-                        updateTimeSlot(index, "time", e.target.value)
-                      }
-                      className="pl-10 w-32"
-                    />
-                  </div>
+                    {proposedTimes.length > 1 && (
+                      <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => removeTimeSlot(index)}
+                          className="h-10 w-10 shrink-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </motion.div>
+                    )}
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            </div>
 
-                  {proposedTimes.length > 1 && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => removeTimeSlot(index)}
-                      className="h-9 w-9 shrink-0"
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  )}
-                </motion.div>
-              ))}
-            </AnimatePresence>
-
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+              <Sparkles className="h-3 w-3" />
               Provide up to 5 time slots for the candidate to choose from.
             </p>
-          </div>
+          </motion.div>
 
           {/* Notes */}
-          <div className="space-y-2">
-            <Label htmlFor="notes">Notes for Candidate (Optional)</Label>
+          <motion.div 
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.25 }}
+            className="space-y-2"
+          >
+            <Label htmlFor="notes" className="text-sm font-medium">Notes for Candidate (Optional)</Label>
             <Textarea
               id="notes"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Any preparation tips or agenda for the interview..."
               rows={3}
+              className="resize-none transition-all hover:border-primary/50 focus:ring-2 focus:ring-primary/20"
             />
-          </div>
+          </motion.div>
 
           {/* Submit */}
-          <Button
-            onClick={handleSchedule}
-            disabled={scheduling}
-            className="w-full gap-2"
+          <motion.div 
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
           >
-            {scheduling ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Scheduling...
-              </>
-            ) : (
-              <>
-                <Send className="h-4 w-4" />
-                Send Interview Request
-              </>
-            )}
-          </Button>
+            <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
+              <Button
+                onClick={handleSchedule}
+                disabled={scheduling}
+                className="w-full h-12 gap-2 text-base font-medium shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all"
+              >
+                {scheduling ? (
+                  <>
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                    Scheduling...
+                  </>
+                ) : (
+                  <>
+                    <Send className="h-5 w-5" />
+                    Send Interview Request
+                  </>
+                )}
+              </Button>
+            </motion.div>
+          </motion.div>
         </motion.div>
       </DialogContent>
     </Dialog>
