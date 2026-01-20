@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -22,6 +22,9 @@ import {
   ExternalLink,
   Clock,
   CheckCircle2,
+  Sparkles,
+  Building2,
+  ArrowLeft,
 } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -95,6 +98,19 @@ const InterviewResponseModal = ({
         return "In-Person Interview";
       default:
         return "Interview";
+    }
+  };
+
+  const getTypeColor = () => {
+    switch (interview.interview_type) {
+      case "video":
+        return "bg-primary/10 text-primary";
+      case "phone":
+        return "bg-accent text-accent-foreground";
+      case "in_person":
+        return "bg-secondary text-secondary-foreground";
+      default:
+        return "bg-primary/10 text-primary";
     }
   };
 
@@ -181,200 +197,325 @@ const InterviewResponseModal = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="font-heading text-xl flex items-center gap-2">
-            {getTypeIcon()}
-            {getTypeLabel()}
-          </DialogTitle>
-        </DialogHeader>
+      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto p-0">
+        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b px-6 py-4">
+          <DialogHeader>
+            <DialogTitle className="font-heading text-xl flex items-center gap-3">
+              <motion.div
+                initial={{ rotate: -20, scale: 0 }}
+                animate={{ rotate: 0, scale: 1 }}
+                transition={{ type: "spring", stiffness: 200 }}
+                className={cn("p-2 rounded-lg", getTypeColor())}
+              >
+                {getTypeIcon()}
+              </motion.div>
+              {getTypeLabel()}
+            </DialogTitle>
+          </DialogHeader>
+        </div>
 
         <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="space-y-6"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ staggerChildren: 0.06, delayChildren: 0.1 }}
+          className="space-y-5 px-6 py-4 pb-6"
         >
           {/* Job Info */}
-          <div className="p-4 rounded-lg bg-secondary/50 border">
-            <p className="font-medium text-foreground">
-              {interview.job_title || "Job Interview"}
-            </p>
-            <p className="text-sm text-muted-foreground">
-              {interview.institute}
-            </p>
-            <div className="mt-2">
-              <Badge
-                variant="outline"
-                className={cn(
-                  interview.status === "confirmed" &&
-                    "bg-green-500/10 text-green-600 border-green-500/30",
-                  interview.status === "pending" &&
-                    "bg-amber-500/10 text-amber-600 border-amber-500/30",
-                  interview.status === "declined" &&
-                    "bg-red-500/10 text-red-600 border-red-500/30"
-                )}
-              >
-                {interview.status.charAt(0).toUpperCase() +
-                  interview.status.slice(1)}
-              </Badge>
+          <motion.div 
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="p-4 rounded-xl bg-gradient-to-br from-secondary/50 to-secondary/30 border border-border/50"
+          >
+            <div className="flex items-start gap-3">
+              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <Building2 className="h-5 w-5 text-primary" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-heading font-semibold text-foreground truncate">
+                  {interview.job_title || "Job Interview"}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {interview.institute}
+                </p>
+                <motion.div 
+                  className="mt-2"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.2 }}
+                >
+                  <Badge
+                    variant="outline"
+                    className={cn(
+                      "transition-all",
+                      interview.status === "confirmed" &&
+                        "bg-green-500/10 text-green-600 border-green-500/30",
+                      interview.status === "pending" &&
+                        "bg-amber-500/10 text-amber-600 border-amber-500/30",
+                      interview.status === "declined" &&
+                        "bg-red-500/10 text-red-600 border-red-500/30"
+                    )}
+                  >
+                    {interview.status === "pending" && (
+                      <Sparkles className="h-3 w-3 mr-1 animate-pulse" />
+                    )}
+                    {interview.status.charAt(0).toUpperCase() +
+                      interview.status.slice(1)}
+                  </Badge>
+                </motion.div>
+              </div>
             </div>
-          </div>
+          </motion.div>
 
           {/* Meeting Details */}
           {interview.meeting_link && (
-            <div className="space-y-2">
-              <Label>Meeting Link</Label>
-              <a
+            <motion.div 
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.15 }}
+              className="space-y-2"
+            >
+              <Label className="text-sm font-medium">Meeting Link</Label>
+              <motion.a
                 href={interview.meeting_link}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 text-primary hover:underline text-sm"
+                className="flex items-center gap-2 text-primary hover:text-primary/80 text-sm p-3 rounded-lg bg-primary/5 border border-primary/20 transition-colors"
+                whileHover={{ x: 3 }}
               >
-                <ExternalLink className="h-4 w-4" />
-                {interview.meeting_link}
-              </a>
-            </div>
+                <ExternalLink className="h-4 w-4 flex-shrink-0" />
+                <span className="truncate">{interview.meeting_link}</span>
+              </motion.a>
+            </motion.div>
           )}
 
           {interview.location && (
-            <div className="space-y-2">
-              <Label>Location</Label>
-              <p className="text-sm text-foreground flex items-center gap-2">
-                <MapPin className="h-4 w-4 text-muted-foreground" />
+            <motion.div 
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="space-y-2"
+            >
+              <Label className="text-sm font-medium">Location</Label>
+              <p className="text-sm text-foreground flex items-center gap-2 p-3 rounded-lg bg-muted/50">
+                <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                 {interview.location}
               </p>
-            </div>
+            </motion.div>
           )}
 
           {/* Recruiter Notes */}
           {interview.notes && (
-            <div className="space-y-2">
-              <Label>Notes from Recruiter</Label>
-              <p className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg">
+            <motion.div 
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.25 }}
+              className="space-y-2"
+            >
+              <Label className="text-sm font-medium">Notes from Recruiter</Label>
+              <div className="text-sm text-muted-foreground bg-muted/30 p-4 rounded-xl border border-border/50">
                 {interview.notes}
-              </p>
-            </div>
+              </div>
+            </motion.div>
           )}
 
           {/* Time Selection (for pending interviews) */}
           {interview.status === "pending" && !showDeclineForm && (
-            <div className="space-y-3">
-              <Label>Select a Time Slot</Label>
+            <motion.div 
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="space-y-3"
+            >
+              <Label className="text-sm font-medium flex items-center gap-2">
+                <Clock className="h-4 w-4 text-primary" />
+                Select a Time Slot
+              </Label>
               <div className="space-y-2">
                 {proposedTimes.map((time, index) => (
-                  <button
+                  <motion.button
                     key={index}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.35 + index * 0.05 }}
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.99 }}
                     onClick={() => setSelectedTime(time.datetime)}
                     className={cn(
-                      "w-full p-3 rounded-lg border text-left transition-all",
+                      "w-full p-4 rounded-xl border text-left transition-all",
                       "hover:border-primary/50 hover:bg-primary/5",
                       selectedTime === time.datetime
-                        ? "border-primary bg-primary/10 ring-1 ring-primary"
-                        : "border-border"
+                        ? "border-primary bg-primary/10 ring-2 ring-primary/20 shadow-sm"
+                        : "border-border bg-card/50"
                     )}
                   >
                     <div className="flex items-center gap-3">
-                      <Clock className="h-4 w-4 text-muted-foreground" />
-                      <span className="font-medium text-foreground">
+                      <div className={cn(
+                        "p-2 rounded-lg transition-colors",
+                        selectedTime === time.datetime 
+                          ? "bg-primary/20 text-primary" 
+                          : "bg-muted text-muted-foreground"
+                      )}>
+                        <Clock className="h-4 w-4" />
+                      </div>
+                      <span className="font-medium text-foreground flex-1">
                         {time.formatted}
                       </span>
-                      {selectedTime === time.datetime && (
-                        <CheckCircle2 className="h-4 w-4 text-primary ml-auto" />
-                      )}
+                      <AnimatePresence>
+                        {selectedTime === time.datetime && (
+                          <motion.div
+                            initial={{ scale: 0, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0, opacity: 0 }}
+                            transition={{ type: "spring", stiffness: 300 }}
+                          >
+                            <CheckCircle2 className="h-5 w-5 text-primary" />
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                     </div>
-                  </button>
+                  </motion.button>
                 ))}
               </div>
-            </div>
+            </motion.div>
           )}
 
           {/* Confirmed Time Display */}
           {isConfirmed && interview.confirmed_time && (
-            <div className="p-4 rounded-lg bg-green-500/10 border border-green-500/30">
-              <div className="flex items-center gap-2 text-green-600">
-                <CalendarCheck className="h-5 w-5" />
-                <span className="font-medium">Confirmed Interview</span>
-              </div>
-              <p className="mt-2 text-foreground">
-                {format(
-                  parseISO(interview.confirmed_time),
-                  "EEEE, MMMM d, yyyy 'at' h:mm a"
-                )}
-              </p>
-            </div>
-          )}
-
-          {/* Decline Form */}
-          {showDeclineForm && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              className="space-y-3"
+            <motion.div 
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="p-4 rounded-xl bg-gradient-to-br from-green-500/10 to-green-500/5 border border-green-500/30"
             >
-              <Label htmlFor="declineReason">
-                Reason for Declining (Optional)
-              </Label>
-              <Textarea
-                id="declineReason"
-                value={declineReason}
-                onChange={(e) => setDeclineReason(e.target.value)}
-                placeholder="Let the recruiter know why you can't attend..."
-                rows={3}
-              />
+              <div className="flex items-center gap-3">
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: "spring", stiffness: 200, delay: 0.3 }}
+                  className="p-2 rounded-full bg-green-500/20"
+                >
+                  <CalendarCheck className="h-5 w-5 text-green-600" />
+                </motion.div>
+                <div>
+                  <span className="font-medium text-green-600">Confirmed Interview</span>
+                  <p className="text-foreground mt-1">
+                    {format(
+                      parseISO(interview.confirmed_time),
+                      "EEEE, MMMM d, yyyy 'at' h:mm a"
+                    )}
+                  </p>
+                </div>
+              </div>
             </motion.div>
           )}
 
+          {/* Decline Form */}
+          <AnimatePresence mode="wait">
+            {showDeclineForm && (
+              <motion.div
+                key="decline-form"
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="space-y-3 overflow-hidden"
+              >
+                <Label htmlFor="declineReason" className="text-sm font-medium">
+                  Reason for Declining (Optional)
+                </Label>
+                <Textarea
+                  id="declineReason"
+                  value={declineReason}
+                  onChange={(e) => setDeclineReason(e.target.value)}
+                  placeholder="Let the recruiter know why you can't attend..."
+                  rows={3}
+                  className="resize-none transition-all hover:border-primary/50 focus:ring-2 focus:ring-primary/20"
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           {/* Actions */}
           {interview.status === "pending" && (
-            <div className="flex gap-3">
+            <motion.div 
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              className="flex flex-col sm:flex-row gap-3 pt-2"
+            >
               {showDeclineForm ? (
                 <>
-                  <Button
-                    variant="outline"
-                    onClick={() => setShowDeclineForm(false)}
-                    className="flex-1"
+                  <motion.div 
+                    className="flex-1" 
+                    whileHover={{ scale: 1.01 }} 
+                    whileTap={{ scale: 0.99 }}
                   >
-                    Back
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    onClick={handleDecline}
-                    disabled={responding}
-                    className="flex-1 gap-2"
+                    <Button
+                      variant="outline"
+                      onClick={() => setShowDeclineForm(false)}
+                      className="w-full h-11 gap-2"
+                    >
+                      <ArrowLeft className="h-4 w-4" />
+                      Back
+                    </Button>
+                  </motion.div>
+                  <motion.div 
+                    className="flex-1" 
+                    whileHover={{ scale: 1.01 }} 
+                    whileTap={{ scale: 0.99 }}
                   >
-                    {responding ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <CalendarX className="h-4 w-4" />
-                    )}
-                    Confirm Decline
-                  </Button>
+                    <Button
+                      variant="destructive"
+                      onClick={handleDecline}
+                      disabled={responding}
+                      className="w-full h-11 gap-2 shadow-lg"
+                    >
+                      {responding ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <CalendarX className="h-4 w-4" />
+                      )}
+                      Confirm Decline
+                    </Button>
+                  </motion.div>
                 </>
               ) : (
                 <>
-                  <Button
-                    variant="outline"
-                    onClick={() => setShowDeclineForm(true)}
-                    className="flex-1 gap-2"
+                  <motion.div 
+                    className="flex-1" 
+                    whileHover={{ scale: 1.01 }} 
+                    whileTap={{ scale: 0.99 }}
                   >
-                    <CalendarX className="h-4 w-4" />
-                    Decline
-                  </Button>
-                  <Button
-                    onClick={handleConfirm}
-                    disabled={responding || !selectedTime}
-                    className="flex-1 gap-2"
+                    <Button
+                      variant="outline"
+                      onClick={() => setShowDeclineForm(true)}
+                      className="w-full h-11 gap-2 hover:border-destructive/50 hover:text-destructive hover:bg-destructive/5"
+                    >
+                      <CalendarX className="h-4 w-4" />
+                      Decline
+                    </Button>
+                  </motion.div>
+                  <motion.div 
+                    className="flex-1" 
+                    whileHover={{ scale: 1.01 }} 
+                    whileTap={{ scale: 0.99 }}
                   >
-                    {responding ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <CalendarCheck className="h-4 w-4" />
-                    )}
-                    Confirm
-                  </Button>
+                    <Button
+                      onClick={handleConfirm}
+                      disabled={responding || !selectedTime}
+                      className="w-full h-11 gap-2 shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all"
+                    >
+                      {responding ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <CalendarCheck className="h-4 w-4" />
+                      )}
+                      Confirm Time
+                    </Button>
+                  </motion.div>
                 </>
               )}
-            </div>
+            </motion.div>
           )}
         </motion.div>
       </DialogContent>
