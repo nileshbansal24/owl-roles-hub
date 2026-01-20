@@ -24,6 +24,7 @@ interface Interview {
   id: string;
   application_id: string;
   job_id: string;
+  recruiter_id?: string;
   proposed_times: ProposedTime[];
   confirmed_time: string | null;
   status: string;

@@ -39,6 +39,7 @@ interface Interview {
   id: string;
   application_id: string;
   job_id: string;
+  recruiter_id: string;
   proposed_times: ProposedTime[];
   confirmed_time: string | null;
   status: string;
@@ -137,6 +138,33 @@ const InterviewResponseModal = ({
 
       if (error) throw error;
 
+      // Fetch recruiter email and candidate name for notification
+      const { data: recruiterProfile } = await supabase
+        .from("profiles")
+        .select("email, full_name")
+        .eq("id", interview.recruiter_id)
+        .single();
+
+      const { data: candidateProfile } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("id", user.id)
+        .single();
+
+      // Send notification to recruiter
+      const selectedTimeData = proposedTimes.find(t => t.datetime === selectedTime);
+      await supabase.functions.invoke("send-status-notification", {
+        body: {
+          newStatus: "interview_confirmed",
+          jobTitle: interview.job_title || "Position",
+          instituteName: interview.institute || "Institution",
+          candidateName: candidateProfile?.full_name || user.email,
+          confirmedTime: selectedTimeData?.formatted || format(parseISO(selectedTime), "EEEE, MMMM d, yyyy 'at' h:mm a"),
+          recruiterEmail: recruiterProfile?.email,
+          interviewType: getTypeLabel(),
+        },
+      });
+
       toast({
         title: "Interview confirmed!",
         description: "The recruiter has been notified of your confirmed time.",
@@ -173,6 +201,31 @@ const InterviewResponseModal = ({
         .eq("id", interview.id);
 
       if (error) throw error;
+
+      // Fetch recruiter email and candidate name for notification
+      const { data: recruiterProfile } = await supabase
+        .from("profiles")
+        .select("email")
+        .eq("id", interview.recruiter_id)
+        .single();
+
+      const { data: candidateProfile } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("id", user.id)
+        .single();
+
+      // Send notification to recruiter
+      await supabase.functions.invoke("send-status-notification", {
+        body: {
+          newStatus: "interview_declined",
+          jobTitle: interview.job_title || "Position",
+          instituteName: interview.institute || "Institution",
+          candidateName: candidateProfile?.full_name || user.email,
+          declineReason: declineReason || undefined,
+          recruiterEmail: recruiterProfile?.email,
+        },
+      });
 
       toast({
         title: "Interview declined",

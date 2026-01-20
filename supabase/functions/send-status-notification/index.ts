@@ -10,13 +10,20 @@ const corsHeaders = {
 };
 
 interface StatusNotificationRequest {
-  applicationId: string;
+  applicationId?: string;
   newStatus: string;
   jobTitle: string;
   instituteName: string;
+  // Interview-specific fields
+  interviewId?: string;
+  candidateName?: string;
+  confirmedTime?: string;
+  declineReason?: string;
+  recruiterEmail?: string;
+  interviewType?: string;
 }
 
-const getStatusEmailContent = (status: string, jobTitle: string, instituteName: string) => {
+const getStatusEmailContent = (status: string, jobTitle: string, instituteName: string, extras?: { candidateName?: string; confirmedTime?: string; declineReason?: string; interviewType?: string }) => {
   const statusMessages: Record<string, { subject: string; heading: string; body: string; color: string }> = {
     reviewed: {
       subject: `Your application for ${jobTitle} is under review`,
@@ -42,6 +49,41 @@ const getStatusEmailContent = (status: string, jobTitle: string, instituteName: 
       body: `Your application for the <strong>${jobTitle}</strong> position at <strong>${instituteName}</strong> has been received. The hiring team will review your profile shortly.`,
       color: "#f59e0b",
     },
+    interview_confirmed: {
+      subject: `✅ Interview Confirmed: ${extras?.candidateName || 'Candidate'} for ${jobTitle}`,
+      heading: "Interview Confirmed! 🎉",
+      body: `Great news! <strong>${extras?.candidateName || 'The candidate'}</strong> has confirmed the interview for the <strong>${jobTitle}</strong> position at <strong>${instituteName}</strong>.
+      
+      <div style="background-color: #dcfce7; border: 1px solid #86efac; border-radius: 8px; padding: 16px; margin: 16px 0;">
+        <p style="margin: 0 0 8px; color: #166534; font-weight: 600;">📅 Confirmed Time</p>
+        <p style="margin: 0; color: #15803d; font-size: 16px;">${extras?.confirmedTime || 'Time to be confirmed'}</p>
+        ${extras?.interviewType ? `<p style="margin: 8px 0 0; color: #166534; font-size: 14px;">Interview Type: ${extras.interviewType}</p>` : ''}
+      </div>
+      
+      Please ensure you're prepared for the scheduled interview. You can view all interview details in your recruiter dashboard.`,
+      color: "#22c55e",
+    },
+    interview_declined: {
+      subject: `❌ Interview Declined: ${extras?.candidateName || 'Candidate'} for ${jobTitle}`,
+      heading: "Interview Declined",
+      body: `<strong>${extras?.candidateName || 'The candidate'}</strong> has declined the interview for the <strong>${jobTitle}</strong> position at <strong>${instituteName}</strong>.
+      
+      ${extras?.declineReason ? `
+      <div style="background-color: #fef2f2; border: 1px solid #fca5a5; border-radius: 8px; padding: 16px; margin: 16px 0;">
+        <p style="margin: 0 0 8px; color: #991b1b; font-weight: 600;">Reason provided:</p>
+        <p style="margin: 0; color: #b91c1c; font-size: 14px;">${extras.declineReason}</p>
+      </div>
+      ` : ''}
+      
+      You may want to reach out to the candidate to reschedule or consider other candidates for this position.`,
+      color: "#ef4444",
+    },
+    interview_scheduled: {
+      subject: `Interview scheduled for ${jobTitle}`,
+      heading: "Interview Scheduled 📅",
+      body: `An interview has been scheduled for your application to the <strong>${jobTitle}</strong> position at <strong>${instituteName}</strong>. Please check your dashboard to review the proposed time slots and confirm your availability.`,
+      color: "#8b5cf6",
+    },
   };
 
   return statusMessages[status] || statusMessages.pending;
@@ -54,9 +96,20 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { applicationId, newStatus, jobTitle, instituteName }: StatusNotificationRequest = await req.json();
+    const requestData: StatusNotificationRequest = await req.json();
+    const { 
+      applicationId, 
+      newStatus, 
+      jobTitle, 
+      instituteName,
+      candidateName,
+      confirmedTime,
+      declineReason,
+      recruiterEmail,
+      interviewType,
+    } = requestData;
 
-    console.log("Sending status notification:", { applicationId, newStatus, jobTitle, instituteName });
+    console.log("Sending status notification:", requestData);
 
     // Get authorization header
     const authHeader = req.headers.get("Authorization");
@@ -75,35 +128,56 @@ const handler = async (req: Request): Promise<Response> => {
       { global: { headers: { Authorization: authHeader } } }
     );
 
-    // Fetch the application with applicant email
-    const { data: application, error: appError } = await supabase
-      .from("job_applications")
-      .select("applicant_email, applicant_id")
-      .eq("id", applicationId)
-      .single();
+    let recipientEmail: string | null = null;
 
-    if (appError || !application) {
-      console.error("Failed to fetch application:", appError);
-      return new Response(
-        JSON.stringify({ error: "Application not found" }),
-        { status: 404, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
+    // For interview responses, send to recruiter
+    if (newStatus === "interview_confirmed" || newStatus === "interview_declined") {
+      recipientEmail = recruiterEmail || null;
+      
+      if (!recipientEmail) {
+        console.log("No recruiter email provided for interview notification");
+        return new Response(
+          JSON.stringify({ success: true, message: "No recruiter email to notify" }),
+          { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        );
+      }
+    } else if (applicationId) {
+      // For application status updates, send to applicant
+      const { data: application, error: appError } = await supabase
+        .from("job_applications")
+        .select("applicant_email, applicant_id")
+        .eq("id", applicationId)
+        .single();
+
+      if (appError || !application) {
+        console.error("Failed to fetch application:", appError);
+        return new Response(
+          JSON.stringify({ error: "Application not found" }),
+          { status: 404, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        );
+      }
+
+      recipientEmail = application.applicant_email;
     }
 
-    const email = application.applicant_email;
-    if (!email) {
-      console.log("No email found for applicant, skipping notification");
+    if (!recipientEmail) {
+      console.log("No email found for recipient, skipping notification");
       return new Response(
         JSON.stringify({ success: true, message: "No email to notify" }),
         { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
-    const content = getStatusEmailContent(newStatus, jobTitle, instituteName);
+    const content = getStatusEmailContent(newStatus, jobTitle, instituteName, {
+      candidateName,
+      confirmedTime,
+      declineReason,
+      interviewType,
+    });
 
     const emailResponse = await resend.emails.send({
       from: "OWL ROLES <onboarding@resend.dev>",
-      to: [email],
+      to: [recipientEmail],
       subject: content.subject,
       html: `
         <!DOCTYPE html>
@@ -124,14 +198,14 @@ const handler = async (req: Request): Promise<Response> => {
               <td style="padding: 40px 30px;">
                 <div style="width: 60px; height: 4px; background-color: ${content.color}; margin-bottom: 24px; border-radius: 2px;"></div>
                 <h2 style="margin: 0 0 20px; color: #1e293b; font-size: 24px; font-weight: 600;">${content.heading}</h2>
-                <p style="margin: 0 0 24px; color: #475569; font-size: 16px; line-height: 1.6;">${content.body}</p>
+                <div style="margin: 0 0 24px; color: #475569; font-size: 16px; line-height: 1.6;">${content.body}</div>
                 <div style="background-color: #f1f5f9; border-radius: 8px; padding: 20px; margin: 24px 0;">
-                  <p style="margin: 0 0 8px; color: #64748b; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Position Applied</p>
+                  <p style="margin: 0 0 8px; color: #64748b; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Position</p>
                   <p style="margin: 0; color: #1e293b; font-size: 18px; font-weight: 600;">${jobTitle}</p>
                   <p style="margin: 4px 0 0; color: #64748b; font-size: 14px;">${instituteName}</p>
                 </div>
                 <p style="margin: 24px 0 0; color: #64748b; font-size: 14px; line-height: 1.5;">
-                  You can track all your applications in your dashboard.
+                  Visit your dashboard to view more details and take action.
                 </p>
               </td>
             </tr>

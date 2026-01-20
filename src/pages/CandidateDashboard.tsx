@@ -796,10 +796,21 @@ const CandidateDashboard = () => {
                 ...interview,
                 job_title: interview.job?.title || "Unknown Position",
                 institute: interview.job?.institute || "Unknown",
+                recruiter_id: interview.recruiter_id,
               }}
               variant="candidate"
-              onRespond={() => handleInterviewClick(interview)}
-              onViewDetails={() => handleInterviewClick(interview)}
+              onRespond={() => handleInterviewClick({
+                ...interview,
+                job_title: interview.job?.title || "Unknown Position",
+                institute: interview.job?.institute || "Unknown",
+                recruiter_id: interview.recruiter_id,
+              })}
+              onViewDetails={() => handleInterviewClick({
+                ...interview,
+                job_title: interview.job?.title || "Unknown Position",
+                institute: interview.job?.institute || "Unknown",
+                recruiter_id: interview.recruiter_id,
+              })}
             />
           </motion.div>
         ))
