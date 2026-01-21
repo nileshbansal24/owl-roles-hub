@@ -193,12 +193,15 @@ export type Database = {
           full_name: string | null
           headline: string | null
           id: string
+          linkedin_url: string | null
           location: string | null
+          orcid_id: string | null
           phone: string | null
           professional_summary: string | null
           research_papers: Json | null
           resume_url: string | null
           role: string | null
+          scopus_link: string | null
           skills: string[] | null
           subjects: string[] | null
           teaching_philosophy: string | null
@@ -218,12 +221,15 @@ export type Database = {
           full_name?: string | null
           headline?: string | null
           id: string
+          linkedin_url?: string | null
           location?: string | null
+          orcid_id?: string | null
           phone?: string | null
           professional_summary?: string | null
           research_papers?: Json | null
           resume_url?: string | null
           role?: string | null
+          scopus_link?: string | null
           skills?: string[] | null
           subjects?: string[] | null
           teaching_philosophy?: string | null
@@ -243,12 +249,15 @@ export type Database = {
           full_name?: string | null
           headline?: string | null
           id?: string
+          linkedin_url?: string | null
           location?: string | null
+          orcid_id?: string | null
           phone?: string | null
           professional_summary?: string | null
           research_papers?: Json | null
           resume_url?: string | null
           role?: string | null
+          scopus_link?: string | null
           skills?: string[] | null
           subjects?: string[] | null
           teaching_philosophy?: string | null

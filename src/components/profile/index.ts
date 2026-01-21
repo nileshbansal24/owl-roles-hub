@@ -9,3 +9,7 @@ export { ResumeCard } from "./ResumeCard";
 export { AISalarySuggestion } from "./AISalarySuggestion";
 export { AchievementsList } from "./AchievementsList";
 export { AIJobMatching } from "./AIJobMatching";
+export { OrcidCard } from "./OrcidCard";
+export { ScopusButton } from "./ScopusButton";
+export { LinkedInImportCard } from "./LinkedInImportCard";
+export { LinkedInImportModal } from "./LinkedInImportModal";
