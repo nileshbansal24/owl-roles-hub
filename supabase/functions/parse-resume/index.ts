@@ -128,7 +128,7 @@ Deno.serve(async (req) => {
 
     console.log(`File type: ${mimeType}, size: ${arrayBuffer.byteLength} bytes`);
 
-    // Call Lovable AI to parse the resume
+    // Call Lovable AI to parse the resume using tool calling for reliable structured output
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -140,30 +140,14 @@ Deno.serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: `You are an expert resume parser for academic and professional profiles. Extract structured information from the resume and return ONLY valid JSON.
-
-Extract the following fields:
-- full_name: The person's full name
-- role: Their current job title or academic position
-- headline: A brief professional headline (1 line)
-- professional_summary: A professional summary (2-4 sentences)
-- location: City, State/Country
-- phone: Phone number if visible
-- email: Email address if visible
-- skills: Array of skills/competencies
-- experience: Array of work experiences with {title, company, location, start_date, end_date, description, current}
-- education: Array of education with {degree, institution, field, start_year, end_year}
-- achievements: Array of notable achievements, awards, certifications
-- research_papers: Array of publications with {title, journal, year, doi, authors} if applicable
-
-Return ONLY valid JSON with these fields. Omit fields that cannot be determined from the resume. Dates should be in "Month Year" or "Year" format.`
+            content: `You are an expert resume parser for academic and professional profiles. Extract structured information from the resume. Limit research_papers to the 10 most recent/important publications to avoid truncation.`
           },
           {
             role: "user",
             content: [
               {
                 type: "text",
-                text: "Parse this resume and extract the profile information. Return only valid JSON."
+                text: "Parse this resume and extract the profile information using the extract_resume_data function."
               },
               {
                 type: "file",
@@ -175,8 +159,78 @@ Return ONLY valid JSON with these fields. Omit fields that cannot be determined 
             ]
           }
         ],
+        tools: [
+          {
+            type: "function",
+            function: {
+              name: "extract_resume_data",
+              description: "Extract structured profile data from a resume",
+              parameters: {
+                type: "object",
+                properties: {
+                  full_name: { type: "string", description: "Person's full name" },
+                  role: { type: "string", description: "Current job title or position" },
+                  headline: { type: "string", description: "Brief professional headline (1 line)" },
+                  professional_summary: { type: "string", description: "Professional summary (2-4 sentences)" },
+                  location: { type: "string", description: "City, State/Country" },
+                  phone: { type: "string", description: "Phone number" },
+                  email: { type: "string", description: "Email address" },
+                  skills: { type: "array", items: { type: "string" }, description: "Skills/competencies" },
+                  experience: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        title: { type: "string" },
+                        company: { type: "string" },
+                        location: { type: "string" },
+                        start_date: { type: "string" },
+                        end_date: { type: "string" },
+                        description: { type: "string" },
+                        current: { type: "boolean" }
+                      },
+                      required: ["title", "company"]
+                    }
+                  },
+                  education: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        degree: { type: "string" },
+                        institution: { type: "string" },
+                        field: { type: "string" },
+                        start_year: { type: "string" },
+                        end_year: { type: "string" }
+                      },
+                      required: ["degree", "institution"]
+                    }
+                  },
+                  achievements: { type: "array", items: { type: "string" } },
+                  research_papers: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        title: { type: "string" },
+                        journal: { type: "string" },
+                        year: { type: "string" },
+                        doi: { type: "string" },
+                        authors: { type: "string" }
+                      },
+                      required: ["title"]
+                    },
+                    description: "Top 10 most recent/important publications"
+                  }
+                },
+                required: ["full_name"]
+              }
+            }
+          }
+        ],
+        tool_choice: { type: "function", function: { name: "extract_resume_data" } },
         temperature: 0.1,
-        max_tokens: 4000,
+        max_tokens: 8000,
       }),
     });
 
@@ -204,53 +258,43 @@ Return ONLY valid JSON with these fields. Omit fields that cannot be determined 
     }
 
     const aiResult = await aiResponse.json();
-    const content = aiResult.choices?.[0]?.message?.content;
-
-    if (!content) {
-      console.error("No content in AI response:", aiResult);
-      return new Response(
-        JSON.stringify({ error: "AI returned empty response" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    console.log("AI response content:", content.substring(0, 500));
-
-    // Parse the JSON from AI response
+    
+    // Extract data from tool call response
     let parsedResume: ParsedResume;
     try {
-      // Extract JSON from response - try multiple approaches
-      let jsonStr = content.trim();
-      
-      // Approach 1: Remove markdown code blocks (greedy match for incomplete blocks)
-      if (jsonStr.startsWith("```")) {
-        // Remove opening fence (with optional language identifier)
-        jsonStr = jsonStr.replace(/^```(?:json)?\s*\n?/, "");
-        // Remove closing fence if present
-        jsonStr = jsonStr.replace(/\n?```\s*$/, "");
-      }
-      
-      // Approach 2: Find JSON object boundaries if still not valid
-      if (!jsonStr.startsWith("{")) {
-        const startIdx = jsonStr.indexOf("{");
-        if (startIdx !== -1) {
-          jsonStr = jsonStr.substring(startIdx);
+      const toolCall = aiResult.choices?.[0]?.message?.tool_calls?.[0];
+      if (toolCall?.function?.arguments) {
+        parsedResume = JSON.parse(toolCall.function.arguments);
+        console.log("Parsed resume via tool call:", JSON.stringify(parsedResume, null, 2).substring(0, 1000));
+      } else {
+        // Fallback: try to extract from content if tool call didn't work
+        const content = aiResult.choices?.[0]?.message?.content;
+        if (!content) {
+          console.error("No tool call or content in AI response:", JSON.stringify(aiResult).substring(0, 500));
+          return new Response(
+            JSON.stringify({ error: "AI returned empty response" }),
+            { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
         }
+        
+        // Try to extract JSON from content
+        let jsonStr = content.trim();
+        if (jsonStr.startsWith("```")) {
+          jsonStr = jsonStr.replace(/^```(?:json)?\s*\n?/, "").replace(/\n?```\s*$/, "");
+        }
+        if (!jsonStr.startsWith("{")) {
+          const startIdx = jsonStr.indexOf("{");
+          if (startIdx !== -1) jsonStr = jsonStr.substring(startIdx);
+        }
+        const lastBrace = jsonStr.lastIndexOf("}");
+        if (lastBrace !== -1) jsonStr = jsonStr.substring(0, lastBrace + 1);
+        
+        parsedResume = JSON.parse(jsonStr);
       }
-      
-      // Approach 3: Find the last closing brace to handle truncated responses
-      const lastBrace = jsonStr.lastIndexOf("}");
-      if (lastBrace !== -1 && lastBrace < jsonStr.length - 1) {
-        jsonStr = jsonStr.substring(0, lastBrace + 1);
-      }
-      
-      console.log("Cleaned JSON string (first 500 chars):", jsonStr.substring(0, 500));
-      
-      parsedResume = JSON.parse(jsonStr);
     } catch (parseError) {
-      console.error("Failed to parse AI JSON:", parseError, content.substring(0, 1000));
+      console.error("Failed to parse AI response:", parseError, JSON.stringify(aiResult).substring(0, 1000));
       return new Response(
-        JSON.stringify({ error: "Failed to parse AI response as JSON" }),
+        JSON.stringify({ error: "Failed to parse AI response" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
