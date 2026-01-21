@@ -8,7 +8,6 @@ import ProfileEditModal from "@/components/ProfileEditModal";
 import SectionEditModal from "@/components/SectionEditModal";
 import QuickApplyModal from "@/components/QuickApplyModal";
 import InterviewResponseModal from "@/components/InterviewResponseModal";
-import { ResumeReviewModal, ParsedResumeData } from "@/components/ResumeReviewModal";
 import InterviewCard from "@/components/InterviewCard";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -28,8 +27,6 @@ import {
   AIJobMatching,
 } from "@/components/profile";
 import { OrcidCard } from "@/components/profile/OrcidCard";
-import { LinkedInImportCard } from "@/components/profile/LinkedInImportCard";
-import { LinkedInImportModal } from "@/components/profile/LinkedInImportModal";
 import { ScopusButton } from "@/components/profile/ScopusButton";
 import {
   Edit2,
@@ -124,7 +121,6 @@ const CandidateDashboard = () => {
   const [editingSection, setEditingSection] = useState<string>("");
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [uploadingResume, setUploadingResume] = useState(false);
-  const [parsingResume, setParsingResume] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
   const [quickApplyJob, setQuickApplyJob] = useState<{
     id: string;
@@ -138,10 +134,6 @@ const CandidateDashboard = () => {
   const [interviews, setInterviews] = useState<any[]>([]);
   const [selectedInterview, setSelectedInterview] = useState<any>(null);
   const [showInterviewModal, setShowInterviewModal] = useState(false);
-  const [linkedInImportOpen, setLinkedInImportOpen] = useState(false);
-  const [resumeReviewOpen, setResumeReviewOpen] = useState(false);
-  const [parsedResumeData, setParsedResumeData] = useState<ParsedResumeData | null>(null);
-  const [savingResumeData, setSavingResumeData] = useState(false);
 
   // Handle quick apply from job recommendations
   const handleQuickApply = async (jobId: string) => {
@@ -340,51 +332,11 @@ const CandidateDashboard = () => {
       if (updateError) throw updateError;
 
       setProfile((prev) => (prev ? { ...prev, resume_url: resumePath } : null));
-      toast({ title: "Resume uploaded!", description: "Parsing your resume to populate your profile..." });
-
-      // Now parse the resume with AI
-      setParsingResume(true);
       setUploadingResume(false);
-
-      try {
-        const { data: sessionData } = await supabase.auth.getSession();
-        const token = sessionData?.session?.access_token;
-
-        if (!token) {
-          throw new Error("Not authenticated");
-        }
-
-        const response = await supabase.functions.invoke("parse-resume", {
-          body: { resumePath, previewOnly: true },
-        });
-
-        if (response.error) {
-          console.error("Parse resume error:", response.error);
-          toast({
-            title: "Profile import partial",
-            description: "Resume uploaded but couldn't extract profile data automatically.",
-            variant: "destructive",
-          });
-        } else if (response.data?.success) {
-          const parsed = response.data.parsed;
-          // Show review modal instead of auto-saving
-          setParsedResumeData(parsed);
-          setResumeReviewOpen(true);
-          toast({
-            title: "Resume analyzed!",
-            description: "Review and edit the extracted data before saving.",
-          });
-        }
-      } catch (parseError: any) {
-        console.error("Error parsing resume:", parseError);
-        toast({
-          title: "Resume parsing failed",
-          description: "Resume uploaded but profile extraction failed. You can still fill in your profile manually.",
-          variant: "destructive",
-        });
-      } finally {
-        setParsingResume(false);
-      }
+      toast({ 
+        title: "Resume uploaded!", 
+        description: "Your resume has been saved to your profile." 
+      });
     } catch (error: any) {
       console.error("Error uploading resume:", error);
       toast({ title: "Upload failed", description: error.message || "Failed to upload resume.", variant: "destructive" });
@@ -393,94 +345,6 @@ const CandidateDashboard = () => {
       if (resumeInputRef.current) {
         resumeInputRef.current.value = "";
       }
-    }
-  };
-
-  const handleResumeDataSave = async (data: ParsedResumeData) => {
-    if (!user) return;
-    
-    setSavingResumeData(true);
-    try {
-      // Map the data to our profile format and database format
-      const updateData: Record<string, unknown> = {};
-      
-      if (data.full_name) updateData.full_name = data.full_name;
-      if (data.role) updateData.role = data.role;
-      if (data.headline) updateData.headline = data.headline;
-      if (data.professional_summary) updateData.professional_summary = data.professional_summary;
-      if (data.location) updateData.location = data.location;
-      if (data.phone) updateData.phone = data.phone;
-      if (data.email) updateData.email = data.email;
-      if (data.skills && data.skills.length > 0) updateData.skills = data.skills;
-      if (data.experience && data.experience.length > 0) updateData.experience = data.experience;
-      if (data.education && data.education.length > 0) updateData.education = data.education;
-      if (data.achievements && data.achievements.length > 0) updateData.achievements = data.achievements;
-      if (data.research_papers && data.research_papers.length > 0) updateData.research_papers = data.research_papers;
-
-      const { error } = await supabase
-        .from("profiles")
-        .update(updateData)
-        .eq("id", user.id);
-
-      if (error) throw error;
-
-      // Update local state
-      if (data.full_name) setProfile((prev) => prev ? { ...prev, full_name: data.full_name! } : null);
-      if (data.role) setProfile((prev) => prev ? { ...prev, role: data.role! } : null);
-      if (data.headline) setProfile((prev) => prev ? { ...prev, headline: data.headline! } : null);
-      if (data.location) setProfile((prev) => prev ? { ...prev, location: data.location! } : null);
-      if (data.professional_summary) setProfessionalSummary(data.professional_summary);
-      if (data.skills) setSkills(data.skills);
-      if (data.achievements) setAchievements(data.achievements);
-      
-      if (data.experience) {
-        const mappedExperience = data.experience.map((exp) => ({
-          year: exp.start_date ? `${exp.start_date} - ${exp.end_date || "Present"}` : "",
-          role: exp.title || "",
-          institution: exp.company || "",
-          description: exp.description || "",
-          isCurrent: exp.current || false,
-        }));
-        setExperienceTimeline(mappedExperience);
-      }
-      
-      if (data.education) {
-        const mappedEducation = data.education.map((edu) => ({
-          degree: edu.degree || "",
-          institution: edu.institution || "",
-          years: edu.start_year && edu.end_year 
-            ? `${edu.start_year} - ${edu.end_year}` 
-            : "",
-        }));
-        setEducation(mappedEducation);
-      }
-      
-      if (data.research_papers) {
-        const mappedPapers = data.research_papers.map((paper) => ({
-          title: paper.title || "",
-          authors: paper.authors || "",
-          date: paper.year || "",
-          doi: paper.doi,
-          journal: paper.journal,
-        }));
-        setResearchPapers(mappedPapers);
-      }
-
-      setResumeReviewOpen(false);
-      setParsedResumeData(null);
-      toast({
-        title: "Profile updated!",
-        description: "Your profile has been updated with the resume data.",
-      });
-    } catch (error: any) {
-      console.error("Error saving resume data:", error);
-      toast({
-        title: "Save failed",
-        description: error.message || "Failed to save profile data.",
-        variant: "destructive",
-      });
-    } finally {
-      setSavingResumeData(false);
     }
   };
 
@@ -611,20 +475,6 @@ const CandidateDashboard = () => {
     setProfile((prev) => prev ? { ...prev, linkedin_url: url } : null);
   };
 
-  const handleLinkedInImport = async (sections: string[]) => {
-    // Simulated LinkedIn import - in a real implementation this would call an API
-    toast({
-      title: "Import Started",
-      description: `Importing ${sections.join(", ")} from LinkedIn. This feature will sync your data after review.`,
-    });
-    // Simulate import delay
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    toast({
-      title: "Import Complete",
-      description: "Your LinkedIn data has been imported. Please review your profile sections.",
-    });
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
@@ -685,7 +535,6 @@ const CandidateDashboard = () => {
               }
             }}
             uploading={uploadingResume}
-            parsing={parsingResume}
           />
         </SidebarCard>
       </motion.div>
@@ -764,14 +613,6 @@ const CandidateDashboard = () => {
         />
       </motion.div>
 
-      {/* LinkedIn Import */}
-      <motion.div variants={itemVariants}>
-        <LinkedInImportCard
-          linkedinUrl={profile?.linkedin_url || null}
-          onConnect={handleLinkedInConnect}
-          onImportRequest={() => setLinkedInImportOpen(true)}
-        />
-      </motion.div>
     </motion.div>
   );
 
@@ -1330,39 +1171,6 @@ const CandidateDashboard = () => {
         onResponded={handleInterviewResponse}
       />
 
-      <LinkedInImportModal
-        isOpen={linkedInImportOpen}
-        onClose={() => setLinkedInImportOpen(false)}
-        linkedinUrl={profile?.linkedin_url || null}
-        onImport={handleLinkedInImport}
-      />
-
-      {parsedResumeData && (
-        <ResumeReviewModal
-          open={resumeReviewOpen}
-          onOpenChange={(open) => {
-            setResumeReviewOpen(open);
-            if (!open) setParsedResumeData(null);
-          }}
-          parsedData={parsedResumeData}
-          currentProfile={{
-            full_name: profile?.full_name,
-            role: profile?.role,
-            headline: profile?.headline,
-            professional_summary: professionalSummary || null,
-            location: profile?.location,
-            phone: profile?.phone,
-            email: profile?.email,
-            skills: skills.length > 0 ? skills : null,
-            achievements: achievements.length > 0 ? achievements : null,
-            experience: experienceTimeline.length > 0 ? experienceTimeline : null,
-            education: education.length > 0 ? education : null,
-            research_papers: researchPapers.length > 0 ? researchPapers : null,
-          }}
-          onSave={handleResumeDataSave}
-          saving={savingResumeData}
-        />
-      )}
     </div>
   );
 };
