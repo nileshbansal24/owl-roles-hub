@@ -1345,6 +1345,20 @@ const CandidateDashboard = () => {
             if (!open) setParsedResumeData(null);
           }}
           parsedData={parsedResumeData}
+          currentProfile={{
+            full_name: profile?.full_name,
+            role: profile?.role,
+            headline: profile?.headline,
+            professional_summary: professionalSummary || null,
+            location: profile?.location,
+            phone: profile?.phone,
+            email: profile?.email,
+            skills: skills.length > 0 ? skills : null,
+            achievements: achievements.length > 0 ? achievements : null,
+            experience: experienceTimeline.length > 0 ? experienceTimeline : null,
+            education: education.length > 0 ? education : null,
+            research_papers: researchPapers.length > 0 ? researchPapers : null,
+          }}
           onSave={handleResumeDataSave}
           saving={savingResumeData}
         />
