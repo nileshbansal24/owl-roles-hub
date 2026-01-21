@@ -188,11 +188,13 @@ Deno.serve(async (req) => {
 
     // Update the user's profile with parsed publications
     if (papers.length > 0) {
-      // Transform to the format expected by the profile
+      // Transform to the format expected by the profile (include DOI and journal for clickable links)
       const researchPapers = papers.map((p) => ({
         title: p.title,
         authors: p.authors,
         date: p.date,
+        doi: p.doi,
+        journal: p.journal,
       }));
 
       const serviceClient = createClient(supabaseUrl, supabaseServiceKey);
