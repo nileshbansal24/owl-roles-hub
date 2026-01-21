@@ -1,3 +1,4 @@
+import { motion } from "framer-motion";
 import { Search, MapPin, Briefcase, ArrowRight, Sparkles } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -38,6 +39,43 @@ const popularSearches = [
   "Lab Technician",
 ];
 
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+      delayChildren: 0.1,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.5,
+      ease: "easeOut" as const,
+    },
+  },
+};
+
+const searchBoxVariants = {
+  hidden: { opacity: 0, y: 30, scale: 0.98 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: {
+      duration: 0.6,
+      ease: "easeOut" as const,
+      delay: 0.3,
+    },
+  },
+};
+
 const NaukriHeroSection = ({
   searchQuery,
   setSearchQuery,
@@ -65,41 +103,70 @@ const NaukriHeroSection = ({
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-primary/50 to-primary" />
 
       <div className="container mx-auto px-4 relative z-10">
-        <div className="max-w-4xl mx-auto text-center">
+        <motion.div 
+          className="max-w-4xl mx-auto text-center"
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+        >
           {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 mb-8">
+          <motion.div 
+            variants={itemVariants}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 mb-8"
+          >
             <Sparkles className="w-4 h-4 text-primary-foreground" />
-            <span className="text-sm text-white font-medium">AI-Powered Job Matching</span>
-          </div>
+            <span className="text-sm text-white font-medium tracking-wide">AI-Powered Job Matching</span>
+          </motion.div>
 
           {/* Main Heading */}
-          <h1 className="font-heading text-4xl sm:text-5xl md:text-6xl font-bold text-white mb-4 leading-tight">
+          <motion.h1 
+            variants={itemVariants}
+            className="font-heading text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-2 leading-tight tracking-tight"
+          >
             Your Gateway to
-          </h1>
-          <h1 className="font-heading text-4xl sm:text-5xl md:text-6xl font-bold mb-6 leading-tight text-white underline decoration-primary-foreground decoration-4 underline-offset-8">
+          </motion.h1>
+          <motion.h1 
+            variants={itemVariants}
+            className="font-heading text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight tracking-tight italic"
+            style={{ 
+              background: 'linear-gradient(135deg, #ffffff 0%, #e0e7ff 50%, #c7d2fe 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+            }}
+          >
             Academic Excellence
-          </h1>
+          </motion.h1>
           
-          <p className="text-white/90 text-lg md:text-xl mb-10 max-w-2xl mx-auto">
+          <motion.p 
+            variants={itemVariants}
+            className="text-white/85 text-lg md:text-xl mb-10 max-w-2xl mx-auto font-medium leading-relaxed"
+          >
             Connect with 500+ top universities and discover 2,500+ academic opportunities tailored to your expertise
-          </p>
+          </motion.p>
 
           {/* Get Started Button for Non-Logged Users */}
           {!isLoggedIn && (
-            <div className="mb-10">
+            <motion.div 
+              variants={itemVariants}
+              className="mb-10"
+            >
               <Button
                 onClick={onGetStarted}
                 size="lg"
-                className="h-14 px-10 text-lg font-semibold bg-white text-primary hover:bg-white/95 shadow-xl gap-2"
+                className="h-14 px-10 text-lg font-semibold bg-white text-primary hover:bg-white/95 shadow-xl gap-2 transition-all hover:scale-[1.02] active:scale-[0.98]"
               >
                 Get Started
                 <ArrowRight className="w-5 h-5" />
               </Button>
-            </div>
+            </motion.div>
           )}
 
           {/* Search Box */}
-          <div className="bg-white rounded-2xl p-5 shadow-2xl max-w-3xl mx-auto">
+          <motion.div 
+            variants={searchBoxVariants}
+            className="bg-white rounded-2xl p-5 shadow-2xl max-w-3xl mx-auto"
+          >
             <div className="flex flex-col md:flex-row gap-3">
               {/* Skills/Designation Search */}
               <div className="flex-1 relative">
@@ -142,29 +209,42 @@ const NaukriHeroSection = ({
               {/* Search Button */}
               <Button 
                 onClick={onSearch}
-                className="h-12 px-8 text-base font-semibold"
+                className="h-12 px-8 text-base font-semibold transition-all hover:scale-[1.02] active:scale-[0.98]"
               >
                 Search Jobs
               </Button>
             </div>
 
             {/* Popular Searches */}
-            <div className="flex flex-wrap items-center gap-2 mt-4 pt-4 border-t border-border/30">
+            <motion.div 
+              className="flex flex-wrap items-center gap-2 mt-4 pt-4 border-t border-border/30"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.6, duration: 0.4 }}
+            >
               <span className="text-sm text-muted-foreground">Popular:</span>
-              {popularSearches.map((search) => (
-                <button
+              {popularSearches.map((search, index) => (
+                <motion.button
                   key={search}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.7 + index * 0.05, duration: 0.3 }}
                   onClick={() => setSearchQuery(search)}
-                  className="px-3 py-1.5 text-sm rounded-full bg-secondary hover:bg-primary/10 hover:text-primary transition-colors font-medium"
+                  className="px-3 py-1.5 text-sm rounded-full bg-secondary hover:bg-primary/10 hover:text-primary transition-all font-medium hover:scale-105 active:scale-95"
                 >
                   {search}
-                </button>
+                </motion.button>
               ))}
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
 
           {/* Trust Indicators */}
-          <div className="flex flex-wrap items-center justify-center gap-6 mt-10 text-white/80 text-sm">
+          <motion.div 
+            className="flex flex-wrap items-center justify-center gap-6 mt-10 text-white/80 text-sm"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.8, duration: 0.5 }}
+          >
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-accent" />
               <span>50,000+ Active Candidates</span>
@@ -177,8 +257,8 @@ const NaukriHeroSection = ({
               <div className="w-2 h-2 rounded-full bg-white" />
               <span>AI-Powered Matching</span>
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       </div>
     </section>
   );
