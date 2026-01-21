@@ -17,6 +17,7 @@ import {
   MapPin,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ProfileMilestoneBadges } from "./ProfileMilestoneBadges";
 
 interface ProfileCompletionCardProps {
   profile: {
@@ -234,6 +235,9 @@ export const ProfileCompletionCard = ({
               />
             </div>
           </div>
+
+          {/* Milestone Badges */}
+          <ProfileMilestoneBadges completionPercentage={completionPercentage} />
 
           {/* Tips for Improvement */}
           {incompleteItems.length > 0 && (
