@@ -41,6 +41,7 @@ import {
   MapPin,
   Upload,
   CalendarDays,
+  GraduationCap,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
@@ -692,7 +693,7 @@ const CandidateDashboard = () => {
     >
       {/* AI Suggested Salary */}
       <motion.div variants={itemVariants}>
-        <SidebarCard title="AI-Suggested Salary" collapsible={false}>
+        <SidebarCard title="" collapsible={false}>
           <AISalarySuggestion
             profile={{
               role: profile?.role,
@@ -741,7 +742,7 @@ const CandidateDashboard = () => {
             <Button
               variant="ghost"
               size="sm"
-              className="h-6 px-2 text-xs"
+              className="h-7 px-2.5 text-xs"
               onClick={() => openSectionEdit("subjects")}
             >
               <Edit2 className="h-3 w-3" />
@@ -763,7 +764,7 @@ const CandidateDashboard = () => {
             <Button
               variant="ghost"
               size="sm"
-              className="h-6 px-2 text-xs"
+              className="h-7 px-2.5 text-xs"
               onClick={() => openSectionEdit("skills")}
             >
               <Plus className="h-3 w-3" />
@@ -780,12 +781,12 @@ const CandidateDashboard = () => {
       {/* Achievements & Awards */}
       <motion.div variants={itemVariants}>
         <SidebarCard
-          title="Achievements & Awards"
+          title="Achievements"
           headerAction={
             <Button
               variant="ghost"
               size="sm"
-              className="h-6 px-2 text-xs"
+              className="h-7 px-2.5 text-xs"
               onClick={() => openSectionEdit("achievements")}
             >
               <Plus className="h-3 w-3" />
@@ -810,10 +811,11 @@ const CandidateDashboard = () => {
       {/* LinkedIn Import */}
       <motion.div variants={itemVariants}>
         <SidebarCard title="LinkedIn" collapsible={false}>
-          <div className="text-center py-4">
+          <div className="text-center py-3">
             <Button
               variant="outline"
-              className="gap-2"
+              size="sm"
+              className="gap-2 w-full"
               onClick={() => setLinkedInImportOpen(true)}
             >
               <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
@@ -821,13 +823,9 @@ const CandidateDashboard = () => {
               </svg>
               Import from LinkedIn
             </Button>
-            <p className="text-xs text-muted-foreground mt-2">
-              Copy & paste your profile data
-            </p>
           </div>
         </SidebarCard>
       </motion.div>
-
     </motion.div>
   );
 
@@ -837,11 +835,11 @@ const CandidateDashboard = () => {
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="space-y-4 md:space-y-5"
+      className="space-y-5"
     >
       {/* AI Job Recommendations */}
       <motion.div variants={itemVariants}>
-        <ProfileCard title="" className="overflow-hidden">
+        <ProfileCard title="" className="overflow-hidden p-0 border-0 shadow-none bg-transparent">
           <AIJobMatching
             profile={{
               role: profile?.role,
@@ -863,10 +861,17 @@ const CandidateDashboard = () => {
         <ProfileCard
           title="Professional Summary"
           onEdit={() => setEditModalOpen(true)}
+          icon={<FileText className="h-4 w-4" />}
         >
-          <p className="text-sm text-muted-foreground leading-relaxed">
-            {profile?.bio || professionalSummary}
-          </p>
+          {profile?.bio || professionalSummary ? (
+            <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">
+              {profile?.bio || professionalSummary}
+            </p>
+          ) : (
+            <p className="text-sm text-muted-foreground italic">
+              Add a professional summary to introduce yourself to potential employers.
+            </p>
+          )}
         </ProfileCard>
       </motion.div>
 
@@ -875,14 +880,15 @@ const CandidateDashboard = () => {
       <motion.div variants={itemVariants}>
         <ProfileCard
           title="Work Experience"
+          icon={<Briefcase className="h-4 w-4" />}
           headerAction={
             <Button
-              variant="ghost"
+              variant="outline"
               size="sm"
-              className="h-8 px-2"
+              className="h-8 px-3 gap-1.5"
               onClick={() => openSectionEdit("experience")}
             >
-              <Plus className="h-4 w-4 mr-1" />
+              <Plus className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">Add</span>
             </Button>
           }
@@ -895,6 +901,7 @@ const CandidateDashboard = () => {
       <motion.div variants={itemVariants}>
         <ProfileCard
           title="Publications"
+          icon={<FileText className="h-4 w-4" />}
           headerAction={
             <div className="flex items-center gap-2">
               <PublicationImportButton
@@ -912,12 +919,12 @@ const CandidateDashboard = () => {
                 }}
               />
               <Button
-                variant="ghost"
+                variant="outline"
                 size="sm"
-                className="h-8 px-2"
+                className="h-8 px-3 gap-1.5"
                 onClick={() => openSectionEdit("research")}
               >
-                <Plus className="h-4 w-4 mr-1" />
+                <Plus className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">Add</span>
               </Button>
             </div>
@@ -931,14 +938,15 @@ const CandidateDashboard = () => {
       <motion.div variants={itemVariants}>
         <ProfileCard
           title="Education"
+          icon={<GraduationCap className="h-4 w-4" />}
           headerAction={
             <Button
-              variant="ghost"
+              variant="outline"
               size="sm"
-              className="h-8 px-2"
+              className="h-8 px-3 gap-1.5"
               onClick={() => openSectionEdit("education")}
             >
-              <Plus className="h-4 w-4 mr-1" />
+              <Plus className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">Add</span>
             </Button>
           }
