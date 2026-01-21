@@ -121,21 +121,19 @@ const NaukriHeroSection = ({
           {/* Main Heading */}
           <motion.h1 
             variants={itemVariants}
-            className="font-heading text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-2 leading-tight tracking-tight"
+            className="font-heading text-4xl sm:text-5xl md:text-6xl font-extrabold text-white mb-2 leading-tight"
           >
             Your Gateway to
           </motion.h1>
           <motion.h1 
             variants={itemVariants}
-            className="font-heading text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight tracking-tight italic"
-            style={{ 
-              background: 'linear-gradient(135deg, #ffffff 0%, #e0e7ff 50%, #c7d2fe 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
-            }}
+            className="font-heading text-4xl sm:text-5xl md:text-6xl font-extrabold mb-6 leading-tight text-white"
           >
-            Academic Excellence
+            <span className="text-primary-foreground">Academic</span>{" "}
+            <span className="relative">
+              Excellence
+              <span className="absolute -bottom-2 left-0 w-full h-1 bg-white/80 rounded-full" />
+            </span>
           </motion.h1>
           
           <motion.p 
