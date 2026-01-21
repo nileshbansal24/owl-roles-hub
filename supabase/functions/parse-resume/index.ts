@@ -219,15 +219,36 @@ Return ONLY valid JSON with these fields. Omit fields that cannot be determined 
     // Parse the JSON from AI response
     let parsedResume: ParsedResume;
     try {
-      // Extract JSON from response (handle markdown code blocks)
-      let jsonStr = content;
-      const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/);
-      if (jsonMatch) {
-        jsonStr = jsonMatch[1].trim();
+      // Extract JSON from response - try multiple approaches
+      let jsonStr = content.trim();
+      
+      // Approach 1: Remove markdown code blocks (greedy match for incomplete blocks)
+      if (jsonStr.startsWith("```")) {
+        // Remove opening fence (with optional language identifier)
+        jsonStr = jsonStr.replace(/^```(?:json)?\s*\n?/, "");
+        // Remove closing fence if present
+        jsonStr = jsonStr.replace(/\n?```\s*$/, "");
       }
+      
+      // Approach 2: Find JSON object boundaries if still not valid
+      if (!jsonStr.startsWith("{")) {
+        const startIdx = jsonStr.indexOf("{");
+        if (startIdx !== -1) {
+          jsonStr = jsonStr.substring(startIdx);
+        }
+      }
+      
+      // Approach 3: Find the last closing brace to handle truncated responses
+      const lastBrace = jsonStr.lastIndexOf("}");
+      if (lastBrace !== -1 && lastBrace < jsonStr.length - 1) {
+        jsonStr = jsonStr.substring(0, lastBrace + 1);
+      }
+      
+      console.log("Cleaned JSON string (first 500 chars):", jsonStr.substring(0, 500));
+      
       parsedResume = JSON.parse(jsonStr);
     } catch (parseError) {
-      console.error("Failed to parse AI JSON:", parseError, content);
+      console.error("Failed to parse AI JSON:", parseError, content.substring(0, 1000));
       return new Response(
         JSON.stringify({ error: "Failed to parse AI response as JSON" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
