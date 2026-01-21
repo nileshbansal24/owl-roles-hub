@@ -166,6 +166,7 @@ const RecruiterDashboard = () => {
   const [experienceFilter, setExperienceFilter] = useState("");
   const [selectedJobFilter, setSelectedJobFilter] = useState<string>("all");
   const [selectedStatusFilter, setSelectedStatusFilter] = useState<string>("all");
+  const [employmentStatusFilter, setEmploymentStatusFilter] = useState<string>("all");
   const [completenessFilter, setCompletenessFilter] = useState(false);
   const [activeTab, setActiveTab] = useState("resdex");
   const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
@@ -689,11 +690,33 @@ const RecruiterDashboard = () => {
     return matchesSearch && matchesLocation && matchesExperience;
   });
 
+  // Helper function to determine employment status
+  const getEmploymentStatus = (profile: Profile | null): "fresher" | "working" | "not_working" => {
+    if (!profile) return "fresher";
+    const experience = Array.isArray(profile.experience) ? profile.experience : [];
+    
+    // If no experience, they're a fresher
+    if (experience.length === 0) return "fresher";
+    
+    // Check if any experience entry is marked as current
+    const hasCurrentJob = experience.some((exp: ExperienceItem) => exp.isCurrent === true);
+    
+    return hasCurrentJob ? "working" : "not_working";
+  };
+
   const filteredApplications = applications.filter((app) => {
     const matchesJob = selectedJobFilter === "all" || app.job_id === selectedJobFilter;
     const matchesStatus = selectedStatusFilter === "all" || app.status === selectedStatusFilter;
     const matchesCompleteness = !completenessFilter || calculateCompleteness(app.profiles) >= 80;
-    return matchesJob && matchesStatus && matchesCompleteness;
+    
+    // Employment status filter
+    let matchesEmployment = true;
+    if (employmentStatusFilter !== "all") {
+      const status = getEmploymentStatus(app.profiles);
+      matchesEmployment = status === employmentStatusFilter;
+    }
+    
+    return matchesJob && matchesStatus && matchesCompleteness && matchesEmployment;
   });
 
   // Keyboard shortcuts for bulk actions
@@ -1433,6 +1456,18 @@ const RecruiterDashboard = () => {
                       <SelectItem value="reviewed">Reviewed</SelectItem>
                       <SelectItem value="shortlisted">Shortlisted</SelectItem>
                       <SelectItem value="rejected">Rejected</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  
+                  <Select value={employmentStatusFilter} onValueChange={setEmploymentStatusFilter}>
+                    <SelectTrigger className="w-[200px]">
+                      <SelectValue placeholder="Employment Status" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-popover">
+                      <SelectItem value="all">All Candidates</SelectItem>
+                      <SelectItem value="fresher">Fresher</SelectItem>
+                      <SelectItem value="not_working">Currently Not Working</SelectItem>
+                      <SelectItem value="working">Working</SelectItem>
                     </SelectContent>
                   </Select>
                   
