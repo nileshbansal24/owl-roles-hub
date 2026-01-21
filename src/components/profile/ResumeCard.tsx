@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useState, useCallback } from "react";
-import { FileText, Eye, Loader2, Upload } from "lucide-react";
+import { FileText, Eye, Loader2, Upload, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -12,6 +12,7 @@ interface ResumeCardProps {
   onFileDrop?: (file: File) => void;
   onView?: () => void;
   uploading?: boolean;
+  parsing?: boolean;
 }
 
 export const ResumeCard = ({
@@ -22,6 +23,7 @@ export const ResumeCard = ({
   onFileDrop,
   onView,
   uploading = false,
+  parsing = false,
 }: ResumeCardProps) => {
   const [isDragging, setIsDragging] = useState(false);
 
@@ -45,7 +47,6 @@ export const ResumeCard = ({
     const files = e.dataTransfer.files;
     if (files.length > 0 && onFileDrop) {
       const file = files[0];
-      // Validate file type
       const allowedTypes = [
         "application/pdf",
         "application/msword",
@@ -56,6 +57,27 @@ export const ResumeCard = ({
       }
     }
   }, [onFileDrop]);
+
+  // Show parsing state
+  if (parsing) {
+    return (
+      <div className="text-center py-6 px-4">
+        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
+          <Sparkles className="h-6 w-6 text-primary animate-pulse" />
+        </div>
+        <p className="text-sm font-medium text-foreground mb-1">
+          Analyzing Resume...
+        </p>
+        <p className="text-xs text-muted-foreground mb-3">
+          AI is extracting your profile information
+        </p>
+        <div className="flex items-center justify-center gap-2">
+          <Loader2 className="h-4 w-4 animate-spin text-primary" />
+          <span className="text-xs text-muted-foreground">This may take a moment</span>
+        </div>
+      </div>
+    );
+  }
 
   if (!resumeUrl) {
     return (
@@ -106,6 +128,10 @@ export const ResumeCard = ({
         )}
         <p className="text-xs text-muted-foreground mt-3">
           PDF or Word (max 10MB)
+        </p>
+        <p className="text-xs text-primary/70 mt-1">
+          <Sparkles className="inline h-3 w-3 mr-1" />
+          AI will auto-fill your profile
         </p>
       </div>
     );
