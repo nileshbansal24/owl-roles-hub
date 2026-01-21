@@ -28,6 +28,7 @@ import {
   AISalarySuggestion,
   AchievementsList,
   AIJobMatching,
+  ProfileCompletionCard,
 } from "@/components/profile";
 import { OrcidCard } from "@/components/profile/OrcidCard";
 import { PublicationImportButton } from "@/components/profile/PublicationImportButton";
@@ -683,6 +684,43 @@ const CandidateDashboard = () => {
     );
   }
 
+  // Handle section click from completion card
+  const handleCompletionSectionClick = (sectionId: string) => {
+    switch (sectionId) {
+      case "basic":
+      case "role":
+      case "location":
+      case "summary":
+        setEditModalOpen(true);
+        break;
+      case "avatar":
+        // Trigger avatar upload
+        const avatarInput = document.querySelector('input[type="file"][accept="image/*"]') as HTMLInputElement;
+        if (avatarInput) avatarInput.click();
+        break;
+      case "experience":
+        openSectionEdit("experience");
+        break;
+      case "education":
+        openSectionEdit("education");
+        break;
+      case "skills":
+        openSectionEdit("skills");
+        break;
+      case "resume":
+        resumeInputRef.current?.click();
+        break;
+      case "achievements":
+        openSectionEdit("achievements");
+        break;
+      case "research":
+        openSectionEdit("research");
+        break;
+      default:
+        break;
+    }
+  };
+
   // Sidebar content (used in both desktop right column and mobile below main content)
   const SidebarContent = () => (
     <motion.div
@@ -691,6 +729,20 @@ const CandidateDashboard = () => {
       animate="visible"
       className="space-y-4"
     >
+      {/* Profile Completion */}
+      <motion.div variants={itemVariants}>
+        <ProfileCompletionCard
+          profile={profile}
+          professionalSummary={professionalSummary || profile?.bio || ""}
+          experience={experienceTimeline}
+          education={education}
+          skills={skills}
+          achievements={achievements}
+          researchPapers={researchPapers}
+          onSectionClick={handleCompletionSectionClick}
+        />
+      </motion.div>
+
       {/* AI Suggested Salary */}
       <motion.div variants={itemVariants}>
         <SidebarCard title="" collapsible={false}>
