@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Search, MapPin, Briefcase, ArrowRight, Sparkles } from "lucide-react";
+import { Search, MapPin, Briefcase, ArrowRight, Sparkles, GraduationCap, BookOpen, Award, ScrollText, Atom, FlaskConical } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -9,6 +9,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+
+const floatingIcons = [
+  { Icon: GraduationCap, delay: 0, x: "10%", y: "15%", size: 32, duration: 6 },
+  { Icon: BookOpen, delay: 1, x: "85%", y: "20%", size: 28, duration: 7 },
+  { Icon: Award, delay: 0.5, x: "75%", y: "70%", size: 36, duration: 5 },
+  { Icon: ScrollText, delay: 1.5, x: "15%", y: "75%", size: 24, duration: 8 },
+  { Icon: Atom, delay: 2, x: "90%", y: "45%", size: 30, duration: 6.5 },
+  { Icon: FlaskConical, delay: 0.8, x: "5%", y: "50%", size: 26, duration: 7.5 },
+  { Icon: GraduationCap, delay: 1.2, x: "60%", y: "85%", size: 22, duration: 5.5 },
+  { Icon: BookOpen, delay: 2.5, x: "30%", y: "10%", size: 20, duration: 6.8 },
+];
 
 interface NaukriHeroSectionProps {
   searchQuery: string;
@@ -65,6 +76,30 @@ const NaukriHeroSection = ({
         animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
         transition={{ duration: 8, repeat: Infinity }}
       />
+
+      {/* Floating Academic Icons */}
+      {floatingIcons.map(({ Icon, delay, x, y, size, duration }, index) => (
+        <motion.div
+          key={index}
+          className="absolute text-white/10 pointer-events-none"
+          style={{ left: x, top: y }}
+          initial={{ opacity: 0, scale: 0 }}
+          animate={{ 
+            opacity: [0.1, 0.2, 0.1],
+            scale: [1, 1.1, 1],
+            y: [0, -15, 0],
+            rotate: [0, 5, -5, 0]
+          }}
+          transition={{ 
+            delay,
+            duration,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+        >
+          <Icon size={size} strokeWidth={1.5} />
+        </motion.div>
+      ))}
       <motion.div
         className="absolute -bottom-48 -left-32 w-[500px] h-[500px] rounded-full bg-gradient-to-tr from-white/10 to-transparent blur-3xl"
         animate={{ scale: [1, 1.1, 1], opacity: [0.2, 0.4, 0.2] }}
