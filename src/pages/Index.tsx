@@ -9,6 +9,7 @@ import JobCategories from "@/components/JobCategories";
 import FeaturedJobs from "@/components/FeaturedJobs";
 import TopCompanies from "@/components/TopCompanies";
 import UniversityPartners from "@/components/UniversityPartners";
+import TestimonialsSection from "@/components/TestimonialsSection";
 import CTASection from "@/components/CTASection";
 import Footer from "@/components/Footer";
 import JobDetailModal from "@/components/JobDetailModal";
@@ -123,6 +124,8 @@ const Index = () => {
       />
 
       <TopCompanies />
+
+      <TestimonialsSection />
 
       <UniversityPartners />
 
