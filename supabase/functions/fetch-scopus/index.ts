@@ -115,8 +115,8 @@ Deno.serve(async (req) => {
 
     console.log(`Extracted Scopus author ID: ${authorId}`);
 
-    // Fetch publications from Scopus API
-    const scopusApiUrl = `https://api.elsevier.com/content/search/scopus?query=AU-ID(${authorId})&count=50&sort=-coverDate`;
+    // Fetch publications from Scopus API (use count=25 for basic API tier)
+    const scopusApiUrl = `https://api.elsevier.com/content/search/scopus?query=AU-ID(${authorId})&count=25&sort=-coverDate`;
     
     const scopusResponse = await fetch(scopusApiUrl, {
       headers: {
@@ -143,10 +143,18 @@ Deno.serve(async (req) => {
         );
       }
 
+      // Handle service level limit errors
+      if (scopusResponse.status === 400 && errorText.includes("Exceeds the maximum")) {
+        return new Response(
+          JSON.stringify({ error: "Scopus API limit exceeded. Your API key may have restricted access." }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
       return new Response(
-        JSON.stringify({ error: "Failed to fetch data from Scopus" }),
+        JSON.stringify({ error: "Failed to fetch data from Scopus. Please verify your API key has proper permissions." }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+        );
     }
 
     const scopusData = await scopusResponse.json();
