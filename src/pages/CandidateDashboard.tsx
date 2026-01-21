@@ -8,6 +8,7 @@ import ProfileEditModal from "@/components/ProfileEditModal";
 import SectionEditModal from "@/components/SectionEditModal";
 import QuickApplyModal from "@/components/QuickApplyModal";
 import InterviewResponseModal from "@/components/InterviewResponseModal";
+import { ResumePreviewModal } from "@/components/profile/ResumePreviewModal";
 import InterviewCard from "@/components/InterviewCard";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -134,6 +135,8 @@ const CandidateDashboard = () => {
   const [interviews, setInterviews] = useState<any[]>([]);
   const [selectedInterview, setSelectedInterview] = useState<any>(null);
   const [showInterviewModal, setShowInterviewModal] = useState(false);
+  const [resumePreviewOpen, setResumePreviewOpen] = useState(false);
+  const [resumePreviewUrl, setResumePreviewUrl] = useState<string | null>(null);
 
   // Handle quick apply from job recommendations
   const handleQuickApply = async (jobId: string) => {
@@ -541,7 +544,8 @@ const CandidateDashboard = () => {
                 .from("resumes")
                 .createSignedUrl(profile.resume_url, 3600);
               if (data?.signedUrl) {
-                window.open(data.signedUrl, "_blank");
+                setResumePreviewUrl(data.signedUrl);
+                setResumePreviewOpen(true);
               } else {
                 toast({ title: "Error", description: "Failed to open resume", variant: "destructive" });
               }
@@ -1181,6 +1185,16 @@ const CandidateDashboard = () => {
           institute: selectedInterview.job?.institute || "Unknown",
         } : null}
         onResponded={handleInterviewResponse}
+      />
+
+      <ResumePreviewModal
+        open={resumePreviewOpen}
+        onOpenChange={(open) => {
+          setResumePreviewOpen(open);
+          if (!open) setResumePreviewUrl(null);
+        }}
+        resumeUrl={resumePreviewUrl}
+        fileName={profile?.full_name ? `${profile.full_name}_CV.pdf` : "Resume.pdf"}
       />
 
     </div>
