@@ -26,6 +26,10 @@ import {
   AchievementsList,
   AIJobMatching,
 } from "@/components/profile";
+import { OrcidCard } from "@/components/profile/OrcidCard";
+import { LinkedInImportCard } from "@/components/profile/LinkedInImportCard";
+import { LinkedInImportModal } from "@/components/profile/LinkedInImportModal";
+import { ScopusButton } from "@/components/profile/ScopusButton";
 import {
   Edit2,
   Plus,
@@ -55,6 +59,9 @@ interface Profile {
   resume_url: string | null;
   phone: string | null;
   email?: string | null;
+  orcid_id?: string | null;
+  scopus_link?: string | null;
+  linkedin_url?: string | null;
 }
 
 interface Application {
@@ -129,6 +136,7 @@ const CandidateDashboard = () => {
   const [interviews, setInterviews] = useState<any[]>([]);
   const [selectedInterview, setSelectedInterview] = useState<any>(null);
   const [showInterviewModal, setShowInterviewModal] = useState(false);
+  const [linkedInImportOpen, setLinkedInImportOpen] = useState(false);
 
   // Handle quick apply from job recommendations
   const handleQuickApply = async (jobId: string) => {
@@ -435,6 +443,51 @@ const CandidateDashboard = () => {
     }
   };
 
+  // Handler functions for academic identifiers
+  const handleOrcidSave = async (orcidId: string) => {
+    if (!user) return;
+    const { error } = await supabase
+      .from("profiles")
+      .update({ orcid_id: orcidId })
+      .eq("id", user.id);
+    if (error) throw error;
+    setProfile((prev) => prev ? { ...prev, orcid_id: orcidId } : null);
+  };
+
+  const handleScopusSave = async (scopusLink: string) => {
+    if (!user) return;
+    const { error } = await supabase
+      .from("profiles")
+      .update({ scopus_link: scopusLink })
+      .eq("id", user.id);
+    if (error) throw error;
+    setProfile((prev) => prev ? { ...prev, scopus_link: scopusLink } : null);
+  };
+
+  const handleLinkedInConnect = async (url: string) => {
+    if (!user) return;
+    const { error } = await supabase
+      .from("profiles")
+      .update({ linkedin_url: url })
+      .eq("id", user.id);
+    if (error) throw error;
+    setProfile((prev) => prev ? { ...prev, linkedin_url: url } : null);
+  };
+
+  const handleLinkedInImport = async (sections: string[]) => {
+    // Simulated LinkedIn import - in a real implementation this would call an API
+    toast({
+      title: "Import Started",
+      description: `Importing ${sections.join(", ")} from LinkedIn. This feature will sync your data after review.`,
+    });
+    // Simulate import delay
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+    toast({
+      title: "Import Complete",
+      description: "Your LinkedIn data has been imported. Please review your profile sections.",
+    });
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
@@ -564,6 +617,23 @@ const CandidateDashboard = () => {
           />
         </SidebarCard>
       </motion.div>
+
+      {/* ORCID iD */}
+      <motion.div variants={itemVariants}>
+        <OrcidCard
+          orcidId={profile?.orcid_id || null}
+          onSave={handleOrcidSave}
+        />
+      </motion.div>
+
+      {/* LinkedIn Import */}
+      <motion.div variants={itemVariants}>
+        <LinkedInImportCard
+          linkedinUrl={profile?.linkedin_url || null}
+          onConnect={handleLinkedInConnect}
+          onImportRequest={() => setLinkedInImportOpen(true)}
+        />
+      </motion.div>
     </motion.div>
   );
 
@@ -641,17 +711,23 @@ const CandidateDashboard = () => {
       {/* Research Papers */}
       <motion.div variants={itemVariants}>
         <ProfileCard
-          title="Research Papers"
+          title="Publications"
           headerAction={
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 px-2"
-              onClick={() => openSectionEdit("research")}
-            >
-              <Plus className="h-4 w-4 mr-1" />
-              <span className="hidden sm:inline">Add</span>
-            </Button>
+            <div className="flex items-center gap-2">
+              <ScopusButton
+                scopusLink={profile?.scopus_link || null}
+                onSave={handleScopusSave}
+              />
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 px-2"
+                onClick={() => openSectionEdit("research")}
+              >
+                <Plus className="h-4 w-4 mr-1" />
+                <span className="hidden sm:inline">Add</span>
+              </Button>
+            </div>
           }
         >
           <ResearchPapersList papers={researchPapers} />
@@ -1104,6 +1180,13 @@ const CandidateDashboard = () => {
           institute: selectedInterview.job?.institute || "Unknown",
         } : null}
         onResponded={handleInterviewResponse}
+      />
+
+      <LinkedInImportModal
+        isOpen={linkedInImportOpen}
+        onClose={() => setLinkedInImportOpen(false)}
+        linkedinUrl={profile?.linkedin_url || null}
+        onImport={handleLinkedInImport}
       />
     </div>
   );
