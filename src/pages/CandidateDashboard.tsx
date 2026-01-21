@@ -123,6 +123,7 @@ const CandidateDashboard = () => {
   const [editingSection, setEditingSection] = useState<string>("");
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [uploadingResume, setUploadingResume] = useState(false);
+  const [parsingResume, setParsingResume] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
   const [quickApplyJob, setQuickApplyJob] = useState<{
     id: string;
@@ -335,12 +336,109 @@ const CandidateDashboard = () => {
       if (updateError) throw updateError;
 
       setProfile((prev) => (prev ? { ...prev, resume_url: resumePath } : null));
-      toast({ title: "Resume uploaded!", description: "Your resume has been uploaded successfully." });
+      toast({ title: "Resume uploaded!", description: "Parsing your resume to populate your profile..." });
+
+      // Now parse the resume with AI
+      setParsingResume(true);
+      setUploadingResume(false);
+
+      try {
+        const { data: sessionData } = await supabase.auth.getSession();
+        const token = sessionData?.session?.access_token;
+
+        if (!token) {
+          throw new Error("Not authenticated");
+        }
+
+        const response = await supabase.functions.invoke("parse-resume", {
+          body: { resumePath },
+        });
+
+        if (response.error) {
+          console.error("Parse resume error:", response.error);
+          toast({
+            title: "Profile import partial",
+            description: "Resume uploaded but couldn't extract profile data automatically.",
+            variant: "destructive",
+          });
+        } else if (response.data?.success) {
+          const parsed = response.data.parsed;
+          const updatedFields = response.data.updated_fields || [];
+
+          // Update local state with parsed data
+          if (parsed.full_name && updatedFields.includes("full_name")) {
+            setProfile((prev) => prev ? { ...prev, full_name: parsed.full_name } : null);
+          }
+          if (parsed.role && updatedFields.includes("role")) {
+            setProfile((prev) => prev ? { ...prev, role: parsed.role } : null);
+          }
+          if (parsed.headline && updatedFields.includes("headline")) {
+            setProfile((prev) => prev ? { ...prev, headline: parsed.headline } : null);
+          }
+          if (parsed.location && updatedFields.includes("location")) {
+            setProfile((prev) => prev ? { ...prev, location: parsed.location } : null);
+          }
+          if (parsed.professional_summary && updatedFields.includes("professional_summary")) {
+            setProfessionalSummary(parsed.professional_summary);
+          }
+          if (parsed.skills && updatedFields.includes("skills")) {
+            setSkills(parsed.skills);
+          }
+          if (parsed.experience && updatedFields.includes("experience")) {
+            // Map AI format to our format
+            const mappedExperience = parsed.experience.map((exp: any) => ({
+              year: exp.start_date ? `${exp.start_date} - ${exp.end_date || "Present"}` : "",
+              role: exp.title || "",
+              institution: exp.company || "",
+              description: exp.description || "",
+              isCurrent: exp.current || false,
+            }));
+            setExperienceTimeline(mappedExperience);
+          }
+          if (parsed.education && updatedFields.includes("education")) {
+            // Map AI format to our format
+            const mappedEducation = parsed.education.map((edu: any) => ({
+              degree: edu.degree || "",
+              institution: edu.institution || "",
+              years: edu.start_year && edu.end_year 
+                ? `${edu.start_year} - ${edu.end_year}` 
+                : edu.year || "",
+            }));
+            setEducation(mappedEducation);
+          }
+          if (parsed.achievements && updatedFields.includes("achievements")) {
+            setAchievements(parsed.achievements);
+          }
+          if (parsed.research_papers && updatedFields.includes("research_papers")) {
+            // Map AI format to our format
+            const mappedPapers = parsed.research_papers.map((paper: any) => ({
+              title: paper.title || "",
+              authors: paper.authors || "",
+              date: paper.year || "",
+            }));
+            setResearchPapers(mappedPapers);
+          }
+
+          toast({
+            title: "Profile populated!",
+            description: `Successfully imported ${updatedFields.length} sections from your resume.`,
+          });
+        }
+      } catch (parseError: any) {
+        console.error("Error parsing resume:", parseError);
+        toast({
+          title: "Resume parsing failed",
+          description: "Resume uploaded but profile extraction failed. You can still fill in your profile manually.",
+          variant: "destructive",
+        });
+      } finally {
+        setParsingResume(false);
+      }
     } catch (error: any) {
       console.error("Error uploading resume:", error);
       toast({ title: "Upload failed", description: error.message || "Failed to upload resume.", variant: "destructive" });
-    } finally {
       setUploadingResume(false);
+    } finally {
       if (resumeInputRef.current) {
         resumeInputRef.current.value = "";
       }
@@ -548,6 +646,7 @@ const CandidateDashboard = () => {
               }
             }}
             uploading={uploadingResume}
+            parsing={parsingResume}
           />
         </SidebarCard>
       </motion.div>

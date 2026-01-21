@@ -1,5 +1,5 @@
 import * as React from "react";
-import { FileText, Download, Eye, Loader2, Upload } from "lucide-react";
+import { FileText, Download, Eye, Loader2, Upload, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface ResumeCardProps {
@@ -9,6 +9,7 @@ interface ResumeCardProps {
   onUpload?: () => void;
   onView?: () => void;
   uploading?: boolean;
+  parsing?: boolean;
 }
 
 export const ResumeCard = ({
@@ -18,7 +19,29 @@ export const ResumeCard = ({
   onUpload,
   onView,
   uploading = false,
+  parsing = false,
 }: ResumeCardProps) => {
+  // Show parsing state
+  if (parsing) {
+    return (
+      <div className="text-center py-4">
+        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
+          <Sparkles className="h-6 w-6 text-primary animate-pulse" />
+        </div>
+        <p className="text-sm font-medium text-foreground mb-1">
+          Analyzing Resume...
+        </p>
+        <p className="text-xs text-muted-foreground mb-3">
+          Extracting your profile information with AI
+        </p>
+        <div className="flex items-center justify-center gap-2">
+          <Loader2 className="h-4 w-4 animate-spin text-primary" />
+          <span className="text-xs text-muted-foreground">This may take a moment</span>
+        </div>
+      </div>
+    );
+  }
+
   if (!resumeUrl) {
     return (
       <div className="text-center py-4">
@@ -45,6 +68,10 @@ export const ResumeCard = ({
         )}
         <p className="text-xs text-muted-foreground mt-2">
           PDF or Word (max 10MB)
+        </p>
+        <p className="text-xs text-primary/70 mt-1">
+          <Sparkles className="inline h-3 w-3 mr-1" />
+          AI will auto-fill your profile
         </p>
       </div>
     );
