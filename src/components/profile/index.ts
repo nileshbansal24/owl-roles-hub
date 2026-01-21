@@ -1,6 +1,7 @@
 export { ProfileCard } from "./ProfileCard";
 export { ProfileHeader } from "./ProfileHeader";
 export { ProfileCompletionCard } from "./ProfileCompletionCard";
+export { ProfileMilestoneBadges } from "./ProfileMilestoneBadges";
 export { SidebarCard } from "./SidebarCard";
 export { ExperienceTimeline } from "./ExperienceTimeline";
 export { ResearchPapersList } from "./ResearchPapersList";
