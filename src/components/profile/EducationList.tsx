@@ -1,4 +1,5 @@
 import * as React from "react";
+import { motion } from "framer-motion";
 import { GraduationCap } from "lucide-react";
 
 interface EducationItem {
@@ -18,9 +19,11 @@ export const EducationList = ({
 }: EducationListProps) => {
   if (items.length === 0) {
     return (
-      <div className="text-center py-6">
-        <GraduationCap className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
-        <p className="text-sm text-muted-foreground">{emptyMessage}</p>
+      <div className="text-center py-8">
+        <div className="w-14 h-14 rounded-2xl bg-secondary/50 flex items-center justify-center mx-auto mb-4">
+          <GraduationCap className="h-7 w-7 text-muted-foreground" />
+        </div>
+        <p className="text-sm text-muted-foreground max-w-xs mx-auto">{emptyMessage}</p>
       </div>
     );
   }
@@ -28,16 +31,24 @@ export const EducationList = ({
   return (
     <div className="space-y-4">
       {items.map((item, index) => (
-        <div key={index} className="flex items-start gap-3">
-          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
-            <GraduationCap className="h-4 w-4 text-primary" />
+        <motion.div
+          key={index}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: index * 0.1 }}
+          className="flex items-start gap-4 p-4 rounded-xl bg-secondary/30 border border-border/50 hover:border-border transition-colors"
+        >
+          <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+            <GraduationCap className="h-5 w-5 text-primary" />
           </div>
-          <div>
-            <h4 className="font-medium text-foreground text-sm">{item.degree}</h4>
-            <p className="text-sm text-primary">{item.institution}</p>
-            <p className="text-xs text-muted-foreground">{item.years}</p>
+          <div className="flex-1 min-w-0">
+            <h4 className="font-heading font-semibold text-foreground text-base mb-0.5">
+              {item.degree}
+            </h4>
+            <p className="text-sm text-primary font-medium">{item.institution}</p>
+            <p className="text-xs text-muted-foreground mt-1">{item.years}</p>
           </div>
-        </div>
+        </motion.div>
       ))}
     </div>
   );
