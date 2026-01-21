@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.parse-resume]
 verify_jwt = false
+
+[functions.fetch-scopus]
+verify_jwt = false
