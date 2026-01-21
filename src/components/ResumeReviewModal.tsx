@@ -14,53 +14,24 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { X, Plus, Check, Loader2 } from "lucide-react";
+import { X, Plus, Check, Loader2, GitCompare, Edit3 } from "lucide-react";
+import {
+  ComparisonView,
+  CurrentProfileData,
+  ParsedResumeData,
+  ParsedExperience,
+  ParsedEducation,
+  ParsedResearchPaper,
+} from "./resume-review";
 
-interface ParsedExperience {
-  title: string;
-  company: string;
-  location?: string;
-  start_date?: string;
-  end_date?: string;
-  description?: string;
-  current?: boolean;
-}
-
-interface ParsedEducation {
-  degree: string;
-  institution: string;
-  field?: string;
-  start_year?: string;
-  end_year?: string;
-}
-
-interface ParsedResearchPaper {
-  title: string;
-  journal?: string;
-  year?: string;
-  doi?: string;
-  authors?: string;
-}
-
-export interface ParsedResumeData {
-  full_name?: string;
-  role?: string;
-  headline?: string;
-  professional_summary?: string;
-  location?: string;
-  phone?: string;
-  email?: string;
-  skills?: string[];
-  experience?: ParsedExperience[];
-  education?: ParsedEducation[];
-  achievements?: string[];
-  research_papers?: ParsedResearchPaper[];
-}
+// Re-export for backwards compatibility
+export type { ParsedResumeData, ParsedExperience, ParsedEducation, ParsedResearchPaper };
 
 interface ResumeReviewModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   parsedData: ParsedResumeData;
+  currentProfile?: CurrentProfileData;
   onSave: (data: ParsedResumeData) => void;
   saving?: boolean;
 }
@@ -69,12 +40,16 @@ export function ResumeReviewModal({
   open,
   onOpenChange,
   parsedData,
+  currentProfile,
   onSave,
   saving = false,
 }: ResumeReviewModalProps) {
   const [data, setData] = useState<ParsedResumeData>(parsedData);
   const [newSkill, setNewSkill] = useState("");
   const [newAchievement, setNewAchievement] = useState("");
+  const [viewMode, setViewMode] = useState<"compare" | "edit">(
+    currentProfile ? "compare" : "edit"
+  );
 
   const updateField = <K extends keyof ParsedResumeData>(
     field: K,
@@ -160,18 +135,56 @@ export function ResumeReviewModal({
         <DialogHeader className="px-6 pt-6 pb-2">
           <DialogTitle>Review Extracted Profile Data</DialogTitle>
           <DialogDescription>
-            Review and edit the information extracted from your resume before saving.
+            {viewMode === "compare"
+              ? "Compare your current profile with the extracted resume data."
+              : "Review and edit the information extracted from your resume before saving."}
           </DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="max-h-[60vh] px-6">
-          <Tabs defaultValue="basic" className="w-full">
-            <TabsList className="grid w-full grid-cols-4 mb-4">
-              <TabsTrigger value="basic">Basic Info</TabsTrigger>
-              <TabsTrigger value="experience">Experience</TabsTrigger>
-              <TabsTrigger value="education">Education</TabsTrigger>
-              <TabsTrigger value="research">Research</TabsTrigger>
-            </TabsList>
+        {/* View Mode Toggle */}
+        {currentProfile && (
+          <div className="px-6 pb-2">
+            <div className="inline-flex items-center rounded-lg border bg-muted p-1 gap-1">
+              <Button
+                variant={viewMode === "compare" ? "secondary" : "ghost"}
+                size="sm"
+                className="h-8 gap-2"
+                onClick={() => setViewMode("compare")}
+              >
+                <GitCompare className="h-4 w-4" />
+                Compare
+              </Button>
+              <Button
+                variant={viewMode === "edit" ? "secondary" : "ghost"}
+                size="sm"
+                className="h-8 gap-2"
+                onClick={() => setViewMode("edit")}
+              >
+                <Edit3 className="h-4 w-4" />
+                Edit
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Comparison View */}
+        {viewMode === "compare" && currentProfile ? (
+          <div className="px-6 pb-4">
+            <ComparisonView
+              currentProfile={currentProfile}
+              parsedData={data}
+            />
+          </div>
+        ) : (
+          /* Edit View */
+          <ScrollArea className="max-h-[60vh] px-6">
+            <Tabs defaultValue="basic" className="w-full">
+              <TabsList className="grid w-full grid-cols-4 mb-4">
+                <TabsTrigger value="basic">Basic Info</TabsTrigger>
+                <TabsTrigger value="experience">Experience</TabsTrigger>
+                <TabsTrigger value="education">Education</TabsTrigger>
+                <TabsTrigger value="research">Research</TabsTrigger>
+              </TabsList>
 
             <TabsContent value="basic" className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
@@ -479,6 +492,7 @@ export function ResumeReviewModal({
             </TabsContent>
           </Tabs>
         </ScrollArea>
+        )}
 
         <DialogFooter className="px-6 py-4 border-t">
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
