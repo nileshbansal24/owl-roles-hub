@@ -186,6 +186,7 @@ const RecruiterDashboard = () => {
   const [interviews, setInterviews] = useState<any[]>([]);
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [schedulingApplication, setSchedulingApplication] = useState<Application | null>(null);
+  const [sendingReminderId, setSendingReminderId] = useState<string | null>(null);
 
   // Calculate profile completeness
   const calculateCompleteness = (profile: Profile | null): number => {
@@ -390,6 +391,60 @@ const RecruiterDashboard = () => {
         };
       });
       setInterviews(enriched);
+    }
+  };
+
+  // Send interview reminder email to candidate
+  const handleSendInterviewReminder = async (interview: any) => {
+    try {
+      setSendingReminderId(interview.id);
+      
+      // Find the application to get candidate email
+      const app = applications.find(a => a.id === interview.application_id);
+      if (!app?.applicant_email) {
+        toast({
+          title: "Email not available",
+          description: "Cannot send reminder - candidate email not found.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const confirmedTime = interview.confirmed_time 
+        ? format(new Date(interview.confirmed_time), "EEEE, MMMM d, yyyy 'at' h:mm a")
+        : "Please check your dashboard";
+
+      const { error } = await supabase.functions.invoke("send-status-notification", {
+        body: {
+          newStatus: "interview_reminder",
+          jobTitle: interview.job_title || app?.jobs?.title || "Position",
+          instituteName: interview.institute || app?.jobs?.institute || "Company",
+          candidateEmail: app.applicant_email,
+          confirmedTime,
+          interviewType: interview.interview_type,
+          meetingLink: interview.meeting_link,
+          location: interview.location,
+          notes: interview.notes,
+        },
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      toast({
+        title: "Reminder sent!",
+        description: `Interview reminder email sent to ${app.profiles?.full_name || "candidate"}.`,
+      });
+    } catch (err) {
+      console.error("Failed to send reminder:", err);
+      toast({
+        title: "Failed to send reminder",
+        description: "There was an error sending the email. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setSendingReminderId(null);
     }
   };
 
@@ -1416,6 +1471,8 @@ const RecruiterDashboard = () => {
                           interview={interview}
                           variant="recruiter"
                           onViewDetails={() => {}}
+                          onSendReminder={() => handleSendInterviewReminder(interview)}
+                          sendingReminder={sendingReminderId === interview.id}
                         />
                       ))}
                     </div>

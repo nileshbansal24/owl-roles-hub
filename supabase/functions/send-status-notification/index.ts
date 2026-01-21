@@ -21,9 +21,14 @@ interface StatusNotificationRequest {
   declineReason?: string;
   recruiterEmail?: string;
   interviewType?: string;
+  // Interview reminder fields
+  candidateEmail?: string;
+  meetingLink?: string;
+  location?: string;
+  notes?: string;
 }
 
-const getStatusEmailContent = (status: string, jobTitle: string, instituteName: string, extras?: { candidateName?: string; confirmedTime?: string; declineReason?: string; interviewType?: string }) => {
+const getStatusEmailContent = (status: string, jobTitle: string, instituteName: string, extras?: { candidateName?: string; confirmedTime?: string; declineReason?: string; interviewType?: string; meetingLink?: string; location?: string; notes?: string }) => {
   const statusMessages: Record<string, { subject: string; heading: string; body: string; color: string }> = {
     reviewed: {
       subject: `Your application for ${jobTitle} is under review`,
@@ -84,6 +89,23 @@ const getStatusEmailContent = (status: string, jobTitle: string, instituteName: 
       body: `An interview has been scheduled for your application to the <strong>${jobTitle}</strong> position at <strong>${instituteName}</strong>. Please check your dashboard to review the proposed time slots and confirm your availability.`,
       color: "#8b5cf6",
     },
+    interview_reminder: {
+      subject: `📅 Interview Reminder: ${jobTitle} at ${instituteName}`,
+      heading: "Interview Reminder 📅",
+      body: `This is a reminder about your upcoming interview for the <strong>${jobTitle}</strong> position at <strong>${instituteName}</strong>.
+      
+      <div style="background-color: #dbeafe; border: 1px solid #93c5fd; border-radius: 8px; padding: 16px; margin: 16px 0;">
+        <p style="margin: 0 0 8px; color: #1e40af; font-weight: 600;">📅 Interview Details</p>
+        <p style="margin: 0 0 8px; color: #1e3a8a; font-size: 16px;"><strong>Date & Time:</strong> ${extras?.confirmedTime || 'Please check your dashboard'}</p>
+        <p style="margin: 0 0 8px; color: #1e3a8a; font-size: 14px;"><strong>Type:</strong> ${extras?.interviewType === 'video' ? 'Video Call' : extras?.interviewType === 'phone' ? 'Phone Call' : extras?.interviewType === 'in_person' ? 'In-Person' : 'Interview'}</p>
+        ${extras?.meetingLink ? `<p style="margin: 0 0 8px; color: #1e3a8a; font-size: 14px;"><strong>Meeting Link:</strong> <a href="${extras.meetingLink}" style="color: #2563eb;">${extras.meetingLink}</a></p>` : ''}
+        ${extras?.location ? `<p style="margin: 0 0 8px; color: #1e3a8a; font-size: 14px;"><strong>Location:</strong> ${extras.location}</p>` : ''}
+        ${extras?.notes ? `<p style="margin: 8px 0 0; color: #1e3a8a; font-size: 14px;"><strong>Notes:</strong> ${extras.notes}</p>` : ''}
+      </div>
+      
+      Please make sure to be prepared and on time for your interview. Best of luck!`,
+      color: "#2563eb",
+    },
   };
 
   return statusMessages[status] || statusMessages.pending;
@@ -107,6 +129,10 @@ const handler = async (req: Request): Promise<Response> => {
       declineReason,
       recruiterEmail,
       interviewType,
+      candidateEmail,
+      meetingLink,
+      location,
+      notes,
     } = requestData;
 
     console.log("Sending status notification:", requestData);
@@ -138,6 +164,17 @@ const handler = async (req: Request): Promise<Response> => {
         console.log("No recruiter email provided for interview notification");
         return new Response(
           JSON.stringify({ success: true, message: "No recruiter email to notify" }),
+          { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        );
+      }
+    } else if (newStatus === "interview_reminder") {
+      // For interview reminders, send to candidate
+      recipientEmail = candidateEmail || null;
+      
+      if (!recipientEmail) {
+        console.log("No candidate email provided for interview reminder");
+        return new Response(
+          JSON.stringify({ success: true, message: "No candidate email to notify" }),
           { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
         );
       }
@@ -173,6 +210,9 @@ const handler = async (req: Request): Promise<Response> => {
       confirmedTime,
       declineReason,
       interviewType,
+      meetingLink,
+      location,
+      notes,
     });
 
     const emailResponse = await resend.emails.send({
