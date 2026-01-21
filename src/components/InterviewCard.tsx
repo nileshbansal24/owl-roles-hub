@@ -11,6 +11,8 @@ import {
   ExternalLink,
   Building2,
   Sparkles,
+  Mail,
+  Loader2,
 } from "lucide-react";
 import { format, parseISO, formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -43,6 +45,8 @@ interface InterviewCardProps {
   variant?: "candidate" | "recruiter";
   onRespond?: () => void;
   onViewDetails?: () => void;
+  onSendReminder?: () => void;
+  sendingReminder?: boolean;
   index?: number;
 }
 
@@ -51,6 +55,8 @@ const InterviewCard = ({
   variant = "candidate",
   onRespond,
   onViewDetails,
+  onSendReminder,
+  sendingReminder = false,
   index = 0,
 }: InterviewCardProps) => {
   const proposedTimes = interview.proposed_times as ProposedTime[];
@@ -237,6 +243,28 @@ const InterviewCard = ({
                   >
                     <Sparkles className="h-3.5 w-3.5" />
                     Respond
+                  </Button>
+                </motion.div>
+              )}
+              {variant === "recruiter" && interview.status === "confirmed" && onSendReminder && (
+                <motion.div 
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="flex-1 sm:flex-none"
+                >
+                  <Button 
+                    size="sm" 
+                    variant="default"
+                    onClick={onSendReminder}
+                    disabled={sendingReminder}
+                    className="w-full sm:w-auto gap-1.5 bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                    {sendingReminder ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <Mail className="h-3.5 w-3.5" />
+                    )}
+                    Send Reminder
                   </Button>
                 </motion.div>
               )}
