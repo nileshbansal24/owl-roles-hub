@@ -108,6 +108,8 @@ const Index = () => {
         experienceFilter={experienceFilter}
         setExperienceFilter={setExperienceFilter}
         onSearch={handleSearch}
+        isLoggedIn={!!user}
+        onGetStarted={() => openAuthModal("signup", "candidate")}
       />
 
       <StatsSection />
