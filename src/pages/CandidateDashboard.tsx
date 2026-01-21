@@ -30,7 +30,7 @@ import {
   AIJobMatching,
 } from "@/components/profile";
 import { OrcidCard } from "@/components/profile/OrcidCard";
-import { ScopusButton } from "@/components/profile/ScopusButton";
+import { PublicationImportButton } from "@/components/profile/PublicationImportButton";
 import {
   Edit2,
   Plus,
@@ -908,18 +908,18 @@ const CandidateDashboard = () => {
           title="Publications"
           headerAction={
             <div className="flex items-center gap-2">
-              <ScopusButton
+              <PublicationImportButton
                 scopusLink={profile?.scopus_link || null}
-                onSave={handleScopusSave}
+                orcidId={profile?.orcid_id || null}
+                onScopusSave={handleScopusSave}
+                onOrcidSave={handleOrcidSave}
                 onPublicationsImported={(papers) => {
-                  // Map to our format and update state
                   const mappedPapers = papers.map((p) => ({
                     title: p.title,
                     authors: p.authors,
                     date: p.date,
                   }));
                   setResearchPapers(mappedPapers);
-                  setProfile((prev) => prev ? { ...prev, scopus_link: profile?.scopus_link } : null);
                 }}
               />
               <Button

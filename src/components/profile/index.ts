@@ -11,3 +11,4 @@ export { AchievementsList } from "./AchievementsList";
 export { AIJobMatching } from "./AIJobMatching";
 export { OrcidCard } from "./OrcidCard";
 export { ScopusButton } from "./ScopusButton";
+export { PublicationImportButton } from "./PublicationImportButton";
