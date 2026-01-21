@@ -8,6 +8,7 @@ import ProfileEditModal from "@/components/ProfileEditModal";
 import SectionEditModal from "@/components/SectionEditModal";
 import QuickApplyModal from "@/components/QuickApplyModal";
 import InterviewResponseModal from "@/components/InterviewResponseModal";
+import { ResumeReviewModal, ParsedResumeData } from "@/components/ResumeReviewModal";
 import InterviewCard from "@/components/InterviewCard";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -138,6 +139,9 @@ const CandidateDashboard = () => {
   const [selectedInterview, setSelectedInterview] = useState<any>(null);
   const [showInterviewModal, setShowInterviewModal] = useState(false);
   const [linkedInImportOpen, setLinkedInImportOpen] = useState(false);
+  const [resumeReviewOpen, setResumeReviewOpen] = useState(false);
+  const [parsedResumeData, setParsedResumeData] = useState<ParsedResumeData | null>(null);
+  const [savingResumeData, setSavingResumeData] = useState(false);
 
   // Handle quick apply from job recommendations
   const handleQuickApply = async (jobId: string) => {
@@ -351,7 +355,7 @@ const CandidateDashboard = () => {
         }
 
         const response = await supabase.functions.invoke("parse-resume", {
-          body: { resumePath },
+          body: { resumePath, previewOnly: true },
         });
 
         if (response.error) {
@@ -363,65 +367,12 @@ const CandidateDashboard = () => {
           });
         } else if (response.data?.success) {
           const parsed = response.data.parsed;
-          const updatedFields = response.data.updated_fields || [];
-
-          // Update local state with parsed data
-          if (parsed.full_name && updatedFields.includes("full_name")) {
-            setProfile((prev) => prev ? { ...prev, full_name: parsed.full_name } : null);
-          }
-          if (parsed.role && updatedFields.includes("role")) {
-            setProfile((prev) => prev ? { ...prev, role: parsed.role } : null);
-          }
-          if (parsed.headline && updatedFields.includes("headline")) {
-            setProfile((prev) => prev ? { ...prev, headline: parsed.headline } : null);
-          }
-          if (parsed.location && updatedFields.includes("location")) {
-            setProfile((prev) => prev ? { ...prev, location: parsed.location } : null);
-          }
-          if (parsed.professional_summary && updatedFields.includes("professional_summary")) {
-            setProfessionalSummary(parsed.professional_summary);
-          }
-          if (parsed.skills && updatedFields.includes("skills")) {
-            setSkills(parsed.skills);
-          }
-          if (parsed.experience && updatedFields.includes("experience")) {
-            // Map AI format to our format
-            const mappedExperience = parsed.experience.map((exp: any) => ({
-              year: exp.start_date ? `${exp.start_date} - ${exp.end_date || "Present"}` : "",
-              role: exp.title || "",
-              institution: exp.company || "",
-              description: exp.description || "",
-              isCurrent: exp.current || false,
-            }));
-            setExperienceTimeline(mappedExperience);
-          }
-          if (parsed.education && updatedFields.includes("education")) {
-            // Map AI format to our format
-            const mappedEducation = parsed.education.map((edu: any) => ({
-              degree: edu.degree || "",
-              institution: edu.institution || "",
-              years: edu.start_year && edu.end_year 
-                ? `${edu.start_year} - ${edu.end_year}` 
-                : edu.year || "",
-            }));
-            setEducation(mappedEducation);
-          }
-          if (parsed.achievements && updatedFields.includes("achievements")) {
-            setAchievements(parsed.achievements);
-          }
-          if (parsed.research_papers && updatedFields.includes("research_papers")) {
-            // Map AI format to our format
-            const mappedPapers = parsed.research_papers.map((paper: any) => ({
-              title: paper.title || "",
-              authors: paper.authors || "",
-              date: paper.year || "",
-            }));
-            setResearchPapers(mappedPapers);
-          }
-
+          // Show review modal instead of auto-saving
+          setParsedResumeData(parsed);
+          setResumeReviewOpen(true);
           toast({
-            title: "Profile populated!",
-            description: `Successfully imported ${updatedFields.length} sections from your resume.`,
+            title: "Resume analyzed!",
+            description: "Review and edit the extracted data before saving.",
           });
         }
       } catch (parseError: any) {
@@ -442,6 +393,94 @@ const CandidateDashboard = () => {
       if (resumeInputRef.current) {
         resumeInputRef.current.value = "";
       }
+    }
+  };
+
+  const handleResumeDataSave = async (data: ParsedResumeData) => {
+    if (!user) return;
+    
+    setSavingResumeData(true);
+    try {
+      // Map the data to our profile format and database format
+      const updateData: Record<string, unknown> = {};
+      
+      if (data.full_name) updateData.full_name = data.full_name;
+      if (data.role) updateData.role = data.role;
+      if (data.headline) updateData.headline = data.headline;
+      if (data.professional_summary) updateData.professional_summary = data.professional_summary;
+      if (data.location) updateData.location = data.location;
+      if (data.phone) updateData.phone = data.phone;
+      if (data.email) updateData.email = data.email;
+      if (data.skills && data.skills.length > 0) updateData.skills = data.skills;
+      if (data.experience && data.experience.length > 0) updateData.experience = data.experience;
+      if (data.education && data.education.length > 0) updateData.education = data.education;
+      if (data.achievements && data.achievements.length > 0) updateData.achievements = data.achievements;
+      if (data.research_papers && data.research_papers.length > 0) updateData.research_papers = data.research_papers;
+
+      const { error } = await supabase
+        .from("profiles")
+        .update(updateData)
+        .eq("id", user.id);
+
+      if (error) throw error;
+
+      // Update local state
+      if (data.full_name) setProfile((prev) => prev ? { ...prev, full_name: data.full_name! } : null);
+      if (data.role) setProfile((prev) => prev ? { ...prev, role: data.role! } : null);
+      if (data.headline) setProfile((prev) => prev ? { ...prev, headline: data.headline! } : null);
+      if (data.location) setProfile((prev) => prev ? { ...prev, location: data.location! } : null);
+      if (data.professional_summary) setProfessionalSummary(data.professional_summary);
+      if (data.skills) setSkills(data.skills);
+      if (data.achievements) setAchievements(data.achievements);
+      
+      if (data.experience) {
+        const mappedExperience = data.experience.map((exp) => ({
+          year: exp.start_date ? `${exp.start_date} - ${exp.end_date || "Present"}` : "",
+          role: exp.title || "",
+          institution: exp.company || "",
+          description: exp.description || "",
+          isCurrent: exp.current || false,
+        }));
+        setExperienceTimeline(mappedExperience);
+      }
+      
+      if (data.education) {
+        const mappedEducation = data.education.map((edu) => ({
+          degree: edu.degree || "",
+          institution: edu.institution || "",
+          years: edu.start_year && edu.end_year 
+            ? `${edu.start_year} - ${edu.end_year}` 
+            : "",
+        }));
+        setEducation(mappedEducation);
+      }
+      
+      if (data.research_papers) {
+        const mappedPapers = data.research_papers.map((paper) => ({
+          title: paper.title || "",
+          authors: paper.authors || "",
+          date: paper.year || "",
+          doi: paper.doi,
+          journal: paper.journal,
+        }));
+        setResearchPapers(mappedPapers);
+      }
+
+      setResumeReviewOpen(false);
+      setParsedResumeData(null);
+      toast({
+        title: "Profile updated!",
+        description: "Your profile has been updated with the resume data.",
+      });
+    } catch (error: any) {
+      console.error("Error saving resume data:", error);
+      toast({
+        title: "Save failed",
+        description: error.message || "Failed to save profile data.",
+        variant: "destructive",
+      });
+    } finally {
+      setSavingResumeData(false);
     }
   };
 
@@ -1297,6 +1336,19 @@ const CandidateDashboard = () => {
         linkedinUrl={profile?.linkedin_url || null}
         onImport={handleLinkedInImport}
       />
+
+      {parsedResumeData && (
+        <ResumeReviewModal
+          open={resumeReviewOpen}
+          onOpenChange={(open) => {
+            setResumeReviewOpen(open);
+            if (!open) setParsedResumeData(null);
+          }}
+          parsedData={parsedResumeData}
+          onSave={handleResumeDataSave}
+          saving={savingResumeData}
+        />
+      )}
     </div>
   );
 };
