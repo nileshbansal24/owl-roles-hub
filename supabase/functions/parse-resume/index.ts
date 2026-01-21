@@ -129,7 +129,7 @@ Deno.serve(async (req) => {
     console.log(`File type: ${mimeType}, size: ${arrayBuffer.byteLength} bytes`);
 
     // Call Lovable AI to parse the resume
-    const aiResponse = await fetch("https://ai-gateway.lovable.dev/v1/chat/completions", {
+    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
