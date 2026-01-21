@@ -11,14 +11,28 @@ import {
 } from "@/components/ui/select";
 
 const floatingIcons = [
-  { Icon: GraduationCap, delay: 0, x: "10%", y: "15%", size: 32, duration: 6 },
-  { Icon: BookOpen, delay: 1, x: "85%", y: "20%", size: 28, duration: 7 },
-  { Icon: Award, delay: 0.5, x: "75%", y: "70%", size: 36, duration: 5 },
-  { Icon: ScrollText, delay: 1.5, x: "15%", y: "75%", size: 24, duration: 8 },
-  { Icon: Atom, delay: 2, x: "90%", y: "45%", size: 30, duration: 6.5 },
-  { Icon: FlaskConical, delay: 0.8, x: "5%", y: "50%", size: 26, duration: 7.5 },
-  { Icon: GraduationCap, delay: 1.2, x: "60%", y: "85%", size: 22, duration: 5.5 },
-  { Icon: BookOpen, delay: 2.5, x: "30%", y: "10%", size: 20, duration: 6.8 },
+  { Icon: GraduationCap, delay: 0, x: 10, y: 15, size: 32, duration: 6 },
+  { Icon: BookOpen, delay: 1, x: 85, y: 20, size: 28, duration: 7 },
+  { Icon: Award, delay: 0.5, x: 75, y: 70, size: 36, duration: 5 },
+  { Icon: ScrollText, delay: 1.5, x: 15, y: 75, size: 24, duration: 8 },
+  { Icon: Atom, delay: 2, x: 90, y: 45, size: 30, duration: 6.5 },
+  { Icon: FlaskConical, delay: 0.8, x: 5, y: 50, size: 26, duration: 7.5 },
+  { Icon: GraduationCap, delay: 1.2, x: 60, y: 85, size: 22, duration: 5.5 },
+  { Icon: BookOpen, delay: 2.5, x: 30, y: 10, size: 20, duration: 6.8 },
+];
+
+// Define constellation connections between icons (pairs of indices)
+const constellationLines = [
+  [0, 7], // GraduationCap top-left to BookOpen top
+  [7, 1], // BookOpen top to BookOpen top-right
+  [1, 4], // BookOpen top-right to Atom right
+  [4, 2], // Atom right to Award bottom-right
+  [2, 6], // Award to GraduationCap bottom
+  [6, 3], // GraduationCap bottom to ScrollText bottom-left
+  [3, 5], // ScrollText to FlaskConical left
+  [5, 0], // FlaskConical to GraduationCap top-left
+  [0, 2], // Cross connection
+  [7, 6], // Cross connection
 ];
 
 interface NaukriHeroSectionProps {
@@ -77,17 +91,84 @@ const NaukriHeroSection = ({
         transition={{ duration: 8, repeat: Infinity }}
       />
 
+      {/* Constellation Lines SVG */}
+      <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 1 }}>
+        <defs>
+          <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="rgba(255,255,255,0.15)" />
+            <stop offset="50%" stopColor="rgba(255,255,255,0.08)" />
+            <stop offset="100%" stopColor="rgba(255,255,255,0.15)" />
+          </linearGradient>
+        </defs>
+        {constellationLines.map(([from, to], index) => {
+          const fromIcon = floatingIcons[from];
+          const toIcon = floatingIcons[to];
+          return (
+            <motion.line
+              key={index}
+              x1={`${fromIcon.x}%`}
+              y1={`${fromIcon.y}%`}
+              x2={`${toIcon.x}%`}
+              y2={`${toIcon.y}%`}
+              stroke="url(#lineGradient)"
+              strokeWidth="1"
+              initial={{ pathLength: 0, opacity: 0 }}
+              animate={{ 
+                pathLength: [0, 1, 1, 0],
+                opacity: [0, 0.6, 0.6, 0]
+              }}
+              transition={{
+                duration: 4,
+                delay: index * 0.3,
+                repeat: Infinity,
+                repeatDelay: 2,
+                ease: "easeInOut"
+              }}
+            />
+          );
+        })}
+        {/* Animated particles along lines */}
+        {constellationLines.slice(0, 5).map(([from, to], index) => {
+          const fromIcon = floatingIcons[from];
+          const toIcon = floatingIcons[to];
+          return (
+            <motion.circle
+              key={`particle-${index}`}
+              r="2"
+              fill="rgba(255,255,255,0.4)"
+              initial={{ 
+                cx: `${fromIcon.x}%`, 
+                cy: `${fromIcon.y}%`,
+                opacity: 0 
+              }}
+              animate={{ 
+                cx: [`${fromIcon.x}%`, `${toIcon.x}%`],
+                cy: [`${fromIcon.y}%`, `${toIcon.y}%`],
+                opacity: [0, 1, 1, 0]
+              }}
+              transition={{
+                duration: 3,
+                delay: index * 0.8 + 1,
+                repeat: Infinity,
+                repeatDelay: 3,
+                ease: "easeInOut"
+              }}
+            />
+          );
+        })}
+      </svg>
+
       {/* Floating Academic Icons */}
       {floatingIcons.map(({ Icon, delay, x, y, size, duration }, index) => (
         <motion.div
           key={index}
-          className="absolute text-white/10 pointer-events-none"
-          style={{ left: x, top: y }}
+          className="absolute text-white/15 pointer-events-none"
+          style={{ left: `${x}%`, top: `${y}%`, zIndex: 2 }}
           initial={{ opacity: 0, scale: 0 }}
           animate={{ 
-            opacity: [0.1, 0.2, 0.1],
+            opacity: [0.15, 0.25, 0.15],
             scale: [1, 1.1, 1],
-            y: [0, -15, 0],
+            y: [0, -12, 0],
             rotate: [0, 5, -5, 0]
           }}
           transition={{ 
