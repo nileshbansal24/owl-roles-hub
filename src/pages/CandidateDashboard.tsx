@@ -816,6 +816,16 @@ const CandidateDashboard = () => {
               <ScopusButton
                 scopusLink={profile?.scopus_link || null}
                 onSave={handleScopusSave}
+                onPublicationsImported={(papers) => {
+                  // Map to our format and update state
+                  const mappedPapers = papers.map((p) => ({
+                    title: p.title,
+                    authors: p.authors,
+                    date: p.date,
+                  }));
+                  setResearchPapers(mappedPapers);
+                  setProfile((prev) => prev ? { ...prev, scopus_link: profile?.scopus_link } : null);
+                }}
               />
               <Button
                 variant="ghost"
