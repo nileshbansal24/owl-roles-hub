@@ -870,17 +870,6 @@ const CandidateDashboard = () => {
         </ProfileCard>
       </motion.div>
 
-      {/* Teaching/Working Philosophy */}
-      <motion.div variants={itemVariants}>
-        <ProfileCard
-          title="Teaching Philosophy"
-          onEdit={() => openSectionEdit("teaching")}
-        >
-          <p className="text-sm text-muted-foreground leading-relaxed">
-            {teachingPhilosophy}
-          </p>
-        </ProfileCard>
-      </motion.div>
 
       {/* Work Experience */}
       <motion.div variants={itemVariants}>
