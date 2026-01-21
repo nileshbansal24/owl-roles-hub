@@ -10,29 +10,32 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+// Floating icons positioned on LEFT and RIGHT edges only (not in center)
 const floatingIcons = [
-  { Icon: GraduationCap, delay: 0, x: 10, y: 15, size: 32, duration: 6 },
-  { Icon: BookOpen, delay: 1, x: 85, y: 20, size: 28, duration: 7 },
-  { Icon: Award, delay: 0.5, x: 75, y: 70, size: 36, duration: 5 },
-  { Icon: ScrollText, delay: 1.5, x: 15, y: 75, size: 24, duration: 8 },
-  { Icon: Atom, delay: 2, x: 90, y: 45, size: 30, duration: 6.5 },
-  { Icon: FlaskConical, delay: 0.8, x: 5, y: 50, size: 26, duration: 7.5 },
-  { Icon: GraduationCap, delay: 1.2, x: 60, y: 85, size: 22, duration: 5.5 },
-  { Icon: BookOpen, delay: 2.5, x: 30, y: 10, size: 20, duration: 6.8 },
+  // Left side icons
+  { Icon: GraduationCap, delay: 0, x: 3, y: 12, size: 28, duration: 6 },
+  { Icon: BookOpen, delay: 1.2, x: 6, y: 35, size: 24, duration: 7 },
+  { Icon: ScrollText, delay: 0.8, x: 2, y: 60, size: 22, duration: 8 },
+  { Icon: FlaskConical, delay: 1.5, x: 8, y: 82, size: 26, duration: 7.5 },
+  // Right side icons
+  { Icon: Award, delay: 0.5, x: 92, y: 15, size: 30, duration: 5 },
+  { Icon: Atom, delay: 2, x: 95, y: 40, size: 26, duration: 6.5 },
+  { Icon: GraduationCap, delay: 0.3, x: 90, y: 65, size: 24, duration: 5.5 },
+  { Icon: BookOpen, delay: 1.8, x: 94, y: 85, size: 22, duration: 6.8 },
 ];
 
-// Define constellation connections between icons (pairs of indices)
+// Constellation connections - left side network and right side network
 const constellationLines = [
-  [0, 7], // GraduationCap top-left to BookOpen top
-  [7, 1], // BookOpen top to BookOpen top-right
-  [1, 4], // BookOpen top-right to Atom right
-  [4, 2], // Atom right to Award bottom-right
-  [2, 6], // Award to GraduationCap bottom
-  [6, 3], // GraduationCap bottom to ScrollText bottom-left
-  [3, 5], // ScrollText to FlaskConical left
-  [5, 0], // FlaskConical to GraduationCap top-left
-  [0, 2], // Cross connection
-  [7, 6], // Cross connection
+  // Left side connections
+  [0, 1],
+  [1, 2],
+  [2, 3],
+  [0, 2],
+  // Right side connections
+  [4, 5],
+  [5, 6],
+  [6, 7],
+  [4, 6],
 ];
 
 interface NaukriHeroSectionProps {
@@ -91,13 +94,13 @@ const NaukriHeroSection = ({
         transition={{ duration: 8, repeat: Infinity }}
       />
 
-      {/* Constellation Lines SVG */}
-      <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 1 }}>
+      {/* Constellation Lines SVG - hidden on mobile */}
+      <svg className="absolute inset-0 w-full h-full pointer-events-none hidden lg:block" style={{ zIndex: 1 }}>
         <defs>
           <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="rgba(255,255,255,0.15)" />
-            <stop offset="50%" stopColor="rgba(255,255,255,0.08)" />
-            <stop offset="100%" stopColor="rgba(255,255,255,0.15)" />
+            <stop offset="0%" stopColor="rgba(255,255,255,0.1)" />
+            <stop offset="50%" stopColor="rgba(255,255,255,0.05)" />
+            <stop offset="100%" stopColor="rgba(255,255,255,0.1)" />
           </linearGradient>
         </defs>
         {constellationLines.map(([from, to], index) => {
@@ -115,27 +118,27 @@ const NaukriHeroSection = ({
               initial={{ pathLength: 0, opacity: 0 }}
               animate={{ 
                 pathLength: [0, 1, 1, 0],
-                opacity: [0, 0.6, 0.6, 0]
+                opacity: [0, 0.4, 0.4, 0]
               }}
               transition={{
                 duration: 4,
-                delay: index * 0.3,
+                delay: index * 0.4,
                 repeat: Infinity,
-                repeatDelay: 2,
+                repeatDelay: 3,
                 ease: "easeInOut"
               }}
             />
           );
         })}
         {/* Animated particles along lines */}
-        {constellationLines.slice(0, 5).map(([from, to], index) => {
+        {constellationLines.slice(0, 4).map(([from, to], index) => {
           const fromIcon = floatingIcons[from];
           const toIcon = floatingIcons[to];
           return (
             <motion.circle
               key={`particle-${index}`}
               r="2"
-              fill="rgba(255,255,255,0.4)"
+              fill="rgba(255,255,255,0.3)"
               initial={{ 
                 cx: `${fromIcon.x}%`, 
                 cy: `${fromIcon.y}%`,
@@ -144,13 +147,13 @@ const NaukriHeroSection = ({
               animate={{ 
                 cx: [`${fromIcon.x}%`, `${toIcon.x}%`],
                 cy: [`${fromIcon.y}%`, `${toIcon.y}%`],
-                opacity: [0, 1, 1, 0]
+                opacity: [0, 0.6, 0.6, 0]
               }}
               transition={{
                 duration: 3,
-                delay: index * 0.8 + 1,
+                delay: index * 1 + 1,
                 repeat: Infinity,
-                repeatDelay: 3,
+                repeatDelay: 4,
                 ease: "easeInOut"
               }}
             />
@@ -158,18 +161,17 @@ const NaukriHeroSection = ({
         })}
       </svg>
 
-      {/* Floating Academic Icons */}
+      {/* Floating Academic Icons - only visible on larger screens */}
       {floatingIcons.map(({ Icon, delay, x, y, size, duration }, index) => (
         <motion.div
           key={index}
-          className="absolute text-white/15 pointer-events-none"
+          className="absolute text-white/10 pointer-events-none hidden lg:block"
           style={{ left: `${x}%`, top: `${y}%`, zIndex: 2 }}
           initial={{ opacity: 0, scale: 0 }}
           animate={{ 
-            opacity: [0.15, 0.25, 0.15],
+            opacity: [0.1, 0.2, 0.1],
             scale: [1, 1.1, 1],
-            y: [0, -12, 0],
-            rotate: [0, 5, -5, 0]
+            y: [0, -10, 0],
           }}
           transition={{ 
             delay,
