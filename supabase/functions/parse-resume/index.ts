@@ -87,7 +87,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    const { resumePath } = await req.json();
+    const { resumePath, previewOnly } = await req.json();
 
     if (!resumePath) {
       return new Response(
@@ -95,6 +95,8 @@ Deno.serve(async (req) => {
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    const shouldPreviewOnly = previewOnly === true;
 
     console.log(`Parsing resume for user ${user.id}: ${resumePath}`);
 
@@ -317,7 +319,8 @@ Deno.serve(async (req) => {
     if (parsedResume.achievements && parsedResume.achievements.length > 0) updateData.achievements = parsedResume.achievements;
     if (parsedResume.research_papers && parsedResume.research_papers.length > 0) updateData.research_papers = parsedResume.research_papers;
 
-    if (Object.keys(updateData).length > 0) {
+    // Only save to database if not in preview mode
+    if (!shouldPreviewOnly && Object.keys(updateData).length > 0) {
       const { error: updateError } = await serviceClient
         .from("profiles")
         .update(updateData)
@@ -338,7 +341,8 @@ Deno.serve(async (req) => {
       JSON.stringify({ 
         success: true, 
         parsed: parsedResume,
-        updated_fields: Object.keys(updateData)
+        updated_fields: shouldPreviewOnly ? [] : Object.keys(updateData),
+        preview_only: shouldPreviewOnly
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
