@@ -7,6 +7,7 @@ import Navbar from "@/components/Navbar";
 import ApplicantDetailModal from "@/components/ApplicantDetailModal";
 import InterviewScheduleModal from "@/components/InterviewScheduleModal";
 import InterviewCard from "@/components/InterviewCard";
+import InterviewDetailsModal from "@/components/InterviewDetailsModal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -187,6 +188,8 @@ const RecruiterDashboard = () => {
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [schedulingApplication, setSchedulingApplication] = useState<Application | null>(null);
   const [sendingReminderId, setSendingReminderId] = useState<string | null>(null);
+  const [selectedInterview, setSelectedInterview] = useState<any | null>(null);
+  const [showInterviewDetailsModal, setShowInterviewDetailsModal] = useState(false);
 
   // Calculate profile completeness
   const calculateCompleteness = (profile: Profile | null): number => {
@@ -308,6 +311,9 @@ const RecruiterDashboard = () => {
               job_title: app?.jobs?.title || "Unknown Job",
               institute: app?.jobs?.institute || "",
               candidate_name: app?.profiles?.full_name || "Candidate",
+              candidate_email: app?.applicant_email || app?.profiles?.email || "",
+              candidate_avatar: app?.profiles?.avatar_url || "",
+              candidate_role: app?.profiles?.role || app?.profiles?.headline || "",
             };
           })
         );
@@ -1470,7 +1476,10 @@ const RecruiterDashboard = () => {
                           key={interview.id}
                           interview={interview}
                           variant="recruiter"
-                          onViewDetails={() => {}}
+                          onViewDetails={() => {
+                            setSelectedInterview(interview);
+                            setShowInterviewDetailsModal(true);
+                          }}
                           onSendReminder={() => handleSendInterviewReminder(interview)}
                           sendingReminder={sendingReminderId === interview.id}
                         />
@@ -1888,6 +1897,16 @@ const RecruiterDashboard = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Interview Details Modal */}
+      <InterviewDetailsModal
+        interview={selectedInterview}
+        open={showInterviewDetailsModal}
+        onClose={() => {
+          setShowInterviewDetailsModal(false);
+          setSelectedInterview(null);
+        }}
+      />
     </div>
   );
 };
