@@ -393,8 +393,21 @@ const RecruiterDashboard = () => {
   };
 
   // Handle viewing a candidate from Search tab
-  const handleViewCandidate = (candidate: Profile) => {
-    setSelectedCandidate(candidate);
+  const handleViewCandidate = async (candidate: Profile) => {
+    // Fetch full profile data including extended fields (experience, education, etc.)
+    const { data: fullProfile, error } = await supabase
+      .from("profiles")
+      .select("id, full_name, avatar_url, university, role, bio, years_experience, location, headline, skills, user_type, resume_url, email, experience, education, research_papers, achievements, subjects, teaching_philosophy, professional_summary")
+      .eq("id", candidate.id)
+      .maybeSingle();
+    
+    if (error) {
+      console.error("Error fetching full profile:", error);
+      // Fall back to the partial profile from public view
+      setSelectedCandidate(candidate);
+    } else {
+      setSelectedCandidate((fullProfile as unknown as Profile) || candidate);
+    }
     setShowCandidateModal(true);
   };
 
@@ -1700,7 +1713,14 @@ const RecruiterDashboard = () => {
                               <p className="text-2xl font-bold text-foreground">{jobApps.length}</p>
                               <p className="text-xs text-muted-foreground">Applications</p>
                             </div>
-                            <Button variant="outline" size="sm">
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => {
+                                setSelectedJobFilter(job.id);
+                                setActiveTab("applications");
+                              }}
+                            >
                               View Details
                             </Button>
                           </div>
