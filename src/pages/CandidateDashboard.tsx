@@ -281,9 +281,9 @@ const CandidateDashboard = () => {
     }
   };
 
-  const handleResumeUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file || !user) return;
+  // Shared resume upload logic
+  const uploadResumeFile = async (file: File) => {
+    if (!user) return;
 
     const allowedTypes = [
       "application/pdf",
@@ -346,6 +346,17 @@ const CandidateDashboard = () => {
         resumeInputRef.current.value = "";
       }
     }
+  };
+
+  const handleResumeUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      await uploadResumeFile(file);
+    }
+  };
+
+  const handleResumeFileDrop = async (file: File) => {
+    await uploadResumeFile(file);
   };
 
   const handleProfileUpdate = (updatedProfile: Profile) => {
@@ -523,6 +534,7 @@ const CandidateDashboard = () => {
             fileName={profile?.full_name ? `${profile.full_name}_CV.pdf` : "Resume.pdf"}
             fileSize="PDF"
             onUpload={() => resumeInputRef.current?.click()}
+            onFileDrop={handleResumeFileDrop}
             onView={async () => {
               if (!profile?.resume_url) return;
               const { data, error } = await supabase.storage
