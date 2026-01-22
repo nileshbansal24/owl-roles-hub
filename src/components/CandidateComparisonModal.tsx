@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
+import { motion, Reorder, AnimatePresence } from "framer-motion";
 import {
   Dialog,
   DialogContent,
@@ -12,11 +12,13 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Progress } from "@/components/ui/progress";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   MapPin,
   GraduationCap,
@@ -39,8 +41,14 @@ import {
   Beaker,
   User,
   Building,
+  GripVertical,
+  Save,
+  ListOrdered,
+  Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 // Preset filter configurations
 interface FilterPreset {
@@ -234,11 +242,104 @@ const CandidateComparisonModal = ({
   onOpenChange,
   onRemoveCandidate,
 }: CandidateComparisonModalProps) => {
+  const { user } = useAuth();
+  
   // Filter state - all metrics visible by default
   const [visibleMetrics, setVisibleMetrics] = useState<Set<MetricKey>>(
     new Set(metricCategories.flatMap((cat) => cat.metrics.map((m) => m.key)))
   );
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<string>("compare");
+
+  // Ranking state
+  const [rankedCandidates, setRankedCandidates] = useState<Application[]>([]);
+  const [rankingNotes, setRankingNotes] = useState("");
+  const [isSavingRanking, setIsSavingRanking] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
+  // Initialize ranked candidates when applications change
+  useEffect(() => {
+    if (applications.length > 0) {
+      setRankedCandidates([...applications]);
+    }
+  }, [applications]);
+
+  // Load existing ranking for this job
+  useEffect(() => {
+    const loadExistingRanking = async () => {
+      if (!user || applications.length === 0) return;
+      
+      const jobId = applications[0]?.job_id;
+      if (!jobId) return;
+
+      const { data, error } = await supabase
+        .from("candidate_rankings")
+        .select("*")
+        .eq("recruiter_id", user.id)
+        .eq("job_id", jobId)
+        .maybeSingle();
+
+      if (error) {
+        console.error("Error loading ranking:", error);
+        return;
+      }
+
+      if (data) {
+        // Reorder applications based on saved ranking
+        const rankingOrder = data.rankings as string[];
+        const reordered = [...applications].sort((a, b) => {
+          const aIndex = rankingOrder.indexOf(a.applicant_id);
+          const bIndex = rankingOrder.indexOf(b.applicant_id);
+          if (aIndex === -1) return 1;
+          if (bIndex === -1) return -1;
+          return aIndex - bIndex;
+        });
+        setRankedCandidates(reordered);
+        setRankingNotes(data.notes || "");
+      }
+    };
+
+    loadExistingRanking();
+  }, [user, applications]);
+
+  const handleReorder = (newOrder: Application[]) => {
+    setRankedCandidates(newOrder);
+    setHasUnsavedChanges(true);
+  };
+
+  const saveRanking = async () => {
+    if (!user || applications.length === 0) {
+      toast.error("Unable to save ranking");
+      return;
+    }
+
+    const jobId = applications[0]?.job_id;
+    if (!jobId) return;
+
+    setIsSavingRanking(true);
+
+    const rankingData = {
+      recruiter_id: user.id,
+      job_id: jobId,
+      rankings: rankedCandidates.map((app) => app.applicant_id),
+      notes: rankingNotes,
+    };
+
+    const { error } = await supabase
+      .from("candidate_rankings")
+      .upsert(rankingData, { onConflict: "recruiter_id,job_id" });
+
+    setIsSavingRanking(false);
+
+    if (error) {
+      console.error("Error saving ranking:", error);
+      toast.error("Failed to save ranking");
+      return;
+    }
+
+    setHasUnsavedChanges(false);
+    toast.success("Candidate ranking saved!");
+  };
 
   const toggleMetric = (key: MetricKey) => {
     setVisibleMetrics((prev) => {
@@ -534,494 +635,663 @@ const CandidateComparisonModal = ({
           </div>
         </DialogHeader>
 
-        {/* Filter Panel */}
-        <div className="px-6 pb-2 space-y-3">
-          {/* Preset Filter Buttons */}
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs text-muted-foreground font-medium">Quick filters:</span>
-            {filterPresets.map((preset) => {
-              const isActive = preset.metrics.every((m) => visibleMetrics.has(m)) && 
-                               visibleMetrics.size === preset.metrics.length;
-              return (
-                <Button
-                  key={preset.id}
-                  variant={isActive ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => applyPreset(preset)}
-                  className="gap-1.5 text-xs h-7"
-                >
-                  {preset.icon}
-                  {preset.label}
-                </Button>
-              );
-            })}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
+          <div className="px-6 pb-2">
+            <TabsList className="grid w-full max-w-md grid-cols-2">
+              <TabsTrigger value="compare" className="gap-2">
+                <FileText className="h-4 w-4" />
+                Compare
+              </TabsTrigger>
+              <TabsTrigger value="rank" className="gap-2">
+                <ListOrdered className="h-4 w-4" />
+                Rank Candidates
+                {hasUnsavedChanges && (
+                  <span className="ml-1 h-2 w-2 rounded-full bg-amber-500" />
+                )}
+              </TabsTrigger>
+            </TabsList>
           </div>
 
-          <Collapsible open={isFilterOpen} onOpenChange={setIsFilterOpen}>
-            <CollapsibleTrigger asChild>
-              <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground hover:text-foreground">
-                <Filter className="h-4 w-4" />
-                Custom Filter
-                <ChevronDown className={`h-4 w-4 transition-transform ${isFilterOpen ? "rotate-180" : ""}`} />
-              </Button>
-            </CollapsibleTrigger>
-            <CollapsibleContent className="mt-3">
-              <div className="p-4 rounded-lg border bg-muted/30 space-y-4">
-                {/* Quick actions */}
-                <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="sm" onClick={selectAll} className="text-xs">
-                    <CheckCircle2 className="h-3 w-3 mr-1" />
-                    Select All
+          <TabsContent value="compare" className="flex-1 overflow-hidden m-0 data-[state=inactive]:hidden">
+            {/* Filter Panel */}
+            <div className="px-6 pb-2 space-y-3">
+              {/* Preset Filter Buttons */}
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-xs text-muted-foreground font-medium">Quick filters:</span>
+                {filterPresets.map((preset) => {
+                  const isActive = preset.metrics.every((m) => visibleMetrics.has(m)) && 
+                                   visibleMetrics.size === preset.metrics.length;
+                  return (
+                    <Button
+                      key={preset.id}
+                      variant={isActive ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => applyPreset(preset)}
+                      className="gap-1.5 text-xs h-7"
+                    >
+                      {preset.icon}
+                      {preset.label}
+                    </Button>
+                  );
+                })}
+              </div>
+
+              <Collapsible open={isFilterOpen} onOpenChange={setIsFilterOpen}>
+                <CollapsibleTrigger asChild>
+                  <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground hover:text-foreground">
+                    <Filter className="h-4 w-4" />
+                    Custom Filter
+                    <ChevronDown className={`h-4 w-4 transition-transform ${isFilterOpen ? "rotate-180" : ""}`} />
                   </Button>
-                  <Button variant="ghost" size="sm" onClick={clearAll} className="text-xs">
-                    <XCircle className="h-3 w-3 mr-1" />
-                    Clear All
-                  </Button>
-                  <Button variant="ghost" size="sm" onClick={selectAll} className="text-xs">
-                    <RotateCcw className="h-3 w-3 mr-1" />
-                    Reset
-                  </Button>
-                </div>
-                
-                {/* Category filters */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  {metricCategories.map((category) => {
-                    const categoryKeys = category.metrics.map((m) => m.key);
-                    const selectedCount = categoryKeys.filter((key) => visibleMetrics.has(key)).length;
-                    const allSelected = selectedCount === categoryKeys.length;
-                    const someSelected = selectedCount > 0 && !allSelected;
+                </CollapsibleTrigger>
+                <CollapsibleContent className="mt-3">
+                  <div className="p-4 rounded-lg border bg-muted/30 space-y-4">
+                    {/* Quick actions */}
+                    <div className="flex items-center gap-2">
+                      <Button variant="ghost" size="sm" onClick={selectAll} className="text-xs">
+                        <CheckCircle2 className="h-3 w-3 mr-1" />
+                        Select All
+                      </Button>
+                      <Button variant="ghost" size="sm" onClick={clearAll} className="text-xs">
+                        <XCircle className="h-3 w-3 mr-1" />
+                        Clear All
+                      </Button>
+                      <Button variant="ghost" size="sm" onClick={selectAll} className="text-xs">
+                        <RotateCcw className="h-3 w-3 mr-1" />
+                        Reset
+                      </Button>
+                    </div>
                     
-                    return (
-                      <div key={category.id} className="space-y-2">
-                        <div 
-                          className="flex items-center gap-2 cursor-pointer hover:text-primary transition-colors"
-                          onClick={() => toggleCategory(category)}
-                        >
-                          <Checkbox 
-                            checked={allSelected}
-                            className={someSelected ? "data-[state=checked]:bg-primary/50" : ""}
-                          />
-                          <span className="flex items-center gap-1.5 text-sm font-medium">
-                            {category.icon}
-                            {category.label}
-                          </span>
-                          <Badge variant="outline" className="text-xs ml-auto">
-                            {selectedCount}/{categoryKeys.length}
-                          </Badge>
-                        </div>
-                        <div className="pl-6 space-y-1.5">
-                          {category.metrics.map((metric) => (
-                            <label 
-                              key={metric.key}
-                              className="flex items-center gap-2 cursor-pointer text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    {/* Category filters */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                      {metricCategories.map((category) => {
+                        const categoryKeys = category.metrics.map((m) => m.key);
+                        const selectedCount = categoryKeys.filter((key) => visibleMetrics.has(key)).length;
+                        const allSelected = selectedCount === categoryKeys.length;
+                        const someSelected = selectedCount > 0 && !allSelected;
+                        
+                        return (
+                          <div key={category.id} className="space-y-2">
+                            <div 
+                              className="flex items-center gap-2 cursor-pointer hover:text-primary transition-colors"
+                              onClick={() => toggleCategory(category)}
                             >
                               <Checkbox 
-                                checked={visibleMetrics.has(metric.key)}
-                                onCheckedChange={() => toggleMetric(metric.key)}
+                                checked={allSelected}
+                                className={someSelected ? "data-[state=checked]:bg-primary/50" : ""}
                               />
-                              {metric.label}
-                            </label>
-                          ))}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </CollapsibleContent>
-          </Collapsible>
-        </div>
+                              <span className="flex items-center gap-1.5 text-sm font-medium">
+                                {category.icon}
+                                {category.label}
+                              </span>
+                              <Badge variant="outline" className="text-xs ml-auto">
+                                {selectedCount}/{categoryKeys.length}
+                              </Badge>
+                            </div>
+                            <div className="pl-6 space-y-1.5">
+                              {category.metrics.map((metric) => (
+                                <label 
+                                  key={metric.key}
+                                  className="flex items-center gap-2 cursor-pointer text-sm text-muted-foreground hover:text-foreground transition-colors"
+                                >
+                                  <Checkbox 
+                                    checked={visibleMetrics.has(metric.key)}
+                                    onCheckedChange={() => toggleMetric(metric.key)}
+                                  />
+                                  {metric.label}
+                                </label>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
+            </div>
 
-        <ScrollArea className="h-[calc(95vh-180px)]">
-          <div className="px-6 pb-6">
-            {/* Comparison Grid */}
-            <div className="overflow-x-auto">
-              <div
-                className="grid gap-4"
-                style={{
-                  gridTemplateColumns: `200px repeat(${applications.length}, minmax(280px, 1fr))`,
-                }}
-              >
-                {/* Header Row - Candidate Cards */}
-                <div className="sticky left-0 bg-background z-10" />
-                {applications.map((app) => (
-                  <motion.div
-                    key={app.id}
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="relative"
+            <ScrollArea className="h-[calc(95vh-260px)]">
+              <div className="px-6 pb-6">
+                {/* Comparison Grid */}
+                <div className="overflow-x-auto">
+                  <div
+                    className="grid gap-4"
+                    style={{
+                      gridTemplateColumns: `200px repeat(${applications.length}, minmax(280px, 1fr))`,
+                    }}
                   >
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="absolute -top-1 -right-1 h-6 w-6 p-0 rounded-full bg-destructive/10 hover:bg-destructive/20 z-10"
-                      onClick={() => onRemoveCandidate(app.id)}
-                    >
-                      <X className="h-3 w-3 text-destructive" />
-                    </Button>
-                    <div className="p-4 rounded-xl bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20 text-center">
-                      <Avatar className="h-16 w-16 mx-auto mb-3 border-2 border-background shadow-lg">
-                        <AvatarImage src={app.profiles?.avatar_url || ""} />
-                        <AvatarFallback className="bg-primary text-primary-foreground font-bold">
-                          {app.profiles?.full_name?.slice(0, 2).toUpperCase() || "U"}
-                        </AvatarFallback>
-                      </Avatar>
-                      <h3 className="font-heading font-semibold text-foreground truncate">
-                        {app.profiles?.full_name || "Anonymous"}
-                      </h3>
-                      <p className="text-xs text-primary truncate">
-                        {app.profiles?.role || app.profiles?.headline || "Candidate"}
-                      </p>
-                      <Badge variant="outline" className="mt-2 text-xs">
-                        {app.status}
-                      </Badge>
-                    </div>
-                  </motion.div>
-                ))}
-
-                {/* Profile Completeness Row */}
-                {isMetricVisible("completeness") && (
-                  <>
-                    <div className="sticky left-0 bg-background z-10 flex items-center font-medium text-sm text-muted-foreground">
-                      <FileText className="h-4 w-4 mr-2 text-primary" />
-                      Profile Completeness
-                    </div>
-                    {applications.map((app) => {
-                      const completeness = calculateCompleteness(app.profiles);
-                      const isBest = completeness === bestCompleteness && bestCompleteness !== null;
-                      return (
-                        <div
-                          key={`completeness-${app.id}`}
-                          className={`p-3 rounded-lg border ${isBest ? "bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800" : "bg-muted/30"}`}
-                        >
-                          <div className="flex items-center justify-between mb-1">
-                            <span className={`text-lg font-bold ${isBest ? "text-green-600" : ""}`}>
-                              {completeness}%
-                            </span>
-                            {isBest && <Award className="h-4 w-4 text-green-600" />}
-                          </div>
-                          <Progress value={completeness} className="h-2" />
-                        </div>
-                      );
-                    })}
-                  </>
-                )}
-
-                {/* Experience Row */}
-                {isMetricVisible("experience") && (
-                  <>
-                    <div className="sticky left-0 bg-background z-10 flex items-center font-medium text-sm text-muted-foreground">
-                      <Briefcase className="h-4 w-4 mr-2 text-primary" />
-                      Years Experience
-                    </div>
-                    {applications.map((app) => {
-                      const exp = app.profiles?.years_experience;
-                      const isBest = exp === bestExperience && bestExperience !== null;
-                      return (
-                        <div
-                          key={`exp-${app.id}`}
-                          className={`p-3 rounded-lg border ${isBest ? "bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800" : "bg-muted/30"}`}
-                        >
-                          <div className="flex items-center justify-between">
-                            <span className={`text-lg font-bold ${isBest ? "text-green-600" : ""}`}>
-                              {exp ?? "—"} {exp !== null && exp !== undefined ? "yrs" : ""}
-                            </span>
-                            {isBest && <Award className="h-4 w-4 text-green-600" />}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </>
-                )}
-
-                {/* H-Index Row */}
-                {isMetricVisible("hindex") && (
-                  <>
-                    <div className="sticky left-0 bg-background z-10 flex items-center font-medium text-sm text-muted-foreground">
-                      <TrendingUp className="h-4 w-4 mr-2 text-primary" />
-                      h-index
-                    </div>
-                    {applications.map((app) => {
-                      const hIndex = getHIndex(app.profiles);
-                      const isBest = hIndex === bestHIndex && bestHIndex !== null;
-                      return (
-                        <div
-                          key={`hindex-${app.id}`}
-                          className={`p-3 rounded-lg border ${isBest ? "bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800" : "bg-muted/30"}`}
-                        >
-                          <div className="flex items-center justify-between">
-                            <span className={`text-lg font-bold ${isBest ? "text-green-600" : ""}`}>
-                              {hIndex ?? "—"}
-                            </span>
-                            {isBest && <Award className="h-4 w-4 text-green-600" />}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </>
-                )}
-
-                {/* Document Count Row */}
-                {isMetricVisible("publications") && (
-                  <>
-                    <div className="sticky left-0 bg-background z-10 flex items-center font-medium text-sm text-muted-foreground">
-                      <BookOpen className="h-4 w-4 mr-2 text-primary" />
-                      Publications
-                    </div>
-                    {applications.map((app) => {
-                      const docs = getDocumentCount(app.profiles);
-                      const isBest = docs === bestDocuments && bestDocuments !== null && docs > 0;
-                      return (
-                        <div
-                          key={`docs-${app.id}`}
-                          className={`p-3 rounded-lg border ${isBest ? "bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800" : "bg-muted/30"}`}
-                        >
-                          <div className="flex items-center justify-between">
-                            <span className={`text-lg font-bold ${isBest ? "text-green-600" : ""}`}>
-                              {docs || "—"}
-                            </span>
-                            {isBest && <Award className="h-4 w-4 text-green-600" />}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </>
-                )}
-
-                {/* Citations Row */}
-                {isMetricVisible("citations") && (
-                  <>
-                    <div className="sticky left-0 bg-background z-10 flex items-center font-medium text-sm text-muted-foreground">
-                      <Quote className="h-4 w-4 mr-2 text-primary" />
-                      Total Citations
-                    </div>
-                    {applications.map((app) => {
-                      const citations = getTotalCitations(app.profiles);
-                      const isBest = citations === bestCitations && bestCitations !== null && citations > 0;
-                      return (
-                        <div
-                          key={`citations-${app.id}`}
-                          className={`p-3 rounded-lg border ${isBest ? "bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800" : "bg-muted/30"}`}
-                        >
-                          <div className="flex items-center justify-between">
-                            <span className={`text-lg font-bold ${isBest ? "text-green-600" : ""}`}>
-                              {citations || "—"}
-                            </span>
-                            {isBest && <Award className="h-4 w-4 text-green-600" />}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </>
-                )}
-
-                {/* Location Row */}
-                {isMetricVisible("location") && (
-                  <>
-                    <div className="sticky left-0 bg-background z-10 flex items-center font-medium text-sm text-muted-foreground">
-                      <MapPin className="h-4 w-4 mr-2 text-primary" />
-                      Location
-                    </div>
-                    {applications.map((app) => (
-                      <div key={`loc-${app.id}`} className="p-3 rounded-lg border bg-muted/30">
-                        <span className="text-sm">{app.profiles?.location || "—"}</span>
-                      </div>
-                    ))}
-                  </>
-                )}
-
-                {/* University Row */}
-                {isMetricVisible("university") && (
-                  <>
-                    <div className="sticky left-0 bg-background z-10 flex items-center font-medium text-sm text-muted-foreground">
-                      <GraduationCap className="h-4 w-4 mr-2 text-primary" />
-                      University
-                    </div>
-                    {applications.map((app) => (
-                      <div key={`uni-${app.id}`} className="p-3 rounded-lg border bg-muted/30">
-                        <span className="text-sm truncate block">{app.profiles?.university || "—"}</span>
-                      </div>
-                    ))}
-                  </>
-                )}
-
-                {/* Academic Identity Row */}
-                {isMetricVisible("academicProfiles") && (
-                  <>
-                    <div className="sticky left-0 bg-background z-10 flex items-center font-medium text-sm text-muted-foreground">
-                      <ExternalLink className="h-4 w-4 mr-2 text-primary" />
-                      Academic Profiles
-                    </div>
-                    {applications.map((app) => (
-                      <div key={`identity-${app.id}`} className="p-3 rounded-lg border bg-muted/30">
-                        <div className="flex flex-wrap gap-1.5">
-                          {app.profiles?.orcid_id ? (
-                            <a
-                              href={`https://orcid.org/${app.profiles.orcid_id}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1 px-2 py-1 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs hover:bg-emerald-500/20"
-                            >
-                              ORCID
-                              <ExternalLink className="h-3 w-3" />
-                            </a>
-                          ) : (
-                            <XCircle className="h-4 w-4 text-muted-foreground/50" />
-                          )}
-                          {app.profiles?.scopus_link ? (
-                            <a
-                              href={app.profiles.scopus_link}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1 px-2 py-1 rounded bg-orange-500/10 text-orange-600 dark:text-orange-400 text-xs hover:bg-orange-500/20"
-                            >
-                              Scopus
-                              <ExternalLink className="h-3 w-3" />
-                            </a>
-                          ) : null}
-                        </div>
-                      </div>
-                    ))}
-                  </>
-                )}
-
-                {/* Skills Row */}
-                {isMetricVisible("skills") && (
-                  <>
-                    <div className="sticky left-0 bg-background z-10 flex items-center font-medium text-sm text-muted-foreground">
-                      <Star className="h-4 w-4 mr-2 text-primary" />
-                      Skills
-                    </div>
-                    {applications.map((app) => (
-                      <div key={`skills-${app.id}`} className="p-3 rounded-lg border bg-muted/30">
-                        {app.profiles?.skills && app.profiles.skills.length > 0 ? (
-                          <div className="flex flex-wrap gap-1">
-                            {app.profiles.skills.slice(0, 5).map((skill, idx) => (
-                              <Badge key={idx} variant="secondary" className="text-xs">
-                                {skill}
-                              </Badge>
-                            ))}
-                            {app.profiles.skills.length > 5 && (
-                              <Badge variant="outline" className="text-xs">
-                                +{app.profiles.skills.length - 5}
-                              </Badge>
-                            )}
-                          </div>
-                        ) : (
-                          <span className="text-muted-foreground text-sm">—</span>
-                        )}
-                      </div>
-                    ))}
-                  </>
-                )}
-
-                {/* Education Row */}
-                {isMetricVisible("education") && (
-                  <>
-                    <div className="sticky left-0 bg-background z-10 flex items-center font-medium text-sm text-muted-foreground">
-                      <GraduationCap className="h-4 w-4 mr-2 text-primary" />
-                      Education
-                    </div>
-                    {applications.map((app) => {
-                      const education = Array.isArray(app.profiles?.education) ? app.profiles.education : [];
-                      return (
-                        <div key={`edu-${app.id}`} className="p-3 rounded-lg border bg-muted/30">
-                          {education.length > 0 ? (
-                            <div className="space-y-1.5">
-                              {education.slice(0, 2).map((edu, idx) => (
-                                <div key={idx} className="text-xs">
-                                  <p className="font-medium truncate">{edu.degree}</p>
-                                  <p className="text-muted-foreground truncate">{edu.institution}</p>
-                                </div>
-                              ))}
-                              {education.length > 2 && (
-                                <p className="text-xs text-muted-foreground">+{education.length - 2} more</p>
-                              )}
-                            </div>
-                          ) : (
-                            <span className="text-muted-foreground text-sm">—</span>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </>
-                )}
-
-                {/* Achievements Row */}
-                {isMetricVisible("achievements") && (
-                  <>
-                    <div className="sticky left-0 bg-background z-10 flex items-center font-medium text-sm text-muted-foreground">
-                      <Trophy className="h-4 w-4 mr-2 text-primary" />
-                      Achievements
-                    </div>
-                    {applications.map((app) => {
-                      const achievements = Array.isArray(app.profiles?.achievements) ? app.profiles.achievements : [];
-                      return (
-                        <div key={`ach-${app.id}`} className="p-3 rounded-lg border bg-muted/30">
-                          {achievements.length > 0 ? (
-                            <div className="space-y-1">
-                              {achievements.slice(0, 2).map((ach, idx) => (
-                                <div key={idx} className="flex items-start gap-1.5 text-xs">
-                                  <Award className="h-3 w-3 text-amber-500 flex-shrink-0 mt-0.5" />
-                                  <span className="line-clamp-1">{ach}</span>
-                                </div>
-                              ))}
-                              {achievements.length > 2 && (
-                                <p className="text-xs text-muted-foreground">+{achievements.length - 2} more</p>
-                              )}
-                            </div>
-                          ) : (
-                            <span className="text-muted-foreground text-sm">—</span>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </>
-                )}
-
-                {/* Resume Row */}
-                {isMetricVisible("resume") && (
-                  <>
-                    <div className="sticky left-0 bg-background z-10 flex items-center font-medium text-sm text-muted-foreground">
-                      <FileText className="h-4 w-4 mr-2 text-primary" />
-                      Resume
-                    </div>
-                    {applications.map((app) => (
-                      <div key={`resume-${app.id}`} className="p-3 rounded-lg border bg-muted/30">
-                        {app.profiles?.resume_url ? (
-                          <div className="flex items-center gap-1.5 text-green-600">
-                            <CheckCircle2 className="h-4 w-4" />
-                            <span className="text-sm">Available</span>
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-1.5 text-muted-foreground">
-                            <XCircle className="h-4 w-4" />
-                            <span className="text-sm">Not uploaded</span>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </>
-                )}
-
-                {/* Empty state when no metrics selected */}
-                {visibleMetrics.size === 0 && (
-                  <>
+                    {/* Header Row - Candidate Cards */}
                     <div className="sticky left-0 bg-background z-10" />
                     {applications.map((app) => (
-                      <div key={`empty-${app.id}`} className="p-6 rounded-lg border bg-muted/30 text-center">
-                        <p className="text-sm text-muted-foreground">
-                          No metrics selected. Use the filter above to choose which metrics to compare.
-                        </p>
-                      </div>
+                      <motion.div
+                        key={app.id}
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="relative"
+                      >
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="absolute -top-1 -right-1 h-6 w-6 p-0 rounded-full bg-destructive/10 hover:bg-destructive/20 z-10"
+                          onClick={() => onRemoveCandidate(app.id)}
+                        >
+                          <X className="h-3 w-3 text-destructive" />
+                        </Button>
+                        <div className="p-4 rounded-xl bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20 text-center">
+                          <Avatar className="h-16 w-16 mx-auto mb-3 border-2 border-background shadow-lg">
+                            <AvatarImage src={app.profiles?.avatar_url || ""} />
+                            <AvatarFallback className="bg-primary text-primary-foreground font-bold">
+                              {app.profiles?.full_name?.slice(0, 2).toUpperCase() || "U"}
+                            </AvatarFallback>
+                          </Avatar>
+                          <h3 className="font-heading font-semibold text-foreground truncate">
+                            {app.profiles?.full_name || "Anonymous"}
+                          </h3>
+                          <p className="text-xs text-primary truncate">
+                            {app.profiles?.role || app.profiles?.headline || "Candidate"}
+                          </p>
+                          <Badge variant="outline" className="mt-2 text-xs">
+                            {app.status}
+                          </Badge>
+                        </div>
+                      </motion.div>
                     ))}
-                  </>
-                )}
+
+                    {/* Profile Completeness Row */}
+                    {isMetricVisible("completeness") && (
+                      <>
+                        <div className="sticky left-0 bg-background z-10 flex items-center font-medium text-sm text-muted-foreground">
+                          <FileText className="h-4 w-4 mr-2 text-primary" />
+                          Profile Completeness
+                        </div>
+                        {applications.map((app) => {
+                          const completeness = calculateCompleteness(app.profiles);
+                          const isBest = completeness === bestCompleteness && bestCompleteness !== null;
+                          return (
+                            <div
+                              key={`completeness-${app.id}`}
+                              className={`p-3 rounded-lg border ${isBest ? "bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800" : "bg-muted/30"}`}
+                            >
+                              <div className="flex items-center justify-between mb-1">
+                                <span className={`text-lg font-bold ${isBest ? "text-green-600" : ""}`}>
+                                  {completeness}%
+                                </span>
+                                {isBest && <Award className="h-4 w-4 text-green-600" />}
+                              </div>
+                              <Progress value={completeness} className="h-2" />
+                            </div>
+                          );
+                        })}
+                      </>
+                    )}
+
+                    {/* Experience Row */}
+                    {isMetricVisible("experience") && (
+                      <>
+                        <div className="sticky left-0 bg-background z-10 flex items-center font-medium text-sm text-muted-foreground">
+                          <Briefcase className="h-4 w-4 mr-2 text-primary" />
+                          Years Experience
+                        </div>
+                        {applications.map((app) => {
+                          const exp = app.profiles?.years_experience;
+                          const isBest = exp === bestExperience && bestExperience !== null;
+                          return (
+                            <div
+                              key={`exp-${app.id}`}
+                              className={`p-3 rounded-lg border ${isBest ? "bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800" : "bg-muted/30"}`}
+                            >
+                              <div className="flex items-center justify-between">
+                                <span className={`text-lg font-bold ${isBest ? "text-green-600" : ""}`}>
+                                  {exp ?? "—"} {exp !== null && exp !== undefined ? "yrs" : ""}
+                                </span>
+                                {isBest && <Award className="h-4 w-4 text-green-600" />}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </>
+                    )}
+
+                    {/* H-Index Row */}
+                    {isMetricVisible("hindex") && (
+                      <>
+                        <div className="sticky left-0 bg-background z-10 flex items-center font-medium text-sm text-muted-foreground">
+                          <TrendingUp className="h-4 w-4 mr-2 text-primary" />
+                          h-index
+                        </div>
+                        {applications.map((app) => {
+                          const hIndex = getHIndex(app.profiles);
+                          const isBest = hIndex === bestHIndex && bestHIndex !== null;
+                          return (
+                            <div
+                              key={`hindex-${app.id}`}
+                              className={`p-3 rounded-lg border ${isBest ? "bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800" : "bg-muted/30"}`}
+                            >
+                              <div className="flex items-center justify-between">
+                                <span className={`text-lg font-bold ${isBest ? "text-green-600" : ""}`}>
+                                  {hIndex ?? "—"}
+                                </span>
+                                {isBest && <Award className="h-4 w-4 text-green-600" />}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </>
+                    )}
+
+                    {/* Document Count Row */}
+                    {isMetricVisible("publications") && (
+                      <>
+                        <div className="sticky left-0 bg-background z-10 flex items-center font-medium text-sm text-muted-foreground">
+                          <BookOpen className="h-4 w-4 mr-2 text-primary" />
+                          Publications
+                        </div>
+                        {applications.map((app) => {
+                          const docs = getDocumentCount(app.profiles);
+                          const isBest = docs === bestDocuments && bestDocuments !== null && docs > 0;
+                          return (
+                            <div
+                              key={`docs-${app.id}`}
+                              className={`p-3 rounded-lg border ${isBest ? "bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800" : "bg-muted/30"}`}
+                            >
+                              <div className="flex items-center justify-between">
+                                <span className={`text-lg font-bold ${isBest ? "text-green-600" : ""}`}>
+                                  {docs || "—"}
+                                </span>
+                                {isBest && <Award className="h-4 w-4 text-green-600" />}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </>
+                    )}
+
+                    {/* Citations Row */}
+                    {isMetricVisible("citations") && (
+                      <>
+                        <div className="sticky left-0 bg-background z-10 flex items-center font-medium text-sm text-muted-foreground">
+                          <Quote className="h-4 w-4 mr-2 text-primary" />
+                          Total Citations
+                        </div>
+                        {applications.map((app) => {
+                          const citations = getTotalCitations(app.profiles);
+                          const isBest = citations === bestCitations && bestCitations !== null && citations > 0;
+                          return (
+                            <div
+                              key={`citations-${app.id}`}
+                              className={`p-3 rounded-lg border ${isBest ? "bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800" : "bg-muted/30"}`}
+                            >
+                              <div className="flex items-center justify-between">
+                                <span className={`text-lg font-bold ${isBest ? "text-green-600" : ""}`}>
+                                  {citations || "—"}
+                                </span>
+                                {isBest && <Award className="h-4 w-4 text-green-600" />}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </>
+                    )}
+
+                    {/* Location Row */}
+                    {isMetricVisible("location") && (
+                      <>
+                        <div className="sticky left-0 bg-background z-10 flex items-center font-medium text-sm text-muted-foreground">
+                          <MapPin className="h-4 w-4 mr-2 text-primary" />
+                          Location
+                        </div>
+                        {applications.map((app) => (
+                          <div key={`loc-${app.id}`} className="p-3 rounded-lg border bg-muted/30">
+                            <span className="text-sm">{app.profiles?.location || "—"}</span>
+                          </div>
+                        ))}
+                      </>
+                    )}
+
+                    {/* University Row */}
+                    {isMetricVisible("university") && (
+                      <>
+                        <div className="sticky left-0 bg-background z-10 flex items-center font-medium text-sm text-muted-foreground">
+                          <GraduationCap className="h-4 w-4 mr-2 text-primary" />
+                          University
+                        </div>
+                        {applications.map((app) => (
+                          <div key={`uni-${app.id}`} className="p-3 rounded-lg border bg-muted/30">
+                            <span className="text-sm truncate block">{app.profiles?.university || "—"}</span>
+                          </div>
+                        ))}
+                      </>
+                    )}
+
+                    {/* Academic Identity Row */}
+                    {isMetricVisible("academicProfiles") && (
+                      <>
+                        <div className="sticky left-0 bg-background z-10 flex items-center font-medium text-sm text-muted-foreground">
+                          <ExternalLink className="h-4 w-4 mr-2 text-primary" />
+                          Academic Profiles
+                        </div>
+                        {applications.map((app) => (
+                          <div key={`identity-${app.id}`} className="p-3 rounded-lg border bg-muted/30">
+                            <div className="flex flex-wrap gap-1.5">
+                              {app.profiles?.orcid_id ? (
+                                <a
+                                  href={`https://orcid.org/${app.profiles.orcid_id}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 px-2 py-1 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs hover:bg-emerald-500/20"
+                                >
+                                  ORCID
+                                  <ExternalLink className="h-3 w-3" />
+                                </a>
+                              ) : (
+                                <XCircle className="h-4 w-4 text-muted-foreground/50" />
+                              )}
+                              {app.profiles?.scopus_link ? (
+                                <a
+                                  href={app.profiles.scopus_link}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 px-2 py-1 rounded bg-orange-500/10 text-orange-600 dark:text-orange-400 text-xs hover:bg-orange-500/20"
+                                >
+                                  Scopus
+                                  <ExternalLink className="h-3 w-3" />
+                                </a>
+                              ) : null}
+                            </div>
+                          </div>
+                        ))}
+                      </>
+                    )}
+
+                    {/* Skills Row */}
+                    {isMetricVisible("skills") && (
+                      <>
+                        <div className="sticky left-0 bg-background z-10 flex items-center font-medium text-sm text-muted-foreground">
+                          <Star className="h-4 w-4 mr-2 text-primary" />
+                          Skills
+                        </div>
+                        {applications.map((app) => (
+                          <div key={`skills-${app.id}`} className="p-3 rounded-lg border bg-muted/30">
+                            {app.profiles?.skills && app.profiles.skills.length > 0 ? (
+                              <div className="flex flex-wrap gap-1">
+                                {app.profiles.skills.slice(0, 5).map((skill, idx) => (
+                                  <Badge key={idx} variant="secondary" className="text-xs">
+                                    {skill}
+                                  </Badge>
+                                ))}
+                                {app.profiles.skills.length > 5 && (
+                                  <Badge variant="outline" className="text-xs">
+                                    +{app.profiles.skills.length - 5}
+                                  </Badge>
+                                )}
+                              </div>
+                            ) : (
+                              <span className="text-muted-foreground text-sm">—</span>
+                            )}
+                          </div>
+                        ))}
+                      </>
+                    )}
+
+                    {/* Education Row */}
+                    {isMetricVisible("education") && (
+                      <>
+                        <div className="sticky left-0 bg-background z-10 flex items-center font-medium text-sm text-muted-foreground">
+                          <GraduationCap className="h-4 w-4 mr-2 text-primary" />
+                          Education
+                        </div>
+                        {applications.map((app) => {
+                          const education = Array.isArray(app.profiles?.education) ? app.profiles.education : [];
+                          return (
+                            <div key={`edu-${app.id}`} className="p-3 rounded-lg border bg-muted/30">
+                              {education.length > 0 ? (
+                                <div className="space-y-1.5">
+                                  {education.slice(0, 2).map((edu, idx) => (
+                                    <div key={idx} className="text-xs">
+                                      <p className="font-medium truncate">{edu.degree}</p>
+                                      <p className="text-muted-foreground truncate">{edu.institution}</p>
+                                    </div>
+                                  ))}
+                                  {education.length > 2 && (
+                                    <p className="text-xs text-muted-foreground">+{education.length - 2} more</p>
+                                  )}
+                                </div>
+                              ) : (
+                                <span className="text-muted-foreground text-sm">—</span>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </>
+                    )}
+
+                    {/* Achievements Row */}
+                    {isMetricVisible("achievements") && (
+                      <>
+                        <div className="sticky left-0 bg-background z-10 flex items-center font-medium text-sm text-muted-foreground">
+                          <Trophy className="h-4 w-4 mr-2 text-primary" />
+                          Achievements
+                        </div>
+                        {applications.map((app) => {
+                          const achievements = Array.isArray(app.profiles?.achievements) ? app.profiles.achievements : [];
+                          return (
+                            <div key={`ach-${app.id}`} className="p-3 rounded-lg border bg-muted/30">
+                              {achievements.length > 0 ? (
+                                <div className="space-y-1">
+                                  {achievements.slice(0, 2).map((ach, idx) => (
+                                    <div key={idx} className="flex items-start gap-1.5 text-xs">
+                                      <Award className="h-3 w-3 text-amber-500 flex-shrink-0 mt-0.5" />
+                                      <span className="line-clamp-1">{ach}</span>
+                                    </div>
+                                  ))}
+                                  {achievements.length > 2 && (
+                                    <p className="text-xs text-muted-foreground">+{achievements.length - 2} more</p>
+                                  )}
+                                </div>
+                              ) : (
+                                <span className="text-muted-foreground text-sm">—</span>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </>
+                    )}
+
+                    {/* Resume Row */}
+                    {isMetricVisible("resume") && (
+                      <>
+                        <div className="sticky left-0 bg-background z-10 flex items-center font-medium text-sm text-muted-foreground">
+                          <FileText className="h-4 w-4 mr-2 text-primary" />
+                          Resume
+                        </div>
+                        {applications.map((app) => (
+                          <div key={`resume-${app.id}`} className="p-3 rounded-lg border bg-muted/30">
+                            {app.profiles?.resume_url ? (
+                              <div className="flex items-center gap-1.5 text-green-600">
+                                <CheckCircle2 className="h-4 w-4" />
+                                <span className="text-sm">Available</span>
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-1.5 text-muted-foreground">
+                                <XCircle className="h-4 w-4" />
+                                <span className="text-sm">Not uploaded</span>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </>
+                    )}
+
+                    {/* Empty state when no metrics selected */}
+                    {visibleMetrics.size === 0 && (
+                      <>
+                        <div className="sticky left-0 bg-background z-10" />
+                        {applications.map((app) => (
+                          <div key={`empty-${app.id}`} className="p-6 rounded-lg border bg-muted/30 text-center">
+                            <p className="text-sm text-muted-foreground">
+                              No metrics selected. Use the filter above to choose which metrics to compare.
+                            </p>
+                          </div>
+                        ))}
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <ScrollBar orientation="horizontal" />
+            </ScrollArea>
+          </TabsContent>
+
+          <TabsContent value="rank" className="flex-1 overflow-hidden m-0 data-[state=inactive]:hidden">
+            <div className="px-6 pb-6 h-full flex flex-col">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h3 className="font-heading font-semibold text-lg">Rank Candidates</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Drag and drop to reorder candidates by your preference
+                  </p>
+                </div>
+                <Button 
+                  onClick={saveRanking} 
+                  disabled={isSavingRanking || !hasUnsavedChanges}
+                  className="gap-2"
+                >
+                  {isSavingRanking ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Save className="h-4 w-4" />
+                  )}
+                  Save Ranking
+                </Button>
+              </div>
+
+              <div className="flex-1 overflow-hidden flex gap-6">
+                {/* Ranking List */}
+                <div className="flex-1 overflow-hidden">
+                  <ScrollArea className="h-[calc(95vh-320px)]">
+                    <Reorder.Group
+                      axis="y"
+                      values={rankedCandidates}
+                      onReorder={handleReorder}
+                      className="space-y-3 pr-4"
+                    >
+                      <AnimatePresence>
+                        {rankedCandidates.map((app, index) => (
+                          <Reorder.Item
+                            key={app.id}
+                            value={app}
+                            className="cursor-grab active:cursor-grabbing"
+                          >
+                            <motion.div
+                              initial={{ opacity: 0, y: 20 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: -20 }}
+                              whileHover={{ scale: 1.01 }}
+                              whileTap={{ scale: 0.99 }}
+                              className="flex items-center gap-4 p-4 rounded-xl border bg-card shadow-sm hover:shadow-md transition-shadow"
+                            >
+                              {/* Rank Number */}
+                              <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg ${
+                                index === 0 
+                                  ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" 
+                                  : index === 1 
+                                  ? "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300"
+                                  : index === 2
+                                  ? "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400"
+                                  : "bg-muted text-muted-foreground"
+                              }`}>
+                                {index + 1}
+                              </div>
+
+                              {/* Drag Handle */}
+                              <GripVertical className="h-5 w-5 text-muted-foreground/50 flex-shrink-0" />
+
+                              {/* Avatar */}
+                              <Avatar className="h-12 w-12 border-2 border-background shadow">
+                                <AvatarImage src={app.profiles?.avatar_url || ""} />
+                                <AvatarFallback className="bg-primary text-primary-foreground font-bold">
+                                  {app.profiles?.full_name?.slice(0, 2).toUpperCase() || "U"}
+                                </AvatarFallback>
+                              </Avatar>
+
+                              {/* Info */}
+                              <div className="flex-1 min-w-0">
+                                <h4 className="font-semibold text-foreground truncate">
+                                  {app.profiles?.full_name || "Anonymous"}
+                                </h4>
+                                <p className="text-sm text-muted-foreground truncate">
+                                  {app.profiles?.role || app.profiles?.headline || "Candidate"}
+                                </p>
+                              </div>
+
+                              {/* Quick Stats */}
+                              <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                                {getHIndex(app.profiles) !== null && (
+                                  <div className="flex items-center gap-1">
+                                    <TrendingUp className="h-4 w-4" />
+                                    <span>h-{getHIndex(app.profiles)}</span>
+                                  </div>
+                                )}
+                                {app.profiles?.years_experience && (
+                                  <div className="flex items-center gap-1">
+                                    <Briefcase className="h-4 w-4" />
+                                    <span>{app.profiles.years_experience} yrs</span>
+                                  </div>
+                                )}
+                                <Badge variant="outline" className="text-xs">
+                                  {app.status}
+                                </Badge>
+                              </div>
+
+                              {/* Medal for top 3 */}
+                              {index < 3 && (
+                                <div className="flex-shrink-0">
+                                  <Trophy className={`h-5 w-5 ${
+                                    index === 0 
+                                      ? "text-amber-500" 
+                                      : index === 1 
+                                      ? "text-slate-400"
+                                      : "text-orange-500"
+                                  }`} />
+                                </div>
+                              )}
+                            </motion.div>
+                          </Reorder.Item>
+                        ))}
+                      </AnimatePresence>
+                    </Reorder.Group>
+                  </ScrollArea>
+                </div>
+
+                {/* Notes Panel */}
+                <div className="w-80 flex-shrink-0 space-y-3">
+                  <div>
+                    <label className="text-sm font-medium text-foreground">Ranking Notes</label>
+                    <p className="text-xs text-muted-foreground">
+                      Add notes about your ranking decision
+                    </p>
+                  </div>
+                  <Textarea
+                    value={rankingNotes}
+                    onChange={(e) => {
+                      setRankingNotes(e.target.value);
+                      setHasUnsavedChanges(true);
+                    }}
+                    placeholder="e.g., Top candidate has the best research output and fits the role requirements..."
+                    className="h-48 resize-none"
+                  />
+                  {hasUnsavedChanges && (
+                    <p className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                      <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                      Unsaved changes
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-          <ScrollBar orientation="horizontal" />
-        </ScrollArea>
+          </TabsContent>
+        </Tabs>
       </DialogContent>
     </Dialog>
   );
