@@ -206,6 +206,7 @@ export type Database = {
           resume_url: string | null
           role: string | null
           scopus_link: string | null
+          scopus_metrics: Json | null
           skills: string[] | null
           subjects: string[] | null
           teaching_philosophy: string | null
@@ -238,6 +239,7 @@ export type Database = {
           resume_url?: string | null
           role?: string | null
           scopus_link?: string | null
+          scopus_metrics?: Json | null
           skills?: string[] | null
           subjects?: string[] | null
           teaching_philosophy?: string | null
@@ -270,6 +272,7 @@ export type Database = {
           resume_url?: string | null
           role?: string | null
           scopus_link?: string | null
+          scopus_metrics?: Json | null
           skills?: string[] | null
           subjects?: string[] | null
           teaching_philosophy?: string | null

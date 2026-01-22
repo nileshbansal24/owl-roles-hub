@@ -34,6 +34,7 @@ import {
 } from "@/components/profile";
 import { OrcidCard } from "@/components/profile/OrcidCard";
 import { PublicationImportButton } from "@/components/profile/PublicationImportButton";
+import { ScopusMetricsCard } from "@/components/profile/ScopusMetricsCard";
 import {
   Edit2,
   Plus,
@@ -62,6 +63,17 @@ import {
   transformEducationToDB,
 } from "@/lib/profileUtils";
 
+interface ScopusMetrics {
+  h_index: number | null;
+  document_count: number | null;
+  citation_count: number | null;
+  co_authors: Array<{
+    name: string;
+    author_id?: string;
+    affiliation?: string;
+  }>;
+}
+
 interface Profile {
   id: string;
   full_name: string | null;
@@ -79,6 +91,7 @@ interface Profile {
   orcid_id?: string | null;
   scopus_link?: string | null;
   linkedin_url?: string | null;
+  scopus_metrics?: ScopusMetrics | null;
   // New personal details fields
   family_details?: string | null;
   hobbies?: string[] | null;
@@ -1096,6 +1109,11 @@ const CandidateDashboard = () => {
             </div>
           }
         >
+          {/* Scopus Metrics Display */}
+          <ScopusMetricsCard 
+            metrics={profile?.scopus_metrics || null} 
+            scopusLink={profile?.scopus_link}
+          />
           <ResearchPapersList papers={researchPapers} />
         </ProfileCard>
       </motion.div>

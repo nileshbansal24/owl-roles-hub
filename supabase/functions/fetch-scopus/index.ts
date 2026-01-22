@@ -24,6 +24,19 @@ interface ParsedPaper {
   citations?: number;
 }
 
+interface CoAuthor {
+  name: string;
+  author_id?: string;
+  affiliation?: string;
+}
+
+interface ScopusMetrics {
+  h_index: number | null;
+  document_count: number | null;
+  citation_count: number | null;
+  co_authors: CoAuthor[];
+}
+
 Deno.serve(async (req) => {
   // Handle CORS preflight
   if (req.method === "OPTIONS") {
@@ -115,6 +128,67 @@ Deno.serve(async (req) => {
 
     console.log(`Extracted Scopus author ID: ${authorId}`);
 
+    // Fetch author metrics (h-index, document count, citations) from Author Retrieval API
+    let scopusMetrics: ScopusMetrics = {
+      h_index: null,
+      document_count: null,
+      citation_count: null,
+      co_authors: [],
+    };
+
+    try {
+      const authorApiUrl = `https://api.elsevier.com/content/author/author_id/${authorId}?view=ENHANCED`;
+      const authorResponse = await fetch(authorApiUrl, {
+        headers: {
+          "Accept": "application/json",
+          "X-ELS-APIKey": scopusApiKey,
+        },
+      });
+
+      if (authorResponse.ok) {
+        const authorData = await authorResponse.json();
+        const authorProfile = authorData["author-retrieval-response"]?.[0];
+        
+        if (authorProfile) {
+          // Extract h-index
+          const hIndex = authorProfile["h-index"];
+          scopusMetrics.h_index = hIndex ? parseInt(hIndex, 10) : null;
+
+          // Extract document count
+          const coredata = authorProfile["coredata"];
+          if (coredata) {
+            scopusMetrics.document_count = coredata["document-count"] 
+              ? parseInt(coredata["document-count"], 10) 
+              : null;
+            scopusMetrics.citation_count = coredata["citation-count"]
+              ? parseInt(coredata["citation-count"], 10)
+              : null;
+          }
+
+          // Extract co-authors
+          const coauthors = authorProfile["coauthor-count"];
+          const coauthorList = authorProfile["author-profile"]?.["coauthor"]?.["coauthor-name"] || [];
+          
+          if (Array.isArray(coauthorList)) {
+            scopusMetrics.co_authors = coauthorList.slice(0, 10).map((ca: Record<string, unknown>) => {
+              const affiliationCurrent = ca["affiliation-current"] as Record<string, unknown> | undefined;
+              return {
+                name: (ca["indexed-name"] as string) || (ca["$"] as string) || "",
+                author_id: ca["@auid"] as string || undefined,
+                affiliation: affiliationCurrent?.["affiliation-name"] as string || undefined,
+              };
+            });
+          }
+
+          console.log(`Fetched author metrics: h-index=${scopusMetrics.h_index}, docs=${scopusMetrics.document_count}, citations=${scopusMetrics.citation_count}, co-authors=${scopusMetrics.co_authors.length}`);
+        }
+      } else {
+        console.warn("Could not fetch author metrics:", authorResponse.status);
+      }
+    } catch (metricsError) {
+      console.warn("Error fetching author metrics (continuing with publications):", metricsError);
+    }
+
     // Fetch publications from Scopus API (use count=25 for basic API tier)
     const scopusApiUrl = `https://api.elsevier.com/content/search/scopus?query=AU-ID(${authorId})&count=25&sort=-coverDate`;
     
@@ -186,43 +260,43 @@ Deno.serve(async (req) => {
         };
       });
 
-    // Update the user's profile with parsed publications
-    if (papers.length > 0) {
-      // Transform to the format expected by the profile (include DOI and journal for clickable links)
-      const researchPapers = papers.map((p) => ({
-        title: p.title,
-        authors: p.authors,
-        date: p.date,
-        doi: p.doi,
-        journal: p.journal,
-      }));
+    // Update the user's profile with parsed publications and metrics
+    // Transform to the format expected by the profile (include DOI and journal for clickable links)
+    const researchPapers = papers.map((p) => ({
+      title: p.title,
+      authors: p.authors,
+      date: p.date,
+      doi: p.doi,
+      journal: p.journal,
+    }));
 
-      const serviceClient = createClient(supabaseUrl, supabaseServiceKey);
-      const { error: updateError } = await serviceClient
-        .from("profiles")
-        .update({ 
-          research_papers: researchPapers,
-          scopus_link: scopusUrl 
-        })
-        .eq("id", user.id);
+    const serviceClient = createClient(supabaseUrl, supabaseServiceKey);
+    const { error: updateError } = await serviceClient
+      .from("profiles")
+      .update({ 
+        research_papers: researchPapers,
+        scopus_link: scopusUrl,
+        scopus_metrics: scopusMetrics,
+      })
+      .eq("id", user.id);
 
-      if (updateError) {
-        console.error("Profile update error:", updateError);
-        return new Response(
-          JSON.stringify({ error: "Failed to update profile with publications" }),
-          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-
-      console.log(`Updated profile for user ${user.id} with ${papers.length} publications`);
+    if (updateError) {
+      console.error("Profile update error:", updateError);
+      return new Response(
+        JSON.stringify({ error: "Failed to update profile with publications" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
+
+    console.log(`Updated profile for user ${user.id} with ${papers.length} publications and metrics`);
 
     return new Response(
       JSON.stringify({ 
         success: true, 
         authorId,
         publications: papers,
-        count: papers.length
+        count: papers.length,
+        metrics: scopusMetrics,
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
