@@ -60,10 +60,7 @@ export const ProfileCompletionCard = ({
   achievements = [],
   researchPapers = [],
   onSectionClick,
-  defaultOpen = true,
 }: ProfileCompletionCardProps) => {
-  const [isOpen, setIsOpen] = useState(defaultOpen);
-
   const completionItems: CompletionItem[] = [
     {
       id: "basic",
@@ -161,6 +158,9 @@ export const ProfileCompletionCard = ({
   
   const totalWeight = completionItems.reduce((sum, item) => sum + item.weight, 0);
   const completionPercentage = Math.round((completedWeight / totalWeight) * 100);
+
+  // Auto-collapse when 100% complete
+  const [isOpen, setIsOpen] = useState(completionPercentage < 100);
 
   const incompleteItems = completionItems.filter((item) => !item.completed);
   const completedItems = completionItems.filter((item) => item.completed);
