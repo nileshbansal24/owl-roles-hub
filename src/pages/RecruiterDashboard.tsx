@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import ApplicantDetailModal from "@/components/ApplicantDetailModal";
+import CandidateComparisonModal from "@/components/CandidateComparisonModal";
 import InterviewScheduleModal from "@/components/InterviewScheduleModal";
 import InterviewCard from "@/components/InterviewCard";
 import InterviewDetailsModal from "@/components/InterviewDetailsModal";
@@ -66,6 +67,7 @@ import {
   Save,
   CalendarDays,
   Video,
+  GitCompare,
 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
@@ -90,6 +92,20 @@ interface ResearchPaper {
   title: string;
   authors: string;
   date: string;
+  doi?: string;
+  journal?: string;
+  citations?: number;
+}
+
+interface ScopusMetrics {
+  h_index: number | null;
+  document_count: number | null;
+  citation_count: number | null;
+  co_authors?: Array<{
+    name: string;
+    author_id?: string;
+    affiliation?: string;
+  }>;
 }
 
 interface Profile {
@@ -114,6 +130,11 @@ interface Profile {
   subjects?: string[] | null;
   teaching_philosophy?: string | null;
   professional_summary?: string | null;
+  // Academic identity fields
+  orcid_id?: string | null;
+  scopus_link?: string | null;
+  scopus_metrics?: ScopusMetrics | null;
+  manual_h_index?: number | null;
 }
 
 interface Job {
@@ -190,6 +211,9 @@ const RecruiterDashboard = () => {
   const [sendingReminderId, setSendingReminderId] = useState<string | null>(null);
   const [selectedInterview, setSelectedInterview] = useState<any | null>(null);
   const [showInterviewDetailsModal, setShowInterviewDetailsModal] = useState(false);
+  
+  // Comparison state
+  const [showComparisonModal, setShowComparisonModal] = useState(false);
 
   // Calculate profile completeness
   const calculateCompleteness = (profile: Profile | null): number => {
@@ -1602,6 +1626,16 @@ const RecruiterDashboard = () => {
                           size="sm"
                           variant="outline"
                           className="gap-1"
+                          onClick={() => setShowComparisonModal(true)}
+                          disabled={selectedAppIds.size < 2}
+                        >
+                          <GitCompare className="h-4 w-4" />
+                          Compare ({selectedAppIds.size})
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="gap-1"
                           onClick={exportSelectedToCSV}
                         >
                           <Download className="h-4 w-4" />
@@ -1905,6 +1939,21 @@ const RecruiterDashboard = () => {
         onClose={() => {
           setShowInterviewDetailsModal(false);
           setSelectedInterview(null);
+        }}
+      />
+
+      {/* Candidate Comparison Modal */}
+      <CandidateComparisonModal
+        applications={applications.filter(app => selectedAppIds.has(app.id))}
+        open={showComparisonModal}
+        onOpenChange={setShowComparisonModal}
+        onRemoveCandidate={(appId) => {
+          const newSelected = new Set(selectedAppIds);
+          newSelected.delete(appId);
+          setSelectedAppIds(newSelected);
+          if (newSelected.size < 2) {
+            setShowComparisonModal(false);
+          }
         }}
       />
     </div>
