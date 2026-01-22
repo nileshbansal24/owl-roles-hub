@@ -79,13 +79,13 @@ const Navbar = ({ onLoginClick, onSignupClick }: NavbarProps) => {
               to="/"
               className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
             >
-              Jobs
+              Home
             </Link>
             <Link
               to="/"
               className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
             >
-              Companies
+              Institutions
             </Link>
             <Link
               to="/"
