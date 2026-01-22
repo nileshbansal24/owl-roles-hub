@@ -1,9 +1,10 @@
 import * as React from "react";
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { ExternalLink, FileText, Search, BookOpen, Calendar, Users, Quote, ArrowUpDown, TrendingUp, SortAsc } from "lucide-react";
+import { ExternalLink, FileText, Search, BookOpen, Calendar, Users, Quote, ArrowUpDown, TrendingUp, SortAsc, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -41,10 +42,22 @@ export const ResearchPapersList = ({
   emptyMessage = "Add your research papers to showcase your academic contributions.",
 }: ResearchPapersListProps) => {
   const [sortBy, setSortBy] = useState<SortOption>("date-desc");
+  const [searchQuery, setSearchQuery] = useState("");
 
-  const sortedPapers = useMemo(() => {
-    const sorted = [...papers];
+  const filteredAndSortedPapers = useMemo(() => {
+    // First filter by search query
+    let filtered = papers;
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      filtered = papers.filter(paper => 
+        paper.title.toLowerCase().includes(query) ||
+        paper.authors.toLowerCase().includes(query) ||
+        (paper.journal?.toLowerCase().includes(query) ?? false)
+      );
+    }
     
+    // Then sort
+    const sorted = [...filtered];
     switch (sortBy) {
       case "date-desc":
         return sorted.sort((a, b) => {
@@ -65,7 +78,7 @@ export const ResearchPapersList = ({
       default:
         return sorted;
     }
-  }, [papers, sortBy]);
+  }, [papers, sortBy, searchQuery]);
 
   if (papers.length === 0) {
     return (
@@ -101,56 +114,96 @@ export const ResearchPapersList = ({
 
   return (
     <div className="space-y-4">
-      {/* Sort Controls */}
+      {/* Search and Sort Controls */}
       {papers.length > 1 && (
-        <div className="flex items-center justify-between">
-          <span className="text-xs text-muted-foreground">
-            {papers.length} publication{papers.length !== 1 ? 's' : ''}
-          </span>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-8 text-xs gap-1.5 text-muted-foreground hover:text-foreground">
-                {getSortIcon()}
-                {sortLabels[sortBy]}
-                <ArrowUpDown className="h-3 w-3 ml-1" />
+        <div className="space-y-3">
+          {/* Search Input */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search by title, author, or journal..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9 pr-9 h-9 text-sm"
+            />
+            {searchQuery && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 p-0"
+                onClick={() => setSearchQuery("")}
+              >
+                <X className="h-3.5 w-3.5" />
               </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-40">
-              <DropdownMenuItem 
-                onClick={() => setSortBy("date-desc")}
-                className={sortBy === "date-desc" ? "bg-primary/10" : ""}
-              >
-                <Calendar className="h-3.5 w-3.5 mr-2" />
-                Newest First
-              </DropdownMenuItem>
-              <DropdownMenuItem 
-                onClick={() => setSortBy("date-asc")}
-                className={sortBy === "date-asc" ? "bg-primary/10" : ""}
-              >
-                <Calendar className="h-3.5 w-3.5 mr-2" />
-                Oldest First
-              </DropdownMenuItem>
-              <DropdownMenuItem 
-                onClick={() => setSortBy("citations")}
-                className={sortBy === "citations" ? "bg-primary/10" : ""}
-              >
-                <TrendingUp className="h-3.5 w-3.5 mr-2" />
-                Most Cited
-              </DropdownMenuItem>
-              <DropdownMenuItem 
-                onClick={() => setSortBy("title")}
-                className={sortBy === "title" ? "bg-primary/10" : ""}
-              >
-                <SortAsc className="h-3.5 w-3.5 mr-2" />
-                Title (A-Z)
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+            )}
+          </div>
+          
+          {/* Count and Sort */}
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-muted-foreground">
+              {searchQuery ? `${filteredAndSortedPapers.length} of ${papers.length}` : papers.length} publication{papers.length !== 1 ? 's' : ''}
+            </span>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="h-8 text-xs gap-1.5 text-muted-foreground hover:text-foreground">
+                  {getSortIcon()}
+                  {sortLabels[sortBy]}
+                  <ArrowUpDown className="h-3 w-3 ml-1" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-40">
+                <DropdownMenuItem 
+                  onClick={() => setSortBy("date-desc")}
+                  className={sortBy === "date-desc" ? "bg-primary/10" : ""}
+                >
+                  <Calendar className="h-3.5 w-3.5 mr-2" />
+                  Newest First
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={() => setSortBy("date-asc")}
+                  className={sortBy === "date-asc" ? "bg-primary/10" : ""}
+                >
+                  <Calendar className="h-3.5 w-3.5 mr-2" />
+                  Oldest First
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={() => setSortBy("citations")}
+                  className={sortBy === "citations" ? "bg-primary/10" : ""}
+                >
+                  <TrendingUp className="h-3.5 w-3.5 mr-2" />
+                  Most Cited
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={() => setSortBy("title")}
+                  className={sortBy === "title" ? "bg-primary/10" : ""}
+                >
+                  <SortAsc className="h-3.5 w-3.5 mr-2" />
+                  Title (A-Z)
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+      )}
+
+      {/* No Results Message */}
+      {searchQuery && filteredAndSortedPapers.length === 0 && (
+        <div className="text-center py-8">
+          <Search className="h-8 w-8 text-muted-foreground mx-auto mb-3 opacity-50" />
+          <p className="text-sm text-muted-foreground">No publications match "{searchQuery}"</p>
+          <Button 
+            variant="link" 
+            size="sm" 
+            className="mt-1 text-xs"
+            onClick={() => setSearchQuery("")}
+          >
+            Clear search
+          </Button>
         </div>
       )}
 
       {/* Papers List */}
-      {sortedPapers.map((paper, index) => (
+      {filteredAndSortedPapers.map((paper, index) => (
         <motion.div
           key={`${paper.title}-${index}`}
           initial={{ opacity: 0, y: 10 }}
