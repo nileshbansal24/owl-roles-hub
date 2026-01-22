@@ -1,8 +1,15 @@
 import * as React from "react";
+import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { ExternalLink, FileText, Search, BookOpen, Calendar, Users, Quote } from "lucide-react";
+import { ExternalLink, FileText, Search, BookOpen, Calendar, Users, Quote, ArrowUpDown, TrendingUp, SortAsc } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface ResearchPaper {
   title: string;
@@ -20,10 +27,46 @@ interface ResearchPapersListProps {
   emptyMessage?: string;
 }
 
+type SortOption = "date-desc" | "date-asc" | "citations" | "title";
+
+const sortLabels: Record<SortOption, string> = {
+  "date-desc": "Newest First",
+  "date-asc": "Oldest First",
+  "citations": "Most Cited",
+  "title": "Title (A-Z)",
+};
+
 export const ResearchPapersList = ({
   papers,
   emptyMessage = "Add your research papers to showcase your academic contributions.",
 }: ResearchPapersListProps) => {
+  const [sortBy, setSortBy] = useState<SortOption>("date-desc");
+
+  const sortedPapers = useMemo(() => {
+    const sorted = [...papers];
+    
+    switch (sortBy) {
+      case "date-desc":
+        return sorted.sort((a, b) => {
+          const yearA = parseInt(a.date) || 0;
+          const yearB = parseInt(b.date) || 0;
+          return yearB - yearA;
+        });
+      case "date-asc":
+        return sorted.sort((a, b) => {
+          const yearA = parseInt(a.date) || 0;
+          const yearB = parseInt(b.date) || 0;
+          return yearA - yearB;
+        });
+      case "citations":
+        return sorted.sort((a, b) => (b.citations || 0) - (a.citations || 0));
+      case "title":
+        return sorted.sort((a, b) => a.title.localeCompare(b.title));
+      default:
+        return sorted;
+    }
+  }, [papers, sortBy]);
+
   if (papers.length === 0) {
     return (
       <div className="text-center py-8">
@@ -45,14 +88,74 @@ export const ResearchPapersList = ({
     return `https://doi.org/${doi}`;
   };
 
+  const getSortIcon = () => {
+    switch (sortBy) {
+      case "citations":
+        return <TrendingUp className="h-3.5 w-3.5" />;
+      case "title":
+        return <SortAsc className="h-3.5 w-3.5" />;
+      default:
+        return <Calendar className="h-3.5 w-3.5" />;
+    }
+  };
+
   return (
     <div className="space-y-4">
-      {papers.map((paper, index) => (
+      {/* Sort Controls */}
+      {papers.length > 1 && (
+        <div className="flex items-center justify-between">
+          <span className="text-xs text-muted-foreground">
+            {papers.length} publication{papers.length !== 1 ? 's' : ''}
+          </span>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm" className="h-8 text-xs gap-1.5 text-muted-foreground hover:text-foreground">
+                {getSortIcon()}
+                {sortLabels[sortBy]}
+                <ArrowUpDown className="h-3 w-3 ml-1" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-40">
+              <DropdownMenuItem 
+                onClick={() => setSortBy("date-desc")}
+                className={sortBy === "date-desc" ? "bg-primary/10" : ""}
+              >
+                <Calendar className="h-3.5 w-3.5 mr-2" />
+                Newest First
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => setSortBy("date-asc")}
+                className={sortBy === "date-asc" ? "bg-primary/10" : ""}
+              >
+                <Calendar className="h-3.5 w-3.5 mr-2" />
+                Oldest First
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => setSortBy("citations")}
+                className={sortBy === "citations" ? "bg-primary/10" : ""}
+              >
+                <TrendingUp className="h-3.5 w-3.5 mr-2" />
+                Most Cited
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => setSortBy("title")}
+                className={sortBy === "title" ? "bg-primary/10" : ""}
+              >
+                <SortAsc className="h-3.5 w-3.5 mr-2" />
+                Title (A-Z)
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      )}
+
+      {/* Papers List */}
+      {sortedPapers.map((paper, index) => (
         <motion.div
-          key={index}
+          key={`${paper.title}-${index}`}
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: index * 0.08 }}
+          transition={{ delay: index * 0.05 }}
           className="p-5 rounded-xl bg-secondary/20 border border-border/50 hover:border-primary/30 hover:shadow-sm transition-all group"
         >
           <div className="flex items-start justify-between gap-3">
