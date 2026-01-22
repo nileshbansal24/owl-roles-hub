@@ -1,6 +1,7 @@
 import * as React from "react";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import confetti from "canvas-confetti";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +19,7 @@ import {
   BookOpen,
   MapPin,
   ChevronDown,
+  PartyPopper,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ProfileMilestoneBadges } from "./ProfileMilestoneBadges";
@@ -161,6 +163,54 @@ export const ProfileCompletionCard = ({
 
   // Auto-collapse when 100% complete
   const [isOpen, setIsOpen] = useState(completionPercentage < 100);
+  const [showCelebration, setShowCelebration] = useState(false);
+  const hasTriggeredConfetti = useRef(false);
+
+  // Confetti celebration for 100% completion
+  useEffect(() => {
+    const CONFETTI_KEY = "profile_completion_celebrated";
+    const hasCelebrated = localStorage.getItem(CONFETTI_KEY);
+    
+    if (completionPercentage === 100 && !hasCelebrated && !hasTriggeredConfetti.current) {
+      hasTriggeredConfetti.current = true;
+      setShowCelebration(true);
+      
+      // Fire confetti from both sides
+      const duration = 3000;
+      const end = Date.now() + duration;
+
+      const frame = () => {
+        confetti({
+          particleCount: 3,
+          angle: 60,
+          spread: 55,
+          origin: { x: 0, y: 0.6 },
+          colors: ['#22c55e', '#3b82f6', '#f59e0b', '#8b5cf6', '#ec4899'],
+        });
+        confetti({
+          particleCount: 3,
+          angle: 120,
+          spread: 55,
+          origin: { x: 1, y: 0.6 },
+          colors: ['#22c55e', '#3b82f6', '#f59e0b', '#8b5cf6', '#ec4899'],
+        });
+
+        if (Date.now() < end) {
+          requestAnimationFrame(frame);
+        }
+      };
+      
+      frame();
+      
+      // Mark as celebrated
+      localStorage.setItem(CONFETTI_KEY, "true");
+      
+      // Hide celebration banner after delay
+      setTimeout(() => {
+        setShowCelebration(false);
+      }, 5000);
+    }
+  }, [completionPercentage]);
 
   const incompleteItems = completionItems.filter((item) => !item.completed);
   const completedItems = completionItems.filter((item) => item.completed);
@@ -179,7 +229,34 @@ export const ProfileCompletionCard = ({
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
+      className="space-y-3"
     >
+      {/* Celebration Banner */}
+      <AnimatePresence>
+        {showCelebration && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9, y: -10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: -10 }}
+            className="bg-gradient-to-r from-green-500/20 via-emerald-500/20 to-teal-500/20 border border-green-500/30 rounded-2xl p-4 text-center"
+          >
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: [0, 1.2, 1] }}
+              transition={{ delay: 0.2, duration: 0.5 }}
+              className="flex items-center justify-center gap-2 mb-2"
+            >
+              <PartyPopper className="h-6 w-6 text-green-600" />
+              <span className="text-lg font-bold text-green-600">Congratulations! 🎉</span>
+              <PartyPopper className="h-6 w-6 text-green-600" />
+            </motion.div>
+            <p className="text-sm text-green-700 dark:text-green-400">
+              Your profile is 100% complete! You're all set to land your dream academic role.
+            </p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <Card className="overflow-hidden border-border bg-card shadow-card rounded-2xl">
         <Collapsible open={isOpen} onOpenChange={setIsOpen}>
           <CardHeader className="pb-3 bg-gradient-to-r from-primary/5 via-transparent to-primary/3">
