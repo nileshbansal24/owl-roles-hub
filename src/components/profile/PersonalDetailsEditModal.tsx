@@ -45,6 +45,9 @@ const hobbySuggestions: Record<string, string[]> = {
   education: ["Curriculum Development", "EdTech Exploration", "Student Counseling", "Educational Games", "Workshop Facilitation", "Child Psychology"],
   computer: ["Coding Side Projects", "Machine Learning", "Open Source", "Tech Blogging", "Hackathons", "Gaming"],
   mathematics: ["Problem Solving", "Mathematical Puzzles", "Chess", "Data Visualization", "Statistics Projects", "Tutoring"],
+  law: ["Legal Research", "Moot Court", "Debate", "Constitutional Studies", "Human Rights Advocacy", "Legal Writing"],
+  agriculture: ["Organic Farming", "Sustainable Agriculture", "Beekeeping", "Plant Breeding", "Agricultural Innovation", "Rural Development"],
+  architecture: ["Sketching & Design", "Urban Planning", "Sustainable Design", "Model Building", "Photography", "Interior Design"],
 };
 
 const bookSuggestions: Record<string, string[]> = {
@@ -58,6 +61,9 @@ const bookSuggestions: Record<string, string[]> = {
   education: ["Pedagogy of the Oppressed by Paulo Freire", "Mindset by Carol Dweck", "The Element by Ken Robinson", "How Children Learn by John Holt"],
   computer: ["Introduction to Algorithms by CLRS", "Artificial Intelligence: A Modern Approach by Stuart Russell", "The Art of Computer Programming by Donald Knuth"],
   mathematics: ["Gödel, Escher, Bach by Douglas Hofstadter", "How to Solve It by George Pólya", "Fermat's Enigma by Simon Singh", "The Princeton Companion to Mathematics"],
+  law: ["The Rule of Law by Tom Bingham", "Justice by Michael Sandel", "The Common Law by Oliver Wendell Holmes", "Law's Empire by Ronald Dworkin"],
+  agriculture: ["The One-Straw Revolution by Masanobu Fukuoka", "Dirt by David Montgomery", "The Omnivore's Dilemma by Michael Pollan", "Farmers of Forty Centuries by F.H. King"],
+  architecture: ["Towards a New Architecture by Le Corbusier", "A Pattern Language by Christopher Alexander", "The Architecture of Happiness by Alain de Botton", "Learning from Las Vegas by Robert Venturi"],
 };
 
 function detectField(academicField?: string | null): string {
@@ -65,14 +71,17 @@ function detectField(academicField?: string | null): string {
   const field = academicField.toLowerCase();
   
   if (field.includes("computer") || field.includes("software") || field.includes("it") || field.includes("cse") || field.includes("information technology")) return "computer";
-  if (field.includes("engineer") || field.includes("mechanical") || field.includes("electrical") || field.includes("civil")) return "engineering";
-  if (field.includes("physics") || field.includes("chemistry") || field.includes("biology") || field.includes("science")) return "science";
+  if (field.includes("engineer") || field.includes("mechanical") || field.includes("electrical") || field.includes("civil") || field.includes("electronics")) return "engineering";
+  if (field.includes("physics") || field.includes("chemistry") || field.includes("biology") || field.includes("science") || field.includes("biotechnology")) return "science";
   if (field.includes("math") || field.includes("statistics")) return "mathematics";
-  if (field.includes("medicine") || field.includes("medical") || field.includes("health") || field.includes("nursing") || field.includes("pharmacy")) return "medicine";
-  if (field.includes("business") || field.includes("management") || field.includes("mba") || field.includes("commerce") || field.includes("finance")) return "business";
-  if (field.includes("education") || field.includes("teaching") || field.includes("pedagogy")) return "education";
-  if (field.includes("art") || field.includes("music") || field.includes("literature") || field.includes("english") || field.includes("creative")) return "arts";
-  if (field.includes("history") || field.includes("philosophy") || field.includes("sociology") || field.includes("psychology") || field.includes("political")) return "humanities";
+  if (field.includes("medicine") || field.includes("medical") || field.includes("health") || field.includes("nursing") || field.includes("pharmacy") || field.includes("dental")) return "medicine";
+  if (field.includes("business") || field.includes("management") || field.includes("mba") || field.includes("commerce") || field.includes("finance") || field.includes("accounting")) return "business";
+  if (field.includes("education") || field.includes("teaching") || field.includes("pedagogy") || field.includes("b.ed") || field.includes("m.ed")) return "education";
+  if (field.includes("art") || field.includes("music") || field.includes("literature") || field.includes("english") || field.includes("creative") || field.includes("fine art")) return "arts";
+  if (field.includes("history") || field.includes("philosophy") || field.includes("sociology") || field.includes("psychology") || field.includes("political") || field.includes("anthropology")) return "humanities";
+  if (field.includes("law") || field.includes("legal") || field.includes("llb") || field.includes("llm") || field.includes("advocate") || field.includes("judicial")) return "law";
+  if (field.includes("agricult") || field.includes("agronomy") || field.includes("horticulture") || field.includes("veterinary") || field.includes("dairy") || field.includes("forestry")) return "agriculture";
+  if (field.includes("architect") || field.includes("urban planning") || field.includes("interior design") || field.includes("landscape")) return "architecture";
   
   return "default";
 }
