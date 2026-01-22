@@ -1,8 +1,13 @@
 import * as React from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { 
   CheckCircle2, 
   Calendar, 
@@ -11,6 +16,9 @@ import {
   Loader2,
   Briefcase,
   GraduationCap,
+  AlertCircle,
+  RefreshCw,
+  Check,
 } from "lucide-react";
 
 interface ProfileHeaderProps {
@@ -20,12 +28,15 @@ interface ProfileHeaderProps {
   role?: string | null;
   university?: string | null;
   yearsExperience?: number | null;
+  calculatedExperience?: number | null;
   location?: string | null;
   phone?: string | null;
   onAvatarUpload?: (event: React.ChangeEvent<HTMLInputElement>) => void;
   uploadingAvatar?: boolean;
   primaryAction?: React.ReactNode;
   secondaryAction?: React.ReactNode;
+  onSyncExperience?: () => void;
+  syncingExperience?: boolean;
 }
 
 export const ProfileHeader = ({
@@ -35,18 +46,97 @@ export const ProfileHeader = ({
   role,
   university,
   yearsExperience,
+  calculatedExperience,
   location,
   phone,
   onAvatarUpload,
   uploadingAvatar = false,
   primaryAction,
   secondaryAction,
+  onSyncExperience,
+  syncingExperience = false,
 }: ProfileHeaderProps) => {
   const getInitials = (fullName: string, fallbackEmail?: string) => {
     if (fullName && fullName !== "Your Name") {
       return fullName.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
     }
     return fallbackEmail?.slice(0, 2).toUpperCase() || "U";
+  };
+
+  // Check if there's a mismatch between stored and calculated experience
+  const hasExperienceMismatch = React.useMemo(() => {
+    if (calculatedExperience === null || calculatedExperience === undefined) return false;
+    if (yearsExperience === null || yearsExperience === undefined) return calculatedExperience > 0;
+    // Allow 0.5 year tolerance
+    return Math.abs(calculatedExperience - yearsExperience) > 0.5;
+  }, [yearsExperience, calculatedExperience]);
+
+  // Display experience value (prefer calculated if available)
+  const displayExperience = calculatedExperience ?? yearsExperience;
+
+  // Experience indicator component for reuse
+  const ExperienceIndicator = ({ compact = false }: { compact?: boolean }) => {
+    if (displayExperience === null || displayExperience === undefined) return null;
+
+    const containerClass = compact
+      ? `flex items-center gap-1.5 ${hasExperienceMismatch ? "bg-amber-500/10 border border-amber-500/30" : "bg-secondary/60"} px-2.5 py-1 rounded-full`
+      : `flex items-center gap-2 ${hasExperienceMismatch ? "bg-amber-500/10 border border-amber-500/30" : "bg-secondary/50"} px-3 py-1.5 rounded-full`;
+
+    const calendarClass = compact
+      ? `h-3.5 w-3.5 ${hasExperienceMismatch ? "text-amber-500" : "text-primary"}`
+      : `h-4 w-4 ${hasExperienceMismatch ? "text-amber-500" : "text-primary"}`;
+
+    const textClass = compact ? "font-medium text-xs" : "font-medium text-sm";
+    const alertClass = compact ? "h-3 w-3 text-amber-500" : "h-3.5 w-3.5 text-amber-500";
+
+    return (
+      <div className="flex items-center gap-1.5">
+        <div className={containerClass}>
+          <Calendar className={calendarClass} />
+          <span className={textClass}>
+            {displayExperience} {compact ? "Years" : "Years Experience"}
+          </span>
+          
+          {hasExperienceMismatch && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="inline-flex items-center cursor-help">
+                  <AlertCircle className={alertClass} />
+                </span>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="max-w-xs">
+                <p className="text-sm">
+                  Calculated experience ({calculatedExperience} years) differs from stored value ({yearsExperience ?? 0} years).
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          )}
+        </div>
+        
+        {hasExperienceMismatch && onSyncExperience && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 rounded-full bg-amber-500/10 hover:bg-amber-500/20 text-amber-600"
+                onClick={onSyncExperience}
+                disabled={syncingExperience}
+              >
+                {syncingExperience ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <RefreshCw className="h-3.5 w-3.5" />
+                )}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">
+              <p className="text-sm">Sync with calculated experience</p>
+            </TooltipContent>
+          </Tooltip>
+        )}
+      </div>
+    );
   };
 
   return (
@@ -120,12 +210,7 @@ export const ProfileHeader = ({
             </div>
             
             <div className="flex flex-wrap items-center gap-5 text-sm text-muted-foreground">
-              {yearsExperience !== null && yearsExperience !== undefined && (
-                <div className="flex items-center gap-2 bg-secondary/50 px-3 py-1.5 rounded-full">
-                  <Calendar className="h-4 w-4 text-primary" />
-                  <span className="font-medium">{yearsExperience} Years Experience</span>
-                </div>
-              )}
+              <ExperienceIndicator compact={false} />
               {location && (
                 <div className="flex items-center gap-2 bg-secondary/50 px-3 py-1.5 rounded-full">
                   <MapPin className="h-4 w-4 text-primary" />
@@ -192,12 +277,7 @@ export const ProfileHeader = ({
 
           {/* Meta Info Pills */}
           <div className="flex flex-wrap items-center gap-2 mb-5">
-            {yearsExperience !== null && yearsExperience !== undefined && (
-              <div className="flex items-center gap-1.5 bg-secondary/60 px-2.5 py-1 rounded-full text-xs">
-                <Calendar className="h-3.5 w-3.5 text-primary" />
-                <span className="font-medium">{yearsExperience} Years</span>
-              </div>
-            )}
+            <ExperienceIndicator compact={true} />
             {location && (
               <div className="flex items-center gap-1.5 bg-secondary/60 px-2.5 py-1 rounded-full text-xs">
                 <MapPin className="h-3.5 w-3.5 text-primary" />

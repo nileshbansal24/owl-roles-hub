@@ -167,8 +167,8 @@ const CandidateDashboard = () => {
   const [savingLinkedInData, setSavingLinkedInData] = useState(false);
   const [personalDetailsEditOpen, setPersonalDetailsEditOpen] = useState(false);
   const [calculatedYearsExperience, setCalculatedYearsExperience] = useState<number | null>(null);
+  const [syncingExperience, setSyncingExperience] = useState(false);
 
-  // Handle quick apply from job recommendations
   const handleQuickApply = async (jobId: string) => {
     // Fetch job details
     const { data: job } = await supabase
@@ -750,6 +750,36 @@ const CandidateDashboard = () => {
     toast({ title: "Personal details updated!", description: "Your information has been saved." });
   };
 
+  // Handler for syncing calculated experience to stored value
+  const handleSyncExperience = async () => {
+    if (!user || calculatedYearsExperience === null) return;
+    
+    setSyncingExperience(true);
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ years_experience: calculatedYearsExperience })
+        .eq("id", user.id);
+      
+      if (error) throw error;
+      
+      setProfile((prev) => prev ? { ...prev, years_experience: calculatedYearsExperience } : null);
+      toast({ 
+        title: "Experience updated!", 
+        description: `Your experience has been set to ${calculatedYearsExperience} years based on your work history.` 
+      });
+    } catch (error: any) {
+      console.error("Error syncing experience:", error);
+      toast({ 
+        title: "Sync failed", 
+        description: error.message || "Failed to update experience.", 
+        variant: "destructive" 
+      });
+    } finally {
+      setSyncingExperience(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
@@ -1267,11 +1297,14 @@ const CandidateDashboard = () => {
               email={user?.email}
               role={profile?.role || profile?.headline}
               university={profile?.university}
-              yearsExperience={calculatedYearsExperience ?? profile?.years_experience}
+              yearsExperience={profile?.years_experience}
+              calculatedExperience={calculatedYearsExperience}
               location={profile?.location}
               phone={profile?.phone}
               onAvatarUpload={handleAvatarUpload}
               uploadingAvatar={uploadingAvatar}
+              onSyncExperience={handleSyncExperience}
+              syncingExperience={syncingExperience}
               secondaryAction={
                 <Button variant="outline" onClick={() => setEditModalOpen(true)}>
                   <Edit2 className="h-4 w-4 mr-2" />
