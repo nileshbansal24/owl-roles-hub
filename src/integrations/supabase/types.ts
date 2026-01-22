@@ -190,14 +190,18 @@ export type Database = {
           education: Json | null
           email: string | null
           experience: Json | null
+          family_details: string | null
           full_name: string | null
           headline: string | null
+          hobbies: string[] | null
           id: string
           linkedin_url: string | null
           location: string | null
           orcid_id: string | null
           phone: string | null
           professional_summary: string | null
+          quotes: string | null
+          recommended_books: string[] | null
           research_papers: Json | null
           resume_url: string | null
           role: string | null
@@ -218,14 +222,18 @@ export type Database = {
           education?: Json | null
           email?: string | null
           experience?: Json | null
+          family_details?: string | null
           full_name?: string | null
           headline?: string | null
+          hobbies?: string[] | null
           id: string
           linkedin_url?: string | null
           location?: string | null
           orcid_id?: string | null
           phone?: string | null
           professional_summary?: string | null
+          quotes?: string | null
+          recommended_books?: string[] | null
           research_papers?: Json | null
           resume_url?: string | null
           role?: string | null
@@ -246,14 +254,18 @@ export type Database = {
           education?: Json | null
           email?: string | null
           experience?: Json | null
+          family_details?: string | null
           full_name?: string | null
           headline?: string | null
+          hobbies?: string[] | null
           id?: string
           linkedin_url?: string | null
           location?: string | null
           orcid_id?: string | null
           phone?: string | null
           professional_summary?: string | null
+          quotes?: string | null
+          recommended_books?: string[] | null
           research_papers?: Json | null
           resume_url?: string | null
           role?: string | null
