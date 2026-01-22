@@ -1120,21 +1120,6 @@ const CandidateDashboard = () => {
           <EducationList items={education} />
         </ProfileCard>
       </motion.div>
-
-      {/* Personal Details Section */}
-      <motion.div variants={itemVariants}>
-        <PersonalDetailsCard
-          name={profile?.full_name}
-          familyDetails={profile?.family_details}
-          email={profile?.email || user?.email}
-          phone={profile?.phone}
-          skills={skills}
-          hobbies={profile?.hobbies}
-          quotes={profile?.quotes}
-          recommendedBooks={profile?.recommended_books}
-          onEdit={() => setPersonalDetailsEditOpen(true)}
-        />
-      </motion.div>
     </motion.div>
   );
 
@@ -1643,6 +1628,7 @@ const CandidateDashboard = () => {
           recommended_books: profile?.recommended_books,
         }}
         onSave={handlePersonalDetailsSave}
+        academicField={profile?.role || profile?.headline}
       />
 
     </div>
