@@ -35,7 +35,20 @@ import {
   Filter,
   ChevronDown,
   RotateCcw,
+  Printer,
+  Beaker,
+  User,
+  Building,
 } from "lucide-react";
+import { toast } from "sonner";
+
+// Preset filter configurations
+interface FilterPreset {
+  id: string;
+  label: string;
+  icon: React.ReactNode;
+  metrics: MetricKey[];
+}
 
 // Define metric categories and their items
 type MetricKey = 
@@ -51,6 +64,39 @@ type MetricKey =
   | "education" 
   | "achievements" 
   | "resume";
+
+const filterPresets: FilterPreset[] = [
+  {
+    id: "research",
+    label: "Research Only",
+    icon: <Beaker className="h-3.5 w-3.5" />,
+    metrics: ["hindex", "publications", "citations", "academicProfiles"],
+  },
+  {
+    id: "experience",
+    label: "Experience Only",
+    icon: <Briefcase className="h-3.5 w-3.5" />,
+    metrics: ["experience", "education", "skills", "achievements"],
+  },
+  {
+    id: "academic",
+    label: "Academic Profile",
+    icon: <GraduationCap className="h-3.5 w-3.5" />,
+    metrics: ["education", "university", "hindex", "publications", "citations", "academicProfiles"],
+  },
+  {
+    id: "overview",
+    label: "Quick Overview",
+    icon: <User className="h-3.5 w-3.5" />,
+    metrics: ["completeness", "experience", "education", "skills", "resume"],
+  },
+  {
+    id: "institution",
+    label: "Institution Focus",
+    icon: <Building className="h-3.5 w-3.5" />,
+    metrics: ["university", "location", "education", "experience"],
+  },
+];
 
 interface MetricCategory {
   id: string;
@@ -233,7 +279,174 @@ const CandidateComparisonModal = ({
     setVisibleMetrics(new Set());
   };
 
+  const applyPreset = (preset: FilterPreset) => {
+    setVisibleMetrics(new Set(preset.metrics));
+    toast.success(`Applied "${preset.label}" preset`);
+  };
+
   const isMetricVisible = (key: MetricKey) => visibleMetrics.has(key);
+
+  // Sanitize HTML for print
+  const escapeHtml = (str: string | null | undefined): string => {
+    if (!str) return "—";
+    return str
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  };
+
+  // Print/Export PDF handler
+  const handlePrint = () => {
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) {
+      toast.error("Please allow popups to export PDF");
+      return;
+    }
+
+    const metricLabels: Record<MetricKey, string> = {
+      completeness: "Profile Completeness",
+      experience: "Years Experience",
+      hindex: "h-index",
+      publications: "Publications",
+      citations: "Total Citations",
+      location: "Location",
+      university: "University",
+      academicProfiles: "Academic Profiles",
+      skills: "Skills",
+      education: "Education",
+      achievements: "Achievements",
+      resume: "Resume",
+    };
+
+    const getMetricValue = (app: Application, metric: MetricKey): string => {
+      const profile = app.profiles;
+      if (!profile) return "—";
+
+      switch (metric) {
+        case "completeness":
+          return `${calculateCompleteness(profile)}%`;
+        case "experience":
+          return profile.years_experience ? `${profile.years_experience} yrs` : "—";
+        case "hindex":
+          const hIndex = getHIndex(profile);
+          return hIndex !== null ? String(hIndex) : "—";
+        case "publications":
+          return String(getDocumentCount(profile) || "—");
+        case "citations":
+          return String(getTotalCitations(profile) || "—");
+        case "location":
+          return escapeHtml(profile.location);
+        case "university":
+          return escapeHtml(profile.university);
+        case "academicProfiles":
+          const links: string[] = [];
+          if (profile.orcid_id) links.push(`ORCID: ${profile.orcid_id}`);
+          if (profile.scopus_link) links.push("Scopus: Linked");
+          return links.length > 0 ? links.join(", ") : "—";
+        case "skills":
+          return profile.skills?.slice(0, 5).join(", ") || "—";
+        case "education":
+          const education = Array.isArray(profile.education) ? profile.education : [];
+          return education.length > 0 
+            ? education.slice(0, 2).map(e => escapeHtml(e.degree)).join(", ")
+            : "—";
+        case "achievements":
+          const achievements = Array.isArray(profile.achievements) ? profile.achievements : [];
+          return achievements.length > 0 
+            ? `${achievements.length} achievements`
+            : "—";
+        case "resume":
+          return profile.resume_url ? "Available" : "Not uploaded";
+        default:
+          return "—";
+      }
+    };
+
+    const visibleMetricKeys = Array.from(visibleMetrics);
+    const currentDate = new Date().toLocaleDateString();
+
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Candidate Comparison Report</title>
+        <style>
+          * { box-sizing: border-box; margin: 0; padding: 0; }
+          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 40px; color: #1a1a1a; }
+          .header { text-align: center; margin-bottom: 32px; border-bottom: 2px solid #e5e5e5; padding-bottom: 24px; }
+          .header h1 { font-size: 24px; margin-bottom: 8px; color: #111; }
+          .header p { color: #666; font-size: 14px; }
+          .comparison-table { width: 100%; border-collapse: collapse; margin-top: 24px; }
+          .comparison-table th, .comparison-table td { border: 1px solid #e5e5e5; padding: 12px; text-align: left; vertical-align: top; }
+          .comparison-table th { background: #f5f5f5; font-weight: 600; font-size: 13px; }
+          .comparison-table td { font-size: 13px; }
+          .candidate-header { background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); text-align: center; padding: 16px !important; }
+          .candidate-name { font-weight: 600; font-size: 14px; margin-bottom: 4px; }
+          .candidate-role { font-size: 12px; color: #666; }
+          .metric-label { font-weight: 500; color: #444; min-width: 140px; background: #fafafa; }
+          .best-value { background: #ecfdf5 !important; color: #059669; font-weight: 600; }
+          .footer { margin-top: 32px; padding-top: 16px; border-top: 1px solid #e5e5e5; font-size: 11px; color: #888; text-align: center; }
+          @media print {
+            body { padding: 20px; }
+            .comparison-table { page-break-inside: auto; }
+            .comparison-table tr { page-break-inside: avoid; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>Candidate Comparison Report</h1>
+          <p>Generated on ${currentDate} • ${applications.length} candidates • ${visibleMetricKeys.length} metrics</p>
+        </div>
+        <table class="comparison-table">
+          <thead>
+            <tr>
+              <th class="metric-label">Metric</th>
+              ${applications.map(app => `
+                <th class="candidate-header">
+                  <div class="candidate-name">${escapeHtml(app.profiles?.full_name) || "Anonymous"}</div>
+                  <div class="candidate-role">${escapeHtml(app.profiles?.role || app.profiles?.headline) || "Candidate"}</div>
+                </th>
+              `).join("")}
+            </tr>
+          </thead>
+          <tbody>
+            ${visibleMetricKeys.map(metric => {
+              const values = applications.map(app => getMetricValue(app, metric));
+              const numericValues = values.map(v => parseFloat(v.replace(/[^0-9.]/g, "")) || 0);
+              const maxValue = Math.max(...numericValues);
+              
+              return `
+                <tr>
+                  <td class="metric-label">${metricLabels[metric]}</td>
+                  ${applications.map((app, idx) => {
+                    const value = values[idx];
+                    const numValue = numericValues[idx];
+                    const isBest = numValue > 0 && numValue === maxValue && numericValues.filter(v => v === maxValue).length === 1;
+                    return `<td class="${isBest ? "best-value" : ""}">${value}</td>`;
+                  }).join("")}
+                </tr>
+              `;
+            }).join("")}
+          </tbody>
+        </table>
+        <div class="footer">
+          This report was generated from the Candidate Comparison Tool. Best values are highlighted in green.
+        </div>
+      </body>
+      </html>
+    `);
+
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => {
+      printWindow.print();
+    }, 250);
+
+    toast.success("PDF export ready - use your browser's print dialog to save");
+  };
 
   // Calculate profile completeness
   const calculateCompleteness = (profile: Profile | null): number => {
@@ -313,17 +526,42 @@ const CandidateComparisonModal = ({
               <Badge variant="secondary" className="text-xs">
                 {visibleMetrics.size} metrics shown
               </Badge>
+              <Button variant="outline" size="sm" onClick={handlePrint} className="gap-2">
+                <Printer className="h-4 w-4" />
+                Export PDF
+              </Button>
             </div>
           </div>
         </DialogHeader>
 
         {/* Filter Panel */}
-        <div className="px-6 pb-2">
+        <div className="px-6 pb-2 space-y-3">
+          {/* Preset Filter Buttons */}
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs text-muted-foreground font-medium">Quick filters:</span>
+            {filterPresets.map((preset) => {
+              const isActive = preset.metrics.every((m) => visibleMetrics.has(m)) && 
+                               visibleMetrics.size === preset.metrics.length;
+              return (
+                <Button
+                  key={preset.id}
+                  variant={isActive ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => applyPreset(preset)}
+                  className="gap-1.5 text-xs h-7"
+                >
+                  {preset.icon}
+                  {preset.label}
+                </Button>
+              );
+            })}
+          </div>
+
           <Collapsible open={isFilterOpen} onOpenChange={setIsFilterOpen}>
             <CollapsibleTrigger asChild>
-              <Button variant="outline" size="sm" className="gap-2">
+              <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground hover:text-foreground">
                 <Filter className="h-4 w-4" />
-                Filter Metrics
+                Custom Filter
                 <ChevronDown className={`h-4 w-4 transition-transform ${isFilterOpen ? "rotate-180" : ""}`} />
               </Button>
             </CollapsibleTrigger>
