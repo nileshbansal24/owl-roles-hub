@@ -1,7 +1,8 @@
 import * as React from "react";
 import { motion } from "framer-motion";
-import { ExternalLink, FileText, Search, BookOpen, Calendar, Users } from "lucide-react";
+import { ExternalLink, FileText, Search, BookOpen, Calendar, Users, Quote } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 interface ResearchPaper {
   title: string;
@@ -11,6 +12,7 @@ interface ResearchPaper {
   journal?: string;
   abstractUrl?: string;
   fullPaperUrl?: string;
+  citations?: number;
 }
 
 interface ResearchPapersListProps {
@@ -53,17 +55,30 @@ export const ResearchPapersList = ({
           transition={{ delay: index * 0.08 }}
           className="p-5 rounded-xl bg-secondary/20 border border-border/50 hover:border-primary/30 hover:shadow-sm transition-all group"
         >
-          <a
-            href={paper.doi ? getDoiUrl(paper.doi) : getSearchUrl(paper.title)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="block"
-          >
-            <h4 className="font-heading font-semibold text-foreground text-base leading-snug group-hover:text-primary transition-colors flex items-start gap-2">
-              <FileText className="h-4 w-4 shrink-0 mt-1 text-primary" />
-              <span>"{paper.title}"</span>
-            </h4>
-          </a>
+          <div className="flex items-start justify-between gap-3">
+            <a
+              href={paper.doi ? getDoiUrl(paper.doi) : getSearchUrl(paper.title)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block flex-1"
+            >
+              <h4 className="font-heading font-semibold text-foreground text-base leading-snug group-hover:text-primary transition-colors flex items-start gap-2">
+                <FileText className="h-4 w-4 shrink-0 mt-1 text-primary" />
+                <span>"{paper.title}"</span>
+              </h4>
+            </a>
+            
+            {/* Citation Badge */}
+            {paper.citations !== undefined && paper.citations >= 0 && (
+              <Badge 
+                variant="secondary" 
+                className="shrink-0 bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20 gap-1"
+              >
+                <Quote className="h-3 w-3" />
+                {paper.citations} {paper.citations === 1 ? 'citation' : 'citations'}
+              </Badge>
+            )}
+          </div>
           
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-3 text-sm text-muted-foreground">
             <div className="flex items-center gap-1.5">

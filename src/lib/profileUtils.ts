@@ -25,6 +25,7 @@ export interface DBResearchPaper {
   year?: string;
   doi?: string;
   authors?: string;
+  citations?: number;
 }
 
 // Display format interfaces (what's shown in UI)
@@ -46,6 +47,9 @@ export interface DisplayResearchPaper {
   title: string;
   authors: string;
   date: string;
+  doi?: string;
+  journal?: string;
+  citations?: number;
 }
 
 // Transform DB experience to display format
@@ -102,6 +106,9 @@ export function transformResearchToDisplay(dbPapers: DBResearchPaper[]): Display
     title: paper.title || "",
     authors: paper.authors || "",
     date: paper.year || "",
+    doi: paper.doi,
+    journal: paper.journal,
+    citations: paper.citations,
   }));
 }
 

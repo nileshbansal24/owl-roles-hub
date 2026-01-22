@@ -292,13 +292,14 @@ Deno.serve(async (req) => {
     console.log(`Metrics from publications: docs=${scopusMetrics.document_count}, citations=${scopusMetrics.citation_count}, co-authors=${scopusMetrics.co_authors.length}`);
 
     // Update the user's profile with parsed publications and metrics
-    // Transform to the format expected by the profile (include DOI and journal for clickable links)
+    // Transform to the format expected by the profile (include DOI, journal, and citations)
     const researchPapers = papers.map((p) => ({
       title: p.title,
       authors: p.authors,
-      date: p.date,
+      year: p.date,
       doi: p.doi,
       journal: p.journal,
+      citations: p.citations,
     }));
 
     const serviceClient = createClient(supabaseUrl, supabaseServiceKey);
