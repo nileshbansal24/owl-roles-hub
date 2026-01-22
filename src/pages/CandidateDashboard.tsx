@@ -45,6 +45,7 @@ import {
   Upload,
   CalendarDays,
   GraduationCap,
+  User,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
@@ -1233,21 +1234,6 @@ const CandidateDashboard = () => {
       animate="visible"
       className="space-y-4"
     >
-      {/* Personal Details */}
-      <motion.div variants={itemVariants}>
-        <PersonalDetailsCard
-          name={profile?.full_name}
-          familyDetails={profile?.family_details}
-          email={profile?.email}
-          phone={profile?.phone}
-          skills={skills}
-          hobbies={profile?.hobbies}
-          quotes={profile?.quotes}
-          recommendedBooks={profile?.recommended_books}
-          onEdit={() => setPersonalDetailsEditOpen(true)}
-        />
-      </motion.div>
-
       {interviews.length === 0 ? (
         <motion.div variants={itemVariants}>
           <ProfileCard title="My Interviews">
@@ -1371,6 +1357,13 @@ const CandidateDashboard = () => {
                     Achievements
                   </TabsTrigger>
                   <TabsTrigger
+                    value="personal"
+                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 py-3"
+                  >
+                    <User className="h-4 w-4 mr-1.5" />
+                    Personal
+                  </TabsTrigger>
+                  <TabsTrigger
                     value="interviews"
                     className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 py-3"
                   >
@@ -1412,6 +1405,13 @@ const CandidateDashboard = () => {
                       className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 py-3 text-sm"
                     >
                       Achievements
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="personal"
+                      className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 py-3 text-sm"
+                    >
+                      <User className="h-4 w-4 mr-1" />
+                      Personal
                     </TabsTrigger>
                     <TabsTrigger
                       value="interviews"
@@ -1533,6 +1533,24 @@ const CandidateDashboard = () => {
                     emptyMessage="Add your achievements and awards to showcase your accomplishments."
                   />
                 </ProfileCard>
+              </div>
+            </TabsContent>
+
+            {/* Personal Details Tab */}
+            <TabsContent value="personal" className="mt-6">
+              <div className="max-w-4xl">
+                <PersonalDetailsCard
+                  name={profile?.full_name}
+                  familyDetails={profile?.family_details}
+                  email={profile?.email}
+                  phone={profile?.phone}
+                  skills={skills}
+                  hobbies={profile?.hobbies}
+                  quotes={profile?.quotes}
+                  recommendedBooks={profile?.recommended_books}
+                  onEdit={() => setPersonalDetailsEditOpen(true)}
+                  defaultOpen={true}
+                />
               </div>
             </TabsContent>
 
