@@ -45,7 +45,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    // Always clear client state, even if the server-side session is already expired/invalid.
+    // This prevents the UI from getting stuck in a "logged in" state.
+    setUser(null);
+    setSession(null);
+
+    try {
+      // "local" guarantees local storage/session is cleared even when /logout returns 403
+      // (e.g. session_not_found).
+      await supabase.auth.signOut({ scope: "local" });
+    } catch {
+      // Intentionally ignore sign-out failures; state is already cleared.
+    }
   };
 
   return (
