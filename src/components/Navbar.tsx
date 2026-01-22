@@ -8,7 +8,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Moon, Sun, LogOut, User, Plus, Briefcase, Search, LayoutDashboard } from "lucide-react";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import { Moon, Sun, LogOut, User, Plus, Briefcase, LayoutDashboard, Menu, Home, Building, Wrench } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useEffect, useState } from "react";
@@ -24,6 +31,7 @@ const Navbar = ({ onLoginClick, onSignupClick }: NavbarProps) => {
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const [userType, setUserType] = useState<string | null>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const fetchUserType = async () => {
@@ -45,6 +53,7 @@ const Navbar = ({ onLoginClick, onSignupClick }: NavbarProps) => {
 
   const handleSignOut = async () => {
     await signOut();
+    setMobileMenuOpen(false);
     navigate("/");
   };
 
@@ -57,6 +66,17 @@ const Navbar = ({ onLoginClick, onSignupClick }: NavbarProps) => {
       return "/recruiter-dashboard";
     }
     return "/candidate-dashboard";
+  };
+
+  const navLinks = [
+    { label: "Home", to: "/", icon: Home },
+    { label: "Institutions", to: "/", icon: Building },
+    { label: "Services", to: "/", icon: Wrench },
+  ];
+
+  const handleNavClick = (to: string) => {
+    setMobileMenuOpen(false);
+    navigate(to);
   };
 
   return (
@@ -73,30 +93,21 @@ const Navbar = ({ onLoginClick, onSignupClick }: NavbarProps) => {
             </span>
           </Link>
 
-          {/* Navigation */}
+          {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-6">
-            <Link
-              to="/"
-              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Home
-            </Link>
-            <Link
-              to="/"
-              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Institutions
-            </Link>
-            <Link
-              to="/"
-              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Services
-            </Link>
+            {navLinks.map((link) => (
+              <Link
+                key={link.label}
+                to={link.to}
+                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+              >
+                {link.label}
+              </Link>
+            ))}
           </nav>
 
           {/* Actions */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <Button
               variant="ghost"
               size="icon"
@@ -170,15 +181,119 @@ const Navbar = ({ onLoginClick, onSignupClick }: NavbarProps) => {
                 </DropdownMenu>
               </>
             ) : (
-              <>
+              <div className="hidden sm:flex items-center gap-2">
                 <Button variant="ghost" size="sm" onClick={onLoginClick}>
                   Login
                 </Button>
                 <Button size="sm" onClick={onSignupClick}>
                   Register
                 </Button>
-              </>
+              </div>
             )}
+
+            {/* Mobile Menu Button */}
+            <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="md:hidden">
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-[280px] sm:w-[320px]">
+                <SheetHeader>
+                  <SheetTitle className="text-left font-heading">Menu</SheetTitle>
+                </SheetHeader>
+                <div className="mt-6 flex flex-col gap-2">
+                  {/* Navigation Links */}
+                  {navLinks.map((link) => (
+                    <Button
+                      key={link.label}
+                      variant="ghost"
+                      className="justify-start gap-3 h-12"
+                      onClick={() => handleNavClick(link.to)}
+                    >
+                      <link.icon className="h-5 w-5" />
+                      {link.label}
+                    </Button>
+                  ))}
+
+                  <div className="my-4 border-t" />
+
+                  {user ? (
+                    <>
+                      {/* User Info */}
+                      <div className="px-3 py-2 mb-2">
+                        <p className="text-sm font-medium">{user.email}</p>
+                        <p className="text-xs text-muted-foreground capitalize">{userType} Account</p>
+                      </div>
+
+                      <Button
+                        variant="ghost"
+                        className="justify-start gap-3 h-12"
+                        onClick={() => handleNavClick(getDashboardLink())}
+                      >
+                        <LayoutDashboard className="h-5 w-5" />
+                        Dashboard
+                      </Button>
+
+                      {userType === "recruiter" && (
+                        <Button
+                          variant="ghost"
+                          className="justify-start gap-3 h-12"
+                          onClick={() => handleNavClick("/post-job")}
+                        >
+                          <Briefcase className="h-5 w-5" />
+                          Post Job
+                        </Button>
+                      )}
+
+                      {userType === "candidate" && (
+                        <Button
+                          variant="ghost"
+                          className="justify-start gap-3 h-12"
+                          onClick={() => handleNavClick("/candidate-dashboard")}
+                        >
+                          <User className="h-5 w-5" />
+                          My Profile
+                        </Button>
+                      )}
+
+                      <div className="my-2 border-t" />
+
+                      <Button
+                        variant="ghost"
+                        className="justify-start gap-3 h-12 text-destructive hover:text-destructive hover:bg-destructive/10"
+                        onClick={handleSignOut}
+                      >
+                        <LogOut className="h-5 w-5" />
+                        Log out
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Button
+                        variant="outline"
+                        className="h-12"
+                        onClick={() => {
+                          setMobileMenuOpen(false);
+                          onLoginClick?.();
+                        }}
+                      >
+                        Login
+                      </Button>
+                      <Button
+                        className="h-12"
+                        onClick={() => {
+                          setMobileMenuOpen(false);
+                          onSignupClick?.();
+                        }}
+                      >
+                        Register
+                      </Button>
+                    </>
+                  )}
+                </div>
+              </SheetContent>
+            </Sheet>
           </div>
         </div>
       </div>
