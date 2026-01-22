@@ -233,17 +233,34 @@ Deno.serve(async (req) => {
 
     const scopusData = await scopusResponse.json();
     const entries: ScopusEntry[] = scopusData["search-results"]?.entry || [];
+    const totalResults = parseInt(scopusData["search-results"]?.["opensearch:totalResults"] || "0", 10);
     
-    console.log(`Found ${entries.length} publications from Scopus`);
+    console.log(`Found ${entries.length} publications from Scopus (total: ${totalResults})`);
+
+    // Calculate total citations from publications
+    let totalCitations = 0;
+    const coAuthorMap = new Map<string, CoAuthor>();
 
     // Parse the publications
     const papers: ParsedPaper[] = entries
       .filter((entry) => entry["dc:title"]) // Filter out entries without titles
       .map((entry) => {
-        // Build authors string
+        // Build authors string and collect co-authors
         let authors = entry["dc:creator"] || "";
         if (entry.author && entry.author.length > 0) {
           authors = entry.author.map((a) => a.authname || "").filter(Boolean).join(", ");
+          // Collect unique co-authors
+          entry.author.forEach((a) => {
+            const name = a.authname;
+            if (name && !coAuthorMap.has(name)) {
+              coAuthorMap.set(name, { name });
+            }
+          });
+        }
+
+        // Sum up citations
+        if (entry["citedby-count"]) {
+          totalCitations += parseInt(entry["citedby-count"], 10);
         }
 
         // Parse date
@@ -259,6 +276,20 @@ Deno.serve(async (req) => {
           citations: entry["citedby-count"] ? parseInt(entry["citedby-count"], 10) : undefined,
         };
       });
+
+    // Update metrics from publication data if Author API failed
+    if (scopusMetrics.document_count === null) {
+      scopusMetrics.document_count = totalResults;
+    }
+    if (scopusMetrics.citation_count === null && totalCitations > 0) {
+      scopusMetrics.citation_count = totalCitations;
+    }
+    if (scopusMetrics.co_authors.length === 0) {
+      // Get up to 10 co-authors from publications (excluding first one which is usually the author)
+      scopusMetrics.co_authors = Array.from(coAuthorMap.values()).slice(1, 11);
+    }
+
+    console.log(`Metrics from publications: docs=${scopusMetrics.document_count}, citations=${scopusMetrics.citation_count}, co-authors=${scopusMetrics.co_authors.length}`);
 
     // Update the user's profile with parsed publications and metrics
     // Transform to the format expected by the profile (include DOI and journal for clickable links)

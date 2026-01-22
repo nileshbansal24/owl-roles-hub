@@ -31,7 +31,15 @@ interface ScopusMetricsCardProps {
 }
 
 export const ScopusMetricsCard: React.FC<ScopusMetricsCardProps> = ({ metrics, scopusLink }) => {
-  if (!metrics || (metrics.h_index === null && metrics.document_count === null)) {
+  // Show card if we have any meaningful metrics
+  const hasMetrics = metrics && (
+    metrics.h_index !== null || 
+    metrics.document_count !== null || 
+    (metrics.citation_count !== null && metrics.citation_count > 0) ||
+    (metrics.co_authors && metrics.co_authors.length > 0)
+  );
+
+  if (!hasMetrics) {
     return null;
   }
 
@@ -44,31 +52,36 @@ export const ScopusMetricsCard: React.FC<ScopusMetricsCardProps> = ({ metrics, s
       animate={{ opacity: 1, y: 0 }}
       className="mb-6"
     >
-      <Card className="bg-gradient-to-br from-orange-500/5 via-amber-500/5 to-yellow-500/5 border-orange-500/20">
+      <Card className="bg-gradient-to-br from-primary/5 via-primary/3 to-primary/5 border-primary/20">
         <CardContent className="p-4">
           {/* Header */}
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <div className="p-2 rounded-lg bg-orange-500/10">
-                <Award className="h-4 w-4 text-orange-600" />
+              <div className="p-2 rounded-lg bg-primary/10">
+                <Award className="h-4 w-4 text-primary" />
               </div>
               <span className="font-heading font-semibold text-sm text-foreground">Scopus Metrics</span>
             </div>
             {scopusLink && (
               <a href={scopusLink} target="_blank" rel="noopener noreferrer">
-                <Button variant="ghost" size="sm" className="h-7 text-xs gap-1 text-muted-foreground hover:text-orange-600">
+                <Button variant="ghost" size="sm" className="h-7 text-xs gap-1 text-muted-foreground hover:text-primary">
                   View Profile <ExternalLink className="h-3 w-3" />
                 </Button>
               </a>
             )}
           </div>
 
-          {/* Metrics Grid */}
-          <div className="grid grid-cols-3 gap-3 mb-4">
+          {/* Metrics Grid - Only show cells with values */}
+          <div className={`grid gap-3 mb-4 ${
+            [metrics.document_count !== null, metrics.h_index !== null, (metrics.citation_count !== null && metrics.citation_count > 0)]
+              .filter(Boolean).length === 1 ? 'grid-cols-1' : 
+            [metrics.document_count !== null, metrics.h_index !== null, (metrics.citation_count !== null && metrics.citation_count > 0)]
+              .filter(Boolean).length === 2 ? 'grid-cols-2' : 'grid-cols-3'
+          }`}>
             {metrics.document_count !== null && (
               <div className="bg-background/60 rounded-lg p-3 text-center">
                 <div className="flex items-center justify-center gap-1.5 mb-1">
-                  <FileText className="h-3.5 w-3.5 text-orange-600" />
+                  <FileText className="h-3.5 w-3.5 text-primary" />
                 </div>
                 <div className="text-xl font-bold text-foreground">{metrics.document_count}</div>
                 <div className="text-xs text-muted-foreground">Documents</div>
@@ -78,17 +91,17 @@ export const ScopusMetricsCard: React.FC<ScopusMetricsCardProps> = ({ metrics, s
             {metrics.h_index !== null && (
               <div className="bg-background/60 rounded-lg p-3 text-center">
                 <div className="flex items-center justify-center gap-1.5 mb-1">
-                  <TrendingUp className="h-3.5 w-3.5 text-orange-600" />
+                  <TrendingUp className="h-3.5 w-3.5 text-primary" />
                 </div>
                 <div className="text-xl font-bold text-foreground">{metrics.h_index}</div>
                 <div className="text-xs text-muted-foreground">h-index</div>
               </div>
             )}
             
-            {metrics.citation_count !== null && (
+            {metrics.citation_count !== null && metrics.citation_count > 0 && (
               <div className="bg-background/60 rounded-lg p-3 text-center">
                 <div className="flex items-center justify-center gap-1.5 mb-1">
-                  <Quote className="h-3.5 w-3.5 text-orange-600" />
+                  <Quote className="h-3.5 w-3.5 text-primary" />
                 </div>
                 <div className="text-xl font-bold text-foreground">{metrics.citation_count}</div>
                 <div className="text-xs text-muted-foreground">Citations</div>
@@ -110,7 +123,7 @@ export const ScopusMetricsCard: React.FC<ScopusMetricsCardProps> = ({ metrics, s
                   <Badge
                     key={index}
                     variant="secondary"
-                    className="text-xs font-normal bg-background/80 hover:bg-orange-500/10 cursor-default"
+                    className="text-xs font-normal bg-background/80 hover:bg-primary/10 cursor-default"
                     title={coAuthor.affiliation || undefined}
                   >
                     {coAuthor.author_id ? (
@@ -118,7 +131,7 @@ export const ScopusMetricsCard: React.FC<ScopusMetricsCardProps> = ({ metrics, s
                         href={getScopusAuthorUrl(coAuthor.author_id)}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="hover:text-orange-600 transition-colors"
+                        className="hover:text-primary transition-colors"
                         onClick={(e) => e.stopPropagation()}
                       >
                         {coAuthor.name}
