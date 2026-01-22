@@ -14,6 +14,7 @@ export { AIJobMatching } from "./AIJobMatching";
 export { OrcidCard } from "./OrcidCard";
 export { ScopusButton } from "./ScopusButton";
 export { ScopusMetricsCard } from "./ScopusMetricsCard";
+export { ManualHIndexCard } from "./ManualHIndexCard";
 export { PublicationImportButton } from "./PublicationImportButton";
 export { PersonalDetailsCard } from "./PersonalDetailsCard";
 export { PersonalDetailsEditModal } from "./PersonalDetailsEditModal";

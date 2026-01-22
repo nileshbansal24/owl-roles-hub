@@ -35,6 +35,7 @@ import {
 import { OrcidCard } from "@/components/profile/OrcidCard";
 import { PublicationImportButton } from "@/components/profile/PublicationImportButton";
 import { ScopusMetricsCard } from "@/components/profile/ScopusMetricsCard";
+import { ManualHIndexCard } from "@/components/profile/ManualHIndexCard";
 import {
   Edit2,
   Plus,
@@ -92,6 +93,7 @@ interface Profile {
   scopus_link?: string | null;
   linkedin_url?: string | null;
   scopus_metrics?: ScopusMetrics | null;
+  manual_h_index?: number | null;
   // New personal details fields
   family_details?: string | null;
   hobbies?: string[] | null;
@@ -794,6 +796,20 @@ const CandidateDashboard = () => {
     }
   };
 
+  // Handler for saving manual h-index
+  const handleManualHIndexSave = async (hIndex: number | null) => {
+    if (!user) throw new Error("User not authenticated");
+    
+    const { error } = await supabase
+      .from("profiles")
+      .update({ manual_h_index: hIndex })
+      .eq("id", user.id);
+    
+    if (error) throw error;
+    
+    setProfile((prev) => prev ? { ...prev, manual_h_index: hIndex } : null);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
@@ -1109,6 +1125,13 @@ const CandidateDashboard = () => {
             </div>
           }
         >
+          {/* Manual H-Index (only shows if Scopus metrics don't exist) */}
+          <ManualHIndexCard
+            currentHIndex={profile?.manual_h_index || null}
+            onSave={handleManualHIndexSave}
+            hasScopusMetrics={!!(profile?.scopus_metrics?.h_index !== null && profile?.scopus_metrics?.h_index !== undefined)}
+          />
+          
           {/* Scopus Metrics Display */}
           <ScopusMetricsCard 
             metrics={profile?.scopus_metrics || null} 

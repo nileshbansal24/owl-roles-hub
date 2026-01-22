@@ -197,6 +197,7 @@ export type Database = {
           id: string
           linkedin_url: string | null
           location: string | null
+          manual_h_index: number | null
           orcid_id: string | null
           phone: string | null
           professional_summary: string | null
@@ -230,6 +231,7 @@ export type Database = {
           id: string
           linkedin_url?: string | null
           location?: string | null
+          manual_h_index?: number | null
           orcid_id?: string | null
           phone?: string | null
           professional_summary?: string | null
@@ -263,6 +265,7 @@ export type Database = {
           id?: string
           linkedin_url?: string | null
           location?: string | null
+          manual_h_index?: number | null
           orcid_id?: string | null
           phone?: string | null
           professional_summary?: string | null
