@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { ExternalLink, FileText, Search, BookOpen, Calendar, Users, Quote, ArrowUpDown, TrendingUp, SortAsc, X } from "lucide-react";
+import { ExternalLink, FileText, Search, BookOpen, Calendar, Users, Quote, ArrowUpDown, TrendingUp, SortAsc, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -43,6 +43,8 @@ export const ResearchPapersList = ({
 }: ResearchPapersListProps) => {
   const [sortBy, setSortBy] = useState<SortOption>("date-desc");
   const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const papersPerPage = 5;
 
   const filteredAndSortedPapers = useMemo(() => {
     // First filter by search query
@@ -79,6 +81,16 @@ export const ResearchPapersList = ({
         return sorted;
     }
   }, [papers, sortBy, searchQuery]);
+
+  // Reset to page 1 when search/sort changes
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, sortBy]);
+
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredAndSortedPapers.length / papersPerPage);
+  const startIndex = (currentPage - 1) * papersPerPage;
+  const paginatedPapers = filteredAndSortedPapers.slice(startIndex, startIndex + papersPerPage);
 
   if (papers.length === 0) {
     return (
@@ -203,9 +215,9 @@ export const ResearchPapersList = ({
       )}
 
       {/* Papers List */}
-      {filteredAndSortedPapers.map((paper, index) => (
+      {paginatedPapers.map((paper, index) => (
         <motion.div
-          key={`${paper.title}-${index}`}
+          key={`${paper.title}-${startIndex + index}`}
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: index * 0.05 }}
@@ -228,7 +240,7 @@ export const ResearchPapersList = ({
             {paper.citations !== undefined && paper.citations >= 0 && (
               <Badge 
                 variant="secondary" 
-                className="shrink-0 bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20 gap-1"
+                className="shrink-0 bg-accent/50 text-accent-foreground border-accent gap-1"
               >
                 <Quote className="h-3 w-3" />
                 {paper.citations} {paper.citations === 1 ? 'citation' : 'citations'}
@@ -294,6 +306,60 @@ export const ResearchPapersList = ({
           </div>
         </motion.div>
       ))}
+
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between pt-4 border-t border-border/30">
+          <span className="text-xs text-muted-foreground">
+            Showing {startIndex + 1}-{Math.min(startIndex + papersPerPage, filteredAndSortedPapers.length)} of {filteredAndSortedPapers.length}
+          </span>
+          <div className="flex items-center gap-1">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 w-8 p-0"
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            
+            {/* Page numbers */}
+            <div className="flex items-center gap-1">
+              {Array.from({ length: totalPages }, (_, i) => i + 1)
+                .filter(page => {
+                  // Show first, last, current, and pages around current
+                  return page === 1 || page === totalPages || Math.abs(page - currentPage) <= 1;
+                })
+                .map((page, idx, arr) => (
+                  <React.Fragment key={page}>
+                    {idx > 0 && arr[idx - 1] !== page - 1 && (
+                      <span className="text-xs text-muted-foreground px-1">...</span>
+                    )}
+                    <Button
+                      variant={currentPage === page ? "default" : "outline"}
+                      size="sm"
+                      className="h-8 w-8 p-0 text-xs"
+                      onClick={() => setCurrentPage(page)}
+                    >
+                      {page}
+                    </Button>
+                  </React.Fragment>
+                ))}
+            </div>
+            
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 w-8 p-0"
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              disabled={currentPage === totalPages}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
