@@ -29,6 +29,8 @@ import {
   AchievementsList,
   AIJobMatching,
   ProfileCompletionCard,
+  PersonalDetailsCard,
+  PersonalDetailsEditModal,
 } from "@/components/profile";
 import { OrcidCard } from "@/components/profile/OrcidCard";
 import { PublicationImportButton } from "@/components/profile/PublicationImportButton";
@@ -47,6 +49,17 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
 import { useIsMobile } from "@/hooks/use-mobile";
+import {
+  DBExperience,
+  DBEducation,
+  DBResearchPaper,
+  transformExperienceToDisplay,
+  transformEducationToDisplay,
+  transformResearchToDisplay,
+  calculateTotalExperience,
+  transformExperienceToDB,
+  transformEducationToDB,
+} from "@/lib/profileUtils";
 
 interface Profile {
   id: string;
@@ -65,6 +78,11 @@ interface Profile {
   orcid_id?: string | null;
   scopus_link?: string | null;
   linkedin_url?: string | null;
+  // New personal details fields
+  family_details?: string | null;
+  hobbies?: string[] | null;
+  quotes?: string | null;
+  recommended_books?: string[] | null;
 }
 
 interface Application {
@@ -147,6 +165,8 @@ const CandidateDashboard = () => {
   const [savingResumeData, setSavingResumeData] = useState(false);
   const [linkedInImportOpen, setLinkedInImportOpen] = useState(false);
   const [savingLinkedInData, setSavingLinkedInData] = useState(false);
+  const [personalDetailsEditOpen, setPersonalDetailsEditOpen] = useState(false);
+  const [calculatedYearsExperience, setCalculatedYearsExperience] = useState<number | null>(null);
 
   // Handle quick apply from job recommendations
   const handleQuickApply = async (jobId: string) => {
@@ -201,12 +221,32 @@ const CandidateDashboard = () => {
       if (profileError) {
         console.error("Error fetching profile:", profileError);
       } else if (profileData) {
-        setProfile(profileData);
+        // Cast to Profile type (with personal details fields)
+        setProfile(profileData as unknown as Profile);
         if (profileData.skills) setSkills(profileData.skills);
-        // Load extended profile data from database
-        if (profileData.experience) setExperienceTimeline(profileData.experience as unknown as ExperienceItem[]);
-        if (profileData.education) setEducation(profileData.education as unknown as EducationItem[]);
-        if (profileData.research_papers) setResearchPapers(profileData.research_papers as unknown as ResearchPaper[]);
+        
+        // Transform DB format to display format for experience
+        if (profileData.experience && Array.isArray(profileData.experience)) {
+          const dbExperience = profileData.experience as unknown as DBExperience[];
+          const displayExp = transformExperienceToDisplay(dbExperience);
+          setExperienceTimeline(displayExp);
+          // Calculate and set years of experience
+          const calculatedYears = calculateTotalExperience(dbExperience);
+          setCalculatedYearsExperience(calculatedYears);
+        }
+        
+        // Transform DB format to display format for education
+        if (profileData.education && Array.isArray(profileData.education)) {
+          const dbEducation = profileData.education as unknown as DBEducation[];
+          setEducation(transformEducationToDisplay(dbEducation));
+        }
+        
+        // Transform DB format to display format for research papers
+        if (profileData.research_papers && Array.isArray(profileData.research_papers)) {
+          const dbPapers = profileData.research_papers as unknown as DBResearchPaper[];
+          setResearchPapers(transformResearchToDisplay(dbPapers));
+        }
+        
         if (profileData.achievements) setAchievements(profileData.achievements);
         if (profileData.subjects) setSubjects(profileData.subjects);
         if (profileData.teaching_philosophy) setTeachingPhilosophy(profileData.teaching_philosophy);
@@ -668,6 +708,48 @@ const CandidateDashboard = () => {
     setProfile((prev) => prev ? { ...prev, linkedin_url: url } : null);
   };
 
+  // Handler for saving personal details
+  const handlePersonalDetailsSave = async (data: {
+    full_name?: string | null;
+    family_details?: string | null;
+    email?: string | null;
+    phone?: string | null;
+    hobbies?: string[] | null;
+    quotes?: string | null;
+    recommended_books?: string[] | null;
+  }) => {
+    if (!user) return;
+    
+    const updateData: Record<string, unknown> = {};
+    if (data.full_name !== undefined) updateData.full_name = data.full_name;
+    if (data.family_details !== undefined) updateData.family_details = data.family_details;
+    if (data.email !== undefined) updateData.email = data.email;
+    if (data.phone !== undefined) updateData.phone = data.phone;
+    if (data.hobbies !== undefined) updateData.hobbies = data.hobbies;
+    if (data.quotes !== undefined) updateData.quotes = data.quotes;
+    if (data.recommended_books !== undefined) updateData.recommended_books = data.recommended_books;
+    
+    const { error } = await supabase
+      .from("profiles")
+      .update(updateData)
+      .eq("id", user.id);
+    
+    if (error) throw error;
+    
+    setProfile((prev) => prev ? { 
+      ...prev, 
+      full_name: data.full_name ?? prev.full_name,
+      family_details: data.family_details ?? prev.family_details,
+      email: data.email ?? prev.email,
+      phone: data.phone ?? prev.phone,
+      hobbies: data.hobbies ?? prev.hobbies,
+      quotes: data.quotes ?? prev.quotes,
+      recommended_books: data.recommended_books ?? prev.recommended_books,
+    } : null);
+    
+    toast({ title: "Personal details updated!", description: "Your information has been saved." });
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
@@ -1006,6 +1088,21 @@ const CandidateDashboard = () => {
           <EducationList items={education} />
         </ProfileCard>
       </motion.div>
+
+      {/* Personal Details Section */}
+      <motion.div variants={itemVariants}>
+        <PersonalDetailsCard
+          name={profile?.full_name}
+          familyDetails={profile?.family_details}
+          email={profile?.email || user?.email}
+          phone={profile?.phone}
+          skills={skills}
+          hobbies={profile?.hobbies}
+          quotes={profile?.quotes}
+          recommendedBooks={profile?.recommended_books}
+          onEdit={() => setPersonalDetailsEditOpen(true)}
+        />
+      </motion.div>
     </motion.div>
   );
 
@@ -1170,7 +1267,7 @@ const CandidateDashboard = () => {
               email={user?.email}
               role={profile?.role || profile?.headline}
               university={profile?.university}
-              yearsExperience={profile?.years_experience}
+              yearsExperience={calculatedYearsExperience ?? profile?.years_experience}
               location={profile?.location}
               phone={profile?.phone}
               onAvatarUpload={handleAvatarUpload}
@@ -1464,6 +1561,21 @@ const CandidateDashboard = () => {
         linkedinUrl={profile?.linkedin_url}
         onSave={handleLinkedInDataSave}
         saving={savingLinkedInData}
+      />
+
+      <PersonalDetailsEditModal
+        open={personalDetailsEditOpen}
+        onOpenChange={setPersonalDetailsEditOpen}
+        data={{
+          full_name: profile?.full_name,
+          family_details: profile?.family_details,
+          email: profile?.email || user?.email,
+          phone: profile?.phone,
+          hobbies: profile?.hobbies,
+          quotes: profile?.quotes,
+          recommended_books: profile?.recommended_books,
+        }}
+        onSave={handlePersonalDetailsSave}
       />
 
     </div>
