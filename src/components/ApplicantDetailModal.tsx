@@ -37,6 +37,9 @@ import {
   CheckCircle2,
   CalendarDays,
   Circle,
+  ExternalLink,
+  TrendingUp,
+  Quote,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
@@ -68,6 +71,20 @@ interface ResearchPaper {
   title: string;
   authors: string;
   date: string;
+  doi?: string;
+  journal?: string;
+  citations?: number;
+}
+
+interface ScopusMetrics {
+  h_index: number | null;
+  document_count: number | null;
+  citation_count: number | null;
+  co_authors?: Array<{
+    name: string;
+    author_id?: string;
+    affiliation?: string;
+  }>;
 }
 
 interface Profile {
@@ -91,6 +108,11 @@ interface Profile {
   subjects?: string[] | null;
   teaching_philosophy?: string | null;
   professional_summary?: string | null;
+  // Academic identity fields
+  orcid_id?: string | null;
+  scopus_link?: string | null;
+  scopus_metrics?: ScopusMetrics | null;
+  manual_h_index?: number | null;
 }
 
 // HTML escape function to prevent XSS attacks
@@ -517,14 +539,38 @@ const ApplicantDetailModal = ({
             </div>
           ` : ''}
 
+          ${(profile?.scopus_metrics || profile?.manual_h_index || profile?.orcid_id || profile?.scopus_link) ? `
+            <div class="section">
+              <div class="section-title">Research Metrics & Identity</div>
+              <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 12px;">
+                ${(profile?.scopus_metrics?.h_index !== null && profile?.scopus_metrics?.h_index !== undefined) || profile?.manual_h_index ? `
+                  <div><strong style="font-size: 20px; color: #3b82f6">${profile?.scopus_metrics?.h_index ?? profile?.manual_h_index}</strong> <span style="color: #6b7280">h-index</span></div>
+                ` : ''}
+                ${profile?.scopus_metrics?.document_count ? `
+                  <div><strong style="font-size: 20px">${profile.scopus_metrics.document_count}</strong> <span style="color: #6b7280">Documents</span></div>
+                ` : ''}
+                ${profile?.scopus_metrics?.citation_count ? `
+                  <div><strong style="font-size: 20px">${profile.scopus_metrics.citation_count}</strong> <span style="color: #6b7280">Citations</span></div>
+                ` : ''}
+              </div>
+              ${profile?.orcid_id ? `<div style="margin-bottom: 6px;"><strong>ORCID:</strong> <a href="https://orcid.org/${escapeHtml(profile.orcid_id)}" style="color: #A6CE39">${escapeHtml(profile.orcid_id)}</a></div>` : ''}
+              ${profile?.scopus_link ? `<div><strong>Scopus:</strong> <a href="${escapeHtml(profile.scopus_link)}" style="color: #E9711C">View Profile</a></div>` : ''}
+            </div>
+          ` : ''}
+
           ${Array.isArray(profile?.research_papers) && profile.research_papers.length > 0 ? `
             <div class="section">
               <div class="section-title">Research Papers (${profile.research_papers.length})</div>
               ${profile.research_papers.map((paper: any) => `
                 <div class="paper-item">
-                  <strong>${escapeHtml(paper.title)}</strong><br/>
+                  <div style="display: flex; justify-content: space-between; align-items: start;">
+                    <strong>${escapeHtml(paper.title)}</strong>
+                    ${paper.citations !== undefined ? `<span style="background: #fef3c7; color: #92400e; padding: 2px 8px; border-radius: 10px; font-size: 11px;">${paper.citations} citations</span>` : ''}
+                  </div>
                   <span style="color: #6b7280; font-size: 12px">${escapeHtml(paper.authors)}</span><br/>
                   <span style="color: #3b82f6; font-size: 12px">${escapeHtml(paper.date)}</span>
+                  ${paper.journal ? `<span style="color: #6b7280; font-size: 12px; font-style: italic;"> • ${escapeHtml(paper.journal)}</span>` : ''}
+                  ${paper.doi ? `<span style="font-size: 12px;"> • <a href="https://doi.org/${escapeHtml(paper.doi)}" style="color: #3b82f6;">DOI</a></span>` : ''}
                 </div>
               `).join('')}
             </div>
@@ -839,6 +885,93 @@ const ApplicantDetailModal = ({
               )}
             </div>
 
+            {/* Research Metrics & Identity Section */}
+            {(profile?.scopus_metrics || profile?.manual_h_index || profile?.orcid_id || profile?.scopus_link) && (
+              <div>
+                <h4 className="font-heading font-semibold text-foreground mb-3 flex items-center gap-2">
+                  <TrendingUp className="h-4 w-4 text-primary" />
+                  Research Metrics & Identity
+                </h4>
+                <div className="p-4 rounded-lg bg-gradient-to-br from-primary/5 via-primary/3 to-primary/5 border border-primary/20">
+                  {/* Metrics Grid */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+                    {/* H-Index */}
+                    {(profile?.scopus_metrics?.h_index !== null && profile?.scopus_metrics?.h_index !== undefined) || profile?.manual_h_index ? (
+                      <div className="bg-background/60 rounded-lg p-3 text-center">
+                        <div className="text-xl font-bold text-primary">
+                          {profile?.scopus_metrics?.h_index ?? profile?.manual_h_index}
+                        </div>
+                        <div className="text-xs text-muted-foreground">h-index</div>
+                      </div>
+                    ) : null}
+                    
+                    {/* Document Count */}
+                    {profile?.scopus_metrics?.document_count !== null && profile?.scopus_metrics?.document_count !== undefined && (
+                      <div className="bg-background/60 rounded-lg p-3 text-center">
+                        <div className="text-xl font-bold text-foreground">
+                          {profile.scopus_metrics.document_count}
+                        </div>
+                        <div className="text-xs text-muted-foreground">Documents</div>
+                      </div>
+                    )}
+                    
+                    {/* Citation Count */}
+                    {profile?.scopus_metrics?.citation_count !== null && profile?.scopus_metrics?.citation_count !== undefined && profile?.scopus_metrics?.citation_count > 0 && (
+                      <div className="bg-background/60 rounded-lg p-3 text-center">
+                        <div className="text-xl font-bold text-foreground">
+                          {profile.scopus_metrics.citation_count}
+                        </div>
+                        <div className="text-xs text-muted-foreground">Citations</div>
+                      </div>
+                    )}
+                    
+                    {/* Research Papers Count */}
+                    {researchPapers.length > 0 && (
+                      <div className="bg-background/60 rounded-lg p-3 text-center">
+                        <div className="text-xl font-bold text-foreground">
+                          {researchPapers.length}
+                        </div>
+                        <div className="text-xs text-muted-foreground">Papers Listed</div>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Academic Identity Links */}
+                  <div className="flex flex-wrap gap-2 pt-3 border-t border-border/30">
+                    {profile?.orcid_id && (
+                      <a
+                        href={`https://orcid.org/${profile.orcid_id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[#A6CE39]/10 text-[#A6CE39] hover:bg-[#A6CE39]/20 transition-colors text-sm font-medium"
+                      >
+                        <svg className="h-4 w-4" viewBox="0 0 256 256" fill="currentColor">
+                          <path d="M128,0C57.3,0,0,57.3,0,128s57.3,128,128,128s128-57.3,128-128S198.7,0,128,0z M86.3,186.2H70.9V79.1h15.4V186.2z M78.6,70.4c-5.5,0-10-4.5-10-10s4.5-10,10-10s10,4.5,10,10S84.1,70.4,78.6,70.4z M185.1,186.2h-15.4v-52.9c0-14.9-5.5-22.7-17.4-22.7c-13.4,0-20.4,9.1-20.4,26.5v49.1h-15.4V79.1h15.4v14.6c5.4-10.1,15.1-17.4,28.3-17.4c20.5,0,24.9,13.5,24.9,35.3V186.2z"/>
+                        </svg>
+                        ORCID: {profile.orcid_id}
+                        <ExternalLink className="h-3 w-3" />
+                      </a>
+                    )}
+                    
+                    {profile?.scopus_link && (
+                      <a
+                        href={profile.scopus_link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[#E9711C]/10 text-[#E9711C] hover:bg-[#E9711C]/20 transition-colors text-sm font-medium"
+                      >
+                        <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm0 2c5.523 0 10 4.477 10 10s-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2zm0 3c-3.866 0-7 3.134-7 7s3.134 7 7 7 7-3.134 7-7-3.134-7-7-7z"/>
+                        </svg>
+                        View Scopus Profile
+                        <ExternalLink className="h-3 w-3" />
+                      </a>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Research Papers - Always show */}
             <div>
               <h4 className="font-heading font-semibold text-foreground mb-3 flex items-center gap-2">
@@ -849,9 +982,32 @@ const ApplicantDetailModal = ({
                 <div className="space-y-3">
                   {researchPapers.map((paper, index) => (
                     <div key={index} className="p-3 rounded-lg bg-muted/50 border">
-                      <h5 className="font-medium text-foreground text-sm">{paper.title}</h5>
-                      <p className="text-xs text-muted-foreground">{paper.authors}</p>
-                      <p className="text-xs text-primary mt-1">{paper.date}</p>
+                      <div className="flex items-start justify-between gap-2">
+                        <h5 className="font-medium text-foreground text-sm flex-1">{paper.title}</h5>
+                        {paper.citations !== undefined && paper.citations >= 0 && (
+                          <Badge variant="secondary" className="shrink-0 bg-accent/50 text-accent-foreground gap-1">
+                            <Quote className="h-3 w-3" />
+                            {paper.citations}
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">{paper.authors}</p>
+                      <div className="flex items-center gap-3 mt-1">
+                        <span className="text-xs text-primary">{paper.date}</span>
+                        {paper.journal && (
+                          <span className="text-xs text-muted-foreground italic">{paper.journal}</span>
+                        )}
+                        {paper.doi && (
+                          <a 
+                            href={`https://doi.org/${paper.doi}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs text-primary hover:underline flex items-center gap-1"
+                          >
+                            DOI <ExternalLink className="h-3 w-3" />
+                          </a>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>
