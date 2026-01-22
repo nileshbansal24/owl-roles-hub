@@ -1020,20 +1020,6 @@ const CandidateDashboard = () => {
         </ProfileCard>
       </motion.div>
 
-      {/* Personal Details */}
-      <motion.div variants={itemVariants}>
-        <PersonalDetailsCard
-          name={profile?.full_name}
-          familyDetails={profile?.family_details}
-          email={profile?.email}
-          phone={profile?.phone}
-          skills={skills}
-          hobbies={profile?.hobbies}
-          quotes={profile?.quotes}
-          recommendedBooks={profile?.recommended_books}
-          onEdit={() => setPersonalDetailsEditOpen(true)}
-        />
-      </motion.div>
 
       {/* Professional Summary */}
       <motion.div variants={itemVariants}>
@@ -1247,6 +1233,21 @@ const CandidateDashboard = () => {
       animate="visible"
       className="space-y-4"
     >
+      {/* Personal Details */}
+      <motion.div variants={itemVariants}>
+        <PersonalDetailsCard
+          name={profile?.full_name}
+          familyDetails={profile?.family_details}
+          email={profile?.email}
+          phone={profile?.phone}
+          skills={skills}
+          hobbies={profile?.hobbies}
+          quotes={profile?.quotes}
+          recommendedBooks={profile?.recommended_books}
+          onEdit={() => setPersonalDetailsEditOpen(true)}
+        />
+      </motion.div>
+
       {interviews.length === 0 ? (
         <motion.div variants={itemVariants}>
           <ProfileCard title="My Interviews">
