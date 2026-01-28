@@ -20,11 +20,26 @@ const Auth = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  const redirectBasedOnRole = async (userId: string) => {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("user_type")
+      .eq("id", userId)
+      .maybeSingle();
+
+    if (profile?.user_type === "recruiter") {
+      navigate("/recruiter-dashboard");
+    } else {
+      navigate("/candidate-dashboard");
+    }
+  };
+
   useEffect(() => {
     if (user) {
-      navigate("/");
+      // Redirect based on user role
+      redirectBasedOnRole(user.id);
     }
-  }, [user, navigate]);
+  }, [user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,7 +63,7 @@ const Auth = () => {
       }
 
       if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({
+        const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
@@ -72,10 +87,13 @@ const Auth = () => {
             title: "Welcome back!",
             description: "You have successfully logged in.",
           });
-          navigate("/");
+          // Redirect based on user role
+          if (data.user) {
+            redirectBasedOnRole(data.user.id);
+          }
         }
       } else {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -105,7 +123,10 @@ const Auth = () => {
             title: "Account created!",
             description: "You have successfully signed up.",
           });
-          navigate("/");
+          // Redirect based on user role
+          if (data.user) {
+            redirectBasedOnRole(data.user.id);
+          }
         }
       }
     } catch (error) {

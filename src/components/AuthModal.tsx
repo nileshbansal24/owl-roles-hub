@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -32,6 +33,7 @@ const AuthModal = ({
   defaultRole = "candidate" 
 }: AuthModalProps) => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [mode, setMode] = useState<"login" | "signup">(defaultMode);
   const [role, setRole] = useState<"candidate" | "recruiter">(defaultRole);
   const [step, setStep] = useState<"role" | "form">("role");
@@ -50,13 +52,38 @@ const AuthModal = ({
     setStep("form");
   };
 
+  const redirectBasedOnRole = async (userId: string, selectedRole?: string) => {
+    // If we know the role from signup, use it directly
+    if (selectedRole) {
+      if (selectedRole === "recruiter") {
+        navigate("/recruiter-dashboard");
+      } else {
+        navigate("/candidate-dashboard");
+      }
+      return;
+    }
+
+    // For login, fetch the user type from the database
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("user_type")
+      .eq("id", userId)
+      .maybeSingle();
+
+    if (profile?.user_type === "recruiter") {
+      navigate("/recruiter-dashboard");
+    } else {
+      navigate("/candidate-dashboard");
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
       if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email: formData.email,
           password: formData.password,
           options: {
@@ -72,11 +99,16 @@ const AuthModal = ({
 
         toast({
           title: "Account created!",
-          description: "You can now log in to your account.",
+          description: "Welcome to OWL ROLES!",
         });
         onOpenChange(false);
+        
+        // Redirect based on selected role
+        if (data.user) {
+          redirectBasedOnRole(data.user.id, role);
+        }
       } else {
-        const { error } = await supabase.auth.signInWithPassword({
+        const { data, error } = await supabase.auth.signInWithPassword({
           email: formData.email,
           password: formData.password,
         });
@@ -88,6 +120,11 @@ const AuthModal = ({
           description: "You have been logged in successfully.",
         });
         onOpenChange(false);
+        
+        // Redirect based on user's stored role
+        if (data.user) {
+          redirectBasedOnRole(data.user.id);
+        }
       }
     } catch (error: any) {
       toast({
