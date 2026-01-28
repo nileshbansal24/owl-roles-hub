@@ -23,6 +23,9 @@ interface CandidateMessageModalProps {
   onOpenChange: (open: boolean) => void;
   candidateName: string;
   candidateEmail: string;
+  candidateId: string;
+  recruiterId: string;
+  jobId?: string;
   jobTitle?: string;
   instituteName?: string;
 }
@@ -105,6 +108,9 @@ const CandidateMessageModal = ({
   onOpenChange,
   candidateName,
   candidateEmail,
+  candidateId,
+  recruiterId,
+  jobId,
   jobTitle = "Open Position",
   instituteName = "Our Institution",
 }: CandidateMessageModalProps) => {
@@ -165,6 +171,10 @@ const CandidateMessageModal = ({
           subject,
           message: body,
           candidateName,
+          candidateId,
+          recruiterId,
+          jobId,
+          jobTitle,
         },
       });
 

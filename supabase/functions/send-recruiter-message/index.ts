@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { Resend } from "https://esm.sh/resend@2.0.0";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
@@ -14,6 +15,10 @@ interface MessageRequest {
   subject: string;
   message: string;
   candidateName: string;
+  candidateId: string;
+  recruiterId: string;
+  jobId?: string;
+  jobTitle?: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -23,13 +28,13 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { to, subject, message, candidateName }: MessageRequest = await req.json();
+    const { to, subject, message, candidateName, candidateId, recruiterId, jobId, jobTitle }: MessageRequest = await req.json();
 
     // Validate required fields
-    if (!to || !subject || !message) {
-      console.error("Missing required fields:", { to: !!to, subject: !!subject, message: !!message });
+    if (!to || !subject || !message || !candidateId || !recruiterId) {
+      console.error("Missing required fields:", { to: !!to, subject: !!subject, message: !!message, candidateId: !!candidateId, recruiterId: !!recruiterId });
       return new Response(
-        JSON.stringify({ error: "Missing required fields: to, subject, and message are required" }),
+        JSON.stringify({ error: "Missing required fields" }),
         {
           status: 400,
           headers: { "Content-Type": "application/json", ...corsHeaders },
@@ -50,8 +55,43 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
+    // Create Supabase client to save message
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
+
+    // Create message record first to get the ID for tracking
+    const { data: messageRecord, error: insertError } = await supabase
+      .from("recruiter_messages")
+      .insert({
+        recruiter_id: recruiterId,
+        candidate_id: candidateId,
+        candidate_email: to,
+        candidate_name: candidateName || "Candidate",
+        subject,
+        message,
+        job_id: jobId || null,
+        job_title: jobTitle || null,
+        status: "sent",
+      })
+      .select()
+      .single();
+
+    if (insertError) {
+      console.error("Error saving message:", insertError);
+      // Continue sending email even if save fails
+    }
+
+    const messageId = messageRecord?.id;
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const trackingPixelUrl = messageId 
+      ? `${supabaseUrl}/functions/v1/track-email-event?id=${messageId}&event=open`
+      : null;
+
     console.log(`Sending message to ${candidateName} at ${to}`);
     console.log(`Subject: ${subject}`);
+    console.log(`Message ID for tracking: ${messageId}`);
 
     // Convert plain text message to HTML with proper formatting
     const htmlMessage = message
@@ -87,6 +127,7 @@ const handler = async (req: Request): Promise<Response> => {
                 This message was sent via OWL ROLES. To manage your notifications or update your profile, visit our platform.
               </p>
             </div>
+            ${trackingPixelUrl ? `<img src="${trackingPixelUrl}" width="1" height="1" style="display:none;" alt="" />` : ""}
           </body>
         </html>
       `,
@@ -94,7 +135,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Message sent successfully:", emailResponse);
 
-    return new Response(JSON.stringify({ success: true, data: emailResponse }), {
+    return new Response(JSON.stringify({ success: true, data: emailResponse, messageId }), {
       status: 200,
       headers: { "Content-Type": "application/json", ...corsHeaders },
     });
