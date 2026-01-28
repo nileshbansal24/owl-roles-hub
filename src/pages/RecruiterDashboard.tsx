@@ -7,6 +7,7 @@ import RecruiterNavbar from "@/components/RecruiterNavbar";
 import RecruiterOnboarding from "@/components/recruiter/RecruiterOnboarding";
 import RecruiterProgressChecklist from "@/components/recruiter/RecruiterProgressChecklist";
 import CandidateMessageModal from "@/components/recruiter/CandidateMessageModal";
+import MessageHistoryTab from "@/components/recruiter/MessageHistoryTab";
 import ApplicantDetailModal from "@/components/ApplicantDetailModal";
 import CandidateComparisonModal from "@/components/CandidateComparisonModal";
 import InterviewScheduleModal from "@/components/InterviewScheduleModal";
@@ -253,8 +254,10 @@ const RecruiterDashboard = () => {
   // Messaging state
   const [showMessageModal, setShowMessageModal] = useState(false);
   const [messageRecipient, setMessageRecipient] = useState<{
+    id: string;
     name: string;
     email: string;
+    jobId?: string;
     jobTitle?: string;
     instituteName?: string;
   } | null>(null);
@@ -585,10 +588,12 @@ const RecruiterDashboard = () => {
   };
   
   // Handle sending a message to a candidate
-  const handleSendMessage = (candidate: Profile, jobTitle?: string, instituteName?: string) => {
+  const handleSendMessage = (candidate: Profile, jobId?: string, jobTitle?: string, instituteName?: string) => {
     setMessageRecipient({
+      id: candidate.id,
       name: candidate.full_name || "Candidate",
       email: candidate.email || "",
+      jobId,
       jobTitle,
       instituteName,
     });
@@ -1210,6 +1215,10 @@ const RecruiterDashboard = () => {
               <TabsTrigger value="jobs" className="gap-2">
                 <Briefcase className="h-4 w-4" />
                 My Jobs ({jobs.length})
+              </TabsTrigger>
+              <TabsTrigger value="messages" className="gap-2">
+                <Mail className="h-4 w-4" />
+                Messages
               </TabsTrigger>
             </TabsList>
 
@@ -2040,6 +2049,11 @@ const RecruiterDashboard = () => {
                 )}
               </motion.div>
             </TabsContent>
+
+            {/* Messages Tab */}
+            <TabsContent value="messages">
+              <MessageHistoryTab />
+            </TabsContent>
           </Tabs>
         </div>
       </main>
@@ -2146,12 +2160,15 @@ const RecruiterDashboard = () => {
       />
 
       {/* Candidate Message Modal */}
-      {messageRecipient && (
+      {messageRecipient && user && (
         <CandidateMessageModal
           open={showMessageModal}
           onOpenChange={setShowMessageModal}
           candidateName={messageRecipient.name}
           candidateEmail={messageRecipient.email}
+          candidateId={messageRecipient.id}
+          recruiterId={user.id}
+          jobId={messageRecipient.jobId}
           jobTitle={messageRecipient.jobTitle}
           instituteName={messageRecipient.instituteName}
         />

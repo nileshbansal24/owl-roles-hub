@@ -331,6 +331,78 @@ export type Database = {
         }
         Relationships: []
       }
+      recruiter_messages: {
+        Row: {
+          candidate_email: string
+          candidate_id: string
+          candidate_name: string
+          click_count: number
+          created_at: string
+          id: string
+          job_id: string | null
+          job_title: string | null
+          last_clicked_at: string | null
+          message: string
+          open_count: number
+          opened_at: string | null
+          recruiter_id: string
+          status: string
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          candidate_email: string
+          candidate_id: string
+          candidate_name: string
+          click_count?: number
+          created_at?: string
+          id?: string
+          job_id?: string | null
+          job_title?: string | null
+          last_clicked_at?: string | null
+          message: string
+          open_count?: number
+          opened_at?: string | null
+          recruiter_id: string
+          status?: string
+          subject: string
+          updated_at?: string
+        }
+        Update: {
+          candidate_email?: string
+          candidate_id?: string
+          candidate_name?: string
+          click_count?: number
+          created_at?: string
+          id?: string
+          job_id?: string | null
+          job_title?: string | null
+          last_clicked_at?: string | null
+          message?: string
+          open_count?: number
+          opened_at?: string | null
+          recruiter_id?: string
+          status?: string
+          subject?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recruiter_messages_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recruiter_messages_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       recruiter_notes: {
         Row: {
           applicant_id: string
