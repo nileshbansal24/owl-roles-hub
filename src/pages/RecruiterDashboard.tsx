@@ -4,6 +4,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import RecruiterNavbar from "@/components/RecruiterNavbar";
+import RecruiterOnboarding from "@/components/recruiter/RecruiterOnboarding";
 import ApplicantDetailModal from "@/components/ApplicantDetailModal";
 import CandidateComparisonModal from "@/components/CandidateComparisonModal";
 import InterviewScheduleModal from "@/components/InterviewScheduleModal";
@@ -239,6 +240,11 @@ const RecruiterDashboard = () => {
   
   // Comparison state
   const [showComparisonModal, setShowComparisonModal] = useState(false);
+  
+  // Onboarding state
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [recruiterName, setRecruiterName] = useState<string | undefined>(undefined);
+  const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
 
   // Calculate profile completeness
   const calculateCompleteness = (profile: Profile | null): number => {
@@ -274,6 +280,21 @@ const RecruiterDashboard = () => {
     const fetchData = async () => {
       setLoading(true);
 
+      // Fetch recruiter's profile for name
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      if (profileData?.full_name) {
+        setRecruiterName(profileData.full_name);
+      }
+
+      // Check if onboarding was completed (stored in localStorage)
+      const onboardingKey = `recruiter_onboarding_${user.id}`;
+      const completedOnboarding = localStorage.getItem(onboardingKey);
+      
       // Fetch recruiter's jobs
       const { data: jobsData } = await supabase
         .from("jobs")
@@ -282,6 +303,13 @@ const RecruiterDashboard = () => {
         .order("created_at", { ascending: false });
 
       setJobs(jobsData || []);
+      
+      // Show onboarding if no jobs and hasn't completed onboarding
+      if (!completedOnboarding && (!jobsData || jobsData.length === 0)) {
+        setShowOnboarding(true);
+      } else {
+        setHasCompletedOnboarding(true);
+      }
 
       // Fetch applications for recruiter's jobs with applicant profiles
       // Note: RLS policy allows recruiters to view profiles of applicants to their jobs
@@ -2043,6 +2071,20 @@ const RecruiterDashboard = () => {
           if (newSelected.size < 2) {
             setShowComparisonModal(false);
           }
+        }}
+      />
+
+      {/* Recruiter Onboarding Modal */}
+      <RecruiterOnboarding
+        open={showOnboarding}
+        onOpenChange={setShowOnboarding}
+        recruiterName={recruiterName}
+        onComplete={() => {
+          // Mark onboarding as completed
+          if (user) {
+            localStorage.setItem(`recruiter_onboarding_${user.id}`, "true");
+          }
+          setHasCompletedOnboarding(true);
         }}
       />
     </div>
