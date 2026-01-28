@@ -2,23 +2,14 @@ import { motion } from "framer-motion";
 import { MapPin, Clock, DollarSign, Bookmark, ArrowRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import VerificationBadge from "@/components/recruiter/VerificationBadge";
 import { formatDistanceToNow } from "date-fns";
-
-interface Job {
-  id: string;
-  title: string;
-  institute: string;
-  location: string;
-  salary_range: string | null;
-  job_type: string | null;
-  tags: string[] | null;
-  created_at: string;
-  description?: string | null;
-}
+import { JobWithRecruiter } from "@/hooks/useJobsWithRecruiters";
 
 interface FeaturedJobsProps {
-  jobs: Job[];
-  onJobClick: (job: Job) => void;
+  jobs: JobWithRecruiter[];
+  onJobClick: (job: JobWithRecruiter) => void;
   loading: boolean;
 }
 
@@ -86,11 +77,28 @@ const FeaturedJobs = ({ jobs, onJobClick, loading }: FeaturedJobsProps) => {
                   <Bookmark className="w-4 h-4 text-muted-foreground" />
                 </button>
 
-                <div className="mb-3">
-                  <h3 className="font-heading font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-1">
-                    {job.title}
-                  </h3>
-                  <p className="text-sm text-primary font-medium mt-1">{job.institute}</p>
+                {/* Institution Header with Avatar */}
+                <div className="flex items-start gap-3 mb-3">
+                  <Avatar className="h-10 w-10 border border-border shrink-0">
+                    <AvatarImage
+                      src={job.recruiter?.avatar_url || undefined}
+                      alt={job.institute}
+                    />
+                    <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">
+                      {job.institute.slice(0, 2).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-heading font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-1">
+                      {job.title}
+                    </h3>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <p className="text-sm text-primary font-medium truncate">{job.institute}</p>
+                      {job.recruiter?.isVerified && (
+                        <VerificationBadge status="verified" size="sm" showLabel={false} />
+                      )}
+                    </div>
+                  </div>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground mb-4">

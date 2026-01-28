@@ -40,6 +40,11 @@ interface Job {
   tags: string[] | null;
   created_at: string;
   description?: string | null;
+  recruiter?: {
+    avatar_url: string | null;
+    full_name: string | null;
+    isVerified: boolean;
+  } | null;
 }
 
 interface RecruiterInfo {
@@ -68,11 +73,24 @@ const JobDetailModal = ({ job, open, onOpenChange }: JobDetailModalProps) => {
   const [recruiterInfo, setRecruiterInfo] = useState<RecruiterInfo | null>(null);
   const [loadingRecruiter, setLoadingRecruiter] = useState(false);
 
-  // Fetch recruiter info when modal opens
+  // Fetch recruiter info when modal opens (if not already provided)
   useEffect(() => {
     if (!open || !job) {
       setRecruiterInfo(null);
       return;
+    }
+
+    // If job already has recruiter info from the list, use it
+    if (job.recruiter) {
+      setRecruiterInfo({
+        full_name: job.recruiter.full_name,
+        role: null,
+        avatar_url: job.recruiter.avatar_url,
+        headline: null,
+        bio: null,
+        isVerified: job.recruiter.isVerified,
+      });
+      // Still fetch full info for bio/headline
     }
 
     const fetchRecruiterInfo = async () => {
