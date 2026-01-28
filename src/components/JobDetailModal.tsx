@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,6 +12,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import VerificationBadge from "@/components/recruiter/VerificationBadge";
 import {
   MapPin,
   Clock,
@@ -40,6 +42,15 @@ interface Job {
   description?: string | null;
 }
 
+interface RecruiterInfo {
+  full_name: string | null;
+  role: string | null;
+  avatar_url: string | null;
+  headline: string | null;
+  bio: string | null;
+  isVerified: boolean;
+}
+
 interface JobDetailModalProps {
   job: Job | null;
   open: boolean;
@@ -54,6 +65,61 @@ const JobDetailModal = ({ job, open, onOpenChange }: JobDetailModalProps) => {
   const [applying, setApplying] = useState(false);
   const [hasApplied, setHasApplied] = useState(false);
   const [showApplyForm, setShowApplyForm] = useState(false);
+  const [recruiterInfo, setRecruiterInfo] = useState<RecruiterInfo | null>(null);
+  const [loadingRecruiter, setLoadingRecruiter] = useState(false);
+
+  // Fetch recruiter info when modal opens
+  useEffect(() => {
+    if (!open || !job) {
+      setRecruiterInfo(null);
+      return;
+    }
+
+    const fetchRecruiterInfo = async () => {
+      setLoadingRecruiter(true);
+      try {
+        // Get job with creator info (requires auth)
+        const { data: jobData, error: jobError } = await supabase
+          .from("jobs")
+          .select("created_by")
+          .eq("id", job.id)
+          .maybeSingle();
+
+        if (jobError || !jobData?.created_by) {
+          setLoadingRecruiter(false);
+          return;
+        }
+
+        // Get recruiter profile
+        const { data: profileData } = await supabase
+          .from("profiles_public")
+          .select("full_name, role, avatar_url, headline, bio")
+          .eq("id", jobData.created_by)
+          .maybeSingle();
+
+        // Check verification status
+        const { data: verificationData } = await supabase
+          .from("institution_verifications")
+          .select("status")
+          .eq("recruiter_id", jobData.created_by)
+          .eq("status", "verified")
+          .maybeSingle();
+
+        if (profileData) {
+          setRecruiterInfo({
+            ...profileData,
+            isVerified: !!verificationData,
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching recruiter info:", error);
+      } finally {
+        setLoadingRecruiter(false);
+      }
+    };
+
+    fetchRecruiterInfo();
+  }, [open, job]);
 
   if (!job) return null;
 
@@ -133,18 +199,40 @@ const JobDetailModal = ({ job, open, onOpenChange }: JobDetailModalProps) => {
           className="space-y-6"
         >
           {/* Company Info */}
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center">
-              <Building2 className="h-7 w-7 text-primary" />
-            </div>
-            <div>
-              <p className="font-medium text-foreground">{job.institute}</p>
+          <div className="flex items-start gap-4">
+            <Avatar className="h-14 w-14 border-2 border-primary/20">
+              <AvatarImage
+                src={recruiterInfo?.avatar_url || undefined}
+                alt={job.institute}
+              />
+              <AvatarFallback className="bg-primary/10 text-primary font-bold">
+                {job.institute.slice(0, 2).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <p className="font-medium text-foreground">{job.institute}</p>
+                {recruiterInfo?.isVerified && (
+                  <VerificationBadge status="verified" size="sm" showLabel={false} />
+                )}
+              </div>
+              {recruiterInfo?.headline && (
+                <p className="text-xs text-muted-foreground mt-0.5">{recruiterInfo.headline}</p>
+              )}
               <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
                 <MapPin className="h-3.5 w-3.5" />
                 <span>{job.location}</span>
               </div>
             </div>
           </div>
+
+          {/* Recruiter Bio */}
+          {recruiterInfo?.bio && (
+            <div className="p-3 rounded-lg bg-secondary/30 border border-border">
+              <p className="text-xs text-muted-foreground mb-1 font-medium">About the Institution</p>
+              <p className="text-sm text-foreground line-clamp-3">{recruiterInfo.bio}</p>
+            </div>
+          )}
 
           {/* Job Details */}
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">

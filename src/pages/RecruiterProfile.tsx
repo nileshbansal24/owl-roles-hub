@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import RecruiterNavbar from "@/components/RecruiterNavbar";
+import RecruiterProfilePreviewCard from "@/components/recruiter/RecruiterProfilePreviewCard";
+import VerificationRequestCard from "@/components/recruiter/VerificationRequestCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -18,15 +20,14 @@ import {
   MapPin,
   Briefcase,
   Linkedin,
-  Upload,
   Save,
   Loader2,
-  Globe,
-  Users,
   FileText,
   Camera,
 } from "lucide-react";
 import { motion } from "framer-motion";
+
+type VerificationStatus = "verified" | "pending" | "rejected" | "none";
 
 interface RecruiterProfileData {
   full_name: string;
@@ -48,6 +49,7 @@ const RecruiterProfile = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [verificationStatus, setVerificationStatus] = useState<VerificationStatus>("none");
   const [profile, setProfile] = useState<RecruiterProfileData>({
     full_name: "",
     university: "",
@@ -67,33 +69,50 @@ const RecruiterProfile = () => {
       return;
     }
 
-    const fetchProfile = async () => {
-      const { data, error } = await supabase
+    const fetchProfileAndVerification = async () => {
+      // Fetch profile
+      const { data: profileData, error: profileError } = await supabase
         .from("profiles")
         .select("full_name, university, role, email, phone, location, bio, linkedin_url, avatar_url, headline")
         .eq("id", user.id)
         .maybeSingle();
 
-      if (error) {
-        console.error("Error fetching profile:", error);
-      } else if (data) {
+      if (profileError) {
+        console.error("Error fetching profile:", profileError);
+      } else if (profileData) {
         setProfile({
-          full_name: data.full_name || "",
-          university: data.university || "",
-          role: data.role || "",
-          email: data.email || user.email || "",
-          phone: data.phone || "",
-          location: data.location || "",
-          bio: data.bio || "",
-          linkedin_url: data.linkedin_url || "",
-          avatar_url: data.avatar_url || "",
-          headline: data.headline || "",
+          full_name: profileData.full_name || "",
+          university: profileData.university || "",
+          role: profileData.role || "",
+          email: profileData.email || user.email || "",
+          phone: profileData.phone || "",
+          location: profileData.location || "",
+          bio: profileData.bio || "",
+          linkedin_url: profileData.linkedin_url || "",
+          avatar_url: profileData.avatar_url || "",
+          headline: profileData.headline || "",
         });
       }
+
+      // Fetch verification status
+      const { data: verificationData, error: verificationError } = await supabase
+        .from("institution_verifications")
+        .select("status")
+        .eq("recruiter_id", user.id)
+        .maybeSingle();
+
+      if (verificationError) {
+        console.error("Error fetching verification:", verificationError);
+      } else if (verificationData) {
+        setVerificationStatus(verificationData.status as VerificationStatus);
+      } else {
+        setVerificationStatus("none");
+      }
+
       setLoading(false);
     };
 
-    fetchProfile();
+    fetchProfileAndVerification();
   }, [user, navigate]);
 
   const handleInputChange = (field: keyof RecruiterProfileData, value: string) => {
@@ -230,7 +249,7 @@ const RecruiterProfile = () => {
     <div className="min-h-screen bg-background">
       <RecruiterNavbar />
 
-      <main className="container mx-auto px-4 py-8 max-w-4xl">
+      <main className="container mx-auto px-4 py-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -255,6 +274,10 @@ const RecruiterProfile = () => {
               Save Changes
             </Button>
           </div>
+
+          <div className="grid lg:grid-cols-3 gap-8">
+            {/* Left Column - Profile Forms */}
+            <div className="lg:col-span-2 space-y-8">
 
           {/* Profile Card with Logo */}
           <Card>
@@ -463,7 +486,7 @@ const RecruiterProfile = () => {
           </Card>
 
           {/* Save Button (Mobile) */}
-          <div className="md:hidden">
+          <div className="lg:hidden">
             <Button onClick={handleSaveProfile} disabled={saving} className="w-full gap-2">
               {saving ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -472,6 +495,26 @@ const RecruiterProfile = () => {
               )}
               Save Changes
             </Button>
+          </div>
+            </div>
+
+            {/* Right Column - Preview & Verification */}
+            <div className="space-y-6">
+              {/* Profile Preview Card */}
+              <RecruiterProfilePreviewCard
+                profile={profile}
+                verificationStatus={verificationStatus}
+              />
+
+              {/* Verification Request Card */}
+              {user && (
+                <VerificationRequestCard
+                  userId={user.id}
+                  status={verificationStatus}
+                  onStatusChange={setVerificationStatus}
+                />
+              )}
+            </div>
           </div>
         </motion.div>
       </main>
