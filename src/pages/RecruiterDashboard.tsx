@@ -5,6 +5,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import RecruiterNavbar from "@/components/RecruiterNavbar";
 import RecruiterOnboarding from "@/components/recruiter/RecruiterOnboarding";
+import RecruiterProgressChecklist from "@/components/recruiter/RecruiterProgressChecklist";
+import CandidateMessageModal from "@/components/recruiter/CandidateMessageModal";
 import ApplicantDetailModal from "@/components/ApplicantDetailModal";
 import CandidateComparisonModal from "@/components/CandidateComparisonModal";
 import InterviewScheduleModal from "@/components/InterviewScheduleModal";
@@ -245,6 +247,17 @@ const RecruiterDashboard = () => {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [recruiterName, setRecruiterName] = useState<string | undefined>(undefined);
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
+  const [hasCompletedProfile, setHasCompletedProfile] = useState(false);
+  const [hasReviewedCandidate, setHasReviewedCandidate] = useState(false);
+  
+  // Messaging state
+  const [showMessageModal, setShowMessageModal] = useState(false);
+  const [messageRecipient, setMessageRecipient] = useState<{
+    name: string;
+    email: string;
+    jobTitle?: string;
+    instituteName?: string;
+  } | null>(null);
 
   // Calculate profile completeness
   const calculateCompleteness = (profile: Profile | null): number => {
@@ -280,20 +293,35 @@ const RecruiterDashboard = () => {
     const fetchData = async () => {
       setLoading(true);
 
-      // Fetch recruiter's profile for name
+      // Fetch recruiter's profile for name and check completeness
       const { data: profileData } = await supabase
         .from("profiles")
-        .select("full_name")
+        .select("full_name, bio, university, location, headline")
         .eq("id", user.id)
         .maybeSingle();
 
       if (profileData?.full_name) {
         setRecruiterName(profileData.full_name);
       }
+      
+      // Check if recruiter has a reasonably complete profile
+      const profileFields = [
+        profileData?.full_name,
+        profileData?.bio || profileData?.headline,
+        profileData?.university,
+        profileData?.location,
+      ];
+      const completedFields = profileFields.filter(Boolean).length;
+      setHasCompletedProfile(completedFields >= 3);
 
       // Check if onboarding was completed (stored in localStorage)
       const onboardingKey = `recruiter_onboarding_${user.id}`;
       const completedOnboarding = localStorage.getItem(onboardingKey);
+      
+      // Check if recruiter has reviewed any candidate (saved candidates or viewed applications)
+      const reviewedKey = `recruiter_reviewed_${user.id}`;
+      const hasReviewed = localStorage.getItem(reviewedKey);
+      setHasReviewedCandidate(!!hasReviewed);
       
       // Fetch recruiter's jobs
       const { data: jobsData } = await supabase
@@ -533,6 +561,12 @@ const RecruiterDashboard = () => {
 
   // Handle viewing a candidate from Search tab
   const handleViewCandidate = async (candidate: Profile) => {
+    // Mark candidate as reviewed
+    if (user) {
+      localStorage.setItem(`recruiter_reviewed_${user.id}`, "true");
+      setHasReviewedCandidate(true);
+    }
+    
     // Fetch full profile data including extended fields (experience, education, etc.)
     const { data: fullProfile, error } = await supabase
       .from("profiles")
@@ -548,6 +582,17 @@ const RecruiterDashboard = () => {
       setSelectedCandidate((fullProfile as unknown as Profile) || candidate);
     }
     setShowCandidateModal(true);
+  };
+  
+  // Handle sending a message to a candidate
+  const handleSendMessage = (candidate: Profile, jobTitle?: string, instituteName?: string) => {
+    setMessageRecipient({
+      name: candidate.full_name || "Candidate",
+      email: candidate.email || "",
+      jobTitle,
+      instituteName,
+    });
+    setShowMessageModal(true);
   };
 
   // Handle contacting a candidate via email
@@ -1131,6 +1176,18 @@ const RecruiterDashboard = () => {
             </Card>
           </motion.div>
 
+          {/* Progress Checklist for new recruiters */}
+          {(!hasCompletedProfile || jobs.length === 0 || !hasReviewedCandidate) && (
+            <div className="mb-8">
+              <RecruiterProgressChecklist
+                hasCompletedProfile={hasCompletedProfile}
+                hasPostedJob={jobs.length > 0}
+                hasReviewedCandidate={hasReviewedCandidate}
+                recruiterName={recruiterName}
+              />
+            </div>
+          )}
+
           {/* Tabs */}
           <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
             <TabsList className="bg-secondary/50 flex-wrap h-auto gap-1 p-1">
@@ -1332,10 +1389,10 @@ const RecruiterDashboard = () => {
                                 <Button 
                                   size="sm" 
                                   className="gap-1"
-                                  onClick={() => handleContactCandidate(candidate)}
+                                  onClick={() => handleSendMessage(candidate)}
                                 >
                                   <Mail className="h-4 w-4" />
-                                  Contact
+                                  Message
                                 </Button>
                               </div>
                             </div>
@@ -1464,10 +1521,10 @@ const RecruiterDashboard = () => {
                                 <Button 
                                   size="sm" 
                                   className="gap-1"
-                                  onClick={() => handleContactCandidate(candidate)}
+                                  onClick={() => handleSendMessage(candidate)}
                                 >
                                   <Mail className="h-4 w-4" />
-                                  Contact
+                                  Message
                                 </Button>
                               </div>
                             </div>
@@ -2087,6 +2144,18 @@ const RecruiterDashboard = () => {
           setHasCompletedOnboarding(true);
         }}
       />
+
+      {/* Candidate Message Modal */}
+      {messageRecipient && (
+        <CandidateMessageModal
+          open={showMessageModal}
+          onOpenChange={setShowMessageModal}
+          candidateName={messageRecipient.name}
+          candidateEmail={messageRecipient.email}
+          jobTitle={messageRecipient.jobTitle}
+          instituteName={messageRecipient.instituteName}
+        />
+      )}
     </div>
   );
 };
