@@ -17,3 +17,6 @@ verify_jwt = false
 
 [functions.fetch-orcid]
 verify_jwt = false
+
+[functions.send-recruiter-message]
+verify_jwt = false
