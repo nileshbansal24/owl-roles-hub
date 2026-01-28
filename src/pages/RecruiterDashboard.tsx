@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import Navbar from "@/components/Navbar";
+import RecruiterNavbar from "@/components/RecruiterNavbar";
 import ApplicantDetailModal from "@/components/ApplicantDetailModal";
 import CandidateComparisonModal from "@/components/CandidateComparisonModal";
 import InterviewScheduleModal from "@/components/InterviewScheduleModal";
@@ -178,19 +178,44 @@ const itemVariants = {
 const RecruiterDashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [applications, setApplications] = useState<Application[]>([]);
   const [candidates, setCandidates] = useState<Profile[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [roleSearchQuery, setRoleSearchQuery] = useState("");
   const [locationFilter, setLocationFilter] = useState("");
   const [experienceFilter, setExperienceFilter] = useState("");
   const [selectedJobFilter, setSelectedJobFilter] = useState<string>("all");
   const [selectedStatusFilter, setSelectedStatusFilter] = useState<string>("all");
   const [employmentStatusFilter, setEmploymentStatusFilter] = useState<string>("all");
   const [completenessFilter, setCompletenessFilter] = useState(false);
-  const [activeTab, setActiveTab] = useState("resdex");
+  
+  // Sync activeTab with URL params
+  const urlTab = searchParams.get("tab");
+  const [activeTab, setActiveTab] = useState(urlTab || "resdex");
+  
+  // Update URL when tab changes
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    if (value === "resdex") {
+      setSearchParams({});
+    } else {
+      setSearchParams({ tab: value });
+    }
+  };
+  
+  // Sync state when URL changes (e.g., from navbar)
+  useEffect(() => {
+    const tabFromUrl = searchParams.get("tab");
+    if (tabFromUrl && tabFromUrl !== activeTab) {
+      setActiveTab(tabFromUrl);
+    } else if (!tabFromUrl && activeTab !== "resdex") {
+      setActiveTab("resdex");
+    }
+  }, [searchParams]);
   const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
   const [showApplicantModal, setShowApplicantModal] = useState(false);
   const [selectedAppIds, setSelectedAppIds] = useState<Set<string>>(new Set());
@@ -971,7 +996,7 @@ const RecruiterDashboard = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
-        <Navbar />
+        <RecruiterNavbar />
         <div className="flex items-center justify-center min-h-screen">
           <motion.div
             animate={{ rotate: 360 }}
@@ -986,7 +1011,7 @@ const RecruiterDashboard = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
+      <RecruiterNavbar />
 
       <main className="pt-20 pb-16">
         <div className="container mx-auto px-4">
@@ -1079,11 +1104,11 @@ const RecruiterDashboard = () => {
           </motion.div>
 
           {/* Tabs */}
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="bg-secondary/50">
+          <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
+            <TabsList className="bg-secondary/50 flex-wrap h-auto gap-1 p-1">
               <TabsTrigger value="resdex" className="gap-2">
                 <Search className="h-4 w-4" />
-                Search
+                Find Candidates
               </TabsTrigger>
               <TabsTrigger value="saved" className="gap-2">
                 <Bookmark className="h-4 w-4" />
@@ -1103,7 +1128,7 @@ const RecruiterDashboard = () => {
               </TabsTrigger>
             </TabsList>
 
-            {/* Resdex Search Tab */}
+            {/* Find Candidates Tab */}
             <TabsContent value="resdex">
               <motion.div
                 variants={containerVariants}
@@ -1111,23 +1136,72 @@ const RecruiterDashboard = () => {
                 animate="visible"
                 className="space-y-6"
               >
-                {/* Search Filters */}
+                {/* Role-Based Search - Primary */}
+                <motion.div variants={itemVariants} className="card-elevated p-6 border-2 border-primary/20">
+                  <h3 className="font-heading font-semibold text-xl mb-2 flex items-center gap-2">
+                    <User className="h-5 w-5 text-primary" />
+                    Search by Role/Position
+                  </h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Find candidates by their current role or position (e.g., Dean-Research, Professor, HOD)
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    <div className="flex-1">
+                      <Input
+                        placeholder="Enter role to search... (e.g., Dean-Research, Professor, HOD)"
+                        value={roleSearchQuery}
+                        onChange={(e) => setRoleSearchQuery(e.target.value)}
+                        className="h-12 text-base"
+                      />
+                    </div>
+                    <Button 
+                      className="h-12 px-8 gap-2"
+                      onClick={() => {
+                        if (roleSearchQuery.trim()) {
+                          setSearchQuery(roleSearchQuery);
+                        }
+                      }}
+                    >
+                      <Search className="h-5 w-5" />
+                      Search Candidates
+                    </Button>
+                  </div>
+                  {/* Quick role suggestions */}
+                  <div className="flex flex-wrap gap-2 mt-4">
+                    <span className="text-sm text-muted-foreground">Quick search:</span>
+                    {["Dean", "Professor", "HOD", "Research", "Director", "Principal", "Lecturer"].map((role) => (
+                      <Badge 
+                        key={role}
+                        variant="outline" 
+                        className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors"
+                        onClick={() => {
+                          setRoleSearchQuery(role);
+                          setSearchQuery(role);
+                        }}
+                      >
+                        {role}
+                      </Badge>
+                    ))}
+                  </div>
+                </motion.div>
+
+                {/* Additional Filters */}
                 <motion.div variants={itemVariants} className="card-elevated p-6">
                   <h3 className="font-heading font-semibold text-lg mb-4 flex items-center gap-2">
-                    <Search className="h-5 w-5 text-primary" />
-                    Search Candidates
+                    <Filter className="h-5 w-5 text-primary" />
+                    Refine Your Search
                   </h3>
                   <div className="grid md:grid-cols-4 gap-4">
                     <div className="md:col-span-2">
                       <Input
-                        placeholder="Search by name, skills, role..."
+                        placeholder="Search by name, skills, keywords..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className="h-11"
                       />
                     </div>
                     <Input
-                      placeholder="Location"
+                      placeholder="Location / University"
                       value={locationFilter}
                       onChange={(e) => setLocationFilter(e.target.value)}
                       className="h-11"
@@ -1148,11 +1222,26 @@ const RecruiterDashboard = () => {
                   <div className="flex items-center justify-between mt-4 pt-4 border-t">
                     <p className="text-sm text-muted-foreground">
                       Showing <span className="font-medium text-foreground">{filteredCandidates.length}</span> candidates
+                      {searchQuery && (
+                        <span> matching "<span className="text-primary font-medium">{searchQuery}</span>"</span>
+                      )}
                     </p>
-                    <Button variant="outline" size="sm" className="gap-2">
-                      <Filter className="h-4 w-4" />
-                      More Filters
-                    </Button>
+                    {(searchQuery || locationFilter || experienceFilter) && (
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="gap-2"
+                        onClick={() => {
+                          setSearchQuery("");
+                          setRoleSearchQuery("");
+                          setLocationFilter("");
+                          setExperienceFilter("");
+                        }}
+                      >
+                        <X className="h-4 w-4" />
+                        Clear Filters
+                      </Button>
+                    )}
                   </div>
                 </motion.div>
 
