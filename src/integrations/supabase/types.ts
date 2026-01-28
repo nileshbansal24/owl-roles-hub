@@ -59,6 +59,36 @@ export type Database = {
           },
         ]
       }
+      institution_verifications: {
+        Row: {
+          created_at: string
+          id: string
+          recruiter_id: string
+          status: string
+          updated_at: string
+          verification_notes: string | null
+          verified_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          recruiter_id: string
+          status?: string
+          updated_at?: string
+          verification_notes?: string | null
+          verified_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          recruiter_id?: string
+          status?: string
+          updated_at?: string
+          verification_notes?: string | null
+          verified_at?: string | null
+        }
+        Relationships: []
+      }
       interviews: {
         Row: {
           application_id: string
@@ -572,6 +602,7 @@ export type Database = {
     }
     Functions: {
       is_recruiter: { Args: { _user_id: string }; Returns: boolean }
+      is_verified_recruiter: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
