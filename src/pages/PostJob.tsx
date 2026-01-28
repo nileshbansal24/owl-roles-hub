@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import Navbar from "@/components/Navbar";
+import RecruiterNavbar from "@/components/RecruiterNavbar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -84,7 +84,7 @@ const PostJob = () => {
           title: "Job posted!",
           description: "Your job listing has been published successfully.",
         });
-        navigate("/");
+        navigate("/recruiter-dashboard");
       }
     } catch (error) {
       toast({
@@ -99,16 +99,16 @@ const PostJob = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
+      <RecruiterNavbar />
 
       <main className="pt-24 pb-16">
         <div className="container mx-auto px-4 max-w-2xl">
           <Link
-            to="/"
+            to="/recruiter-dashboard"
             className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />
-            Back to jobs
+            Back to Dashboard
           </Link>
 
           <div className="card-elevated p-8 animate-fade-in">
@@ -214,7 +214,7 @@ const PostJob = () => {
               </div>
 
               <div className="flex gap-4 pt-4">
-                <Button type="button" variant="outline" className="flex-1" onClick={() => navigate("/")}>
+                <Button type="button" variant="outline" className="flex-1" onClick={() => navigate("/recruiter-dashboard")}>
                   Cancel
                 </Button>
                 <Button type="submit" className="flex-1" disabled={loading}>
