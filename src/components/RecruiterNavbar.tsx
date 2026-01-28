@@ -15,7 +15,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { Moon, Sun, LogOut, Plus, LayoutDashboard, Menu, Calendar, User } from "lucide-react";
+import { Moon, Sun, LogOut, Plus, LayoutDashboard, Menu, Calendar, User, Building2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useState } from "react";
@@ -39,8 +39,9 @@ const RecruiterNavbar = () => {
 
   const navLinks = [
     { label: "Dashboard", to: "/recruiter-dashboard", icon: LayoutDashboard },
+    { label: "My Profile", to: "/recruiter-profile", icon: Building2 },
     { label: "Post a Job", to: "/post-job", icon: Plus },
-    { label: "Scheduled Meetings", to: "/recruiter-dashboard?tab=interviews", icon: Calendar },
+    { label: "Interviews", to: "/recruiter-dashboard?tab=interviews", icon: Calendar },
   ];
 
   const handleNavClick = (to: string) => {
@@ -129,6 +130,12 @@ const RecruiterNavbar = () => {
                     </div>
                   </div>
                   <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link to="/recruiter-profile" className="cursor-pointer">
+                      <Building2 className="mr-2 h-4 w-4" />
+                      My Profile
+                    </Link>
+                  </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link to="/recruiter-dashboard" className="cursor-pointer">
                       <LayoutDashboard className="mr-2 h-4 w-4" />

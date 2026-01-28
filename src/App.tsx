@@ -10,6 +10,7 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import CandidateDashboard from "./pages/CandidateDashboard";
 import RecruiterDashboard from "./pages/RecruiterDashboard";
+import RecruiterProfile from "./pages/RecruiterProfile";
 import PostJob from "./pages/PostJob";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "@/components/ProtectedRoute";
@@ -50,6 +51,14 @@ const App = () => {
                   element={
                     <ProtectedRoute>
                       <PostJob />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/recruiter-profile"
+                  element={
+                    <ProtectedRoute>
+                      <RecruiterProfile />
                     </ProtectedRoute>
                   }
                 />
