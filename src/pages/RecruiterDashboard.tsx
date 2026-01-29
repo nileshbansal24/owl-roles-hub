@@ -77,6 +77,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { formatDistanceToNow, format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
+import { transformExperienceToDisplay, type DBExperience } from "@/lib/profileUtils";
 
 interface ExperienceItem {
   year: string;
@@ -367,10 +368,24 @@ const RecruiterDashboard = () => {
             .select("id, full_name, avatar_url, university, role, bio, years_experience, location, headline, skills, user_type, resume_url, experience, education, research_papers, achievements, subjects, teaching_philosophy, professional_summary")
             .eq("id", app.applicant_id)
             .maybeSingle();
+
+          // Normalize experience JSON to UI shape (role/institution/year) so titles render correctly.
+          // Some profiles store experience entries in DB format (title/company/start_date/end_date).
+          const normalizedProfile = profileData
+            ? {
+                ...profileData,
+                experience:
+                  Array.isArray((profileData as any).experience)
+                    ? transformExperienceToDisplay(
+                        (profileData as any).experience as DBExperience[]
+                      )
+                    : (profileData as any).experience,
+              }
+            : profileData;
           
           applicationsWithProfiles.push({
             ...app,
-            profiles: profileData,
+            profiles: normalizedProfile as any,
           } as unknown as Application);
         }
       }
