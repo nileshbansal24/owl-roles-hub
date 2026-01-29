@@ -53,14 +53,34 @@ export interface DisplayResearchPaper {
 }
 
 // Transform DB experience to display format
+// Handles both old format (role, institution, year) and new format (title, company, start_date, end_date)
 export function transformExperienceToDisplay(dbExp: DBExperience[]): DisplayExperience[] {
-  return dbExp.map((exp) => ({
-    year: exp.start_date ? `${exp.start_date} - ${exp.end_date || "Present"}` : "",
-    role: exp.title || "",
-    institution: exp.company || "",
-    description: exp.description || "",
-    isCurrent: exp.current || (!exp.end_date && !!exp.start_date),
-  }));
+  return dbExp.map((exp) => {
+    // Cast to unknown first to check for old format fields
+    const expAny = exp as unknown as Record<string, unknown>;
+    // Check if this is old format data (has 'role' or 'institution' or 'year' as direct fields)
+    const isOldFormat = 'role' in expAny || ('institution' in expAny && !('company' in expAny)) || ('year' in expAny && !('start_date' in expAny));
+    
+    if (isOldFormat) {
+      // Old format: { role, institution, year, description, isCurrent }
+      return {
+        year: (expAny.year as string) || "",
+        role: (expAny.role as string) || exp.title || "",
+        institution: (expAny.institution as string) || exp.company || "",
+        description: exp.description || "",
+        isCurrent: Boolean(expAny.isCurrent) || exp.current || false,
+      };
+    }
+    
+    // New format: { title, company, start_date, end_date, description, current }
+    return {
+      year: exp.start_date ? `${exp.start_date} - ${exp.end_date || "Present"}` : "",
+      role: exp.title || "",
+      institution: exp.company || "",
+      description: exp.description || "",
+      isCurrent: exp.current || (!exp.end_date && !!exp.start_date),
+    };
+  });
 }
 
 // Transform display experience to DB format
