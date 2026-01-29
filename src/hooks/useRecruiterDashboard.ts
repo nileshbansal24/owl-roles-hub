@@ -211,6 +211,81 @@ export const useRecruiterDashboard = () => {
     setHasCompletedOnboarding(true);
   }, [user]);
 
+  // Refetch applications helper for realtime updates
+  const refetchApplications = useCallback(async () => {
+    if (!user) return;
+    
+    const { data: appsData, error: appsError } = await supabase
+      .from("job_applications")
+      .select(`
+        *,
+        jobs!inner(title, institute, created_by)
+      `)
+      .eq("jobs.created_by", user.id)
+      .order("created_at", { ascending: false });
+
+    if (appsError) {
+      console.error("Error refetching applications:", appsError);
+      return;
+    }
+
+    const applicationsWithProfiles: Application[] = [];
+    if (appsData) {
+      for (const app of appsData) {
+        const { data: appProfileData } = await supabase
+          .from("profiles")
+          .select("id, full_name, avatar_url, university, role, bio, years_experience, location, headline, skills, user_type, resume_url, experience, education, research_papers, achievements, subjects, teaching_philosophy, professional_summary")
+          .eq("id", app.applicant_id)
+          .maybeSingle();
+
+        const normalizedProfile = appProfileData
+          ? {
+              ...appProfileData,
+              experience:
+                Array.isArray((appProfileData as any).experience)
+                  ? transformExperienceToDisplay(
+                      (appProfileData as any).experience as DBExperience[]
+                    )
+                  : (appProfileData as any).experience,
+            }
+          : appProfileData;
+        
+        applicationsWithProfiles.push({
+          ...app,
+          profiles: normalizedProfile as any,
+        } as unknown as Application);
+      }
+    }
+
+    setApplications(applicationsWithProfiles);
+  }, [user]);
+
+  // Realtime subscription for job_applications
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel('job_applications_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'job_applications',
+        },
+        (payload) => {
+          console.log('Realtime application update:', payload);
+          // Refetch to get enriched data with profiles
+          refetchApplications();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, refetchApplications]);
+
   // Initial data fetch
   useEffect(() => {
     if (!user) {
