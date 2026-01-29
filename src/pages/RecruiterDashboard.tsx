@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import RecruiterNavbar from "@/components/RecruiterNavbar";
+import RecruiterLayout from "@/components/recruiter/RecruiterLayout";
 import RecruiterOnboarding from "@/components/recruiter/RecruiterOnboarding";
 import RecruiterProgressChecklist from "@/components/recruiter/RecruiterProgressChecklist";
 import CandidateMessageModal from "@/components/recruiter/CandidateMessageModal";
@@ -1098,9 +1098,8 @@ const RecruiterDashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background">
-        <RecruiterNavbar />
-        <div className="flex items-center justify-center min-h-screen">
+      <RecruiterLayout hasJobs={false} title="Loading...">
+        <div className="flex items-center justify-center h-full">
           <motion.div
             animate={{ rotate: 360 }}
             transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
@@ -1108,37 +1107,14 @@ const RecruiterDashboard = () => {
             <Loader2 className="h-8 w-8 text-primary" />
           </motion.div>
         </div>
-      </div>
+      </RecruiterLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <RecruiterNavbar />
-
-      <main className="pt-20 pb-16">
-        <div className="container mx-auto px-4">
-          {/* Header */}
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-8"
-          >
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <div>
-                <h1 className="font-heading text-2xl md:text-3xl font-bold text-foreground">
-                  Recruiter Dashboard
-                </h1>
-                <p className="text-muted-foreground mt-1">
-                  Manage your job postings and find top talent
-                </p>
-              </div>
-              <Button onClick={() => navigate("/post-job")} className="gap-2">
-                <Plus className="h-4 w-4" />
-                Post New Job
-              </Button>
-            </div>
-          </motion.div>
+    <RecruiterLayout hasJobs={jobs.length > 0} title="Recruiter Dashboard">
+      <div className="p-6 space-y-6">
+        {/* Stats Cards */}
 
           {/* Stats Cards */}
           <motion.div
@@ -1218,33 +1194,15 @@ const RecruiterDashboard = () => {
             </div>
           )}
 
-          {/* Tabs */}
+          {/* Tabs - TabsList is hidden since navigation is handled by sidebar */}
           <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
-            <TabsList className="bg-secondary/50 flex-wrap h-auto gap-1 p-1">
-              <TabsTrigger value="resdex" className="gap-2">
-                <Search className="h-4 w-4" />
-                Find Candidates
-              </TabsTrigger>
-              <TabsTrigger value="saved" className="gap-2">
-                <Bookmark className="h-4 w-4" />
-                Saved ({savedCandidateIds.size})
-              </TabsTrigger>
-              <TabsTrigger value="interviews" className="gap-2">
-                <CalendarDays className="h-4 w-4" />
-                Interviews ({interviews.length})
-              </TabsTrigger>
-              <TabsTrigger value="applications" className="gap-2">
-                <FileText className="h-4 w-4" />
-                Applications ({applications.length})
-              </TabsTrigger>
-              <TabsTrigger value="jobs" className="gap-2">
-                <Briefcase className="h-4 w-4" />
-                My Jobs ({jobs.length})
-              </TabsTrigger>
-              <TabsTrigger value="messages" className="gap-2">
-                <Mail className="h-4 w-4" />
-                Messages
-              </TabsTrigger>
+            <TabsList className="sr-only">
+              <TabsTrigger value="resdex">Find Candidates</TabsTrigger>
+              <TabsTrigger value="saved">Saved</TabsTrigger>
+              <TabsTrigger value="interviews">Interviews</TabsTrigger>
+              <TabsTrigger value="applications">Applications</TabsTrigger>
+              <TabsTrigger value="jobs">My Jobs</TabsTrigger>
+              <TabsTrigger value="messages">Messages</TabsTrigger>
             </TabsList>
 
             {/* Find Candidates Tab */}
@@ -2081,7 +2039,6 @@ const RecruiterDashboard = () => {
             </TabsContent>
           </Tabs>
         </div>
-      </main>
 
       {/* Applicant Detail Modal */}
       <ApplicantDetailModal
@@ -2198,7 +2155,7 @@ const RecruiterDashboard = () => {
           instituteName={messageRecipient.instituteName}
         />
       )}
-    </div>
+    </RecruiterLayout>
   );
 };
 
