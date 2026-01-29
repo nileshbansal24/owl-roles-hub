@@ -596,8 +596,18 @@ const RecruiterDashboard = () => {
       console.error("Error fetching full profile:", error);
       // Fall back to the partial profile from public view
       setSelectedCandidate(candidate);
+    } else if (fullProfile) {
+      // Normalize experience JSON to UI shape (role/institution/year) so titles render correctly
+      const normalizedProfile = {
+        ...fullProfile,
+        experience:
+          Array.isArray((fullProfile as any).experience)
+            ? transformExperienceToDisplay((fullProfile as any).experience as DBExperience[])
+            : (fullProfile as any).experience,
+      };
+      setSelectedCandidate(normalizedProfile as unknown as Profile);
     } else {
-      setSelectedCandidate((fullProfile as unknown as Profile) || candidate);
+      setSelectedCandidate(candidate);
     }
     setShowCandidateModal(true);
   };
