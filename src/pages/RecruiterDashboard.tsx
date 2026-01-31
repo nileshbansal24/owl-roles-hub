@@ -289,6 +289,7 @@ const RecruiterDashboard = () => {
               onSaveCandidate={handleSaveCandidate}
               onMessageCandidate={(candidate) => handleSendMessage(candidate)}
               onSaveNote={handleSaveNote}
+              isLoading={loading}
             />
           </TabsContent>
 
@@ -302,6 +303,7 @@ const RecruiterDashboard = () => {
               onSaveCandidate={handleSaveCandidate}
               onMessageCandidate={(candidate) => handleSendMessage(candidate)}
               onSaveNote={handleSaveNote}
+              isLoading={loading}
             />
           </TabsContent>
 
@@ -315,6 +317,7 @@ const RecruiterDashboard = () => {
                 setShowInterviewDetailsModal(true);
               }}
               onSendReminder={handleSendInterviewReminder}
+              isLoading={loading}
             />
           </TabsContent>
 
@@ -338,6 +341,7 @@ const RecruiterDashboard = () => {
               jobs={jobs}
               applications={applications}
               onViewJobApplications={handleViewJobApplications}
+              isLoading={loading}
             />
           </TabsContent>
 

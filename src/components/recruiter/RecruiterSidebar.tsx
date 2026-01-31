@@ -1,4 +1,5 @@
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import {
   Sidebar,
@@ -41,7 +42,7 @@ const RecruiterSidebar = ({ hasJobs = false }: RecruiterSidebarProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
-  const { state } = useSidebar();
+  const { state, setOpenMobile } = useSidebar();
   const isCollapsed = state === "collapsed";
 
   const currentTab = searchParams.get("tab") || "resdex";
@@ -89,6 +90,8 @@ const RecruiterSidebar = ({ hasJobs = false }: RecruiterSidebarProps) => {
   ];
 
   const handleNavClick = (tab: string) => {
+    // Close mobile sidebar on navigation
+    setOpenMobile(false);
     if (tab === "resdex") {
       navigate("/recruiter-dashboard");
     } else {
@@ -125,17 +128,22 @@ const RecruiterSidebar = ({ hasJobs = false }: RecruiterSidebarProps) => {
       <SidebarContent className="px-2 py-4">
         {/* Post Job Button */}
         <div className="px-2 mb-4">
-          <Button
-            onClick={() => navigate("/post-job")}
-            className={cn(
-              "w-full justify-start gap-2",
-              isCollapsed && "justify-center px-0"
-            )}
-            size={isCollapsed ? "icon" : "default"}
-          >
-            <Plus className="h-4 w-4" />
-            {!isCollapsed && <span>Post a Job</span>}
-          </Button>
+          <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+            <Button
+              onClick={() => {
+                setOpenMobile(false);
+                navigate("/post-job");
+              }}
+              className={cn(
+                "w-full justify-start gap-2",
+                isCollapsed && "justify-center px-0"
+              )}
+              size={isCollapsed ? "icon" : "default"}
+            >
+              <Plus className="h-4 w-4" />
+              {!isCollapsed && <span>Post a Job</span>}
+            </Button>
+          </motion.div>
         </div>
 
         {/* Main Navigation */}
@@ -154,12 +162,17 @@ const RecruiterSidebar = ({ hasJobs = false }: RecruiterSidebarProps) => {
                     isActive={isActive(item.tab)}
                     tooltip={item.title}
                     className={cn(
-                      "transition-colors",
+                      "transition-all duration-200",
                       isActive(item.tab) &&
                         "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
                     )}
                   >
-                    <item.icon className="h-4 w-4" />
+                    <motion.div
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <item.icon className="h-4 w-4" />
+                    </motion.div>
                     {!isCollapsed && <span>{item.title}</span>}
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -179,21 +192,35 @@ const RecruiterSidebar = ({ hasJobs = false }: RecruiterSidebarProps) => {
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton
-                  onClick={() => navigate("/recruiter-profile")}
+                  onClick={() => {
+                    setOpenMobile(false);
+                    navigate("/recruiter-profile");
+                  }}
                   tooltip="My Profile"
                   isActive={location.pathname === "/recruiter-profile"}
+                  className="transition-all duration-200"
                 >
                   <Building2 className="h-4 w-4" />
                   {!isCollapsed && <span>My Profile</span>}
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton onClick={toggleTheme} tooltip="Toggle Theme">
-                  {theme === "light" ? (
-                    <Moon className="h-4 w-4" />
-                  ) : (
-                    <Sun className="h-4 w-4" />
-                  )}
+                <SidebarMenuButton 
+                  onClick={toggleTheme} 
+                  tooltip="Toggle Theme"
+                  className="transition-all duration-200"
+                >
+                  <motion.div
+                    initial={false}
+                    animate={{ rotate: theme === "dark" ? 180 : 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    {theme === "light" ? (
+                      <Moon className="h-4 w-4" />
+                    ) : (
+                      <Sun className="h-4 w-4" />
+                    )}
+                  </motion.div>
                   {!isCollapsed && (
                     <span>{theme === "light" ? "Dark Mode" : "Light Mode"}</span>
                   )}
