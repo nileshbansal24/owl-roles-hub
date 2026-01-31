@@ -198,6 +198,18 @@ const CandidateCard = ({
                 </div>
               )}
               
+              {/* Citation count */}
+              {candidate.scopus_metrics?.citation_count != null && candidate.scopus_metrics.citation_count > 0 && (
+                <div className="flex items-center gap-1 text-sm">
+                  <svg className="h-3.5 w-3.5 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V21" />
+                    <path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3" />
+                  </svg>
+                  <span className="font-semibold">{candidate.scopus_metrics.citation_count}</span>
+                  <span className="text-muted-foreground text-xs">citations</span>
+                </div>
+              )}
+              
               {/* ORCID link */}
               {candidate.orcid_id && (
                 <a
