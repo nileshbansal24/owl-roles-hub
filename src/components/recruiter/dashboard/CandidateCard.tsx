@@ -16,6 +16,9 @@ import {
   Edit3,
   Save,
   Loader2,
+  FileText,
+  TrendingUp,
+  ExternalLink,
 } from "lucide-react";
 import type { Profile } from "@/types/recruiter";
 
@@ -165,6 +168,64 @@ const CandidateCard = ({
                 </Badge>
               )}
             </div>
+          )}
+
+          {/* Scopus Metrics & Academic Identity - Compact View */}
+          {(candidate.scopus_metrics || candidate.manual_h_index || candidate.orcid_id || candidate.scopus_link) && (
+            <motion.div 
+              className="flex flex-wrap items-center gap-3 mt-3 pt-3 border-t border-border/50"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.15 }}
+            >
+              {/* h-index */}
+              {(candidate.scopus_metrics?.h_index != null || candidate.manual_h_index != null) && (
+                <div className="flex items-center gap-1 text-sm">
+                  <TrendingUp className="h-3.5 w-3.5 text-primary" />
+                  <span className="font-semibold text-primary">
+                    {candidate.scopus_metrics?.h_index ?? candidate.manual_h_index}
+                  </span>
+                  <span className="text-muted-foreground text-xs">h-index</span>
+                </div>
+              )}
+              
+              {/* Document count */}
+              {candidate.scopus_metrics?.document_count != null && (
+                <div className="flex items-center gap-1 text-sm">
+                  <FileText className="h-3.5 w-3.5 text-muted-foreground" />
+                  <span className="font-semibold">{candidate.scopus_metrics.document_count}</span>
+                  <span className="text-muted-foreground text-xs">docs</span>
+                </div>
+              )}
+              
+              {/* ORCID link */}
+              {candidate.orcid_id && (
+                <a
+                  href={`https://orcid.org/${candidate.orcid_id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-[#A6CE39]/10 text-[#A6CE39] hover:bg-[#A6CE39]/20 transition-colors"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  ORCID
+                  <ExternalLink className="h-3 w-3" />
+                </a>
+              )}
+              
+              {/* Scopus link */}
+              {candidate.scopus_link && (
+                <a
+                  href={candidate.scopus_link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-[#E9711C]/10 text-[#E9711C] hover:bg-[#E9711C]/20 transition-colors"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  Scopus
+                  <ExternalLink className="h-3 w-3" />
+                </a>
+              )}
+            </motion.div>
           )}
 
           {/* Private Notes Section */}
