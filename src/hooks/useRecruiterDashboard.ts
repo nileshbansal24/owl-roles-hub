@@ -234,7 +234,7 @@ export const useRecruiterDashboard = () => {
       for (const app of appsData) {
         const { data: appProfileData } = await supabase
           .from("profiles")
-          .select("id, full_name, avatar_url, university, role, bio, years_experience, location, headline, skills, user_type, resume_url, experience, education, research_papers, achievements, subjects, teaching_philosophy, professional_summary")
+          .select("id, full_name, avatar_url, university, role, bio, years_experience, location, headline, skills, user_type, resume_url, experience, education, research_papers, achievements, subjects, teaching_philosophy, professional_summary, orcid_id, scopus_link, scopus_metrics, manual_h_index")
           .eq("id", app.applicant_id)
           .maybeSingle();
 
@@ -357,7 +357,7 @@ export const useRecruiterDashboard = () => {
         for (const app of appsData) {
           const { data: appProfileData } = await supabase
             .from("profiles")
-            .select("id, full_name, avatar_url, university, role, bio, years_experience, location, headline, skills, user_type, resume_url, experience, education, research_papers, achievements, subjects, teaching_philosophy, professional_summary")
+            .select("id, full_name, avatar_url, university, role, bio, years_experience, location, headline, skills, user_type, resume_url, experience, education, research_papers, achievements, subjects, teaching_philosophy, professional_summary, orcid_id, scopus_link, scopus_metrics, manual_h_index")
             .eq("id", app.applicant_id)
             .maybeSingle();
 
