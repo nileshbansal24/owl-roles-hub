@@ -12,6 +12,8 @@ import CandidateDashboard from "./pages/CandidateDashboard";
 import RecruiterDashboard from "./pages/RecruiterDashboard";
 import RecruiterProfile from "./pages/RecruiterProfile";
 import AdminVerification from "./pages/AdminVerification";
+import AdminLogin from "./pages/AdminLogin";
+import AdminDashboard from "./pages/AdminDashboard";
 import PostJob from "./pages/PostJob";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "@/components/ProtectedRoute";
@@ -68,6 +70,16 @@ const App = () => {
                   element={
                     <ProtectedRoute>
                       <AdminVerification />
+                    </ProtectedRoute>
+                  }
+                />
+                {/* Hidden Admin Panel - not linked from anywhere */}
+                <Route path="/adpanel" element={<AdminLogin />} />
+                <Route
+                  path="/adpanel/dashboard"
+                  element={
+                    <ProtectedRoute>
+                      <AdminDashboard />
                     </ProtectedRoute>
                   }
                 />
