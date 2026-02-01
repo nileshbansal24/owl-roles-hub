@@ -33,5 +33,5 @@ jobs:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: >
             pages deploy dist
-            --project-name=ownroles
+            --project-name=owlroles
             --branch=${{ github.head_ref || github.ref_name }}
