@@ -117,7 +117,7 @@ const RecruiterSidebar = ({ hasJobs = false }: RecruiterSidebarProps) => {
           <img 
             src={theme === "dark" ? logoDark : logoLight} 
             alt="OWL Roles" 
-            className={cn("w-auto", isCollapsed ? "h-8" : "h-10")}
+            className={cn("w-auto", isCollapsed ? "h-10" : "h-14")}
           />
         </button>
       </SidebarHeader>
