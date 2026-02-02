@@ -382,13 +382,13 @@ export const useRecruiterDashboard = () => {
 
       setApplications(applicationsWithProfiles);
 
-      // Fetch all candidate profiles
+      // Fetch all candidate profiles from candidate_directory (has proper RLS for recruiters)
       const { data: candidatesData, error: candidatesError } = await supabase
-        .from("profiles_public")
+        .from("candidate_directory")
         .select("*")
         .order("updated_at", { ascending: false });
 
-      console.log("Fetched candidates:", candidatesData?.length, candidatesError);
+      console.log("Fetched candidates from candidate_directory:", candidatesData?.length, candidatesError);
       setCandidates((candidatesData as unknown as Profile[]) || []);
 
       // Fetch saved candidates
