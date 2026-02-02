@@ -9,7 +9,6 @@ import { transformExperienceToDisplay, type DBExperience } from "@/lib/profileUt
 // Layout and existing components
 import RecruiterLayout from "@/components/recruiter/RecruiterLayout";
 import RecruiterOnboarding from "@/components/recruiter/RecruiterOnboarding";
-import RecruiterProgressChecklist from "@/components/recruiter/RecruiterProgressChecklist";
 import CandidateMessageModal from "@/components/recruiter/CandidateMessageModal";
 import MessageHistoryTab from "@/components/recruiter/MessageHistoryTab";
 import ApplicantDetailModal from "@/components/ApplicantDetailModal";
@@ -19,7 +18,6 @@ import InterviewDetailsModal from "@/components/InterviewDetailsModal";
 
 // Dashboard components
 import {
-  StatsCards,
   FindCandidatesTab,
   InterviewsTab,
   MyJobsTab,
@@ -47,8 +45,6 @@ const RecruiterDashboard = () => {
     showOnboarding,
     setShowOnboarding,
     recruiterName,
-    hasCompletedProfile,
-    hasReviewedCandidate,
     updateApplicationStatus,
     handleSaveCandidate,
     handleDownloadResume,
@@ -249,25 +245,6 @@ const RecruiterDashboard = () => {
   return (
     <RecruiterLayout hasJobs={jobs.length > 0} title="Recruiter Dashboard">
       <div className="p-6 space-y-6">
-        {/* Stats Cards */}
-        <StatsCards 
-          jobs={jobs} 
-          applications={applications} 
-          candidates={candidates} 
-        />
-
-        {/* Progress Checklist for new recruiters */}
-        {(!hasCompletedProfile || jobs.length === 0 || !hasReviewedCandidate) && (
-          <div className="mb-8">
-            <RecruiterProgressChecklist
-              hasCompletedProfile={hasCompletedProfile}
-              hasPostedJob={jobs.length > 0}
-              hasReviewedCandidate={hasReviewedCandidate}
-              recruiterName={recruiterName}
-            />
-          </div>
-        )}
-
         {/* Tabs - TabsList is hidden since navigation is handled by sidebar */}
         <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
           <TabsList className="sr-only">
