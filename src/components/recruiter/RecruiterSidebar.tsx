@@ -31,6 +31,8 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
+import logoLight from "@/assets/logo-light.png";
+import logoDark from "@/assets/logo-dark.png";
 
 interface RecruiterSidebarProps {
   hasJobs?: boolean;
@@ -110,18 +112,13 @@ const RecruiterSidebar = ({ hasJobs = false }: RecruiterSidebarProps) => {
       <SidebarHeader className="border-b border-sidebar-border px-4 py-4">
         <button
           onClick={() => navigate("/recruiter-dashboard")}
-          className="flex items-center gap-3"
+          className="flex items-center"
         >
-          <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center shrink-0">
-            <span className="text-primary-foreground font-heading font-bold text-lg">
-              O
-            </span>
-          </div>
-          {!isCollapsed && (
-            <span className="font-heading font-bold text-lg text-sidebar-foreground">
-              OWL ROLES
-            </span>
-          )}
+          <img 
+            src={theme === "dark" ? logoDark : logoLight} 
+            alt="OWL Roles" 
+            className={cn("w-auto", isCollapsed ? "h-8" : "h-10")}
+          />
         </button>
       </SidebarHeader>
 

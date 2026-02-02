@@ -19,6 +19,8 @@ import { Moon, Sun, LogOut, Plus, LayoutDashboard, Menu, Calendar, User, Buildin
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useState } from "react";
+import logoLight from "@/assets/logo-light.png";
+import logoDark from "@/assets/logo-dark.png";
 
 const RecruiterNavbar = () => {
   const { user, signOut } = useAuth();
@@ -68,13 +70,12 @@ const RecruiterNavbar = () => {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link to="/recruiter-dashboard" className="flex items-center gap-2">
-            <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center">
-              <span className="text-primary-foreground font-heading font-bold text-lg">O</span>
-            </div>
-            <span className="font-heading font-bold text-xl text-foreground">
-              OWL ROLES
-            </span>
+          <Link to="/recruiter-dashboard" className="flex items-center">
+            <img 
+              src={theme === "dark" ? logoDark : logoLight} 
+              alt="OWL Roles" 
+              className="h-10 w-auto"
+            />
           </Link>
 
           {/* Desktop Navigation */}

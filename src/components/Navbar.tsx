@@ -20,6 +20,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import logoLight from "@/assets/logo-light.png";
+import logoDark from "@/assets/logo-dark.png";
 
 interface NavbarProps {
   onLoginClick?: () => void;
@@ -84,13 +86,12 @@ const Navbar = ({ onLoginClick, onSignupClick }: NavbarProps) => {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2">
-            <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center">
-              <span className="text-primary-foreground font-heading font-bold text-lg">O</span>
-            </div>
-            <span className="font-heading font-bold text-xl text-foreground">
-              OWL ROLES
-            </span>
+          <Link to="/" className="flex items-center">
+            <img 
+              src={theme === "dark" ? logoDark : logoLight} 
+              alt="OWL Roles" 
+              className="h-10 w-auto"
+            />
           </Link>
 
           {/* Desktop Navigation */}
