@@ -383,11 +383,12 @@ export const useRecruiterDashboard = () => {
       setApplications(applicationsWithProfiles);
 
       // Fetch all candidate profiles
-      const { data: candidatesData } = await supabase
+      const { data: candidatesData, error: candidatesError } = await supabase
         .from("profiles_public")
         .select("*")
         .order("updated_at", { ascending: false });
 
+      console.log("Fetched candidates:", candidatesData?.length, candidatesError);
       setCandidates((candidatesData as unknown as Profile[]) || []);
 
       // Fetch saved candidates
