@@ -70,11 +70,11 @@ const RecruiterNavbar = () => {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link to="/recruiter-dashboard" className="flex items-center">
+          <Link to="/recruiter-dashboard" className="flex items-center py-1">
             <img 
               src={theme === "dark" ? logoDark : logoLight} 
               alt="OWL Roles" 
-              className="h-14 w-auto"
+              className="h-[56px] w-auto"
             />
           </Link>
 
