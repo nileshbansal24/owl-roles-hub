@@ -14,6 +14,57 @@ export type Database = {
   }
   public: {
     Tables: {
+      candidate_directory: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          email: string | null
+          full_name: string | null
+          headline: string | null
+          id: string
+          location: string | null
+          professional_summary: string | null
+          role: string | null
+          skills: string[] | null
+          university: string | null
+          updated_at: string | null
+          user_type: string | null
+          years_experience: number | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          email?: string | null
+          full_name?: string | null
+          headline?: string | null
+          id: string
+          location?: string | null
+          professional_summary?: string | null
+          role?: string | null
+          skills?: string[] | null
+          university?: string | null
+          updated_at?: string | null
+          user_type?: string | null
+          years_experience?: number | null
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          email?: string | null
+          full_name?: string | null
+          headline?: string | null
+          id?: string
+          location?: string | null
+          professional_summary?: string | null
+          role?: string | null
+          skills?: string[] | null
+          university?: string | null
+          updated_at?: string | null
+          user_type?: string | null
+          years_experience?: number | null
+        }
+        Relationships: []
+      }
       candidate_rankings: {
         Row: {
           created_at: string
