@@ -1,3 +1,4 @@
+// Dashboard component exports
 export { default as CandidateCategoryBadge } from "./CandidateCategoryBadge";
 export { default as CandidateCard } from "./CandidateCard";
 export { default as FindCandidatesTab } from "./FindCandidatesTab";
