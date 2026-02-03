@@ -4,6 +4,7 @@ import AdminOverview from "@/components/admin/AdminOverview";
 import AdminInstitutions from "@/components/admin/AdminInstitutions";
 import AdminCandidates from "@/components/admin/AdminCandidates";
 import AdminJobs from "@/components/admin/AdminJobs";
+import AdminMassUpload from "@/components/admin/AdminMassUpload";
 import { useAdminStats } from "@/hooks/useAdminStats";
 
 const AdminDashboard = () => {
@@ -27,6 +28,8 @@ const AdminDashboard = () => {
         return <AdminCandidates candidates={candidates} loading={loading} />;
       case "jobs":
         return <AdminJobs jobs={jobs} loading={loading} />;
+      case "mass-upload":
+        return <AdminMassUpload loading={loading} />;
       default:
         return <AdminOverview stats={stats} loading={loading} />;
     }
