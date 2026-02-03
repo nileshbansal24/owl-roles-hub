@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Upload, FileText, CheckCircle, XCircle, Loader2, AlertTriangle, Users } from "lucide-react";
+import { Upload, FileText, CheckCircle, XCircle, Loader2, AlertTriangle, Users, Download } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -137,6 +137,36 @@ const AdminMassUpload = ({ loading }: AdminMassUploadProps) => {
 
   const successCount = results.filter(r => r.success).length;
   const failCount = results.filter(r => !r.success).length;
+
+  const downloadCSV = () => {
+    if (results.length === 0) return;
+
+    const headers = ["Filename", "Status", "Email", "User ID", "Error"];
+    const rows = results.map(r => [
+      r.filename,
+      r.success ? "Success" : "Failed",
+      r.email || "",
+      r.userId || "",
+      r.error || ""
+    ]);
+
+    const csvContent = [
+      headers.join(","),
+      ...rows.map(row => row.map(cell => `"${cell.replace(/"/g, '""')}"`).join(","))
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `mass-upload-report-${new Date().toISOString().split("T")[0]}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    toast.success("CSV report downloaded");
+  };
 
   if (loading) {
     return (
@@ -286,17 +316,23 @@ const AdminMassUpload = ({ loading }: AdminMassUploadProps) => {
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
               <span>Upload Results</span>
-              <div className="flex gap-2">
-                {successCount > 0 && (
-                  <Badge variant="default" className="bg-green-500">
-                    {successCount} Success
-                  </Badge>
-                )}
-                {failCount > 0 && (
-                  <Badge variant="destructive">
-                    {failCount} Failed
-                  </Badge>
-                )}
+              <div className="flex items-center gap-3">
+                <div className="flex gap-2">
+                  {successCount > 0 && (
+                    <Badge variant="default" className="bg-green-500">
+                      {successCount} Success
+                    </Badge>
+                  )}
+                  {failCount > 0 && (
+                    <Badge variant="destructive">
+                      {failCount} Failed
+                    </Badge>
+                  )}
+                </div>
+                <Button variant="outline" size="sm" onClick={downloadCSV}>
+                  <Download className="h-4 w-4 mr-2" />
+                  Download CSV
+                </Button>
               </div>
             </CardTitle>
           </CardHeader>
