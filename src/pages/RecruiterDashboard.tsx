@@ -15,6 +15,7 @@ import ApplicantDetailModal from "@/components/ApplicantDetailModal";
 import CandidateComparisonModal from "@/components/CandidateComparisonModal";
 import InterviewScheduleModal from "@/components/InterviewScheduleModal";
 import InterviewDetailsModal from "@/components/InterviewDetailsModal";
+import RecruiterChatbot from "@/components/recruiter/RecruiterChatbot";
 
 // Dashboard components
 import {
@@ -413,6 +414,12 @@ const RecruiterDashboard = () => {
           instituteName={messageRecipient.instituteName}
         />
       )}
+
+      {/* AI Chatbot */}
+      <RecruiterChatbot
+        onViewCandidate={handleViewCandidate}
+        onMessageCandidate={(candidate) => handleSendMessage(candidate)}
+      />
     </RecruiterLayout>
   );
 };
