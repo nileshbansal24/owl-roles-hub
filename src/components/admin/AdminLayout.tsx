@@ -11,7 +11,8 @@ import {
   Shield,
   Menu,
   X,
-  RefreshCw
+  RefreshCw,
+  Upload
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -30,6 +31,7 @@ const navItems = [
   { id: "institutions", label: "Institutions", icon: Building2 },
   { id: "candidates", label: "Candidates", icon: Users },
   { id: "jobs", label: "Jobs", icon: Briefcase },
+  { id: "mass-upload", label: "Mass Upload", icon: Upload },
 ];
 
 const AdminLayout = ({ children, activeTab, onTabChange, onRefresh, isRefreshing }: AdminLayoutProps) => {
