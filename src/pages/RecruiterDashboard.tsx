@@ -24,6 +24,7 @@ import {
   MyJobsTab,
   SavedCandidatesTab,
   ApplicationsTab,
+  EventsTab,
 } from "@/components/recruiter/dashboard";
 
 // Hooks and types
@@ -251,6 +252,7 @@ const RecruiterDashboard = () => {
           <TabsList className="sr-only">
             <TabsTrigger value="resdex">Find Candidates</TabsTrigger>
             <TabsTrigger value="saved">Saved</TabsTrigger>
+            <TabsTrigger value="events">Events</TabsTrigger>
             <TabsTrigger value="interviews">Interviews</TabsTrigger>
             <TabsTrigger value="applications">Applications</TabsTrigger>
             <TabsTrigger value="jobs">My Jobs</TabsTrigger>
@@ -283,6 +285,11 @@ const RecruiterDashboard = () => {
               onSaveNote={handleSaveNote}
               isLoading={loading}
             />
+          </TabsContent>
+
+          {/* Events Tab */}
+          <TabsContent value="events">
+            <EventsTab jobs={jobs} />
           </TabsContent>
 
           {/* Interviews Tab */}

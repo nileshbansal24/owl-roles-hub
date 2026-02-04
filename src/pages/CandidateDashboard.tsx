@@ -36,6 +36,7 @@ import { OrcidCard } from "@/components/profile/OrcidCard";
 import { PublicationImportButton } from "@/components/profile/PublicationImportButton";
 import { ScopusMetricsCard } from "@/components/profile/ScopusMetricsCard";
 import { ManualHIndexCard } from "@/components/profile/ManualHIndexCard";
+import { CandidateEventsSection } from "@/components/events";
 import {
   Edit2,
   Plus,
@@ -1390,6 +1391,13 @@ const CandidateDashboard = () => {
                     Personal
                   </TabsTrigger>
                   <TabsTrigger
+                    value="events"
+                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 py-3"
+                  >
+                    <CalendarDays className="h-4 w-4 mr-1.5" />
+                    Events
+                  </TabsTrigger>
+                  <TabsTrigger
                     value="interviews"
                     className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 py-3"
                   >
@@ -1438,6 +1446,13 @@ const CandidateDashboard = () => {
                     >
                       <User className="h-4 w-4 mr-1" />
                       Personal
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="events"
+                      className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 py-3 text-sm"
+                    >
+                      <CalendarDays className="h-4 w-4 mr-1" />
+                      Events
                     </TabsTrigger>
                     <TabsTrigger
                       value="interviews"
@@ -1577,6 +1592,13 @@ const CandidateDashboard = () => {
                   onEdit={() => setPersonalDetailsEditOpen(true)}
                   defaultOpen={true}
                 />
+              </div>
+            </TabsContent>
+
+            {/* Events Tab */}
+            <TabsContent value="events" className="mt-6">
+              <div className="max-w-4xl">
+                <CandidateEventsSection />
               </div>
             </TabsContent>
 
