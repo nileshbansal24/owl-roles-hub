@@ -46,6 +46,7 @@ export interface Profile {
   headline: string | null;
   skills: string[] | null;
   user_type: string | null;
+  updated_at?: string | null;
   resume_url?: string | null;
   email?: string | null;
   experience?: ExperienceItem[] | null;
