@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Users, X, UserSearch, Sparkles } from "lucide-react";
+import { Users, X, UserSearch, Sparkles, ChevronLeft, ChevronRight } from "lucide-react";
 import CandidateCard from "./CandidateCard";
 import SmartCandidateSearch from "./SmartCandidateSearch";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -20,6 +20,8 @@ interface FindCandidatesTabProps {
   isLoading?: boolean;
 }
 
+const CANDIDATES_PER_PAGE = 5;
+
 const FindCandidatesTab = ({
   candidates,
   savedCandidateIds,
@@ -33,10 +35,12 @@ const FindCandidatesTab = ({
   const [searchResults, setSearchResults] = useState<Profile[] | null>(null);
   const [isSearching, setIsSearching] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const handleSearchResults = useCallback((results: Profile[]) => {
     setSearchResults(results);
     setHasSearched(true);
+    setCurrentPage(1); // Reset to first page on new search
   }, []);
 
   const handleSearching = useCallback((searching: boolean) => {
@@ -46,10 +50,29 @@ const FindCandidatesTab = ({
   const clearSearch = useCallback(() => {
     setSearchResults(null);
     setHasSearched(false);
+    setCurrentPage(1);
   }, []);
 
   // Show search results if available, otherwise show all candidates
   const displayedCandidates = searchResults !== null ? searchResults : candidates;
+  
+  // Pagination logic
+  const totalPages = Math.ceil(displayedCandidates.length / CANDIDATES_PER_PAGE);
+  const startIndex = (currentPage - 1) * CANDIDATES_PER_PAGE;
+  const endIndex = startIndex + CANDIDATES_PER_PAGE;
+  const paginatedCandidates = displayedCandidates.slice(startIndex, endIndex);
+
+  const goToNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const goToPreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -73,7 +96,7 @@ const FindCandidatesTab = ({
         onSearching={handleSearching}
       />
 
-      {/* Results Header */}
+      {/* Results Header with Pagination Info */}
       <motion.div variants={staggerItemVariants} className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Users className="h-5 w-5 text-primary" />
@@ -84,8 +107,13 @@ const FindCandidatesTab = ({
               </>
             ) : (
               <>
-                Showing <span className="font-medium text-foreground">{displayedCandidates.length}</span> candidates
+                Candidate Pool: <span className="font-medium text-foreground">{displayedCandidates.length}</span> candidates
               </>
+            )}
+            {displayedCandidates.length > 0 && (
+              <span className="ml-2 text-muted-foreground">
+                (Showing {startIndex + 1}-{Math.min(endIndex, displayedCandidates.length)} of {displayedCandidates.length})
+              </span>
             )}
           </p>
         </div>
@@ -106,7 +134,7 @@ const FindCandidatesTab = ({
       <motion.div variants={staggerItemVariants} className="grid gap-4">
         {isSearching ? (
           <CardListSkeleton count={3} />
-        ) : displayedCandidates.length === 0 ? (
+        ) : paginatedCandidates.length === 0 ? (
           hasSearched ? (
             <EmptyState
               icon={UserSearch}
@@ -131,7 +159,7 @@ const FindCandidatesTab = ({
             </EmptyState>
           )
         ) : (
-          displayedCandidates.map((candidate, index) => (
+          paginatedCandidates.map((candidate, index) => (
             <CandidateCard
               key={candidate.id}
               candidate={candidate}
@@ -146,6 +174,50 @@ const FindCandidatesTab = ({
           ))
         )}
       </motion.div>
+
+      {/* Pagination Controls */}
+      {displayedCandidates.length > CANDIDATES_PER_PAGE && (
+        <motion.div 
+          variants={staggerItemVariants} 
+          className="flex items-center justify-center gap-4 pt-4"
+        >
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={goToPreviousPage}
+            disabled={currentPage === 1}
+            className="gap-2"
+          >
+            <ChevronLeft className="h-4 w-4" />
+            Previous
+          </Button>
+          
+          <div className="flex items-center gap-2">
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+              <Button
+                key={page}
+                variant={currentPage === page ? "default" : "outline"}
+                size="sm"
+                className="w-8 h-8 p-0"
+                onClick={() => setCurrentPage(page)}
+              >
+                {page}
+              </Button>
+            ))}
+          </div>
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={goToNextPage}
+            disabled={currentPage === totalPages}
+            className="gap-2"
+          >
+            Next
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </motion.div>
+      )}
     </motion.div>
   );
 };
