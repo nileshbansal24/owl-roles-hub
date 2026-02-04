@@ -31,6 +31,8 @@ import {
   ProfileCompletionCard,
   PersonalDetailsCard,
   PersonalDetailsEditModal,
+  CareerInsightsCard,
+  CareerPathVisualization,
 } from "@/components/profile";
 import { OrcidCard } from "@/components/profile/OrcidCard";
 import { PublicationImportButton } from "@/components/profile/PublicationImportButton";
@@ -49,6 +51,7 @@ import {
   CalendarDays,
   GraduationCap,
   User,
+  TrendingUp,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
@@ -899,6 +902,13 @@ const CandidateDashboard = () => {
               university: profile?.university,
             }}
           />
+          {/* Career Insights Card - Clickable to navigate to Career tab */}
+          <div className="mt-4 pt-4 border-t border-border/50">
+            <CareerInsightsCard
+              currentRole={profile?.role || profile?.headline}
+              onClick={() => setActiveTab("career")}
+            />
+          </div>
         </SidebarCard>
       </motion.div>
 
@@ -1391,6 +1401,13 @@ const CandidateDashboard = () => {
                     Personal
                   </TabsTrigger>
                   <TabsTrigger
+                    value="career"
+                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 py-3"
+                  >
+                    <TrendingUp className="h-4 w-4 mr-1.5" />
+                    Career
+                  </TabsTrigger>
+                  <TabsTrigger
                     value="events"
                     className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 py-3"
                   >
@@ -1446,6 +1463,13 @@ const CandidateDashboard = () => {
                     >
                       <User className="h-4 w-4 mr-1" />
                       Personal
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="career"
+                      className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 py-3 text-sm"
+                    >
+                      <TrendingUp className="h-4 w-4 mr-1" />
+                      Career
                     </TabsTrigger>
                     <TabsTrigger
                       value="events"
@@ -1591,6 +1615,16 @@ const CandidateDashboard = () => {
                   recommendedBooks={profile?.recommended_books}
                   onEdit={() => setPersonalDetailsEditOpen(true)}
                   defaultOpen={true}
+                />
+              </div>
+            </TabsContent>
+
+            {/* Career Insights Tab */}
+            <TabsContent value="career" className="mt-6">
+              <div className="max-w-5xl">
+                <CareerPathVisualization
+                  currentRole={profile?.role || profile?.headline}
+                  yearsExperience={profile?.years_experience}
                 />
               </div>
             </TabsContent>

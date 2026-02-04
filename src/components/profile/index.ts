@@ -18,3 +18,5 @@ export { ManualHIndexCard } from "./ManualHIndexCard";
 export { PublicationImportButton } from "./PublicationImportButton";
 export { PersonalDetailsCard } from "./PersonalDetailsCard";
 export { PersonalDetailsEditModal } from "./PersonalDetailsEditModal";
+export { CareerInsightsCard } from "./CareerInsightsCard";
+export { CareerPathVisualization } from "./CareerPathVisualization";
