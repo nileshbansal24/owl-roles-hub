@@ -1,6 +1,6 @@
 import { JobData } from "@/hooks/useAdminStats";
 import { format } from "date-fns";
-import { Briefcase, MapPin, FileText, User, Building } from "lucide-react";
+import { Briefcase, MapPin, FileText, User, Building, Mail } from "lucide-react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -13,6 +13,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { FadeIn } from "@/components/ui/fade-in";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface AdminJobsProps {
   jobs: JobData[];
@@ -149,10 +155,30 @@ const AdminJobs = ({ jobs, loading }: AdminJobsProps) => {
                         </TableCell>
                         <TableCell>
                           {job.recruiter_name ? (
-                            <div className="flex items-center gap-1 text-muted-foreground">
-                              <User className="h-3 w-3" />
-                              {job.recruiter_name}
-                            </div>
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <div className="flex items-center gap-1 text-muted-foreground cursor-pointer hover:text-foreground">
+                                    <User className="h-3 w-3" />
+                                    <span className="max-w-[120px] truncate">{job.recruiter_name}</span>
+                                  </div>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <div className="text-sm">
+                                    <p className="font-medium">{job.recruiter_name}</p>
+                                    {job.recruiter_email && (
+                                      <a 
+                                        href={`mailto:${job.recruiter_email}`}
+                                        className="flex items-center gap-1 text-primary hover:underline mt-1"
+                                      >
+                                        <Mail className="h-3 w-3" />
+                                        {job.recruiter_email}
+                                      </a>
+                                    )}
+                                  </div>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
                           ) : "—"}
                         </TableCell>
                         <TableCell className="text-center">
