@@ -1,7 +1,14 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Users, X, UserSearch, Sparkles, ChevronLeft, ChevronRight } from "lucide-react";
+import { Users, X, UserSearch, Sparkles, ChevronLeft, ChevronRight, ArrowUpDown, Clock, User, Briefcase } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import CandidateCard from "./CandidateCard";
 import SmartCandidateSearch from "./SmartCandidateSearch";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -22,6 +29,16 @@ interface FindCandidatesTabProps {
 
 const CANDIDATES_PER_PAGE = 5;
 
+type SortOption = "recent" | "experience-desc" | "experience-asc" | "name-asc" | "name-desc";
+
+const sortOptions: { value: SortOption; label: string; icon: React.ReactNode }[] = [
+  { value: "recent", label: "Most Recent", icon: <Clock className="h-4 w-4" /> },
+  { value: "experience-desc", label: "Experience (High to Low)", icon: <Briefcase className="h-4 w-4" /> },
+  { value: "experience-asc", label: "Experience (Low to High)", icon: <Briefcase className="h-4 w-4" /> },
+  { value: "name-asc", label: "Name (A-Z)", icon: <User className="h-4 w-4" /> },
+  { value: "name-desc", label: "Name (Z-A)", icon: <User className="h-4 w-4" /> },
+];
+
 const FindCandidatesTab = ({
   candidates,
   savedCandidateIds,
@@ -36,11 +53,12 @@ const FindCandidatesTab = ({
   const [isSearching, setIsSearching] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [sortBy, setSortBy] = useState<SortOption>("recent");
 
   const handleSearchResults = useCallback((results: Profile[]) => {
     setSearchResults(results);
     setHasSearched(true);
-    setCurrentPage(1); // Reset to first page on new search
+    setCurrentPage(1);
   }, []);
 
   const handleSearching = useCallback((searching: boolean) => {
@@ -53,14 +71,43 @@ const FindCandidatesTab = ({
     setCurrentPage(1);
   }, []);
 
+  const handleSortChange = useCallback((value: SortOption) => {
+    setSortBy(value);
+    setCurrentPage(1);
+  }, []);
+
   // Show search results if available, otherwise show all candidates
-  const displayedCandidates = searchResults !== null ? searchResults : candidates;
+  const baseCandidates = searchResults !== null ? searchResults : candidates;
   
+  // Sort candidates
+  const sortedCandidates = useMemo(() => {
+    const sorted = [...baseCandidates];
+    
+    switch (sortBy) {
+      case "recent":
+        return sorted.sort((a, b) => {
+          const dateA = a.updated_at ? new Date(a.updated_at).getTime() : 0;
+          const dateB = b.updated_at ? new Date(b.updated_at).getTime() : 0;
+          return dateB - dateA;
+        });
+      case "experience-desc":
+        return sorted.sort((a, b) => (b.years_experience || 0) - (a.years_experience || 0));
+      case "experience-asc":
+        return sorted.sort((a, b) => (a.years_experience || 0) - (b.years_experience || 0));
+      case "name-asc":
+        return sorted.sort((a, b) => (a.full_name || "").localeCompare(b.full_name || ""));
+      case "name-desc":
+        return sorted.sort((a, b) => (b.full_name || "").localeCompare(a.full_name || ""));
+      default:
+        return sorted;
+    }
+  }, [baseCandidates, sortBy]);
+
   // Pagination logic
-  const totalPages = Math.ceil(displayedCandidates.length / CANDIDATES_PER_PAGE);
+  const totalPages = Math.ceil(sortedCandidates.length / CANDIDATES_PER_PAGE);
   const startIndex = (currentPage - 1) * CANDIDATES_PER_PAGE;
   const endIndex = startIndex + CANDIDATES_PER_PAGE;
-  const paginatedCandidates = displayedCandidates.slice(startIndex, endIndex);
+  const paginatedCandidates = sortedCandidates.slice(startIndex, endIndex);
 
   const goToNextPage = () => {
     if (currentPage < totalPages) {
@@ -96,38 +143,61 @@ const FindCandidatesTab = ({
         onSearching={handleSearching}
       />
 
-      {/* Results Header with Pagination Info */}
-      <motion.div variants={staggerItemVariants} className="flex items-center justify-between">
+      {/* Results Header with Sorting and Pagination Info */}
+      <motion.div variants={staggerItemVariants} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <Users className="h-5 w-5 text-primary" />
           <p className="text-sm text-muted-foreground">
             {hasSearched ? (
               <>
-                Found <span className="font-medium text-foreground">{displayedCandidates.length}</span> matching candidates
+                Found <span className="font-medium text-foreground">{sortedCandidates.length}</span> matching candidates
               </>
             ) : (
               <>
-                Candidate Pool: <span className="font-medium text-foreground">{displayedCandidates.length}</span> candidates
+                Candidate Pool: <span className="font-medium text-foreground">{sortedCandidates.length}</span> candidates
               </>
             )}
-            {displayedCandidates.length > 0 && (
+            {sortedCandidates.length > 0 && (
               <span className="ml-2 text-muted-foreground">
-                (Showing {startIndex + 1}-{Math.min(endIndex, displayedCandidates.length)} of {displayedCandidates.length})
+                (Showing {startIndex + 1}-{Math.min(endIndex, sortedCandidates.length)} of {sortedCandidates.length})
               </span>
             )}
           </p>
         </div>
-        {hasSearched && (
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className="gap-2"
-            onClick={clearSearch}
-          >
-            <X className="h-4 w-4" />
-            Clear Search
-          </Button>
-        )}
+        
+        <div className="flex items-center gap-2">
+          {/* Sort Dropdown */}
+          <div className="flex items-center gap-2">
+            <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
+            <Select value={sortBy} onValueChange={(value) => handleSortChange(value as SortOption)}>
+              <SelectTrigger className="w-[200px] h-9">
+                <SelectValue placeholder="Sort by" />
+              </SelectTrigger>
+              <SelectContent>
+                {sortOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    <div className="flex items-center gap-2">
+                      {option.icon}
+                      {option.label}
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          
+          {hasSearched && (
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="gap-2"
+              onClick={clearSearch}
+            >
+              <X className="h-4 w-4" />
+              Clear Search
+            </Button>
+          )}
+        </div>
       </motion.div>
 
       {/* Candidate Results */}
@@ -176,7 +246,7 @@ const FindCandidatesTab = ({
       </motion.div>
 
       {/* Pagination Controls */}
-      {displayedCandidates.length > CANDIDATES_PER_PAGE && (
+      {sortedCandidates.length > CANDIDATES_PER_PAGE && (
         <motion.div 
           variants={staggerItemVariants} 
           className="flex items-center justify-center gap-4 pt-4"
@@ -193,17 +263,29 @@ const FindCandidatesTab = ({
           </Button>
           
           <div className="flex items-center gap-2">
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-              <Button
-                key={page}
-                variant={currentPage === page ? "default" : "outline"}
-                size="sm"
-                className="w-8 h-8 p-0"
-                onClick={() => setCurrentPage(page)}
-              >
-                {page}
-              </Button>
-            ))}
+            {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+              let page: number;
+              if (totalPages <= 5) {
+                page = i + 1;
+              } else if (currentPage <= 3) {
+                page = i + 1;
+              } else if (currentPage >= totalPages - 2) {
+                page = totalPages - 4 + i;
+              } else {
+                page = currentPage - 2 + i;
+              }
+              return (
+                <Button
+                  key={page}
+                  variant={currentPage === page ? "default" : "outline"}
+                  size="sm"
+                  className="w-8 h-8 p-0"
+                  onClick={() => setCurrentPage(page)}
+                >
+                  {page}
+                </Button>
+              );
+            })}
           </div>
           
           <Button
