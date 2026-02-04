@@ -62,6 +62,15 @@ export interface JobData {
   created_at: string;
   applications_count: number;
   recruiter_name: string | null;
+  recruiter_email: string | null;
+}
+
+export interface EmailData {
+  id: string;
+  email: string | null;
+  full_name: string | null;
+  user_type: string | null;
+  created_at: string;
 }
 
 export const useAdminStats = () => {
@@ -69,6 +78,7 @@ export const useAdminStats = () => {
   const [institutions, setInstitutions] = useState<InstitutionData[]>([]);
   const [candidates, setCandidates] = useState<CandidateData[]>([]);
   const [jobs, setJobs] = useState<JobData[]>([]);
+  const [emails, setEmails] = useState<EmailData[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchStats = async () => {
@@ -243,7 +253,7 @@ export const useAdminStats = () => {
 
       const { data: profiles } = await supabase
         .from("profiles")
-        .select("id, full_name")
+        .select("id, full_name, email")
         .eq("user_type", "recruiter");
 
       const appCounts = new Map<string, number>();
@@ -251,7 +261,7 @@ export const useAdminStats = () => {
         appCounts.set(a.job_id, (appCounts.get(a.job_id) || 0) + 1);
       });
 
-      const profileMap = new Map(profiles?.map(p => [p.id, p.full_name]));
+      const profileMap = new Map(profiles?.map(p => [p.id, { name: p.full_name, email: p.email }]));
 
       const jobsList: JobData[] = (jobsData || []).map(j => ({
         id: j.id,
@@ -261,7 +271,8 @@ export const useAdminStats = () => {
         job_type: j.job_type,
         created_at: j.created_at,
         applications_count: appCounts.get(j.id) || 0,
-        recruiter_name: profileMap.get(j.created_by) || null,
+        recruiter_name: profileMap.get(j.created_by)?.name || null,
+        recruiter_email: profileMap.get(j.created_by)?.email || null,
       }));
 
       setJobs(jobsList);
@@ -270,10 +281,31 @@ export const useAdminStats = () => {
     }
   };
 
+  const fetchEmails = async () => {
+    try {
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("id, email, full_name, user_type, created_at")
+        .order("created_at", { ascending: false });
+
+      const emailsList: EmailData[] = (profiles || []).map(p => ({
+        id: p.id,
+        email: p.email,
+        full_name: p.full_name,
+        user_type: p.user_type,
+        created_at: p.created_at,
+      }));
+
+      setEmails(emailsList);
+    } catch (error) {
+      console.error("Error fetching emails:", error);
+    }
+  };
+
   useEffect(() => {
     const fetchAll = async () => {
       setLoading(true);
-      await Promise.all([fetchStats(), fetchInstitutions(), fetchCandidates(), fetchJobs()]);
+      await Promise.all([fetchStats(), fetchInstitutions(), fetchCandidates(), fetchJobs(), fetchEmails()]);
       setLoading(false);
     };
     fetchAll();
@@ -281,9 +313,9 @@ export const useAdminStats = () => {
 
   const refetch = async () => {
     setLoading(true);
-    await Promise.all([fetchStats(), fetchInstitutions(), fetchCandidates(), fetchJobs()]);
+    await Promise.all([fetchStats(), fetchInstitutions(), fetchCandidates(), fetchJobs(), fetchEmails()]);
     setLoading(false);
   };
 
-  return { stats, institutions, candidates, jobs, loading, refetch };
+  return { stats, institutions, candidates, jobs, emails, loading, refetch };
 };

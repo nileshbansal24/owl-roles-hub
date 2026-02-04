@@ -1,9 +1,11 @@
+import { useState } from "react";
 import { InstitutionData } from "@/hooks/useAdminStats";
 import { format } from "date-fns";
-import { Building2, CheckCircle, Clock, XCircle, Briefcase, Mail } from "lucide-react";
+import { Building2, CheckCircle, Clock, XCircle, Briefcase, Mail, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -12,11 +14,24 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { FadeIn, staggerContainerVariants, staggerItemVariants } from "@/components/ui/fade-in";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface AdminInstitutionsProps {
   institutions: InstitutionData[];
   loading: boolean;
+  onRefetch: () => void;
 }
 
 const getStatusBadge = (status: string | null) => {
@@ -51,7 +66,76 @@ const getStatusBadge = (status: string | null) => {
   }
 };
 
-const AdminInstitutions = ({ institutions, loading }: AdminInstitutionsProps) => {
+const AdminInstitutions = ({ institutions, loading, onRefetch }: AdminInstitutionsProps) => {
+  const { toast } = useToast();
+  const [processingId, setProcessingId] = useState<string | null>(null);
+  const [confirmDialog, setConfirmDialog] = useState<{
+    open: boolean;
+    action: "verify" | "reject";
+    institution: InstitutionData | null;
+  }>({ open: false, action: "verify", institution: null });
+
+  const handleVerificationAction = async (action: "verify" | "reject") => {
+    const institution = confirmDialog.institution;
+    if (!institution) return;
+
+    setProcessingId(institution.id);
+    setConfirmDialog({ open: false, action: "verify", institution: null });
+
+    try {
+      const newStatus = action === "verify" ? "verified" : "rejected";
+      
+      // Check if verification record exists
+      const { data: existing } = await supabase
+        .from("institution_verifications")
+        .select("id")
+        .eq("recruiter_id", institution.id)
+        .single();
+
+      if (existing) {
+        // Update existing record
+        const { error } = await supabase
+          .from("institution_verifications")
+          .update({
+            status: newStatus,
+            verified_at: action === "verify" ? new Date().toISOString() : null,
+            verification_notes: `${action === "verify" ? "Verified" : "Rejected"} by admin on ${format(new Date(), "MMM d, yyyy")}`,
+          })
+          .eq("recruiter_id", institution.id);
+
+        if (error) throw error;
+      } else {
+        // Insert new record
+        const { error } = await supabase
+          .from("institution_verifications")
+          .insert({
+            recruiter_id: institution.id,
+            status: newStatus,
+            verified_at: action === "verify" ? new Date().toISOString() : null,
+            verification_notes: `${action === "verify" ? "Verified" : "Rejected"} by admin on ${format(new Date(), "MMM d, yyyy")}`,
+          });
+
+        if (error) throw error;
+      }
+
+      toast({
+        title: action === "verify" ? "Institution Verified" : "Institution Rejected",
+        description: `${institution.full_name || "Institution"} has been ${action === "verify" ? "verified" : "rejected"} successfully.`,
+      });
+
+      onRefetch();
+    } catch (error) {
+      console.error("Error updating verification:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update verification status. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
   if (loading) {
     return (
       <div className="space-y-4">
@@ -71,6 +155,7 @@ const AdminInstitutions = ({ institutions, loading }: AdminInstitutionsProps) =>
 
   const verified = institutions.filter(i => i.verification_status === "verified").length;
   const pending = institutions.filter(i => i.verification_status === "pending").length;
+  const pendingInstitutions = institutions.filter(i => i.verification_status === "pending");
 
   return (
     <div className="space-y-6">
@@ -128,6 +213,85 @@ const AdminInstitutions = ({ institutions, loading }: AdminInstitutionsProps) =>
         </FadeIn>
       </div>
 
+      {/* Pending Verifications Section */}
+      {pendingInstitutions.length > 0 && (
+        <FadeIn delay={0.35}>
+          <Card className="border-amber-500/30 bg-amber-500/5">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-amber-600">
+                <Clock className="h-5 w-5" />
+                Pending Verification Requests ({pendingInstitutions.length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {pendingInstitutions.map((institution) => (
+                  <div 
+                    key={institution.id}
+                    className="flex items-center justify-between p-4 bg-background rounded-lg border"
+                  >
+                    <div className="flex-1">
+                      <p className="font-medium">{institution.full_name || "Unknown"}</p>
+                      <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
+                        {institution.email && (
+                          <span className="flex items-center gap-1">
+                            <Mail className="h-3 w-3" />
+                            {institution.email}
+                          </span>
+                        )}
+                        {institution.university && (
+                          <span className="flex items-center gap-1">
+                            <Building2 className="h-3 w-3" />
+                            {institution.university}
+                          </span>
+                        )}
+                        <span className="flex items-center gap-1">
+                          <Briefcase className="h-3 w-3" />
+                          {institution.jobs_count} jobs
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                        disabled={processingId === institution.id}
+                        onClick={() => setConfirmDialog({ open: true, action: "reject", institution })}
+                      >
+                        {processingId === institution.id ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <>
+                            <XCircle className="h-4 w-4 mr-1" />
+                            Reject
+                          </>
+                        )}
+                      </Button>
+                      <Button
+                        size="sm"
+                        className="bg-emerald-500 hover:bg-emerald-600"
+                        disabled={processingId === institution.id}
+                        onClick={() => setConfirmDialog({ open: true, action: "verify", institution })}
+                      >
+                        {processingId === institution.id ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <>
+                            <CheckCircle className="h-4 w-4 mr-1" />
+                            Verify
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </FadeIn>
+      )}
+
       {/* Institutions Table */}
       <FadeIn delay={0.4}>
         <Card>
@@ -151,6 +315,7 @@ const AdminInstitutions = ({ institutions, loading }: AdminInstitutionsProps) =>
                       <TableHead>Status</TableHead>
                       <TableHead className="text-center">Jobs</TableHead>
                       <TableHead>Joined</TableHead>
+                      <TableHead>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -196,6 +361,52 @@ const AdminInstitutions = ({ institutions, loading }: AdminInstitutionsProps) =>
                             <TableCell className="text-muted-foreground text-sm">
                               {format(new Date(institution.created_at), "MMM d, yyyy")}
                             </TableCell>
+                            <TableCell>
+                              {institution.verification_status === "pending" && (
+                                <div className="flex items-center gap-1">
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="h-7 text-destructive hover:bg-destructive/10"
+                                    disabled={processingId === institution.id}
+                                    onClick={() => setConfirmDialog({ open: true, action: "reject", institution })}
+                                  >
+                                    <XCircle className="h-3 w-3" />
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="h-7 text-emerald-500 hover:bg-emerald-500/10"
+                                    disabled={processingId === institution.id}
+                                    onClick={() => setConfirmDialog({ open: true, action: "verify", institution })}
+                                  >
+                                    <CheckCircle className="h-3 w-3" />
+                                  </Button>
+                                </div>
+                              )}
+                              {institution.verification_status === "verified" && (
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-7 text-destructive hover:bg-destructive/10"
+                                  disabled={processingId === institution.id}
+                                  onClick={() => setConfirmDialog({ open: true, action: "reject", institution })}
+                                >
+                                  Revoke
+                                </Button>
+                              )}
+                              {institution.verification_status === "rejected" && (
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-7 text-emerald-500 hover:bg-emerald-500/10"
+                                  disabled={processingId === institution.id}
+                                  onClick={() => setConfirmDialog({ open: true, action: "verify", institution })}
+                                >
+                                  Re-verify
+                                </Button>
+                              )}
+                            </TableCell>
                           </TableRow>
                         </motion.tr>
                       ))}
@@ -207,6 +418,32 @@ const AdminInstitutions = ({ institutions, loading }: AdminInstitutionsProps) =>
           </CardContent>
         </Card>
       </FadeIn>
+
+      {/* Confirmation Dialog */}
+      <AlertDialog open={confirmDialog.open} onOpenChange={(open) => !open && setConfirmDialog({ ...confirmDialog, open: false })}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {confirmDialog.action === "verify" ? "Verify Institution" : "Reject Institution"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {confirmDialog.action === "verify" 
+                ? `Are you sure you want to verify "${confirmDialog.institution?.full_name || "this institution"}"? They will receive a verified badge and gain full platform access.`
+                : `Are you sure you want to reject "${confirmDialog.institution?.full_name || "this institution"}"? They will be notified of this decision.`
+              }
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className={confirmDialog.action === "verify" ? "bg-emerald-500 hover:bg-emerald-600" : "bg-destructive hover:bg-destructive/90"}
+              onClick={() => handleVerificationAction(confirmDialog.action)}
+            >
+              {confirmDialog.action === "verify" ? "Verify" : "Reject"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
