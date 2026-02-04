@@ -28,11 +28,166 @@ interface AISalarySuggestionProps {
   className?: string;
 }
 
-// Mock salary data based on role/position
+// Helper function to detect if role is teaching or non-teaching
+const isTeachingRole = (role: string | null | undefined): boolean => {
+  if (!role) return true;
+  const roleLower = role.toLowerCase();
+  
+  const nonTeachingKeywords = [
+    "hr", "human resource", "admin", "administrator", "finance", "accounts",
+    "purchase", "procurement", "registrar", "librarian", "it ", "maintenance",
+    "security", "transport", "hostel", "placement", "training", "tpo", "counselor",
+    "executive", "officer", "coordinator"
+  ];
+  
+  const teachingKeywords = [
+    "professor", "lecturer", "faculty", "teacher", "instructor",
+    "dean", "hod", "head of department", "principal", "academic", "research"
+  ];
+  
+  for (const keyword of teachingKeywords) {
+    if (roleLower.includes(keyword)) return true;
+  }
+  
+  for (const keyword of nonTeachingKeywords) {
+    if (roleLower.includes(keyword)) return false;
+  }
+  
+  if ((roleLower.includes("manager") || roleLower.includes("executive") || roleLower.includes("coordinator") || roleLower.includes("officer"))
+      && !roleLower.includes("academic")) {
+    return false;
+  }
+  
+  return true;
+};
+
+// Salary data based on role/position - synced with CareerPathVisualization
 const getMockSalaryData = (profile: ProfileData | null): SalaryData => {
   const role = (profile?.role || profile?.headline || "").toLowerCase();
   const yearsExp = profile?.yearsExperience || 0;
+  const isTeaching = isTeachingRole(role);
   
+  // NON-TEACHING / ADMINISTRATIVE ROLES
+  if (!isTeaching) {
+    // GM / Director (Admin) level
+    if (role.includes("gm") || role.includes("general manager") || (role.includes("director") && !role.includes("academic"))) {
+      return {
+        minSalary: 1500000,
+        maxSalary: 3000000,
+        confidence: "high",
+        percentile: 95,
+        factors: [
+          "GM/Director (Admin) level position",
+          `${yearsExp > 0 ? yearsExp + "+ years experience" : "Executive leadership role"}`,
+          profile?.location ? `Location: ${profile.location}` : "Metro city premium",
+          "Strategic administrative responsibilities"
+        ],
+        salaryRange: "₹15 - 30 LPA"
+      };
+    }
+    
+    // AGM / DGM level
+    if (role.includes("agm") || role.includes("dgm") || role.includes("assistant general") || role.includes("deputy general")) {
+      return {
+        minSalary: 1000000,
+        maxSalary: 1800000,
+        confidence: "high",
+        percentile: 85,
+        factors: [
+          "AGM/DGM level position",
+          `${yearsExp > 0 ? yearsExp + "+ years experience" : "Senior management role"}`,
+          profile?.location ? `Location: ${profile.location}` : "Institution type",
+          "Department oversight"
+        ],
+        salaryRange: "₹10 - 18 LPA"
+      };
+    }
+    
+    // Senior Manager / Deputy Director level
+    if (role.includes("senior manager") || role.includes("deputy director") || role.includes("sr. manager") || role.includes("sr manager")) {
+      return {
+        minSalary: 600000,
+        maxSalary: 1200000,
+        confidence: "high",
+        percentile: 75,
+        factors: [
+          "Senior Manager level position",
+          `${yearsExp > 0 ? yearsExp + "+ years experience" : "Senior management"}`,
+          profile?.location ? `Location: ${profile.location}` : "Institution type",
+          "Team and process management"
+        ],
+        salaryRange: "₹6 - 12 LPA"
+      };
+    }
+    
+    // Manager level
+    if (role.includes("manager") && !role.includes("assistant") && !role.includes("senior")) {
+      return {
+        minSalary: 400000,
+        maxSalary: 800000,
+        confidence: "medium",
+        percentile: 60,
+        factors: [
+          "Manager level position",
+          `${yearsExp > 0 ? yearsExp + "+ years experience" : "Mid-level management"}`,
+          profile?.location ? `Location: ${profile.location}` : "Institution type",
+          "Operational management"
+        ],
+        salaryRange: "₹4 - 8 LPA"
+      };
+    }
+    
+    // Assistant Manager level
+    if (role.includes("assistant manager") || role.includes("asst. manager") || role.includes("asst manager")) {
+      return {
+        minSalary: 400000,
+        maxSalary: 600000,
+        confidence: "medium",
+        percentile: 50,
+        factors: [
+          "Assistant Manager level position",
+          `${yearsExp > 0 ? yearsExp + "+ years experience" : "Early management"}`,
+          profile?.location ? `Location: ${profile.location}` : "Institution type",
+          "Support management functions"
+        ],
+        salaryRange: "₹4 - 6 LPA"
+      };
+    }
+    
+    // Senior Executive level
+    if (role.includes("senior executive") || role.includes("sr. executive") || role.includes("sr executive") || role.includes("senior officer")) {
+      return {
+        minSalary: 300000,
+        maxSalary: 500000,
+        confidence: "medium",
+        percentile: 40,
+        factors: [
+          "Senior Executive level position",
+          `${yearsExp > 0 ? yearsExp + "+ years experience" : "Experienced professional"}`,
+          profile?.location ? `Location: ${profile.location}` : "Institution type",
+          "Specialized expertise"
+        ],
+        salaryRange: "₹3 - 5 LPA"
+      };
+    }
+    
+    // Executive / Officer level (default non-teaching)
+    return {
+      minSalary: 200000,
+      maxSalary: 400000,
+      confidence: "medium",
+      percentile: 30,
+      factors: [
+        "Executive/Officer level position",
+        `${yearsExp > 0 ? yearsExp + "+ years experience" : "Entry to mid-level"}`,
+        profile?.location ? `Location: ${profile.location}` : "Institution type varies",
+        "Administrative responsibilities"
+      ],
+      salaryRange: "₹2 - 4 LPA"
+    };
+  }
+  
+  // TEACHING / ACADEMIC ROLES
   // Director level
   if (role.includes("director") || role.includes("principal") || role.includes("vice chancellor")) {
     return {
