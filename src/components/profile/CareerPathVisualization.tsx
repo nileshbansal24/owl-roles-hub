@@ -27,7 +27,7 @@ interface CareerPathVisualizationProps {
   className?: string;
 }
 
-// Academic career path data based on Indian market standards
+// Academic teaching career path data based on Indian market standards
 const academicCareerPath = [
   {
     id: "assistant-professor",
@@ -199,6 +199,214 @@ const academicCareerPath = [
   }
 ];
 
+// Administrative/Non-Teaching career path for institutional support roles
+const administrativeCareerPath = [
+  {
+    id: "executive",
+    title: "Executive / Officer",
+    shortTitle: "Executive",
+    salaryRange: "₹2.5L - ₹5L",
+    avgSalary: 3.75,
+    experience: "0-3 years",
+    minYears: 0,
+    maxYears: 3,
+    description: "Entry-level administrative support role",
+    responsibilities: [
+      "Handle day-to-day administrative tasks",
+      "Maintain records and documentation",
+      "Coordinate with various departments",
+      "Support senior staff in operations"
+    ],
+    keySkills: ["MS Office", "Communication", "Record Keeping", "Coordination"],
+    growthFactors: [
+      "Process improvement initiatives",
+      "Cross-functional exposure",
+      "Additional certifications",
+      "Strong performance reviews"
+    ]
+  },
+  {
+    id: "senior-executive",
+    title: "Senior Executive",
+    shortTitle: "Sr. Executive",
+    salaryRange: "₹4L - ₹7L",
+    avgSalary: 5.5,
+    experience: "3-6 years",
+    minYears: 3,
+    maxYears: 6,
+    description: "Experienced administrative professional",
+    responsibilities: [
+      "Handle complex administrative processes",
+      "Train and guide junior staff",
+      "Manage departmental documentation",
+      "Liaise with external stakeholders"
+    ],
+    keySkills: ["Process Management", "Training", "Stakeholder Management", "Problem Solving"],
+    growthFactors: [
+      "Leadership of small projects",
+      "ERP/software proficiency",
+      "Domain specialization",
+      "Team coordination skills"
+    ]
+  },
+  {
+    id: "assistant-manager",
+    title: "Assistant Manager",
+    shortTitle: "Asst. Manager",
+    salaryRange: "₹5L - ₹10L",
+    avgSalary: 7.5,
+    experience: "5-8 years",
+    minYears: 5,
+    maxYears: 8,
+    description: "First-level management position",
+    responsibilities: [
+      "Supervise team of executives",
+      "Implement departmental policies",
+      "Handle escalations and complex issues",
+      "Prepare reports for management"
+    ],
+    keySkills: ["Team Supervision", "Policy Implementation", "Reporting", "Conflict Resolution"],
+    growthFactors: [
+      "MBA or equivalent qualification",
+      "People management experience",
+      "Budget handling exposure",
+      "Cross-departmental projects"
+    ]
+  },
+  {
+    id: "manager",
+    title: "Manager",
+    shortTitle: "Manager",
+    salaryRange: "₹8L - ₹15L",
+    avgSalary: 11.5,
+    experience: "8-12 years",
+    minYears: 8,
+    maxYears: 12,
+    description: "Department/function management",
+    responsibilities: [
+      "Manage department operations",
+      "Drive process improvements",
+      "Handle departmental budgets",
+      "Performance management of team"
+    ],
+    keySkills: ["Department Management", "Budget Planning", "Process Optimization", "Leadership"],
+    growthFactors: [
+      "Strategic initiative leadership",
+      "Cost optimization achievements",
+      "Team building and retention",
+      "Digital transformation projects"
+    ]
+  },
+  {
+    id: "senior-manager",
+    title: "Senior Manager / Deputy Director",
+    shortTitle: "Sr. Manager",
+    salaryRange: "₹12L - ₹22L",
+    avgSalary: 17,
+    experience: "12-18 years",
+    minYears: 12,
+    maxYears: 18,
+    description: "Senior management with strategic responsibilities",
+    responsibilities: [
+      "Oversee multiple functions/teams",
+      "Strategic planning and execution",
+      "Policy development",
+      "Key stakeholder relationship management"
+    ],
+    keySkills: ["Strategic Planning", "Multi-team Management", "Policy Development", "Stakeholder Relations"],
+    growthFactors: [
+      "Institution-wide impact projects",
+      "External collaborations",
+      "Regulatory compliance expertise",
+      "Leadership development programs"
+    ]
+  },
+  {
+    id: "agm-dgm",
+    title: "AGM / DGM",
+    shortTitle: "AGM/DGM",
+    salaryRange: "₹18L - ₹35L",
+    avgSalary: 26.5,
+    experience: "18-22 years",
+    minYears: 18,
+    maxYears: 22,
+    description: "Executive leadership role",
+    responsibilities: [
+      "Lead major institutional functions",
+      "Resource allocation and optimization",
+      "Board-level reporting",
+      "Strategic decision making"
+    ],
+    keySkills: ["Executive Leadership", "Resource Management", "Board Communication", "Strategic Vision"],
+    growthFactors: [
+      "Multi-department oversight",
+      "Significant cost/efficiency gains",
+      "Industry networking",
+      "Thought leadership"
+    ]
+  },
+  {
+    id: "gm-director",
+    title: "GM / Director (Admin)",
+    shortTitle: "GM/Director",
+    salaryRange: "₹25L - ₹50L+",
+    avgSalary: 37.5,
+    experience: "22+ years",
+    minYears: 22,
+    maxYears: 35,
+    description: "Top administrative leadership",
+    responsibilities: [
+      "Overall institutional administration",
+      "Policy and governance",
+      "Organizational transformation",
+      "Executive committee participation"
+    ],
+    keySkills: ["Institutional Governance", "Transformation Leadership", "Executive Management", "Vision Setting"],
+    growthFactors: [
+      "Institution-wide transformation",
+      "Excellence awards and recognition",
+      "Industry body participation",
+      "Mentoring next-gen leaders"
+    ]
+  }
+];
+
+// Helper function to detect if role is teaching or non-teaching
+const isTeachingRole = (role: string | null | undefined): boolean => {
+  if (!role) return true; // Default to teaching path
+  const roleLower = role.toLowerCase();
+  
+  // Non-teaching keywords
+  const nonTeachingKeywords = [
+    "hr", "human resource", "admin", "administrator", "administration",
+    "finance", "accounts", "accountant", "purchase", "procurement",
+    "registrar", "librarian", "library", "it ", "information technology",
+    "maintenance", "security", "transport", "hostel", "warden",
+    "placement", "training", "tpo", "counselor", "counsellor",
+    "manager", "executive", "coordinator", "officer", "clerk",
+    "receptionist", "secretary", "assistant" // generic admin roles
+  ];
+  
+  // Teaching keywords take precedence
+  const teachingKeywords = [
+    "professor", "lecturer", "faculty", "teacher", "instructor",
+    "dean", "hod", "head of department", "principal", "director",
+    "academic", "research"
+  ];
+  
+  // Check for teaching keywords first
+  for (const keyword of teachingKeywords) {
+    if (roleLower.includes(keyword)) return true;
+  }
+  
+  // Check for non-teaching keywords
+  for (const keyword of nonTeachingKeywords) {
+    if (roleLower.includes(keyword)) return false;
+  }
+  
+  return true; // Default to teaching
+};
+
 // Market insights data
 const marketInsights = {
   salaryFactors: [
@@ -255,22 +463,39 @@ export const CareerPathVisualization = ({
 }: CareerPathVisualizationProps) => {
   const [selectedLevel, setSelectedLevel] = React.useState<string | null>(null);
   
+  // Determine if this is a teaching or non-teaching role
+  const isTeaching = isTeachingRole(currentRole);
+  const careerPath = isTeaching ? academicCareerPath : administrativeCareerPath;
+  
   // Determine current position in career path
   const getCurrentLevelIndex = () => {
     const role = (currentRole || "").toLowerCase();
-    if (role.includes("executive") || role.includes("vice chancellor")) return 6;
-    if (role.includes("director") || role.includes("principal")) return 5;
-    if (role.includes("assistant director")) return 4;
-    if (role.includes("hod") || role.includes("head") || role.includes("dean")) return 3;
-    if (role.includes("professor") && !role.includes("assistant") && !role.includes("associate")) return 2;
-    if (role.includes("associate")) return 1;
-    return 0;
+    
+    if (isTeaching) {
+      // Teaching career path logic
+      if (role.includes("executive") || role.includes("vice chancellor")) return 6;
+      if (role.includes("director") || role.includes("principal")) return 5;
+      if (role.includes("assistant director")) return 4;
+      if (role.includes("hod") || role.includes("head") || role.includes("dean")) return 3;
+      if (role.includes("professor") && !role.includes("assistant") && !role.includes("associate")) return 2;
+      if (role.includes("associate")) return 1;
+      return 0;
+    } else {
+      // Administrative career path logic
+      if (role.includes("gm") || role.includes("general manager") || (role.includes("director") && !role.includes("assistant"))) return 6;
+      if (role.includes("agm") || role.includes("dgm") || role.includes("deputy")) return 5;
+      if (role.includes("senior manager") || role.includes("sr. manager") || role.includes("sr manager")) return 4;
+      if (role.includes("manager") && !role.includes("assistant") && !role.includes("senior") && !role.includes("sr")) return 3;
+      if (role.includes("assistant manager") || role.includes("asst. manager") || role.includes("asst manager")) return 2;
+      if (role.includes("senior executive") || role.includes("sr. executive") || role.includes("sr executive")) return 1;
+      return 0;
+    }
   };
 
   const currentLevelIndex = getCurrentLevelIndex();
   const selectedLevelData = selectedLevel 
-    ? academicCareerPath.find(l => l.id === selectedLevel)
-    : academicCareerPath[currentLevelIndex];
+    ? careerPath.find(l => l.id === selectedLevel)
+    : careerPath[currentLevelIndex];
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -292,7 +517,7 @@ export const CareerPathVisualization = ({
         <div>
           <h2 className="text-xl font-heading font-bold text-foreground">Career Path & Salary Insights</h2>
           <p className="text-sm text-muted-foreground mt-1">
-            Based on Indian academic market data and HR best practices
+            Based on Indian {isTeaching ? "academic" : "institutional"} market data and HR best practices
           </p>
         </div>
         <Badge className="bg-primary/10 text-primary border-0">
@@ -324,7 +549,7 @@ export const CareerPathVisualization = ({
             <CardHeader className="pb-4">
               <CardTitle className="text-base flex items-center gap-2">
                 <TrendingUp className="h-4 w-4 text-primary" />
-                Academic Career Progression
+                {isTeaching ? "Academic Career Progression" : "Administrative Career Progression"}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -335,14 +560,14 @@ export const CareerPathVisualization = ({
                   <motion.div 
                     className="h-full bg-gradient-to-r from-primary to-primary/60 rounded-full"
                     initial={{ width: 0 }}
-                    animate={{ width: `${((currentLevelIndex + 1) / academicCareerPath.length) * 100}%` }}
+                    animate={{ width: `${((currentLevelIndex + 1) / careerPath.length) * 100}%` }}
                     transition={{ duration: 1, ease: "easeOut" }}
                   />
                 </div>
 
                 {/* Level Nodes */}
                 <div className="flex justify-between relative">
-                  {academicCareerPath.map((level, index) => {
+                  {careerPath.map((level, index) => {
                     const isCompleted = index < currentLevelIndex;
                     const isCurrent = index === currentLevelIndex;
                     const isSelected = selectedLevel === level.id;
@@ -494,8 +719,8 @@ export const CareerPathVisualization = ({
                 animate="visible"
                 className="space-y-3"
               >
-                {academicCareerPath.map((level, index) => {
-                  const widthPercent = (level.avgSalary / 55) * 100;
+                {careerPath.map((level, index) => {
+                  const widthPercent = (level.avgSalary / (isTeaching ? 55 : 37.5)) * 100;
                   const isCurrent = index === currentLevelIndex;
                   
                   return (

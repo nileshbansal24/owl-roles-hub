@@ -14,15 +14,58 @@ export const CareerInsightsCard = ({
   onClick,
   className,
 }: CareerInsightsCardProps) => {
+  // Helper function to detect if role is teaching or non-teaching
+  const isTeachingRole = (role: string | null | undefined): boolean => {
+    if (!role) return true;
+    const roleLower = role.toLowerCase();
+    
+    const nonTeachingKeywords = [
+      "hr", "human resource", "admin", "administrator", "finance", "accounts",
+      "purchase", "procurement", "registrar", "librarian", "it ", "maintenance",
+      "security", "transport", "hostel", "placement", "training", "tpo", "counselor"
+    ];
+    
+    const teachingKeywords = [
+      "professor", "lecturer", "faculty", "teacher", "instructor",
+      "dean", "hod", "head of department", "principal", "academic", "research"
+    ];
+    
+    for (const keyword of teachingKeywords) {
+      if (roleLower.includes(keyword)) return true;
+    }
+    
+    for (const keyword of nonTeachingKeywords) {
+      if (roleLower.includes(keyword)) return false;
+    }
+    
+    // Check for generic admin roles (manager, executive, coordinator without teaching context)
+    if ((roleLower.includes("manager") || roleLower.includes("executive") || roleLower.includes("coordinator") || roleLower.includes("officer"))
+        && !roleLower.includes("academic")) {
+      return false;
+    }
+    
+    return true;
+  };
+
+  const isTeaching = isTeachingRole(currentRole);
+
   // Determine career stage based on role
   const getCareerStage = () => {
     const role = (currentRole || "").toLowerCase();
-    if (role.includes("director") || role.includes("executive")) return "Senior Leadership";
-    if (role.includes("hod") || role.includes("head") || role.includes("dean")) return "Leadership";
-    if (role.includes("professor") && !role.includes("assistant") && !role.includes("associate")) return "Senior Faculty";
-    if (role.includes("associate")) return "Mid-Level Faculty";
-    if (role.includes("assistant") || role.includes("lecturer")) return "Early Career";
-    return "Early Career";
+    
+    if (isTeaching) {
+      if (role.includes("director") || role.includes("executive")) return "Senior Leadership";
+      if (role.includes("hod") || role.includes("head") || role.includes("dean")) return "Leadership";
+      if (role.includes("professor") && !role.includes("assistant") && !role.includes("associate")) return "Senior Faculty";
+      if (role.includes("associate")) return "Mid-Level Faculty";
+      return "Early Career Faculty";
+    } else {
+      if (role.includes("gm") || role.includes("director")) return "Executive Leadership";
+      if (role.includes("agm") || role.includes("dgm") || role.includes("senior manager")) return "Senior Management";
+      if (role.includes("manager")) return "Management";
+      if (role.includes("senior") || role.includes("sr.")) return "Senior Professional";
+      return "Professional";
+    }
   };
 
   return (
