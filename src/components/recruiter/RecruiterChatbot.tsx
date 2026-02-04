@@ -373,7 +373,7 @@ const RecruiterChatbot = ({ onViewCandidate, onMessageCandidate }: RecruiterChat
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className="fixed bottom-24 right-6 z-50 w-[380px] max-w-[calc(100vw-3rem)] rounded-xl border bg-background shadow-2xl overflow-hidden"
+            className="fixed bottom-24 right-6 z-50 w-[420px] max-w-[calc(100vw-3rem)] rounded-xl border bg-background shadow-2xl overflow-hidden"
           >
             {/* Header */}
             <div className="bg-primary px-4 py-3 text-primary-foreground">
@@ -406,10 +406,10 @@ const RecruiterChatbot = ({ onViewCandidate, onMessageCandidate }: RecruiterChat
                     )}
                     <div
                       className={cn(
-                        "max-w-[80%] rounded-lg px-3 py-2",
+                        "rounded-lg px-3 py-2",
                         message.type === "user"
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-muted"
+                          ? "max-w-[80%] bg-primary text-primary-foreground"
+                          : "max-w-[95%] bg-muted"
                       )}
                     >
                       <p className="text-sm">{message.content}</p>
@@ -418,48 +418,50 @@ const RecruiterChatbot = ({ onViewCandidate, onMessageCandidate }: RecruiterChat
                       {message.candidates && message.candidates.length > 0 && (
                         <div className="mt-3 space-y-2">
                           {message.candidates.map((candidate) => (
-                            <Card key={candidate.id} className="p-3 bg-background">
+                            <Card key={candidate.id} className="p-3 bg-background border shadow-sm">
                               <div className="flex items-start gap-3">
-                                <Avatar className="h-10 w-10">
+                                <Avatar className="h-12 w-12 border-2 border-primary/20">
                                   <AvatarImage src={candidate.avatar_url || undefined} />
-                                  <AvatarFallback>
+                                  <AvatarFallback className="bg-primary/10 text-primary font-semibold">
                                     {candidate.full_name?.charAt(0) || "C"}
                                   </AvatarFallback>
                                 </Avatar>
                                 <div className="flex-1 min-w-0">
-                                  <div className="flex items-center gap-2">
-                                    <p className="font-medium text-sm truncate">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <p className="font-semibold text-sm text-foreground">
                                       {candidate.full_name || "Unknown"}
                                     </p>
                                     {candidate.category && candidate.category !== "FRESHER" && (
                                       <Badge 
                                         variant="outline" 
-                                        className={cn("text-[10px] px-1.5 py-0 flex items-center gap-1", getCategoryBadgeStyle(candidate.category))}
+                                        className={cn("text-[10px] px-1.5 py-0.5 flex items-center gap-1 shrink-0", getCategoryBadgeStyle(candidate.category))}
                                       >
                                         {getCategoryIcon(candidate.category)}
                                         {candidate.category}
                                       </Badge>
                                     )}
                                   </div>
-                                  <p className="text-xs text-muted-foreground truncate">
+                                  <p className="text-xs text-primary font-medium mt-0.5 line-clamp-2">
                                     {candidate.role || candidate.headline || "No role specified"}
                                   </p>
-                                  {candidate.location && (
-                                    <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
-                                      <MapPin className="h-3 w-3" />
-                                      <span className="truncate">{candidate.location}</span>
-                                    </div>
-                                  )}
-                                  {candidate.years_experience !== null && candidate.years_experience > 0 && (
-                                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                                      <Briefcase className="h-3 w-3" />
-                                      <span>{candidate.years_experience} years exp.</span>
-                                    </div>
-                                  )}
+                                  <div className="flex items-center gap-3 mt-1.5 text-xs text-muted-foreground">
+                                    {candidate.location && (
+                                      <div className="flex items-center gap-1">
+                                        <MapPin className="h-3 w-3" />
+                                        <span className="truncate max-w-[100px]">{candidate.location}</span>
+                                      </div>
+                                    )}
+                                    {candidate.years_experience !== null && candidate.years_experience > 0 && (
+                                      <div className="flex items-center gap-1">
+                                        <Briefcase className="h-3 w-3" />
+                                        <span>{candidate.years_experience} yrs</span>
+                                      </div>
+                                    )}
+                                  </div>
                                   {candidate.matchReasons && candidate.matchReasons.length > 0 && (
                                     <div className="flex flex-wrap gap-1 mt-2">
                                       {candidate.matchReasons.slice(0, 2).map((reason, idx) => (
-                                        <Badge key={idx} variant="secondary" className="text-[10px] px-1.5 py-0">
+                                        <Badge key={idx} variant="secondary" className="text-[10px] px-1.5 py-0.5 bg-primary/5 text-primary border-0">
                                           {reason}
                                         </Badge>
                                       ))}
@@ -467,22 +469,22 @@ const RecruiterChatbot = ({ onViewCandidate, onMessageCandidate }: RecruiterChat
                                   )}
                                 </div>
                               </div>
-                              <div className="flex gap-2 mt-3">
+                              <div className="grid grid-cols-2 gap-2 mt-3">
                                 <Button
                                   size="sm"
                                   variant="outline"
-                                  className="flex-1 h-7 text-xs"
+                                  className="h-8 text-xs font-medium"
                                   onClick={() => handleViewProfile(candidate)}
                                 >
-                                  <Eye className="h-3 w-3 mr-1" />
-                                  View
+                                  <Eye className="h-3.5 w-3.5 mr-1.5" />
+                                  View Profile
                                 </Button>
                                 <Button
                                   size="sm"
-                                  className="flex-1 h-7 text-xs"
+                                  className="h-8 text-xs font-medium"
                                   onClick={() => handleSendMessage(candidate)}
                                 >
-                                  <Mail className="h-3 w-3 mr-1" />
+                                  <Mail className="h-3.5 w-3.5 mr-1.5" />
                                   Message
                                 </Button>
                               </div>

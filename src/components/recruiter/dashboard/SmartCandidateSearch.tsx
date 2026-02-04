@@ -26,7 +26,10 @@ interface SmartCandidateSearchProps {
 const parseKeywords = (input: string): { roles: string[]; experience: number | null; salary: number | null; keywords: string[] } => {
   const result = { roles: [] as string[], experience: null as number | null, salary: null as number | null, keywords: [] as string[] };
   
-  const parts = input.toLowerCase().split(/[,;]+/).map(p => p.trim()).filter(Boolean);
+  const lower = input.toLowerCase().trim();
+  
+  // First, try comma-separated parsing
+  const parts = lower.split(/[,;]+/).map(p => p.trim()).filter(Boolean);
   
   for (const part of parts) {
     // Check for experience patterns
@@ -45,16 +48,28 @@ const parseKeywords = (input: string): { roles: string[]; experience: number | n
     }
     
     // Common academic roles
-    const roleKeywords = ['dean', 'professor', 'hod', 'director', 'principal', 'lecturer', 'researcher', 'vice chancellor', 'chancellor', 'head', 'coordinator'];
+    const roleKeywords = ['dean', 'professor', 'hod', 'director', 'principal', 'lecturer', 'researcher', 'vice chancellor', 'chancellor', 'head', 'coordinator', 'manager'];
     const isRole = roleKeywords.some(role => part.includes(role));
     if (isRole) {
       result.roles.push(part);
-      continue;
     }
     
-    // Everything else is a keyword
+    // Also add as keyword for flexible matching
     if (part.length > 2) {
       result.keywords.push(part);
+    }
+  }
+  
+  // If no commas were used, treat the whole input as search terms
+  if (parts.length <= 1 && lower.length > 0) {
+    // Split by spaces and add each word
+    const words = lower.split(/\s+/).filter(w => w.length > 2);
+    for (const word of words) {
+      const roleKeywords = ['dean', 'professor', 'hod', 'director', 'principal', 'lecturer', 'researcher', 'chancellor', 'head', 'coordinator', 'manager'];
+      if (roleKeywords.includes(word)) {
+        result.roles.push(word);
+      }
+      result.keywords.push(word);
     }
   }
   
@@ -187,65 +202,68 @@ const SmartCandidateSearch = ({
   const performSearch = useCallback((
     criteria: { roles: string[]; experience: number | null; salary?: number | null; skills?: string[]; keywords: string[] }
   ) => {
-    const results = candidates.filter(candidate => {
+    // If no criteria, return empty
+    if (criteria.roles.length === 0 && criteria.experience === null && 
+        (!criteria.skills || criteria.skills.length === 0) && criteria.keywords.length === 0) {
+      return [];
+    }
+
+    const results = candidates.map(candidate => {
       let score = 0;
       
-      // Role matching
+      const candidateRole = (candidate.role || '').toLowerCase();
+      const candidateHeadline = (candidate.headline || '').toLowerCase();
+      const candidateBio = (candidate.bio || '').toLowerCase();
+      const candidateSummary = (candidate.professional_summary || '').toLowerCase();
+      const candidateSkillsText = (candidate.skills || []).join(' ').toLowerCase();
+      
+      const searchableText = `${candidateRole} ${candidateHeadline} ${candidateBio} ${candidateSummary} ${candidateSkillsText}`;
+      
+      // Role matching - be more flexible
       if (criteria.roles.length > 0) {
-        const candidateRole = (candidate.role || candidate.headline || '').toLowerCase();
-        const hasRoleMatch = criteria.roles.some(role => 
-          candidateRole.includes(role.toLowerCase()) ||
-          role.toLowerCase().includes(candidateRole)
-        );
-        if (hasRoleMatch) score += 3;
+        for (const role of criteria.roles) {
+          const roleLower = role.toLowerCase().trim();
+          if (searchableText.includes(roleLower)) {
+            score += 5;
+          }
+        }
+      }
+      
+      // Also check all keywords against the searchable text
+      if (criteria.keywords.length > 0) {
+        for (const keyword of criteria.keywords) {
+          const kwLower = keyword.toLowerCase().trim();
+          if (searchableText.includes(kwLower)) {
+            score += 2;
+          }
+        }
       }
       
       // Experience matching
       if (criteria.experience !== null && candidate.years_experience !== null) {
         if (candidate.years_experience >= criteria.experience) {
-          score += 2;
+          score += 3;
         }
       }
       
       // Skills matching
       if (criteria.skills && criteria.skills.length > 0 && candidate.skills) {
         const candidateSkills = candidate.skills.map(s => s.toLowerCase());
-        const matchedSkills = criteria.skills.filter(skill => 
-          candidateSkills.some(cs => cs.includes(skill.toLowerCase()) || skill.toLowerCase().includes(cs))
-        );
-        score += matchedSkills.length;
-      }
-      
-      // Keywords matching in bio, headline, professional summary
-      if (criteria.keywords.length > 0) {
-        const searchableText = [
-          candidate.bio,
-          candidate.headline,
-          candidate.professional_summary,
-          candidate.role,
-          ...(candidate.skills || [])
-        ].filter(Boolean).join(' ').toLowerCase();
-        
-        const matchedKeywords = criteria.keywords.filter(kw => searchableText.includes(kw.toLowerCase()));
-        score += matchedKeywords.length * 0.5;
-      }
-      
-      return score > 0;
-    });
-    
-    // Sort by relevance (we'll need to recalculate scores for sorting)
-    return results.sort((a, b) => {
-      const getScore = (c: Profile) => {
-        let score = 0;
-        if (criteria.roles.length > 0) {
-          const role = (c.role || c.headline || '').toLowerCase();
-          if (criteria.roles.some(r => role.includes(r.toLowerCase()))) score += 3;
+        for (const skill of criteria.skills) {
+          const skillLower = skill.toLowerCase().trim();
+          if (candidateSkills.some(cs => cs.includes(skillLower) || skillLower.includes(cs))) {
+            score += 2;
+          }
         }
-        if (criteria.experience && c.years_experience && c.years_experience >= criteria.experience) score += 2;
-        return score;
-      };
-      return getScore(b) - getScore(a);
-    });
+      }
+      
+      return { candidate, score };
+    }).filter(item => item.score > 0);
+    
+    // Sort by score descending
+    return results
+      .sort((a, b) => b.score - a.score)
+      .map(item => item.candidate);
   }, [candidates]);
 
   const handleKeywordSearch = useCallback(() => {
