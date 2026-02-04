@@ -463,15 +463,26 @@ export const CareerPathVisualization = ({
 }: CareerPathVisualizationProps) => {
   const [selectedLevel, setSelectedLevel] = React.useState<string | null>(null);
   
-  // Determine if this is a teaching or non-teaching role
-  const isTeaching = isTeachingRole(currentRole);
-  const careerPath = isTeaching ? academicCareerPath : administrativeCareerPath;
+  // Determine default path based on role, but allow manual override
+  const defaultIsTeaching = isTeachingRole(currentRole);
+  const [viewingTeachingPath, setViewingTeachingPath] = React.useState(defaultIsTeaching);
   
-  // Determine current position in career path
+  // Use the manually selected path
+  const careerPath = viewingTeachingPath ? academicCareerPath : administrativeCareerPath;
+  
+  // Reset selected level when switching paths
+  React.useEffect(() => {
+    setSelectedLevel(null);
+  }, [viewingTeachingPath]);
+  
+  // Determine current position in career path (only relevant if viewing their actual path)
   const getCurrentLevelIndex = () => {
+    // If viewing a different path than their role, start at beginning
+    if (viewingTeachingPath !== defaultIsTeaching) return 0;
+    
     const role = (currentRole || "").toLowerCase();
     
-    if (isTeaching) {
+    if (viewingTeachingPath) {
       // Teaching career path logic
       if (role.includes("executive") || role.includes("vice chancellor")) return 6;
       if (role.includes("director") || role.includes("principal")) return 5;
@@ -513,17 +524,46 @@ export const CareerPathVisualization = ({
   return (
     <div className={cn("space-y-6", className)}>
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-xl font-heading font-bold text-foreground">Career Path & Salary Insights</h2>
           <p className="text-sm text-muted-foreground mt-1">
-            Based on Indian {isTeaching ? "academic" : "institutional"} market data and HR best practices
+            Based on Indian {viewingTeachingPath ? "academic" : "institutional"} market data and HR best practices
           </p>
         </div>
-        <Badge className="bg-primary/10 text-primary border-0">
-          <TrendingUp className="h-3 w-3 mr-1" />
-          2024-25 Data
-        </Badge>
+        <div className="flex items-center gap-3">
+          {/* Path Toggle */}
+          <div className="flex items-center gap-2 p-1 rounded-lg bg-muted/50 border border-border">
+            <button
+              onClick={() => setViewingTeachingPath(true)}
+              className={cn(
+                "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all",
+                viewingTeachingPath 
+                  ? "bg-background text-foreground shadow-sm" 
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <GraduationCap className="h-3.5 w-3.5" />
+              Teaching
+            </button>
+            <button
+              onClick={() => setViewingTeachingPath(false)}
+              className={cn(
+                "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all",
+                !viewingTeachingPath 
+                  ? "bg-background text-foreground shadow-sm" 
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <Briefcase className="h-3.5 w-3.5" />
+              Non-Teaching
+            </button>
+          </div>
+          <Badge className="bg-primary/10 text-primary border-0 hidden sm:flex">
+            <TrendingUp className="h-3 w-3 mr-1" />
+            2024-25 Data
+          </Badge>
+        </div>
       </div>
 
       <Tabs defaultValue="career-path" className="space-y-6">
@@ -549,7 +589,7 @@ export const CareerPathVisualization = ({
             <CardHeader className="pb-4">
               <CardTitle className="text-base flex items-center gap-2">
                 <TrendingUp className="h-4 w-4 text-primary" />
-                {isTeaching ? "Academic Career Progression" : "Administrative Career Progression"}
+                {viewingTeachingPath ? "Academic Career Progression" : "Administrative Career Progression"}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -720,7 +760,7 @@ export const CareerPathVisualization = ({
                 className="space-y-3"
               >
                 {careerPath.map((level, index) => {
-                  const widthPercent = (level.avgSalary / (isTeaching ? 55 : 37.5)) * 100;
+                  const widthPercent = (level.avgSalary / (viewingTeachingPath ? 55 : 37.5)) * 100;
                   const isCurrent = index === currentLevelIndex;
                   
                   return (
