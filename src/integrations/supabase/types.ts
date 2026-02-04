@@ -673,6 +673,10 @@ export type Database = {
       }
     }
     Functions: {
+      calculate_years_experience: {
+        Args: { experience_json: Json }
+        Returns: number
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
