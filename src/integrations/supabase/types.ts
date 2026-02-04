@@ -14,6 +14,59 @@ export type Database = {
   }
   public: {
     Tables: {
+      assignment_submissions: {
+        Row: {
+          candidate_id: string
+          event_id: string
+          feedback: string | null
+          file_name: string
+          file_size_bytes: number | null
+          file_url: string
+          graded_at: string | null
+          graded_by: string | null
+          id: string
+          max_score: number | null
+          score: number | null
+          submitted_at: string
+        }
+        Insert: {
+          candidate_id: string
+          event_id: string
+          feedback?: string | null
+          file_name: string
+          file_size_bytes?: number | null
+          file_url: string
+          graded_at?: string | null
+          graded_by?: string | null
+          id?: string
+          max_score?: number | null
+          score?: number | null
+          submitted_at?: string
+        }
+        Update: {
+          candidate_id?: string
+          event_id?: string
+          feedback?: string | null
+          file_name?: string
+          file_size_bytes?: number | null
+          file_url?: string
+          graded_at?: string | null
+          graded_by?: string | null
+          id?: string
+          max_score?: number | null
+          score?: number | null
+          submitted_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assignment_submissions_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       candidate_directory: {
         Row: {
           avatar_url: string | null
@@ -103,6 +156,160 @@ export type Database = {
           },
           {
             foreignKeyName: "candidate_rankings_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_questions: {
+        Row: {
+          correct_answer: string | null
+          created_at: string
+          event_id: string
+          id: string
+          options: Json | null
+          order_index: number
+          points: number
+          question_text: string
+          question_type: Database["public"]["Enums"]["question_type"]
+        }
+        Insert: {
+          correct_answer?: string | null
+          created_at?: string
+          event_id: string
+          id?: string
+          options?: Json | null
+          order_index?: number
+          points?: number
+          question_text: string
+          question_type?: Database["public"]["Enums"]["question_type"]
+        }
+        Update: {
+          correct_answer?: string | null
+          created_at?: string
+          event_id?: string
+          id?: string
+          options?: Json | null
+          order_index?: number
+          points?: number
+          question_text?: string
+          question_type?: Database["public"]["Enums"]["question_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_questions_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_registrations: {
+        Row: {
+          attended_at: string | null
+          candidate_id: string
+          event_id: string
+          id: string
+          registered_at: string
+          status: string
+        }
+        Insert: {
+          attended_at?: string | null
+          candidate_id: string
+          event_id: string
+          id?: string
+          registered_at?: string
+          status?: string
+        }
+        Update: {
+          attended_at?: string | null
+          candidate_id?: string
+          event_id?: string
+          id?: string
+          registered_at?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_registrations_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      events: {
+        Row: {
+          allowed_file_types: string[] | null
+          created_at: string
+          description: string | null
+          end_time: string | null
+          event_type: Database["public"]["Enums"]["event_type"]
+          id: string
+          job_id: string
+          max_file_size_mb: number | null
+          meeting_link: string | null
+          platform: string | null
+          recruiter_id: string
+          start_time: string | null
+          status: Database["public"]["Enums"]["event_status"]
+          submission_deadline: string | null
+          time_limit_minutes: number | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          allowed_file_types?: string[] | null
+          created_at?: string
+          description?: string | null
+          end_time?: string | null
+          event_type: Database["public"]["Enums"]["event_type"]
+          id?: string
+          job_id: string
+          max_file_size_mb?: number | null
+          meeting_link?: string | null
+          platform?: string | null
+          recruiter_id: string
+          start_time?: string | null
+          status?: Database["public"]["Enums"]["event_status"]
+          submission_deadline?: string | null
+          time_limit_minutes?: number | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          allowed_file_types?: string[] | null
+          created_at?: string
+          description?: string | null
+          end_time?: string | null
+          event_type?: Database["public"]["Enums"]["event_type"]
+          id?: string
+          job_id?: string
+          max_file_size_mb?: number | null
+          meeting_link?: string | null
+          platform?: string | null
+          recruiter_id?: string
+          start_time?: string | null
+          status?: Database["public"]["Enums"]["event_status"]
+          submission_deadline?: string | null
+          time_limit_minutes?: number | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "events_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "events_job_id_fkey"
             columns: ["job_id"]
             isOneToOne: false
             referencedRelation: "jobs_public"
@@ -412,6 +619,56 @@ export type Database = {
         }
         Relationships: []
       }
+      quiz_submissions: {
+        Row: {
+          answers: Json
+          candidate_id: string
+          event_id: string
+          graded_at: string | null
+          graded_by: string | null
+          id: string
+          max_score: number | null
+          score: number | null
+          started_at: string
+          submitted_at: string | null
+          time_taken_seconds: number | null
+        }
+        Insert: {
+          answers?: Json
+          candidate_id: string
+          event_id: string
+          graded_at?: string | null
+          graded_by?: string | null
+          id?: string
+          max_score?: number | null
+          score?: number | null
+          started_at?: string
+          submitted_at?: string | null
+          time_taken_seconds?: number | null
+        }
+        Update: {
+          answers?: Json
+          candidate_id?: string
+          event_id?: string
+          graded_at?: string | null
+          graded_by?: string | null
+          id?: string
+          max_score?: number | null
+          score?: number | null
+          started_at?: string
+          submitted_at?: string | null
+          time_taken_seconds?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quiz_submissions_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       recruiter_messages: {
         Row: {
           candidate_email: string
@@ -689,6 +946,9 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
+      event_status: "draft" | "published" | "cancelled" | "completed"
+      event_type: "webinar" | "quiz" | "assignment"
+      question_type: "mcq" | "short_answer"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -817,6 +1077,9 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "moderator", "user"],
+      event_status: ["draft", "published", "cancelled", "completed"],
+      event_type: ["webinar", "quiz", "assignment"],
+      question_type: ["mcq", "short_answer"],
     },
   },
 } as const

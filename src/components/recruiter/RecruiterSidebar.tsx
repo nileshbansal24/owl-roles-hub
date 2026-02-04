@@ -75,6 +75,11 @@ const RecruiterSidebar = ({ hasJobs = false }: RecruiterSidebarProps) => {
       tab: "jobs",
     },
     {
+      title: "Events",
+      icon: Calendar,
+      tab: "events",
+    },
+    {
       title: "Interviews",
       icon: Calendar,
       tab: "interviews",
