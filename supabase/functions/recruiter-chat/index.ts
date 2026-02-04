@@ -6,13 +6,45 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+// Candidate category ranking (higher is better)
+function getCandidateCategory(candidate: any): { category: string; rank: number } {
+  const role = (candidate.role || "").toLowerCase();
+  const headline = (candidate.headline || "").toLowerCase();
+  const combinedText = `${role} ${headline}`;
+  const experience = candidate.years_experience || 0;
+
+  // GOLD: Top-tier leadership positions
+  const goldKeywords = ["hod", "head of department", "dean", "vice chancellor", "vc", "pvc", "pro vice chancellor", "director", "principal", "registrar", "ceo", "cto", "cfo"];
+  if (goldKeywords.some(keyword => combinedText.includes(keyword))) {
+    return { category: "GOLD", rank: 3 };
+  }
+
+  // SILVER: Senior positions
+  const silverKeywords = ["professor", "manager", "senior lecturer", "associate professor", "coordinator", "lead", "head", "senior"];
+  if (silverKeywords.some(keyword => combinedText.includes(keyword)) && !combinedText.includes("assistant")) {
+    return { category: "SILVER", rank: 2 };
+  }
+
+  // BRONZE: Entry to mid-level
+  const bronzeKeywords = ["assistant professor", "lecturer", "instructor", "teaching assistant", "research associate"];
+  if (bronzeKeywords.some(keyword => combinedText.includes(keyword))) {
+    return { category: "BRONZE", rank: 1 };
+  }
+
+  // Experience-based fallback
+  if (experience >= 10) return { category: "SILVER", rank: 2 };
+  if (experience >= 3) return { category: "BRONZE", rank: 1 };
+
+  return { category: "FRESHER", rank: 0 };
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { message } = await req.json();
+    const { message, showMore, previousCandidateIds } = await req.json();
     
     if (!message) {
       return new Response(
@@ -183,16 +215,37 @@ Only include fields that are clearly mentioned.`
         }
       }
 
-      return { ...candidate, score, matchReasons };
+      // Get category ranking
+      const categoryInfo = getCandidateCategory(candidate);
+
+      return { ...candidate, score, matchReasons, category: categoryInfo.category, categoryRank: categoryInfo.rank };
     });
 
-    // Filter candidates with score > 0 and sort by score
+    // Filter candidates with score > 0 and sort by category rank first, then score
     const matchedCandidates = scoredCandidates
       .filter((c: any) => c.score > 0)
-      .sort((a: any, b: any) => b.score - a.score)
-      .slice(0, 10); // Limit to top 10
+      .sort((a: any, b: any) => {
+        // First sort by category rank (GOLD > SILVER > BRONZE > FRESHER)
+        if (b.categoryRank !== a.categoryRank) {
+          return b.categoryRank - a.categoryRank;
+        }
+        // Then by score
+        return b.score - a.score;
+      });
 
-    console.log(`Found ${matchedCandidates.length} matching candidates`);
+    // If showMore is requested, exclude previously shown candidates
+    let candidatesToShow = matchedCandidates;
+    if (showMore && previousCandidateIds && previousCandidateIds.length > 0) {
+      candidatesToShow = matchedCandidates.filter((c: any) => !previousCandidateIds.includes(c.id));
+    }
+
+    // Limit to top 3 candidates
+    const topCandidates = candidatesToShow.slice(0, 3);
+    const hasMore = candidatesToShow.length > 3;
+    const totalMatches = matchedCandidates.length;
+    const shownSoFar = showMore && previousCandidateIds ? previousCandidateIds.length + topCandidates.length : topCandidates.length;
+
+    console.log(`Found ${matchedCandidates.length} matching candidates, showing ${topCandidates.length}`);
 
     // Generate a friendly response
     const searchDescription = [
@@ -203,17 +256,25 @@ Only include fields that are clearly mentioned.`
     ].filter(Boolean).join(" ");
 
     let responseMessage = "";
-    if (matchedCandidates.length === 0) {
-      responseMessage = `I couldn't find any candidates matching "${searchDescription}". Try broadening your search criteria or check back later as new candidates join.`;
+    if (topCandidates.length === 0) {
+      if (showMore) {
+        responseMessage = "No more candidates available for this search. Try refining your criteria to see different results.";
+      } else {
+        responseMessage = `I couldn't find any candidates matching "${searchDescription}". Try broadening your search criteria or check back later as new candidates join.`;
+      }
     } else {
-      responseMessage = `I found ${matchedCandidates.length} candidate${matchedCandidates.length > 1 ? "s" : ""} matching your search for ${searchDescription}. Here are the best matches:`;
+      if (showMore) {
+        responseMessage = `Here are ${topCandidates.length} more candidate${topCandidates.length > 1 ? "s" : ""} (${shownSoFar} of ${totalMatches} total):`;
+      } else {
+        responseMessage = `I found ${totalMatches} candidate${totalMatches > 1 ? "s" : ""} for ${searchDescription}. Here are the top ${topCandidates.length} ranked by seniority:`;
+      }
     }
 
     return new Response(
       JSON.stringify({
         type: "candidates",
         message: responseMessage,
-        candidates: matchedCandidates.map((c: any) => ({
+        candidates: topCandidates.map((c: any) => ({
           id: c.id,
           full_name: c.full_name,
           avatar_url: c.avatar_url,
@@ -226,8 +287,12 @@ Only include fields that are clearly mentioned.`
           email: c.email,
           matchReasons: c.matchReasons,
           score: c.score,
+          category: c.category,
         })),
         searchCriteria: parsed,
+        hasMore,
+        totalMatches,
+        shownSoFar,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
