@@ -151,9 +151,8 @@ export function calculateTotalExperience(dbExp: DBExperience[]): number {
     totalMonths += Math.max(0, months);
   }
 
-  // Round to nearest 0.5 years
-  const years = totalMonths / 12;
-  return Math.round(years * 2) / 2;
+  // Round to nearest whole year (DB column is integer)
+  return Math.round(totalMonths / 12);
 }
 
 // Parse various date formats (e.g., "Jan 2020", "2020", "January 2020", "01/2020")
