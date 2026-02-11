@@ -76,16 +76,18 @@ const RecruiterDashboard = () => {
   const handleViewCandidate = useCallback(async (candidate: Profile) => {
     markCandidateReviewed();
     
+    // Try fetching full profile - may fail due to RLS if candidate hasn't applied to recruiter's jobs
     const { data: fullProfile, error } = await supabase
       .from("profiles")
-      .select("id, full_name, avatar_url, university, role, bio, years_experience, location, headline, skills, user_type, resume_url, email, experience, education, research_papers, achievements, subjects, teaching_philosophy, professional_summary")
+      .select("id, full_name, avatar_url, university, role, bio, years_experience, location, headline, skills, user_type, resume_url, email, experience, education, research_papers, achievements, subjects, teaching_philosophy, professional_summary, orcid_id, scopus_link, scopus_metrics, manual_h_index")
       .eq("id", candidate.id)
       .maybeSingle();
     
-    if (error) {
-      console.error("Error fetching full profile:", error);
+    if (error || !fullProfile) {
+      // Fallback: use candidate_directory data (limited fields but still useful)
+      if (error) console.error("Error fetching full profile:", error);
       setSelectedCandidate(candidate);
-    } else if (fullProfile) {
+    } else {
       const normalizedProfile = {
         ...fullProfile,
         experience:
@@ -94,8 +96,6 @@ const RecruiterDashboard = () => {
             : (fullProfile as any).experience,
       };
       setSelectedCandidate(normalizedProfile as unknown as Profile);
-    } else {
-      setSelectedCandidate(candidate);
     }
     setShowCandidateModal(true);
   }, [markCandidateReviewed]);
