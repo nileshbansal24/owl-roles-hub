@@ -245,6 +245,14 @@ const ApplicantDetailModal = ({
     const fetchNotes = async () => {
       if (!application || !open || !user) return;
       
+      // Skip notes fetch for search-based views (non-UUID application IDs)
+      const isSearchView = application.id.startsWith("search-");
+      if (isSearchView) {
+        setNotes([]);
+        setLoadingNotes(false);
+        return;
+      }
+      
       setLoadingNotes(true);
       const { data, error } = await supabase
         .from("recruiter_notes")
