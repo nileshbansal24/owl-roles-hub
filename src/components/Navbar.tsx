@@ -71,14 +71,22 @@ const Navbar = ({ onLoginClick, onSignupClick }: NavbarProps) => {
   };
 
   const navLinks = [
-    { label: "Home", to: "/", icon: Home },
-    { label: "Institutions", to: "/", icon: Building },
-    { label: "Services", to: "/", icon: Wrench },
+    { label: "Home", to: "/", icon: Home, scrollTo: null },
+    { label: "Institutions", to: "/", icon: Building, scrollTo: "institutions" },
+    { label: "Services", to: "/", icon: Wrench, scrollTo: "services" },
   ];
 
-  const handleNavClick = (to: string) => {
+  const handleNavClick = (to: string, scrollTo?: string | null) => {
     setMobileMenuOpen(false);
     navigate(to);
+    if (scrollTo) {
+      setTimeout(() => {
+        const el = document.getElementById(scrollTo);
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      }, 100);
+    }
   };
 
   return (
@@ -97,13 +105,13 @@ const Navbar = ({ onLoginClick, onSignupClick }: NavbarProps) => {
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-6">
             {navLinks.map((link) => (
-              <Link
+              <button
                 key={link.label}
-                to={link.to}
-                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                onClick={() => handleNavClick(link.to, link.scrollTo)}
+                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
               >
                 {link.label}
-              </Link>
+              </button>
             ))}
           </nav>
 
@@ -210,7 +218,7 @@ const Navbar = ({ onLoginClick, onSignupClick }: NavbarProps) => {
                       key={link.label}
                       variant="ghost"
                       className="justify-start gap-3 h-12"
-                      onClick={() => handleNavClick(link.to)}
+                      onClick={() => handleNavClick(link.to, link.scrollTo)}
                     >
                       <link.icon className="h-5 w-5" />
                       {link.label}
