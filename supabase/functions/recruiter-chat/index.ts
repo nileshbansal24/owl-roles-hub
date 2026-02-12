@@ -6,32 +6,27 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-// Candidate category ranking (higher is better)
 function getCandidateCategory(candidate: any): { category: string; rank: number } {
   const role = (candidate.role || "").toLowerCase();
   const headline = (candidate.headline || "").toLowerCase();
   const combinedText = `${role} ${headline}`;
   const experience = candidate.years_experience || 0;
 
-  // GOLD: Top-tier leadership positions
   const goldKeywords = ["hod", "head of department", "dean", "vice chancellor", "vc", "pvc", "pro vice chancellor", "director", "principal", "registrar", "ceo", "cto", "cfo"];
   if (goldKeywords.some(keyword => combinedText.includes(keyword))) {
     return { category: "GOLD", rank: 3 };
   }
 
-  // SILVER: Senior positions
   const silverKeywords = ["professor", "manager", "senior lecturer", "associate professor", "coordinator", "lead", "head", "senior"];
   if (silverKeywords.some(keyword => combinedText.includes(keyword)) && !combinedText.includes("assistant")) {
     return { category: "SILVER", rank: 2 };
   }
 
-  // BRONZE: Entry to mid-level
   const bronzeKeywords = ["assistant professor", "lecturer", "instructor", "teaching assistant", "research associate"];
   if (bronzeKeywords.some(keyword => combinedText.includes(keyword))) {
     return { category: "BRONZE", rank: 1 };
   }
 
-  // Experience-based fallback
   if (experience >= 10) return { category: "SILVER", rank: 2 };
   if (experience >= 3) return { category: "BRONZE", rank: 1 };
 
@@ -58,7 +53,7 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    // First, use AI to extract job requirements from natural language
+    // Use AI to extract requirements - supports Hindi and English
     const extractionResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -70,17 +65,26 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: `You are a helpful assistant that extracts job requirements from recruiter queries.
-Extract the following information if mentioned:
-- role/position (e.g., Manager, Director, Professor, HOD)
-- department/field (e.g., Human Resources, Computer Science, Marketing)
-- skills (any specific skills mentioned)
-- experience_years (minimum years of experience if mentioned)
-- location (if mentioned)
+            content: `You are a multilingual assistant that understands both Hindi and English. You extract job/candidate search requirements from recruiter queries.
 
-Respond ONLY with a JSON object. If the query is a greeting or not a job search, return {"is_search": false, "greeting_response": "your friendly response"}.
-For job searches, return {"is_search": true, "role": "...", "department": "...", "skills": [...], "experience_years": null or number, "location": "..."}.
-Only include fields that are clearly mentioned.`
+The recruiter may speak in Hindi (e.g., "mujhe HR ka manager chahiye", "xyz ka email do", "marketing mein 5 saal experience wale candidates dikhao") or English. Understand both languages and extract the intent.
+
+There are 3 types of queries:
+1. CANDIDATE SEARCH - Looking for candidates by role/skills/department/experience/location
+2. EMAIL QUERY - Asking for email/contact of a specific candidate by name
+3. GREETING/OTHER - Not a search query
+
+For CANDIDATE SEARCH, respond with:
+{"query_type": "search", "role": "...", "department": "...", "skills": [...], "experience_years": null or number, "location": "..."}
+Only include fields that are clearly mentioned.
+
+For EMAIL QUERY (e.g., "get me email of John", "xyz ka email do", "contact details of abc"), respond with:
+{"query_type": "email", "candidate_name": "the name they mentioned"}
+
+For GREETING/OTHER, respond with:
+{"query_type": "greeting", "greeting_response": "your friendly response in the SAME LANGUAGE the user spoke (Hindi or English)"}
+
+IMPORTANT: Always respond in JSON only. For greetings, respond in the same language the user used.`
           },
           { role: "user", content: message }
         ],
@@ -91,18 +95,21 @@ Only include fields that are clearly mentioned.`
     if (!extractionResponse.ok) {
       const errorText = await extractionResponse.text();
       console.error("AI extraction error:", errorText);
+      if (extractionResponse.status === 429) {
+        return new Response(
+          JSON.stringify({ type: "text", message: "Too many requests. Please try again in a moment." }),
+          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
       throw new Error("Failed to process your request");
     }
 
     const extractionData = await extractionResponse.json();
     const extractedText = extractionData.choices?.[0]?.message?.content || "";
-    
     console.log("AI extraction response:", extractedText);
 
-    // Parse the JSON response
     let parsed;
     try {
-      // Extract JSON from potential markdown code blocks
       const jsonMatch = extractedText.match(/```(?:json)?\s*([\s\S]*?)```/) || [null, extractedText];
       parsed = JSON.parse(jsonMatch[1].trim());
     } catch (e) {
@@ -110,18 +117,18 @@ Only include fields that are clearly mentioned.`
       return new Response(
         JSON.stringify({
           type: "text",
-          message: "I'm here to help you find candidates! Try saying something like 'I need a Manager for Human Resources' or 'Find me candidates with 5 years of experience in Marketing'.",
+          message: "I'm here to help you find candidates! Try saying something like 'I need a Manager for Human Resources' or Hindi mein 'mujhe HR ka manager chahiye'.",
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // If not a search query, return the greeting
-    if (!parsed.is_search) {
+    // Handle greeting
+    if (parsed.query_type === "greeting" || (!parsed.query_type && !parsed.is_search)) {
       return new Response(
         JSON.stringify({
           type: "text",
-          message: parsed.greeting_response || "Hello! I'm here to help you find the perfect candidates. Just tell me what role you're looking for, like 'I need a Manager for Human Resources'.",
+          message: parsed.greeting_response || "Hello! I'm here to help you find candidates. You can speak in Hindi or English! 👋",
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
@@ -132,10 +139,54 @@ Only include fields that are clearly mentioned.`
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Build search query for candidates
-    let query = supabase.from("candidate_directory").select("*");
+    // Handle EMAIL QUERY
+    if (parsed.query_type === "email" && parsed.candidate_name) {
+      const searchName = parsed.candidate_name.toLowerCase();
+      const { data: candidates, error } = await supabase
+        .from("candidate_directory")
+        .select("id, full_name, email, role, headline, avatar_url, location")
+        .order("updated_at", { ascending: false });
 
-    // Build search terms for text search
+      if (error) {
+        console.error("Database error:", error);
+        throw new Error("Failed to search candidates");
+      }
+
+      const matched = (candidates || []).filter((c: any) => 
+        c.full_name && c.full_name.toLowerCase().includes(searchName)
+      );
+
+      if (matched.length === 0) {
+        return new Response(
+          JSON.stringify({
+            type: "text",
+            message: `I couldn't find any candidate named "${parsed.candidate_name}". Please check the spelling and try again.`,
+          }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const emailResults = matched.map((c: any) => ({
+        name: c.full_name,
+        email: c.email || "Email not available",
+        role: c.role || c.headline || "N/A",
+        location: c.location || "N/A",
+      }));
+
+      const emailList = emailResults.map((c: any) => 
+        `📧 **${c.name}** — ${c.email} (${c.role})`
+      ).join("\n");
+
+      return new Response(
+        JSON.stringify({
+          type: "text",
+          message: `Here are the contact details for "${parsed.candidate_name}":\n\n${emailList}`,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // CANDIDATE SEARCH (existing logic)
     const searchTerms: string[] = [];
     if (parsed.role) searchTerms.push(parsed.role);
     if (parsed.department) searchTerms.push(parsed.department);
@@ -144,17 +195,17 @@ Only include fields that are clearly mentioned.`
     }
 
     console.log("Search terms:", searchTerms);
-    console.log("Parsed requirements:", parsed);
 
-    // Fetch all candidates first, then filter in memory for more flexible matching
-    const { data: allCandidates, error } = await query.order("updated_at", { ascending: false });
+    const { data: allCandidates, error } = await supabase
+      .from("candidate_directory")
+      .select("*")
+      .order("updated_at", { ascending: false });
 
     if (error) {
       console.error("Database error:", error);
       throw new Error("Failed to search candidates");
     }
 
-    // Score and filter candidates based on extracted requirements
     const scoredCandidates = (allCandidates || []).map((candidate: any) => {
       let score = 0;
       const matchReasons: string[] = [];
@@ -168,19 +219,16 @@ Only include fields that are clearly mentioned.`
         ...(candidate.skills || []),
       ].join(" ").toLowerCase();
 
-      // Check role match
       if (parsed.role && candidateText.includes(parsed.role.toLowerCase())) {
         score += 30;
         matchReasons.push(`Role: ${parsed.role}`);
       }
 
-      // Check department/field match
       if (parsed.department && candidateText.includes(parsed.department.toLowerCase())) {
         score += 25;
         matchReasons.push(`Field: ${parsed.department}`);
       }
 
-      // Check skills match
       if (parsed.skills && parsed.skills.length > 0) {
         const candidateSkills = (candidate.skills || []).map((s: string) => s.toLowerCase());
         for (const skill of parsed.skills) {
@@ -192,7 +240,6 @@ Only include fields that are clearly mentioned.`
         }
       }
 
-      // Check experience
       if (parsed.experience_years && candidate.years_experience) {
         if (candidate.years_experience >= parsed.experience_years) {
           score += 20;
@@ -200,7 +247,6 @@ Only include fields that are clearly mentioned.`
         }
       }
 
-      // Check location
       if (parsed.location && candidate.location) {
         if (candidate.location.toLowerCase().includes(parsed.location.toLowerCase())) {
           score += 10;
@@ -208,46 +254,33 @@ Only include fields that are clearly mentioned.`
         }
       }
 
-      // Bonus for having any search term in profile
       for (const term of searchTerms) {
         if (candidateText.includes(term.toLowerCase()) && !matchReasons.some(r => r.toLowerCase().includes(term.toLowerCase()))) {
           score += 5;
         }
       }
 
-      // Get category ranking
       const categoryInfo = getCandidateCategory(candidate);
-
       return { ...candidate, score, matchReasons, category: categoryInfo.category, categoryRank: categoryInfo.rank };
     });
 
-    // Filter candidates with score > 0 and sort by category rank first, then score
     const matchedCandidates = scoredCandidates
       .filter((c: any) => c.score > 0)
       .sort((a: any, b: any) => {
-        // First sort by category rank (GOLD > SILVER > BRONZE > FRESHER)
-        if (b.categoryRank !== a.categoryRank) {
-          return b.categoryRank - a.categoryRank;
-        }
-        // Then by score
+        if (b.categoryRank !== a.categoryRank) return b.categoryRank - a.categoryRank;
         return b.score - a.score;
       });
 
-    // If showMore is requested, exclude previously shown candidates
     let candidatesToShow = matchedCandidates;
     if (showMore && previousCandidateIds && previousCandidateIds.length > 0) {
       candidatesToShow = matchedCandidates.filter((c: any) => !previousCandidateIds.includes(c.id));
     }
 
-    // Limit to top 3 candidates
     const topCandidates = candidatesToShow.slice(0, 3);
     const hasMore = candidatesToShow.length > 3;
     const totalMatches = matchedCandidates.length;
     const shownSoFar = showMore && previousCandidateIds ? previousCandidateIds.length + topCandidates.length : topCandidates.length;
 
-    console.log(`Found ${matchedCandidates.length} matching candidates, showing ${topCandidates.length}`);
-
-    // Generate a friendly response
     const searchDescription = [
       parsed.role,
       parsed.department ? `in ${parsed.department}` : null,
@@ -258,9 +291,9 @@ Only include fields that are clearly mentioned.`
     let responseMessage = "";
     if (topCandidates.length === 0) {
       if (showMore) {
-        responseMessage = "No more candidates available for this search. Try refining your criteria to see different results.";
+        responseMessage = "No more candidates available for this search.";
       } else {
-        responseMessage = `I couldn't find any candidates matching "${searchDescription}". Try broadening your search criteria or check back later as new candidates join.`;
+        responseMessage = `I couldn't find any candidates matching "${searchDescription}". Try broadening your search or check back later.`;
       }
     } else {
       if (showMore) {
@@ -298,9 +331,7 @@ Only include fields that are clearly mentioned.`
     );
   } catch (error) {
     console.error("Error in recruiter-chat:", error);
-    
     const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred";
-    
     return new Response(
       JSON.stringify({ 
         type: "error",

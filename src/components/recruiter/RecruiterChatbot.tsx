@@ -93,7 +93,7 @@ const RecruiterChatbot = ({ onViewCandidate, onMessageCandidate }: RecruiterChat
     {
       id: "welcome",
       type: "bot",
-      content: "Hello! 👋 How can I help you today? Tell me what kind of candidate you're looking for, like 'I need a Manager for Human Resources' or 'Find candidates with 5 years of Marketing experience'.",
+      content: "Hello! 👋 How can I help you today? You can speak in Hindi or English! Try 'I need a Manager for HR' or 'mujhe HR ka manager chahiye'. You can also ask for contact info like 'get me email of John'.",
       timestamp: new Date(),
     },
   ]);
@@ -113,7 +113,7 @@ const RecruiterChatbot = ({ onViewCandidate, onMessageCandidate }: RecruiterChat
       recognitionRef.current = new SpeechRecognition();
       recognitionRef.current.continuous = false;
       recognitionRef.current.interimResults = false;
-      recognitionRef.current.lang = "en-US";
+      recognitionRef.current.lang = "hi-IN"; // Hindi support
 
       recognitionRef.current.onresult = (event) => {
         const transcript = event.results[0][0].transcript;
@@ -560,7 +560,7 @@ const RecruiterChatbot = ({ onViewCandidate, onMessageCandidate }: RecruiterChat
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  placeholder={isListening ? "Listening..." : "Type or speak your request..."}
+                  placeholder={isListening ? "सुन रहा हूँ... Listening..." : "Type in Hindi or English..."}
                   disabled={isLoading || isListening}
                   className="flex-1"
                 />

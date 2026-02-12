@@ -91,11 +91,15 @@ const Index = () => {
         loading={loading}
       />
 
-      <TopCompanies />
+      <div id="institutions">
+        <TopCompanies />
+      </div>
 
       <TestimonialsSection />
 
-      <UniversityPartners />
+      <div id="services">
+        <UniversityPartners />
+      </div>
 
       <CTASection 
         onCandidateClick={() => openAuthModal("signup", "candidate")}
