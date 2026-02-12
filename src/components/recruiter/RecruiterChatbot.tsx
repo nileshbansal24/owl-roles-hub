@@ -113,7 +113,7 @@ const RecruiterChatbot = ({ onViewCandidate, onMessageCandidate }: RecruiterChat
       recognitionRef.current = new SpeechRecognition();
       recognitionRef.current.continuous = false;
       recognitionRef.current.interimResults = false;
-      recognitionRef.current.lang = "hi-IN"; // Hindi support
+      recognitionRef.current.lang = "en-IN"; // English output, understands Hindi-accented English too
 
       recognitionRef.current.onresult = (event) => {
         const transcript = event.results[0][0].transcript;
