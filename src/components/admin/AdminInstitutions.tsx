@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { InstitutionData } from "@/hooks/useAdminStats";
 import { format } from "date-fns";
-import { Building2, CheckCircle, Clock, XCircle, Briefcase, Mail, Loader2 } from "lucide-react";
+import { Building2, CheckCircle, Clock, XCircle, Briefcase, Mail, Loader2, Trash2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -69,11 +69,48 @@ const getStatusBadge = (status: string | null) => {
 const AdminInstitutions = ({ institutions, loading, onRefetch }: AdminInstitutionsProps) => {
   const { toast } = useToast();
   const [processingId, setProcessingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [confirmDialog, setConfirmDialog] = useState<{
     open: boolean;
     action: "verify" | "reject";
     institution: InstitutionData | null;
   }>({ open: false, action: "verify", institution: null });
+  const [confirmDelete, setConfirmDelete] = useState<{ open: boolean; institution: InstitutionData | null }>({
+    open: false,
+    institution: null,
+  });
+
+  const handleDeleteInstitution = async () => {
+    const institution = confirmDelete.institution;
+    if (!institution) return;
+
+    setConfirmDelete({ open: false, institution: null });
+    setDeletingId(institution.id);
+
+    try {
+      const response = await supabase.functions.invoke("admin-delete-user", {
+        body: { userId: institution.id },
+      });
+
+      if (response.error) throw new Error(response.error.message);
+
+      toast({
+        title: "Recruiter Deleted",
+        description: `${institution.full_name || "Recruiter"} and all associated data have been permanently removed.`,
+      });
+
+      onRefetch();
+    } catch (error: any) {
+      console.error("Error deleting recruiter:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete recruiter. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   const handleVerificationAction = async (action: "verify" | "reject") => {
     const institution = confirmDialog.institution;
@@ -362,50 +399,65 @@ const AdminInstitutions = ({ institutions, loading, onRefetch }: AdminInstitutio
                               {format(new Date(institution.created_at), "MMM d, yyyy")}
                             </TableCell>
                             <TableCell>
-                              {institution.verification_status === "pending" && (
-                                <div className="flex items-center gap-1">
+                              <div className="flex items-center gap-1">
+                                {institution.verification_status === "pending" && (
+                                  <>
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      className="h-7 text-destructive hover:bg-destructive/10"
+                                      disabled={processingId === institution.id || deletingId === institution.id}
+                                      onClick={() => setConfirmDialog({ open: true, action: "reject", institution })}
+                                    >
+                                      <XCircle className="h-3 w-3" />
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      className="h-7 text-emerald-500 hover:bg-emerald-500/10"
+                                      disabled={processingId === institution.id || deletingId === institution.id}
+                                      onClick={() => setConfirmDialog({ open: true, action: "verify", institution })}
+                                    >
+                                      <CheckCircle className="h-3 w-3" />
+                                    </Button>
+                                  </>
+                                )}
+                                {institution.verification_status === "verified" && (
                                   <Button
                                     size="sm"
                                     variant="ghost"
                                     className="h-7 text-destructive hover:bg-destructive/10"
-                                    disabled={processingId === institution.id}
+                                    disabled={processingId === institution.id || deletingId === institution.id}
                                     onClick={() => setConfirmDialog({ open: true, action: "reject", institution })}
                                   >
-                                    <XCircle className="h-3 w-3" />
+                                    Revoke
                                   </Button>
+                                )}
+                                {institution.verification_status === "rejected" && (
                                   <Button
                                     size="sm"
                                     variant="ghost"
                                     className="h-7 text-emerald-500 hover:bg-emerald-500/10"
-                                    disabled={processingId === institution.id}
+                                    disabled={processingId === institution.id || deletingId === institution.id}
                                     onClick={() => setConfirmDialog({ open: true, action: "verify", institution })}
                                   >
-                                    <CheckCircle className="h-3 w-3" />
+                                    Re-verify
                                   </Button>
-                                </div>
-                              )}
-                              {institution.verification_status === "verified" && (
+                                )}
                                 <Button
                                   size="sm"
                                   variant="ghost"
                                   className="h-7 text-destructive hover:bg-destructive/10"
-                                  disabled={processingId === institution.id}
-                                  onClick={() => setConfirmDialog({ open: true, action: "reject", institution })}
+                                  disabled={deletingId === institution.id}
+                                  onClick={() => setConfirmDelete({ open: true, institution })}
                                 >
-                                  Revoke
+                                  {deletingId === institution.id ? (
+                                    <Loader2 className="h-3 w-3 animate-spin" />
+                                  ) : (
+                                    <Trash2 className="h-3 w-3" />
+                                  )}
                                 </Button>
-                              )}
-                              {institution.verification_status === "rejected" && (
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  className="h-7 text-emerald-500 hover:bg-emerald-500/10"
-                                  disabled={processingId === institution.id}
-                                  onClick={() => setConfirmDialog({ open: true, action: "verify", institution })}
-                                >
-                                  Re-verify
-                                </Button>
-                              )}
+                              </div>
                             </TableCell>
                           </TableRow>
                         </motion.tr>
@@ -440,6 +492,24 @@ const AdminInstitutions = ({ institutions, loading, onRefetch }: AdminInstitutio
               onClick={() => handleVerificationAction(confirmDialog.action)}
             >
               {confirmDialog.action === "verify" ? "Verify" : "Reject"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={confirmDelete.open} onOpenChange={(open) => !open && setConfirmDelete({ open: false, institution: null })}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Permanently Delete Recruiter</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently remove <strong>{confirmDelete.institution?.full_name || "this recruiter"}</strong> and ALL their data including profile, jobs, applications, events, and auth account. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteInstitution} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete Permanently
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
