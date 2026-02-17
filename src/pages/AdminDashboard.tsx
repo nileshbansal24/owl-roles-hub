@@ -28,7 +28,7 @@ const AdminDashboard = () => {
       case "institutions":
         return <AdminInstitutions institutions={institutions} loading={loading} onRefetch={refetch} />;
       case "candidates":
-        return <AdminCandidates candidates={candidates} loading={loading} />;
+        return <AdminCandidates candidates={candidates} loading={loading} onRefetch={refetch} />;
       case "jobs":
         return <AdminJobs jobs={jobs} loading={loading} />;
       case "mass-upload":
