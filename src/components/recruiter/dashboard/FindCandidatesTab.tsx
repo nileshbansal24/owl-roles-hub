@@ -2,6 +2,7 @@ import { useState, useCallback, useMemo } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Users, X, UserSearch, Sparkles, ChevronLeft, ChevronRight, ArrowUpDown, Clock, User, Briefcase, MapPin } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import {
   Select,
   SelectContent,
@@ -53,6 +54,7 @@ const FindCandidatesTab = ({
   isLoading = false,
   recruiterLocation,
 }: FindCandidatesTabProps) => {
+  const { toast } = useToast();
   const [searchResults, setSearchResults] = useState<Profile[] | null>(null);
   const [isSearching, setIsSearching] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
@@ -258,10 +260,17 @@ const FindCandidatesTab = ({
             <Checkbox
               checked={showNearMe}
               onCheckedChange={(checked) => {
+                if (!recruiterLocation) {
+                  toast({
+                    title: "Location not set",
+                    description: "Please update your location in your profile settings to use this filter.",
+                    variant: "destructive",
+                  });
+                  return;
+                }
                 setShowNearMe(!!checked);
                 setCurrentPage(1);
               }}
-              disabled={!recruiterLocation}
             />
             <MapPin className="h-4 w-4 text-primary" />
             <span className="text-sm font-medium text-foreground whitespace-nowrap">Near Me</span>
