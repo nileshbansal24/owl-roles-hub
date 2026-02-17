@@ -148,9 +148,9 @@ serve(async (req) => {
     // 17. Profile
     await callerClient.from("profiles").delete().eq("id", userId);
 
-    // 18. Finally delete the auth user
+    // 18. Finally delete the auth user (ignore "not found" if already gone)
     const { error: authError } = await callerClient.auth.admin.deleteUser(userId);
-    if (authError) {
+    if (authError && authError.status !== 404) {
       console.error("Error deleting auth user:", authError);
       return new Response(JSON.stringify({ error: "Failed to delete auth user: " + authError.message }), {
         status: 500,
