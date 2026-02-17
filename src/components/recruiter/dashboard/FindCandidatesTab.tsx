@@ -1,7 +1,7 @@
 import { useState, useCallback, useMemo } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Users, X, UserSearch, Sparkles, ChevronLeft, ChevronRight, ArrowUpDown, Clock, User, Briefcase } from "lucide-react";
+import { Users, X, UserSearch, Sparkles, ChevronLeft, ChevronRight, ArrowUpDown, Clock, User, Briefcase, MapPin } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/select";
 import CandidateCard from "./CandidateCard";
 import SmartCandidateSearch from "./SmartCandidateSearch";
+import { Checkbox } from "@/components/ui/checkbox";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CardListSkeleton } from "@/components/ui/loading-skeleton";
 import { staggerContainerVariants, staggerItemVariants } from "@/components/ui/fade-in";
@@ -25,6 +26,7 @@ interface FindCandidatesTabProps {
   onMessageCandidate: (candidate: Profile) => void;
   onSaveNote: (candidateId: string, note: string) => Promise<void>;
   isLoading?: boolean;
+  recruiterLocation?: string | null;
 }
 
 const CANDIDATES_PER_PAGE = 5;
@@ -48,12 +50,14 @@ const FindCandidatesTab = ({
   onMessageCandidate,
   onSaveNote,
   isLoading = false,
+  recruiterLocation,
 }: FindCandidatesTabProps) => {
   const [searchResults, setSearchResults] = useState<Profile[] | null>(null);
   const [isSearching, setIsSearching] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [sortBy, setSortBy] = useState<SortOption>("recent");
+  const [showNearMe, setShowNearMe] = useState(false);
 
   const handleSearchResults = useCallback((results: Profile[]) => {
     setSearchResults(results);
@@ -76,12 +80,34 @@ const FindCandidatesTab = ({
     setCurrentPage(1);
   }, []);
 
+  // Helper: extract location tokens for proximity matching
+  const getLocationTokens = useCallback((location: string | null): string[] => {
+    if (!location) return [];
+    return location
+      .toLowerCase()
+      .split(/[,\-\/\|]+/)
+      .map(t => t.trim())
+      .filter(t => t.length > 1);
+  }, []);
+
+  const recruiterTokens = useMemo(() => getLocationTokens(recruiterLocation ?? null), [recruiterLocation, getLocationTokens]);
+
   // Show search results if available, otherwise show all candidates
   const baseCandidates = searchResults !== null ? searchResults : candidates;
-  
+
+  // Apply "near me" filter
+  const filteredCandidates = useMemo(() => {
+    if (!showNearMe || recruiterTokens.length === 0) return baseCandidates;
+    return baseCandidates.filter(c => {
+      const candidateTokens = getLocationTokens(c.location);
+      // Match if any location token overlaps (same city, state, or region)
+      return candidateTokens.some(ct => recruiterTokens.some(rt => ct.includes(rt) || rt.includes(ct)));
+    });
+  }, [baseCandidates, showNearMe, recruiterTokens, getLocationTokens]);
+
   // Sort candidates
   const sortedCandidates = useMemo(() => {
-    const sorted = [...baseCandidates];
+    const sorted = [...filteredCandidates];
     
     switch (sortBy) {
       case "recent":
@@ -101,7 +127,7 @@ const FindCandidatesTab = ({
       default:
         return sorted;
     }
-  }, [baseCandidates, sortBy]);
+  }, [filteredCandidates, sortBy]);
 
   // Pagination logic
   const totalPages = Math.ceil(sortedCandidates.length / CANDIDATES_PER_PAGE);
@@ -165,8 +191,21 @@ const FindCandidatesTab = ({
           </p>
         </div>
         
-        <div className="flex items-center gap-2">
-          {/* Sort Dropdown */}
+        <div className="flex items-center gap-3">
+          {/* Near Me Filter */}
+          <label className="flex items-center gap-2 cursor-pointer select-none border border-border rounded-lg px-3 py-1.5 hover:bg-accent/50 transition-colors">
+            <Checkbox
+              checked={showNearMe}
+              onCheckedChange={(checked) => {
+                setShowNearMe(!!checked);
+                setCurrentPage(1);
+              }}
+              disabled={!recruiterLocation}
+            />
+            <MapPin className="h-4 w-4 text-primary" />
+            <span className="text-sm font-medium text-foreground whitespace-nowrap">Near Me</span>
+          </label>
+
           <div className="flex items-center gap-2">
             <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
             <Select value={sortBy} onValueChange={(value) => handleSortChange(value as SortOption)}>

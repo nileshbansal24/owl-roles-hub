@@ -38,6 +38,7 @@ const RecruiterDashboard = () => {
     jobs,
     applications,
     candidates,
+    recruiterLocation,
     interviews,
     savedCandidateIds,
     savedCandidateNotes,
@@ -270,6 +271,7 @@ const RecruiterDashboard = () => {
               onMessageCandidate={(candidate) => handleSendMessage(candidate)}
               onSaveNote={handleSaveNote}
               isLoading={loading}
+              recruiterLocation={recruiterLocation}
             />
           </TabsContent>
 

@@ -13,6 +13,7 @@ export const useRecruiterDashboard = () => {
   const { toast } = useToast();
   
   const [loading, setLoading] = useState(true);
+  const [recruiterLocation, setRecruiterLocation] = useState<string | null>(null);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [applications, setApplications] = useState<Application[]>([]);
   const [candidates, setCandidates] = useState<Profile[]>([]);
@@ -306,6 +307,9 @@ export const useRecruiterDashboard = () => {
       if (profileData?.full_name) {
         setRecruiterName(profileData.full_name);
       }
+      if (profileData?.location) {
+        setRecruiterLocation(profileData.location);
+      }
       
       const profileFields = [
         profileData?.full_name,
@@ -445,6 +449,7 @@ export const useRecruiterDashboard = () => {
     jobs,
     applications,
     candidates,
+    recruiterLocation,
     interviews,
     savedCandidateIds,
     savedCandidateNotes,
