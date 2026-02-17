@@ -12,6 +12,7 @@ import {
 import CandidateCard from "./CandidateCard";
 import SmartCandidateSearch from "./SmartCandidateSearch";
 import { Checkbox } from "@/components/ui/checkbox";
+import CandidateFiltersPanel, { type CandidateFilters, defaultFilters } from "./CandidateFiltersPanel";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CardListSkeleton } from "@/components/ui/loading-skeleton";
 import { staggerContainerVariants, staggerItemVariants } from "@/components/ui/fade-in";
@@ -58,6 +59,7 @@ const FindCandidatesTab = ({
   const [currentPage, setCurrentPage] = useState(1);
   const [sortBy, setSortBy] = useState<SortOption>("recent");
   const [showNearMe, setShowNearMe] = useState(false);
+  const [advancedFilters, setAdvancedFilters] = useState<CandidateFilters>(defaultFilters);
 
   const handleSearchResults = useCallback((results: Profile[]) => {
     setSearchResults(results);
@@ -96,14 +98,61 @@ const FindCandidatesTab = ({
   const baseCandidates = searchResults !== null ? searchResults : candidates;
 
   // Apply "near me" filter
-  const filteredCandidates = useMemo(() => {
+  const nearMeFiltered = useMemo(() => {
     if (!showNearMe || recruiterTokens.length === 0) return baseCandidates;
     return baseCandidates.filter(c => {
       const candidateTokens = getLocationTokens(c.location);
-      // Match if any location token overlaps (same city, state, or region)
       return candidateTokens.some(ct => recruiterTokens.some(rt => ct.includes(rt) || rt.includes(ct)));
     });
   }, [baseCandidates, showNearMe, recruiterTokens, getLocationTokens]);
+
+  // Apply advanced filters
+  const filteredCandidates = useMemo(() => {
+    let result = nearMeFiltered;
+
+    // Experience range filter
+    const [minExp, maxExp] = advancedFilters.experienceRange;
+    if (minExp !== 0 || maxExp !== 30) {
+      result = result.filter(c => {
+        const exp = c.years_experience || 0;
+        return exp >= minExp && (maxExp === 30 ? true : exp <= maxExp);
+      });
+    }
+
+    // Skills filter
+    if (advancedFilters.selectedSkills.length > 0) {
+      result = result.filter(c => {
+        const candidateSkills = (c.skills || []).map(s => s.trim().toLowerCase());
+        return advancedFilters.selectedSkills.some(skill => candidateSkills.includes(skill));
+      });
+    }
+
+    // Education level filter
+    if (advancedFilters.educationLevel !== "all") {
+      result = result.filter(c => {
+        const bio = (c.bio || "").toLowerCase();
+        const headline = (c.headline || "").toLowerCase();
+        const role = (c.role || "").toLowerCase();
+        const summary = (c.professional_summary || "").toLowerCase();
+        const text = `${bio} ${headline} ${role} ${summary}`;
+        
+        switch (advancedFilters.educationLevel) {
+          case "phd":
+            return /\b(ph\.?d|doctorate|doctoral)\b/.test(text);
+          case "masters":
+            return /\b(master'?s?|m\.?s\.?|m\.?a\.?|m\.?tech|m\.?sc|mba)\b/.test(text);
+          case "bachelors":
+            return /\b(bachelor'?s?|b\.?s\.?|b\.?a\.?|b\.?tech|b\.?sc|b\.?e\.?)\b/.test(text);
+          case "diploma":
+            return /\b(diploma|certificate|certification)\b/.test(text);
+          default:
+            return true;
+        }
+      });
+    }
+
+    return result;
+  }, [nearMeFiltered, advancedFilters]);
 
   // Sort candidates
   const sortedCandidates = useMemo(() => {
@@ -168,6 +217,18 @@ const FindCandidatesTab = ({
         onSearchResults={handleSearchResults}
         onSearching={handleSearching}
       />
+
+      {/* Advanced Filters */}
+      <motion.div variants={staggerItemVariants}>
+        <CandidateFiltersPanel
+          candidates={candidates}
+          filters={advancedFilters}
+          onFiltersChange={(f) => {
+            setAdvancedFilters(f);
+            setCurrentPage(1);
+          }}
+        />
+      </motion.div>
 
       {/* Results Header with Sorting and Pagination Info */}
       <motion.div variants={staggerItemVariants} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
