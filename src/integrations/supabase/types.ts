@@ -71,7 +71,9 @@ export type Database = {
         Row: {
           avatar_url: string | null
           bio: string | null
+          current_salary: number | null
           email: string | null
+          expected_salary: number | null
           full_name: string | null
           headline: string | null
           id: string
@@ -87,7 +89,9 @@ export type Database = {
         Insert: {
           avatar_url?: string | null
           bio?: string | null
+          current_salary?: number | null
           email?: string | null
+          expected_salary?: number | null
           full_name?: string | null
           headline?: string | null
           id: string
@@ -103,7 +107,9 @@ export type Database = {
         Update: {
           avatar_url?: string | null
           bio?: string | null
+          current_salary?: number | null
           email?: string | null
+          expected_salary?: number | null
           full_name?: string | null
           headline?: string | null
           id?: string
@@ -520,8 +526,10 @@ export type Database = {
           avatar_url: string | null
           bio: string | null
           created_at: string
+          current_salary: number | null
           education: Json | null
           email: string | null
+          expected_salary: number | null
           experience: Json | null
           family_details: string | null
           full_name: string | null
@@ -554,8 +562,10 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
+          current_salary?: number | null
           education?: Json | null
           email?: string | null
+          expected_salary?: number | null
           experience?: Json | null
           family_details?: string | null
           full_name?: string | null
@@ -588,8 +598,10 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
+          current_salary?: number | null
           education?: Json | null
           email?: string | null
+          expected_salary?: number | null
           experience?: Json | null
           family_details?: string | null
           full_name?: string | null
