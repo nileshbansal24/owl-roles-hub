@@ -19,6 +19,7 @@ import {
   FileText,
   TrendingUp,
   ExternalLink,
+  IndianRupee,
 } from "lucide-react";
 import type { Profile } from "@/types/recruiter";
 
@@ -141,6 +142,21 @@ const CandidateCard = ({
               <div className="flex items-center gap-1">
                 <Briefcase className="h-4 w-4" />
                 <span>{candidate.years_experience} Years Exp</span>
+              </div>
+            )}
+            {(candidate.current_salary || candidate.expected_salary) && (
+              <div className="flex items-center gap-1">
+                <IndianRupee className="h-4 w-4" />
+                <span>
+                  {candidate.current_salary
+                    ? `₹${(candidate.current_salary / 100000).toFixed(1)}L`
+                    : "—"}
+                  {candidate.expected_salary && (
+                    <span className="text-primary font-medium ml-1">
+                      → ₹{(candidate.expected_salary / 100000).toFixed(1)}L
+                    </span>
+                  )}
+                </span>
               </div>
             )}
           </div>

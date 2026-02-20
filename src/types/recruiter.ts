@@ -60,6 +60,8 @@ export interface Profile {
   scopus_link?: string | null;
   scopus_metrics?: ScopusMetrics | null;
   manual_h_index?: number | null;
+  current_salary?: number | null;
+  expected_salary?: number | null;
 }
 
 export interface Job {

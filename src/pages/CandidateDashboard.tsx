@@ -103,6 +103,8 @@ interface Profile {
   hobbies?: string[] | null;
   quotes?: string | null;
   recommended_books?: string[] | null;
+  current_salary?: number | null;
+  expected_salary?: number | null;
 }
 
 interface Application {

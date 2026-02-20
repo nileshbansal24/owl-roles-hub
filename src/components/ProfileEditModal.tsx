@@ -25,6 +25,8 @@ interface Profile {
   bio: string | null;
   years_experience: number | null;
   email?: string | null;
+  current_salary?: number | null;
+  expected_salary?: number | null;
 }
 
 interface ProfileEditModalProps {
@@ -51,6 +53,8 @@ const ProfileEditModal = ({
     bio: profile?.bio || "",
     years_experience: profile?.years_experience || 0,
     email: profile?.email || "",
+    current_salary: profile?.current_salary || "",
+    expected_salary: profile?.expected_salary || "",
   });
   const [avatarUrl, setAvatarUrl] = useState(profile?.avatar_url || "");
   const [uploading, setUploading] = useState(false);
@@ -150,6 +154,8 @@ const ProfileEditModal = ({
           years_experience: validation.data.years_experience || null,
           avatar_url: avatarUrl || null,
           email: formData.email || null,
+          current_salary: formData.current_salary ? parseInt(String(formData.current_salary)) : null,
+          expected_salary: formData.expected_salary ? parseInt(String(formData.expected_salary)) : null,
         })
         .eq("id", user.id)
         .select()
@@ -311,6 +317,35 @@ const ProfileEditModal = ({
                 placeholder="A brief description of your academic background and research interests..."
                 rows={4}
               />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="current_salary">Current Salary (₹/year)</Label>
+                <Input
+                  id="current_salary"
+                  type="number"
+                  min={0}
+                  value={formData.current_salary}
+                  onChange={(e) =>
+                    setFormData({ ...formData, current_salary: e.target.value })
+                  }
+                  placeholder="e.g. 600000"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="expected_salary">Expected Salary (₹/year)</Label>
+                <Input
+                  id="expected_salary"
+                  type="number"
+                  min={0}
+                  value={formData.expected_salary}
+                  onChange={(e) =>
+                    setFormData({ ...formData, expected_salary: e.target.value })
+                  }
+                  placeholder="e.g. 800000"
+                />
+              </div>
             </div>
           </div>
 
