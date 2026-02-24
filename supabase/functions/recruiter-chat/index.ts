@@ -44,7 +44,7 @@ serve(async (req) => {
   }
 
   try {
-    const { message, showMore, previousCandidateIds } = await req.json();
+    const { message, showMore, previousCandidateIds, conversationHistory } = await req.json();
     
     if (!message) {
       return new Response(
@@ -96,11 +96,13 @@ There are 5 types of queries:
 
 IMPORTANT RULES:
 - If the user asks a QUESTION or seeks ADVICE about a candidate (will they join? should I hire? is this a good offer?) → use "advisory"
+- If the user refers to someone from previous conversation (e.g. "uski salary kitni hai", "what about her experience", "tell me more") → use context from the conversation history to identify the candidate name
 - If user asks about salary, experience, skills, or any profile detail of a specific person → use "candidate_info", NOT "email"
 - Only use "email" when they explicitly ask for email/contact
 - Always respond in JSON only
 - For greetings, respond in the same language the user used`
           },
+          ...(conversationHistory || []).slice(-6).map((msg: any) => ({ role: msg.role, content: msg.content })),
           { role: "user", content: message }
         ],
         temperature: 0.3,

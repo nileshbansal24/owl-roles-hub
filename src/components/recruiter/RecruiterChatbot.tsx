@@ -192,8 +192,14 @@ const RecruiterChatbot = ({ onViewCandidate, onMessageCandidate }: RecruiterChat
     setIsLoading(true);
 
     try {
+      // Build conversation history for context (last 10 messages)
+      const history = messages
+        .filter(m => m.id !== "welcome")
+        .slice(-10)
+        .map(m => ({ role: m.type === "user" ? "user" : "assistant", content: m.content }));
+
       const { data, error } = await supabase.functions.invoke("recruiter-chat", {
-        body: { message: userMessage.content },
+        body: { message: userMessage.content, conversationHistory: history },
       });
 
       if (error) throw error;
