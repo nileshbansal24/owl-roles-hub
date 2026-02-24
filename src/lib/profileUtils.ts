@@ -133,12 +133,14 @@ export function transformResearchToDisplay(dbPapers: DBResearchPaper[]): Display
 }
 
 // Calculate total years of experience from DB experience data
+// Merges overlapping intervals to avoid double-counting
 export function calculateTotalExperience(dbExp: DBExperience[]): number {
   if (!dbExp || dbExp.length === 0) return 0;
 
-  let totalMonths = 0;
   const currentDate = new Date();
 
+  // Build intervals as [startMs, endMs]
+  const intervals: [number, number][] = [];
   for (const exp of dbExp) {
     const startDate = parseDate(exp.start_date);
     if (!startDate) continue;
@@ -146,12 +148,36 @@ export function calculateTotalExperience(dbExp: DBExperience[]): number {
     const endDate = exp.current || !exp.end_date ? currentDate : parseDate(exp.end_date);
     if (!endDate) continue;
 
-    const months = (endDate.getFullYear() - startDate.getFullYear()) * 12 + 
-                   (endDate.getMonth() - startDate.getMonth());
-    totalMonths += Math.max(0, months);
+    if (endDate.getTime() > startDate.getTime()) {
+      intervals.push([startDate.getTime(), endDate.getTime()]);
+    }
   }
 
-  // Round to nearest whole year (DB column is integer)
+  if (intervals.length === 0) return 0;
+
+  // Sort by start time, then merge overlapping intervals
+  intervals.sort((a, b) => a[0] - b[0]);
+  const merged: [number, number][] = [intervals[0]];
+
+  for (let i = 1; i < intervals.length; i++) {
+    const last = merged[merged.length - 1];
+    if (intervals[i][0] <= last[1]) {
+      // Overlapping — extend the end if needed
+      last[1] = Math.max(last[1], intervals[i][1]);
+    } else {
+      // Gap — new interval
+      merged.push(intervals[i]);
+    }
+  }
+
+  // Sum total months from merged intervals
+  let totalMonths = 0;
+  for (const [start, end] of merged) {
+    const s = new Date(start);
+    const e = new Date(end);
+    totalMonths += (e.getFullYear() - s.getFullYear()) * 12 + (e.getMonth() - s.getMonth());
+  }
+
   return Math.round(totalMonths / 12);
 }
 
