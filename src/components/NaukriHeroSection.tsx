@@ -1,3 +1,4 @@
+import { Suspense, lazy } from "react";
 import { motion } from "framer-motion";
 import { Search, MapPin, Briefcase, ArrowRight, Sparkles } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -9,6 +10,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+
+const FloatingGeometry = lazy(() => import("@/components/FloatingGeometry"));
 
 interface NaukriHeroSectionProps {
   searchQuery: string;
@@ -316,8 +319,10 @@ const NaukriHeroSection = ({
 }: NaukriHeroSectionProps) => {
   return (
     <section className="relative bg-background pt-28 pb-20 overflow-hidden">
-      {/* Animated Background Effects */}
-      <FloatingShapes />
+      {/* 3D Floating Geometry Background */}
+      <Suspense fallback={null}>
+        <FloatingGeometry />
+      </Suspense>
 
       {/* Subtle top gradient */}
       <div className="absolute top-0 left-0 right-0 h-40 bg-gradient-to-b from-primary/5 to-transparent" />
