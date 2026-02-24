@@ -74,24 +74,28 @@ serve(async (req) => {
 
 The recruiter may speak in Hindi (e.g., "mujhe HR ka manager chahiye", "xyz ka email do", "poonam ki salary kitni hai") or English. Understand both languages and extract the intent.
 
-There are 4 types of queries:
+There are 5 types of queries:
 
 1. CANDIDATE SEARCH - Looking for candidates by role/skills/department/experience/location
    Respond: {"query_type": "search", "role": "...", "department": "...", "skills": [...], "experience_years": null or number, "location": "..."}
 
 2. CANDIDATE INFO - Asking about specific details of a named candidate such as salary, experience, skills, location, education, role, etc.
-   Examples: "What's Poonam's salary?", "poonam ki current salary kitni hai?", "tell me about John's experience", "xyz ka experience kitna hai", "abc ki skills kya hain"
+   Examples: "What's Poonam's salary?", "poonam ki current salary kitni hai?", "tell me about John's experience"
    Respond: {"query_type": "candidate_info", "candidate_name": "the name", "info_requested": ["salary", "experience", "skills", "location", "education", "role", "all"]}
-   info_requested should list what specific info is asked. Use "all" if they just say "tell me about X" or want full profile.
 
-3. EMAIL QUERY - ONLY when specifically asking for email or contact details
+3. ADVISORY - Asking for opinions, advice, or analysis about a candidate. The recruiter is asking a QUESTION that needs a thoughtful answer, not just data.
+   Examples: "kya lgta hai agar mein poonam ko 15 LPA offer kru toh join kregi?", "should I hire John?", "is Poonam a good fit for manager role?", "will she accept 10 LPA?", "what do you think about this candidate?"
+   Respond: {"query_type": "advisory", "candidate_name": "the name", "original_question": "the full original question as-is"}
+
+4. EMAIL QUERY - ONLY when specifically asking for email or contact details
    Examples: "get me email of John", "xyz ka email do", "contact details of abc"
    Respond: {"query_type": "email", "candidate_name": "the name they mentioned"}
 
-4. GREETING/OTHER - Not a search or info query
+5. GREETING/OTHER - Not a search or info query
    Respond: {"query_type": "greeting", "greeting_response": "your friendly response in the SAME LANGUAGE the user spoke"}
 
 IMPORTANT RULES:
+- If the user asks a QUESTION or seeks ADVICE about a candidate (will they join? should I hire? is this a good offer?) → use "advisory"
 - If user asks about salary, experience, skills, or any profile detail of a specific person → use "candidate_info", NOT "email"
 - Only use "email" when they explicitly ask for email/contact
 - Always respond in JSON only
@@ -227,6 +231,86 @@ IMPORTANT RULES:
         JSON.stringify({
           type: "text",
           message: `Here are the details for "${parsed.candidate_name}":\n\n${infoResults.join("\n\n---\n\n")}`,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Handle ADVISORY QUERY - AI-powered contextual advice about a candidate
+    if (parsed.query_type === "advisory" && parsed.candidate_name) {
+      const searchName = parsed.candidate_name.toLowerCase();
+      const { data: candidates, error: advError } = await supabase
+        .from("profiles")
+        .select("id, full_name, role, headline, location, years_experience, current_salary, expected_salary, skills, university, professional_summary, user_type")
+        .eq("user_type", "candidate")
+        .order("updated_at", { ascending: false });
+
+      if (advError) {
+        console.error("Database error:", advError);
+        throw new Error("Failed to search candidates");
+      }
+
+      const matched = (candidates || []).filter((c: any) =>
+        c.full_name && c.full_name.toLowerCase().includes(searchName)
+      );
+
+      if (matched.length === 0) {
+        return new Response(
+          JSON.stringify({
+            type: "text",
+            message: `I couldn't find any candidate named "${parsed.candidate_name}". Please check the spelling and try again.`,
+          }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const candidate = matched[0];
+      const candidateContext = `
+Name: ${candidate.full_name}
+Role: ${candidate.role || candidate.headline || "Not specified"}
+Location: ${candidate.location || "Not specified"}
+Experience: ${candidate.years_experience ?? 0} years
+Current Salary: ${formatSalary(candidate.current_salary)}
+Expected Salary: ${formatSalary(candidate.expected_salary)}
+University: ${candidate.university || "Not specified"}
+Skills: ${(candidate.skills || []).join(", ") || "Not specified"}
+Summary: ${candidate.professional_summary || "Not specified"}`.trim();
+
+      const advisoryResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${LOVABLE_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "google/gemini-3-flash-preview",
+          messages: [
+            {
+              role: "system",
+              content: `You are a smart, friendly recruitment advisor chatbot. A recruiter is asking you a question about a candidate. Use the candidate's profile data to give a thoughtful, practical answer. 
+
+Respond in the SAME LANGUAGE the recruiter used (Hindi, English, or Hinglish). Keep the response concise (3-5 sentences). Use relevant data points to support your answer. Be honest and balanced — mention both positives and concerns.
+
+Candidate Profile:
+${candidateContext}`
+            },
+            { role: "user", content: parsed.original_question || message }
+          ],
+          temperature: 0.5,
+        }),
+      });
+
+      if (!advisoryResponse.ok) {
+        throw new Error("Failed to generate advisory response");
+      }
+
+      const advisoryData = await advisoryResponse.json();
+      const advisoryText = advisoryData.choices?.[0]?.message?.content || "Sorry, I couldn't generate advice at this time.";
+
+      return new Response(
+        JSON.stringify({
+          type: "text",
+          message: advisoryText,
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
