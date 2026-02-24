@@ -1044,6 +1044,32 @@ const CandidateDashboard = () => {
       animate="visible"
       className="space-y-5"
     >
+      {/* Salary Overview */}
+      {(profile?.current_salary || profile?.expected_salary) && (
+        <motion.div variants={itemVariants}>
+          <ProfileCard title="Salary Details" className="overflow-hidden">
+            <div className="grid grid-cols-2 gap-4">
+              {profile?.current_salary && (
+                <div className="space-y-1">
+                  <p className="text-xs text-muted-foreground">Current Salary</p>
+                  <p className="text-lg font-semibold text-foreground">
+                    ₹{(profile.current_salary / 100000).toFixed(1)} LPA
+                  </p>
+                </div>
+              )}
+              {profile?.expected_salary && (
+                <div className="space-y-1">
+                  <p className="text-xs text-muted-foreground">Expected Salary</p>
+                  <p className="text-lg font-semibold text-primary">
+                    ₹{(profile.expected_salary / 100000).toFixed(1)} LPA
+                  </p>
+                </div>
+              )}
+            </div>
+          </ProfileCard>
+        </motion.div>
+      )}
+
       {/* AI Job Recommendations */}
       <motion.div variants={itemVariants}>
         <ProfileCard title="" className="overflow-hidden p-0 border-0 shadow-none bg-transparent">
