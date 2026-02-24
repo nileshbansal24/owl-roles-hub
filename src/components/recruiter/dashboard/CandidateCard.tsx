@@ -144,19 +144,16 @@ const CandidateCard = ({
                 <span>{candidate.years_experience} Years Exp</span>
               </div>
             )}
-            {(candidate.current_salary || candidate.expected_salary) && (
+            {candidate.current_salary != null && candidate.current_salary > 0 && (
               <div className="flex items-center gap-1">
                 <IndianRupee className="h-4 w-4" />
-                <span>
-                  {candidate.current_salary
-                    ? `₹${(candidate.current_salary / 100000).toFixed(1)}L`
-                    : "—"}
-                  {candidate.expected_salary && (
-                    <span className="text-primary font-medium ml-1">
-                      → ₹{(candidate.expected_salary / 100000).toFixed(1)}L
-                    </span>
-                  )}
-                </span>
+                <span>Current: <span className="font-medium text-foreground">₹{(candidate.current_salary / 100000).toFixed(1)}L</span></span>
+              </div>
+            )}
+            {candidate.expected_salary != null && candidate.expected_salary > 0 && (
+              <div className="flex items-center gap-1">
+                <IndianRupee className="h-4 w-4" />
+                <span>Expected: <span className="font-medium text-primary">₹{(candidate.expected_salary / 100000).toFixed(1)}L</span></span>
               </div>
             )}
           </div>
