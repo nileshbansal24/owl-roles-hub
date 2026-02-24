@@ -255,6 +255,19 @@ const CandidateDashboard = () => {
           // Calculate and set years of experience
           const calculatedYears = calculateTotalExperience(dbExperience);
           setCalculatedYearsExperience(calculatedYears);
+          
+          // Auto-sync years_experience to DB if it differs from calculated
+          if (calculatedYears > 0 && calculatedYears !== profileData.years_experience) {
+            supabase
+              .from("profiles")
+              .update({ years_experience: calculatedYears })
+              .eq("id", user.id)
+              .then(({ error }) => {
+                if (!error) {
+                  setProfile((prev) => prev ? { ...prev, years_experience: calculatedYears } : null);
+                }
+              });
+          }
         }
         
         // Transform DB format to display format for education
