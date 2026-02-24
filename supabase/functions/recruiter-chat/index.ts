@@ -33,6 +33,11 @@ function getCandidateCategory(candidate: any): { category: string; rank: number 
   return { category: "FRESHER", rank: 0 };
 }
 
+function formatSalary(amount: number | null): string {
+  if (!amount || amount <= 0) return "Not specified";
+  return `₹${(amount / 100000).toFixed(1)} LPA`;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -67,24 +72,30 @@ serve(async (req) => {
             role: "system",
             content: `You are a multilingual assistant that understands both Hindi and English. You extract job/candidate search requirements from recruiter queries.
 
-The recruiter may speak in Hindi (e.g., "mujhe HR ka manager chahiye", "xyz ka email do", "marketing mein 5 saal experience wale candidates dikhao") or English. Understand both languages and extract the intent.
+The recruiter may speak in Hindi (e.g., "mujhe HR ka manager chahiye", "xyz ka email do", "poonam ki salary kitni hai") or English. Understand both languages and extract the intent.
 
-There are 3 types of queries:
+There are 4 types of queries:
+
 1. CANDIDATE SEARCH - Looking for candidates by role/skills/department/experience/location
-2. EMAIL QUERY - Asking for email/contact of a specific candidate by name
-3. GREETING/OTHER - Not a search query
+   Respond: {"query_type": "search", "role": "...", "department": "...", "skills": [...], "experience_years": null or number, "location": "..."}
 
-For CANDIDATE SEARCH, respond with:
-{"query_type": "search", "role": "...", "department": "...", "skills": [...], "experience_years": null or number, "location": "..."}
-Only include fields that are clearly mentioned.
+2. CANDIDATE INFO - Asking about specific details of a named candidate such as salary, experience, skills, location, education, role, etc.
+   Examples: "What's Poonam's salary?", "poonam ki current salary kitni hai?", "tell me about John's experience", "xyz ka experience kitna hai", "abc ki skills kya hain"
+   Respond: {"query_type": "candidate_info", "candidate_name": "the name", "info_requested": ["salary", "experience", "skills", "location", "education", "role", "all"]}
+   info_requested should list what specific info is asked. Use "all" if they just say "tell me about X" or want full profile.
 
-For EMAIL QUERY (e.g., "get me email of John", "xyz ka email do", "contact details of abc"), respond with:
-{"query_type": "email", "candidate_name": "the name they mentioned"}
+3. EMAIL QUERY - ONLY when specifically asking for email or contact details
+   Examples: "get me email of John", "xyz ka email do", "contact details of abc"
+   Respond: {"query_type": "email", "candidate_name": "the name they mentioned"}
 
-For GREETING/OTHER, respond with:
-{"query_type": "greeting", "greeting_response": "your friendly response in the SAME LANGUAGE the user spoke (Hindi or English)"}
+4. GREETING/OTHER - Not a search or info query
+   Respond: {"query_type": "greeting", "greeting_response": "your friendly response in the SAME LANGUAGE the user spoke"}
 
-IMPORTANT: Always respond in JSON only. For greetings, respond in the same language the user used.`
+IMPORTANT RULES:
+- If user asks about salary, experience, skills, or any profile detail of a specific person → use "candidate_info", NOT "email"
+- Only use "email" when they explicitly ask for email/contact
+- Always respond in JSON only
+- For greetings, respond in the same language the user used`
           },
           { role: "user", content: message }
         ],
@@ -99,6 +110,12 @@ IMPORTANT: Always respond in JSON only. For greetings, respond in the same langu
         return new Response(
           JSON.stringify({ type: "text", message: "Too many requests. Please try again in a moment." }),
           { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      if (extractionResponse.status === 402) {
+        return new Response(
+          JSON.stringify({ type: "text", message: "AI credits exhausted. Please add credits to continue." }),
+          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
       throw new Error("Failed to process your request");
@@ -117,7 +134,7 @@ IMPORTANT: Always respond in JSON only. For greetings, respond in the same langu
       return new Response(
         JSON.stringify({
           type: "text",
-          message: "I'm here to help you find candidates! Try saying something like 'I need a Manager for Human Resources' or Hindi mein 'mujhe HR ka manager chahiye'.",
+          message: "I'm here to help you find candidates! Try saying something like 'I need a Manager for Human Resources' or Hindi mein 'mujhe HR ka manager chahiye'. You can also ask about a candidate's details like 'Poonam ki salary kitni hai?'",
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
@@ -128,7 +145,7 @@ IMPORTANT: Always respond in JSON only. For greetings, respond in the same langu
       return new Response(
         JSON.stringify({
           type: "text",
-          message: parsed.greeting_response || "Hello! I'm here to help you find candidates. You can speak in Hindi or English! 👋",
+          message: parsed.greeting_response || "Hello! I'm here to help you find candidates. You can speak in Hindi or English! 👋\n\nTry:\n• 'Find me a manager for HR'\n• 'Poonam ki salary kitni hai?'\n• 'Get email of John'",
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
@@ -138,6 +155,82 @@ IMPORTANT: Always respond in JSON only. For greetings, respond in the same langu
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // Handle CANDIDATE INFO QUERY
+    if (parsed.query_type === "candidate_info" && parsed.candidate_name) {
+      const searchName = parsed.candidate_name.toLowerCase();
+      const { data: candidates, error } = await supabase
+        .from("profiles")
+        .select("id, full_name, email, role, headline, avatar_url, location, years_experience, current_salary, expected_salary, skills, university, professional_summary, experience, education, user_type")
+        .eq("user_type", "candidate")
+        .order("updated_at", { ascending: false });
+
+      if (error) {
+        console.error("Database error:", error);
+        throw new Error("Failed to search candidates");
+      }
+
+      const matched = (candidates || []).filter((c: any) =>
+        c.full_name && c.full_name.toLowerCase().includes(searchName)
+      );
+
+      if (matched.length === 0) {
+        return new Response(
+          JSON.stringify({
+            type: "text",
+            message: `I couldn't find any candidate named "${parsed.candidate_name}". Please check the spelling and try again.`,
+          }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const infoRequested = parsed.info_requested || ["all"];
+      const isAll = infoRequested.includes("all");
+
+      const infoResults = matched.map((c: any) => {
+        const lines: string[] = [`👤 **${c.full_name}**`];
+        
+        if (isAll || infoRequested.includes("role")) {
+          lines.push(`💼 Role: ${c.role || c.headline || "Not specified"}`);
+        }
+        if (isAll || infoRequested.includes("salary")) {
+          lines.push(`💰 Current Salary: ${formatSalary(c.current_salary)}`);
+          lines.push(`📈 Expected Salary: ${formatSalary(c.expected_salary)}`);
+        }
+        if (isAll || infoRequested.includes("experience")) {
+          lines.push(`📅 Experience: ${c.years_experience ?? 0} years`);
+        }
+        if (isAll || infoRequested.includes("location")) {
+          lines.push(`📍 Location: ${c.location || "Not specified"}`);
+        }
+        if (isAll || infoRequested.includes("education")) {
+          lines.push(`🎓 University: ${c.university || "Not specified"}`);
+        }
+        if (isAll || infoRequested.includes("skills")) {
+          const skills = c.skills && c.skills.length > 0 ? c.skills.slice(0, 8).join(", ") : "Not specified";
+          lines.push(`🛠️ Skills: ${skills}`);
+        }
+        if (isAll) {
+          if (c.email) lines.push(`📧 Email: ${c.email}`);
+          if (c.professional_summary) {
+            const summary = c.professional_summary.length > 150 
+              ? c.professional_summary.substring(0, 150) + "..." 
+              : c.professional_summary;
+            lines.push(`📝 Summary: ${summary}`);
+          }
+        }
+
+        return lines.join("\n");
+      });
+
+      return new Response(
+        JSON.stringify({
+          type: "text",
+          message: `Here are the details for "${parsed.candidate_name}":\n\n${infoResults.join("\n\n---\n\n")}`,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     // Handle EMAIL QUERY
     if (parsed.query_type === "email" && parsed.candidate_name) {
