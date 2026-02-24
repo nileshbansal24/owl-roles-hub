@@ -1,6 +1,6 @@
-import { useRef, useMemo } from "react";
-import { Canvas, useFrame } from "@react-three/fiber";
-import { Float, MeshTransmissionMaterial } from "@react-three/drei";
+import { useRef, useMemo, useEffect, useState } from "react";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { Float } from "@react-three/drei";
 import * as THREE from "three";
 
 const RotatingBox = ({ position, scale, speed }: { position: [number, number, number]; scale: number; speed: number }) => {
@@ -89,9 +89,21 @@ const GlassSphere = ({ position, scale }: { position: [number, number, number]; 
   );
 };
 
-const Scene = () => {
+// Hook to track scroll progress and apply to scene
+const ScrollTracker = ({ scrollY }: { scrollY: React.MutableRefObject<number> }) => {
+  const { camera } = useThree();
+  useFrame(() => {
+    // Shift camera Y based on scroll, creating parallax
+    camera.position.y = -scrollY.current * 0.003;
+    camera.rotation.x = scrollY.current * 0.0002;
+  });
+  return null;
+};
+
+const Scene = ({ scrollY }: { scrollY: React.MutableRefObject<number> }) => {
   return (
     <>
+      <ScrollTracker scrollY={scrollY} />
       <ambientLight intensity={0.6} />
       <directionalLight position={[5, 5, 5]} intensity={0.4} />
       <pointLight position={[-3, 2, 4]} intensity={0.3} color="#6366f1" />
@@ -110,6 +122,16 @@ const Scene = () => {
 };
 
 const FloatingGeometry = () => {
+  const scrollY = useRef(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      scrollY.current = window.scrollY;
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   return (
     <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 0 }}>
       <Canvas
@@ -118,7 +140,7 @@ const FloatingGeometry = () => {
         gl={{ antialias: true, alpha: true }}
         style={{ background: "transparent" }}
       >
-        <Scene />
+        <Scene scrollY={scrollY} />
       </Canvas>
     </div>
   );
