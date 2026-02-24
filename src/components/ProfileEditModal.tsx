@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -59,6 +59,23 @@ const ProfileEditModal = ({
   const [avatarUrl, setAvatarUrl] = useState(profile?.avatar_url || "");
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  // Re-sync form data when modal opens or profile changes
+  useEffect(() => {
+    if (open && profile) {
+      setFormData({
+        full_name: profile.full_name || "",
+        university: profile.university || "",
+        role: profile.role || "",
+        bio: profile.bio || "",
+        years_experience: profile.years_experience || 0,
+        email: profile.email || "",
+        current_salary: profile.current_salary || "",
+        expected_salary: profile.expected_salary || "",
+      });
+      setAvatarUrl(profile.avatar_url || "");
+    }
+  }, [open, profile]);
 
   const handleAvatarClick = () => {
     fileInputRef.current?.click();
