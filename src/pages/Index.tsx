@@ -11,6 +11,7 @@ import TopCompanies from "@/components/TopCompanies";
 import UniversityPartners from "@/components/UniversityPartners";
 import TestimonialsSection from "@/components/TestimonialsSection";
 import CTASection from "@/components/CTASection";
+import HowItWorks from "@/components/HowItWorks";
 import Footer from "@/components/Footer";
 import JobDetailModal from "@/components/JobDetailModal";
 import AuthModal from "@/components/AuthModal";
@@ -84,6 +85,8 @@ const Index = () => {
       <StatsSection />
 
       <JobCategories onCategoryClick={handleCategoryClick} />
+
+      <HowItWorks />
 
       <FeaturedJobs 
         jobs={filteredJobs} 
