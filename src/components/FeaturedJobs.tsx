@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { MapPin, Clock, DollarSign, Bookmark, ArrowRight } from "lucide-react";
+import { MapPin, Clock, DollarSign, Bookmark, ArrowRight, Zap } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -18,15 +18,21 @@ const FeaturedJobs = ({ jobs, onJobClick, loading }: FeaturedJobsProps) => {
     return (
       <section className="py-16">
         <div className="container mx-auto px-4">
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
             {[...Array(6)].map((_, i) => (
-              <div key={i} className="card-elevated p-5 animate-pulse">
-                <div className="h-6 bg-muted rounded w-3/4 mb-3" />
-                <div className="h-4 bg-muted rounded w-1/2 mb-4" />
-                <div className="flex gap-2">
-                  <div className="h-6 bg-muted rounded w-20" />
-                  <div className="h-6 bg-muted rounded w-16" />
+              <div key={i} className="card-elevated p-5 animate-pulse rounded-2xl">
+                <div className="flex gap-3 mb-4">
+                  <div className="w-12 h-12 bg-muted rounded-xl" />
+                  <div className="flex-1">
+                    <div className="h-5 bg-muted rounded w-3/4 mb-2" />
+                    <div className="h-4 bg-muted rounded w-1/2" />
+                  </div>
                 </div>
+                <div className="flex gap-2 mb-3">
+                  <div className="h-6 bg-muted rounded-full w-20" />
+                  <div className="h-6 bg-muted rounded-full w-16" />
+                </div>
+                <div className="h-4 bg-muted rounded w-1/3" />
               </div>
             ))}
           </div>
@@ -45,6 +51,10 @@ const FeaturedJobs = ({ jobs, onJobClick, loading }: FeaturedJobsProps) => {
           className="flex items-center justify-between mb-10"
         >
           <div>
+            <div className="flex items-center gap-2 mb-2">
+              <Zap className="w-5 h-5 text-primary" />
+              <span className="text-sm font-medium text-primary">Latest Openings</span>
+            </div>
             <h2 className="font-heading text-2xl md:text-3xl font-bold text-foreground mb-2">
               Featured Jobs
             </h2>
@@ -52,13 +62,13 @@ const FeaturedJobs = ({ jobs, onJobClick, loading }: FeaturedJobsProps) => {
               Hand-picked opportunities from top institutions
             </p>
           </div>
-          <Button variant="outline" className="hidden sm:flex gap-2">
+          <Button variant="outline" className="hidden sm:flex gap-2 group">
             View All Jobs
-            <ArrowRight className="w-4 h-4" />
+            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </Button>
         </motion.div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
           {jobs.slice(0, 6).map((job, index) => {
             const timeAgo = formatDistanceToNow(new Date(job.created_at), { addSuffix: true });
             
@@ -69,68 +79,70 @@ const FeaturedJobs = ({ jobs, onJobClick, loading }: FeaturedJobsProps) => {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.05 }}
-                whileHover={{ y: -4 }}
+                whileHover={{ y: -6 }}
                 onClick={() => onJobClick(job)}
-                className="card-elevated p-5 cursor-pointer group relative"
+                className="relative cursor-pointer group"
               >
-                <button className="absolute top-4 right-4 p-2 rounded-full hover:bg-secondary transition-colors opacity-0 group-hover:opacity-100">
-                  <Bookmark className="w-4 h-4 text-muted-foreground" />
-                </button>
-
-                {/* Institution Header with Avatar */}
-                <div className="flex items-start gap-3 mb-3">
-                  <Avatar className="h-10 w-10 border border-border shrink-0">
-                    <AvatarImage
-                      src={job.recruiter?.avatar_url || undefined}
-                      alt={job.institute}
-                    />
-                    <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">
-                      {job.institute.slice(0, 2).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-heading font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-1">
-                      {job.title}
-                    </h3>
-                    <div className="flex items-center gap-1.5 mt-0.5">
-                      <p className="text-sm text-primary font-medium truncate">{job.institute}</p>
-                      {job.recruiter?.isVerified && (
-                        <VerificationBadge status="verified" size="sm" showLabel={false} />
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground mb-4">
-                  <div className="flex items-center gap-1">
-                    <MapPin className="w-3.5 h-3.5" />
-                    <span>{job.location}</span>
-                  </div>
-                  {job.salary_range && (
-                    <div className="flex items-center gap-1">
-                      <DollarSign className="w-3.5 h-3.5" />
-                      <span>{job.salary_range}</span>
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {job.job_type && (
-                    <Badge variant="secondary">{job.job_type}</Badge>
-                  )}
-                  {job.tags?.slice(0, 2).map((tag) => (
-                    <Badge key={tag} variant="outline">{tag}</Badge>
-                  ))}
-                </div>
-
-                <div className="flex items-center justify-between pt-3 border-t border-border">
-                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <Clock className="w-3.5 h-3.5" />
-                    <span>{timeAgo}</span>
-                  </div>
-                  <button className="text-sm text-primary font-medium hover:underline">
-                    Apply Now
+                {/* Gradient border on hover */}
+                <div className="absolute -inset-[1px] rounded-2xl bg-gradient-to-br from-primary/50 via-primary/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                
+                <div className="relative card-elevated p-5 rounded-2xl h-full">
+                  <button className="absolute top-4 right-4 p-2 rounded-full hover:bg-secondary transition-all opacity-0 group-hover:opacity-100 hover:scale-110">
+                    <Bookmark className="w-4 h-4 text-muted-foreground" />
                   </button>
+
+                  {/* Institution Header */}
+                  <div className="flex items-start gap-3 mb-4">
+                    <Avatar className="h-11 w-11 border-2 border-border shrink-0 group-hover:border-primary/30 transition-colors">
+                      <AvatarImage src={job.recruiter?.avatar_url || undefined} alt={job.institute} />
+                      <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">
+                        {job.institute.slice(0, 2).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-heading font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-1">
+                        {job.title}
+                      </h3>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <p className="text-sm text-primary/80 font-medium truncate">{job.institute}</p>
+                        {job.recruiter?.isVerified && (
+                          <VerificationBadge status="verified" size="sm" showLabel={false} />
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground mb-4">
+                    <div className="flex items-center gap-1.5">
+                      <MapPin className="w-3.5 h-3.5" />
+                      <span>{job.location}</span>
+                    </div>
+                    {job.salary_range && (
+                      <div className="flex items-center gap-1.5">
+                        <DollarSign className="w-3.5 h-3.5" />
+                        <span>{job.salary_range}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {job.job_type && (
+                      <Badge variant="secondary" className="rounded-full">{job.job_type}</Badge>
+                    )}
+                    {job.tags?.slice(0, 2).map((tag) => (
+                      <Badge key={tag} variant="outline" className="rounded-full">{tag}</Badge>
+                    ))}
+                  </div>
+
+                  <div className="flex items-center justify-between pt-3 border-t border-border">
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <Clock className="w-3.5 h-3.5" />
+                      <span>{timeAgo}</span>
+                    </div>
+                    <span className="text-sm text-primary font-semibold group-hover:underline">
+                      Apply Now →
+                    </span>
+                  </div>
                 </div>
               </motion.div>
             );
