@@ -6,6 +6,38 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+// Retry wrapper for Supabase queries to handle transient SSL/network failures
+async function queryWithRetry<T>(
+  queryFn: () => Promise<{ data: T | null; error: any }>,
+  maxRetries = 3,
+  delayMs = 1000
+): Promise<{ data: T | null; error: any }> {
+  let lastError: any = null;
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      const result = await queryFn();
+      // Check if error message contains HTML (Cloudflare error page)
+      if (result.error && typeof result.error?.message === "string" && result.error.message.includes("<!DOCTYPE")) {
+        console.warn(`Attempt ${attempt + 1}/${maxRetries}: Got Cloudflare error page, retrying...`);
+        lastError = result.error;
+        if (attempt < maxRetries - 1) {
+          await new Promise(r => setTimeout(r, delayMs * (attempt + 1)));
+          continue;
+        }
+        return { data: null, error: { message: "Database temporarily unavailable. Please try again in a moment." } };
+      }
+      return result;
+    } catch (e) {
+      console.warn(`Attempt ${attempt + 1}/${maxRetries}: Query threw error:`, e);
+      lastError = e;
+      if (attempt < maxRetries - 1) {
+        await new Promise(r => setTimeout(r, delayMs * (attempt + 1)));
+      }
+    }
+  }
+  return { data: null, error: lastError || { message: "Database query failed after retries" } };
+}
+
 function getCandidateCategory(candidate: any): { category: string; rank: number } {
   const role = (candidate.role || "").toLowerCase();
   const headline = (candidate.headline || "").toLowerCase();
@@ -165,15 +197,17 @@ IMPORTANT RULES:
     // Handle CANDIDATE INFO QUERY
     if (parsed.query_type === "candidate_info" && parsed.candidate_name) {
       const searchName = parsed.candidate_name.toLowerCase();
-      const { data: candidates, error } = await supabase
-        .from("profiles")
-        .select("id, full_name, email, role, headline, avatar_url, location, years_experience, current_salary, expected_salary, skills, university, professional_summary, experience, education, user_type")
-        .eq("user_type", "candidate")
-        .order("updated_at", { ascending: false });
+      const { data: candidates, error } = await queryWithRetry(() =>
+        supabase
+          .from("profiles")
+          .select("id, full_name, email, role, headline, avatar_url, location, years_experience, current_salary, expected_salary, skills, university, professional_summary, experience, education, user_type")
+          .eq("user_type", "candidate")
+          .order("updated_at", { ascending: false })
+      );
 
       if (error) {
         console.error("Database error:", error);
-        throw new Error("Failed to search candidates");
+        throw new Error(error.message || "Failed to search candidates");
       }
 
       const matched = (candidates || []).filter((c: any) =>
@@ -241,15 +275,17 @@ IMPORTANT RULES:
     // Handle ADVISORY QUERY - AI-powered contextual advice about a candidate
     if (parsed.query_type === "advisory" && parsed.candidate_name) {
       const searchName = parsed.candidate_name.toLowerCase();
-      const { data: candidates, error: advError } = await supabase
-        .from("profiles")
-        .select("id, full_name, role, headline, location, years_experience, current_salary, expected_salary, skills, university, professional_summary, user_type")
-        .eq("user_type", "candidate")
-        .order("updated_at", { ascending: false });
+      const { data: candidates, error: advError } = await queryWithRetry(() =>
+        supabase
+          .from("profiles")
+          .select("id, full_name, role, headline, location, years_experience, current_salary, expected_salary, skills, university, professional_summary, user_type")
+          .eq("user_type", "candidate")
+          .order("updated_at", { ascending: false })
+      );
 
       if (advError) {
         console.error("Database error:", advError);
-        throw new Error("Failed to search candidates");
+        throw new Error(advError.message || "Failed to search candidates");
       }
 
       const matched = (candidates || []).filter((c: any) =>
@@ -321,14 +357,16 @@ ${candidateContext}`
     // Handle EMAIL QUERY
     if (parsed.query_type === "email" && parsed.candidate_name) {
       const searchName = parsed.candidate_name.toLowerCase();
-      const { data: candidates, error } = await supabase
-        .from("candidate_directory")
-        .select("id, full_name, email, role, headline, avatar_url, location")
-        .order("updated_at", { ascending: false });
+      const { data: candidates, error } = await queryWithRetry(() =>
+        supabase
+          .from("candidate_directory")
+          .select("id, full_name, email, role, headline, avatar_url, location")
+          .order("updated_at", { ascending: false })
+      );
 
       if (error) {
         console.error("Database error:", error);
-        throw new Error("Failed to search candidates");
+        throw new Error(error.message || "Failed to search candidates");
       }
 
       const matched = (candidates || []).filter((c: any) => 
@@ -375,14 +413,16 @@ ${candidateContext}`
 
     console.log("Search terms:", searchTerms);
 
-    const { data: allCandidates, error } = await supabase
-      .from("candidate_directory")
-      .select("*")
-      .order("updated_at", { ascending: false });
+    const { data: allCandidates, error } = await queryWithRetry(() =>
+      supabase
+        .from("candidate_directory")
+        .select("*")
+        .order("updated_at", { ascending: false })
+    );
 
     if (error) {
       console.error("Database error:", error);
-      throw new Error("Failed to search candidates");
+      throw new Error(error.message || "Failed to search candidates");
     }
 
     const scoredCandidates = (allCandidates || []).map((candidate: any) => {
@@ -511,13 +551,16 @@ ${candidateContext}`
   } catch (error) {
     console.error("Error in recruiter-chat:", error);
     const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred";
+    const isTransient = errorMessage.includes("temporarily unavailable") || errorMessage.includes("SSL") || errorMessage.includes("handshake");
     return new Response(
       JSON.stringify({ 
         type: "error",
         error: errorMessage,
-        message: "Sorry, I encountered an error. Please try again."
+        message: isTransient 
+          ? "The database is temporarily unavailable due to a network issue. Please try again in a few seconds." 
+          : "Sorry, I encountered an error. Please try again."
       }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { status: isTransient ? 503 : 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 });
