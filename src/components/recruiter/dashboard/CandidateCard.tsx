@@ -61,7 +61,7 @@ const CandidateCard = ({
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05, duration: 0.3 }}
       whileHover={{ y: -2, boxShadow: "0 8px 30px rgba(0,0,0,0.08)" }}
-      className="card-elevated p-5 transition-all duration-200"
+      className="card-elevated p-3 sm:p-5 transition-all duration-200"
     >
       <div className="flex flex-col md:flex-row gap-4">
         <motion.div whileHover={{ scale: 1.05 }} transition={{ type: "spring", stiffness: 300 }}>
@@ -76,10 +76,10 @@ const CandidateCard = ({
         <div className="flex-1 min-w-0">
           <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
             <div>
-              <h4 className="font-heading font-semibold text-lg text-foreground hover:text-primary transition-colors cursor-pointer" onClick={() => onView(candidate)}>
+              <h4 className="font-heading font-semibold text-base sm:text-lg text-foreground hover:text-primary transition-colors cursor-pointer truncate" onClick={() => onView(candidate)}>
                 {candidate.full_name || "Anonymous"}
               </h4>
-              <p className="text-primary font-medium">
+              <p className="text-primary font-medium text-sm sm:text-base truncate">
                 {candidate.role || candidate.headline || "Academic Professional"}
               </p>
             </div>

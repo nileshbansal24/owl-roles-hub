@@ -332,7 +332,7 @@ const RecruiterChatbot = ({ onViewCandidate, onMessageCandidate }: RecruiterChat
     <>
       {/* Floating Action Button */}
       <motion.div
-        className="fixed bottom-6 right-6 z-50"
+        className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50"
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
         transition={{ type: "spring", stiffness: 260, damping: 20 }}
@@ -341,7 +341,7 @@ const RecruiterChatbot = ({ onViewCandidate, onMessageCandidate }: RecruiterChat
           onClick={() => setIsOpen(!isOpen)}
           size="lg"
           className={cn(
-            "h-14 w-14 rounded-full shadow-lg",
+            "h-12 w-12 sm:h-14 sm:w-14 rounded-full shadow-lg",
             isOpen ? "bg-destructive hover:bg-destructive/90" : "bg-primary hover:bg-primary/90"
           )}
         >
@@ -379,7 +379,7 @@ const RecruiterChatbot = ({ onViewCandidate, onMessageCandidate }: RecruiterChat
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className="fixed bottom-24 right-6 z-50 w-[420px] max-w-[calc(100vw-3rem)] rounded-xl border bg-background shadow-2xl overflow-hidden"
+            className="fixed bottom-20 right-2 sm:bottom-24 sm:right-6 z-50 w-[calc(100vw-1rem)] sm:w-[420px] sm:max-w-[calc(100vw-3rem)] max-h-[calc(100vh-6rem)] rounded-xl border bg-background shadow-2xl overflow-hidden flex flex-col"
           >
             {/* Header */}
             <div className="bg-primary px-4 py-3 text-primary-foreground">
@@ -395,7 +395,7 @@ const RecruiterChatbot = ({ onViewCandidate, onMessageCandidate }: RecruiterChat
             </div>
 
             {/* Messages */}
-            <ScrollArea ref={scrollRef} className="h-[400px] p-4">
+            <ScrollArea ref={scrollRef} className="h-[50vh] sm:h-[400px] p-3 sm:p-4 flex-1">
               <div className="space-y-4">
                 {messages.map((message) => (
                   <div

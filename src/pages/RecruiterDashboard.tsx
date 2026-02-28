@@ -247,7 +247,7 @@ const RecruiterDashboard = () => {
 
   return (
     <RecruiterLayout hasJobs={jobs.length > 0} title="Recruiter Dashboard">
-      <div className="p-6 space-y-6">
+      <div className="p-3 sm:p-6 space-y-4 sm:space-y-6">
         {/* Tabs - TabsList is hidden since navigation is handled by sidebar */}
         <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
           <TabsList className="sr-only">
