@@ -1,4 +1,3 @@
-import { Suspense, lazy } from "react";
 import { motion } from "framer-motion";
 import { Search, MapPin, Briefcase, ArrowRight, Sparkles } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -10,8 +9,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-const FloatingGeometry = lazy(() => import("@/components/FloatingGeometry"));
 
 interface NaukriHeroSectionProps {
   searchQuery: string;
@@ -79,229 +76,39 @@ const searchBoxVariants = {
   },
 };
 
-// Animated floating shapes component
-const FloatingShapes = () => (
+// Subtle 2D decorative elements
+const SubtleDecorations = () => (
   <div className="absolute inset-0 overflow-hidden pointer-events-none">
-    {/* Large gradient orbs */}
-    <motion.div
-      className="absolute -top-20 -right-20 w-[500px] h-[500px] rounded-full bg-gradient-to-br from-primary/25 via-primary/10 to-transparent blur-3xl"
-      animate={{
-        scale: [1, 1.15, 1],
-        x: [0, 30, 0],
-        y: [0, -30, 0],
-        rotate: [0, 10, 0],
-      }}
-      transition={{
-        duration: 12,
-        repeat: Infinity,
-        ease: "easeInOut",
-      }}
-    />
-    <motion.div
-      className="absolute -bottom-40 -left-20 w-[400px] h-[400px] rounded-full bg-gradient-to-tr from-accent/20 via-primary/15 to-transparent blur-3xl"
-      animate={{
-        scale: [1, 1.2, 1],
-        x: [0, -20, 0],
-        y: [0, 20, 0],
-        rotate: [0, -15, 0],
-      }}
-      transition={{
-        duration: 15,
-        repeat: Infinity,
-        ease: "easeInOut",
-        delay: 2,
-      }}
-    />
-    <motion.div
-      className="absolute top-1/3 left-1/4 w-72 h-72 rounded-full bg-gradient-to-r from-primary/15 to-accent/15 blur-2xl"
-      animate={{
-        scale: [1, 1.3, 1],
-        opacity: [0.3, 0.6, 0.3],
-        x: [0, 20, 0],
-      }}
-      transition={{
-        duration: 8,
-        repeat: Infinity,
-        ease: "easeInOut",
-        delay: 1,
-      }}
-    />
-    <motion.div
-      className="absolute top-1/2 right-1/4 w-56 h-56 rounded-full bg-gradient-to-bl from-accent/20 to-primary/10 blur-2xl"
-      animate={{
-        scale: [1, 1.25, 1],
-        opacity: [0.2, 0.5, 0.2],
-        y: [0, -30, 0],
-      }}
-      transition={{
-        duration: 10,
-        repeat: Infinity,
-        ease: "easeInOut",
-        delay: 3,
-      }}
-    />
-
-    {/* Floating particles - various sizes */}
-    {[...Array(8)].map((_, i) => (
-      <motion.div
-        key={`particle-${i}`}
-        className="absolute rounded-full bg-primary/30"
-        style={{
-          width: 4 + (i % 3) * 2,
-          height: 4 + (i % 3) * 2,
-          left: `${10 + i * 12}%`,
-          top: `${20 + (i % 4) * 20}%`,
-        }}
-        animate={{
-          y: [0, -30 - (i % 3) * 10, 0],
-          x: [0, (i % 2 === 0 ? 15 : -15), 0],
-          opacity: [0.2, 0.6, 0.2],
-          scale: [1, 1.2, 1],
-        }}
-        transition={{
-          duration: 4 + i * 0.5,
-          repeat: Infinity,
-          ease: "easeInOut",
-          delay: i * 0.3,
-        }}
-      />
-    ))}
-
-    {/* Animated rings */}
-    <motion.div
-      className="absolute top-24 right-20 w-32 h-32 rounded-full border border-primary/10"
-      animate={{
-        scale: [1, 1.3, 1],
-        opacity: [0.3, 0.1, 0.3],
-        rotate: [0, 180, 360],
-      }}
-      transition={{
-        duration: 20,
-        repeat: Infinity,
-        ease: "linear",
-      }}
-    />
-    <motion.div
-      className="absolute bottom-40 left-20 w-24 h-24 rounded-full border border-accent/15"
-      animate={{
-        scale: [1, 1.5, 1],
-        opacity: [0.2, 0.05, 0.2],
-        rotate: [360, 180, 0],
-      }}
-      transition={{
-        duration: 15,
-        repeat: Infinity,
-        ease: "linear",
-      }}
-    />
-
-    {/* Floating geometric shapes */}
-    <motion.div
-      className="absolute top-32 left-[15%] w-8 h-8 rotate-45 bg-gradient-to-br from-primary/20 to-transparent rounded-sm"
-      animate={{
-        y: [0, -20, 0],
-        rotate: [45, 90, 45],
-        opacity: [0.3, 0.5, 0.3],
-      }}
-      transition={{
-        duration: 6,
-        repeat: Infinity,
-        ease: "easeInOut",
-      }}
-    />
-    <motion.div
-      className="absolute bottom-48 right-[20%] w-6 h-6 bg-gradient-to-tr from-accent/25 to-transparent rounded-full"
-      animate={{
-        y: [0, 25, 0],
-        x: [0, 15, 0],
-        scale: [1, 1.3, 1],
-        opacity: [0.4, 0.7, 0.4],
-      }}
-      transition={{
-        duration: 7,
-        repeat: Infinity,
-        ease: "easeInOut",
-        delay: 1,
-      }}
-    />
-    <motion.div
-      className="absolute top-1/2 right-16 w-5 h-5 rotate-12 bg-gradient-to-r from-primary/15 to-accent/15 rounded-sm"
-      animate={{
-        y: [0, -15, 0],
-        rotate: [12, 60, 12],
-        opacity: [0.2, 0.4, 0.2],
-      }}
-      transition={{
-        duration: 5,
-        repeat: Infinity,
-        ease: "easeInOut",
-        delay: 2,
-      }}
-    />
-
-    {/* Subtle horizontal lines animation */}
-    <motion.div
-      className="absolute top-1/4 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/10 to-transparent"
-      animate={{
-        opacity: [0, 0.5, 0],
-        scaleX: [0.5, 1, 0.5],
-      }}
-      transition={{
-        duration: 8,
-        repeat: Infinity,
-        ease: "easeInOut",
-      }}
-    />
-    <motion.div
-      className="absolute top-2/3 left-0 right-0 h-px bg-gradient-to-r from-transparent via-accent/10 to-transparent"
-      animate={{
-        opacity: [0, 0.3, 0],
-        scaleX: [0.3, 0.8, 0.3],
-      }}
-      transition={{
-        duration: 10,
-        repeat: Infinity,
-        ease: "easeInOut",
-        delay: 3,
-      }}
-    />
-
-    {/* Grid pattern overlay */}
+    {/* Soft dot grid */}
     <div 
-      className="absolute inset-0 opacity-[0.03]"
+      className="absolute inset-0 opacity-[0.04]"
       style={{
-        backgroundImage: `linear-gradient(rgba(37, 99, 235, 0.15) 1px, transparent 1px),
-                          linear-gradient(90deg, rgba(37, 99, 235, 0.15) 1px, transparent 1px)`,
-        backgroundSize: '60px 60px',
+        backgroundImage: `radial-gradient(circle, hsl(var(--primary)) 1px, transparent 1px)`,
+        backgroundSize: '32px 32px',
       }}
     />
 
-    {/* Diagonal lines pattern */}
-    <div 
-      className="absolute inset-0 opacity-[0.015]"
-      style={{
-        backgroundImage: `repeating-linear-gradient(
-          45deg,
-          transparent,
-          transparent 100px,
-          rgba(37, 99, 235, 0.1) 100px,
-          rgba(37, 99, 235, 0.1) 101px
-        )`,
-      }}
-    />
+    {/* Top-right soft gradient blob */}
+    <div className="absolute -top-24 -right-24 w-[400px] h-[400px] rounded-full bg-primary/[0.04] blur-3xl" />
 
-    {/* Radial gradient spotlight effect */}
+    {/* Bottom-left soft gradient blob */}
+    <div className="absolute -bottom-32 -left-24 w-[350px] h-[350px] rounded-full bg-accent/[0.04] blur-3xl" />
+
+    {/* Subtle floating circles */}
     <motion.div
-      className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-gradient-radial from-primary/5 via-transparent to-transparent"
-      animate={{
-        opacity: [0.5, 0.8, 0.5],
-        scale: [1, 1.1, 1],
-      }}
-      transition={{
-        duration: 6,
-        repeat: Infinity,
-        ease: "easeInOut",
-      }}
+      className="absolute top-20 right-[15%] w-3 h-3 rounded-full bg-primary/10"
+      animate={{ y: [0, -12, 0] }}
+      transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+    />
+    <motion.div
+      className="absolute top-[40%] left-[10%] w-2 h-2 rounded-full bg-primary/15"
+      animate={{ y: [0, 10, 0] }}
+      transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+    />
+    <motion.div
+      className="absolute bottom-32 right-[25%] w-2.5 h-2.5 rounded-full bg-accent/10"
+      animate={{ y: [0, -8, 0] }}
+      transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 2 }}
     />
   </div>
 );
@@ -319,13 +126,11 @@ const NaukriHeroSection = ({
 }: NaukriHeroSectionProps) => {
   return (
     <section className="relative bg-background pt-28 pb-20 overflow-hidden">
-      {/* 3D Floating Geometry Background */}
-      <Suspense fallback={null}>
-        <FloatingGeometry />
-      </Suspense>
+      {/* Subtle 2D decorations */}
+      <SubtleDecorations />
 
       {/* Subtle top gradient */}
-      <div className="absolute top-0 left-0 right-0 h-40 bg-gradient-to-b from-primary/5 to-transparent" />
+      <div className="absolute top-0 left-0 right-0 h-40 bg-gradient-to-b from-primary/[0.03] to-transparent" />
 
       <div className="container mx-auto px-4 relative z-10">
         <motion.div 
