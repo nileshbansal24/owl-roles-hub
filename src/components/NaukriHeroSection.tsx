@@ -1,5 +1,4 @@
-import { useRef } from "react";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion } from "framer-motion";
 import { Search, MapPin, Briefcase, ArrowRight, Sparkles } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -77,59 +76,42 @@ const searchBoxVariants = {
   },
 };
 
-// Subtle 2D decorative elements with parallax
-const SubtleDecorations = ({ scrollYProgress }: { scrollYProgress: any }) => {
-  const y1 = useTransform(scrollYProgress, [0, 1], [0, -60]);
-  const y2 = useTransform(scrollYProgress, [0, 1], [0, 40]);
-  const y3 = useTransform(scrollYProgress, [0, 1], [0, -30]);
-  const dotY = useTransform(scrollYProgress, [0, 1], [0, 20]);
+// Subtle 2D decorative elements
+const SubtleDecorations = () => (
+  <div className="absolute inset-0 overflow-hidden pointer-events-none">
+    {/* Soft dot grid */}
+    <div
+      className="absolute inset-0 opacity-[0.04]"
+      style={{
+        backgroundImage: `radial-gradient(circle, hsl(var(--primary)) 1px, transparent 1px)`,
+        backgroundSize: '32px 32px',
+      }}
+    />
 
-  return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {/* Soft dot grid with slow parallax */}
-      <motion.div
-        className="absolute inset-0 opacity-[0.04]"
-        style={{
-          y: dotY,
-          backgroundImage: `radial-gradient(circle, hsl(var(--primary)) 1px, transparent 1px)`,
-          backgroundSize: '32px 32px',
-        }}
-      />
+    {/* Top-right soft gradient blob */}
+    <div className="absolute -top-24 -right-24 w-[400px] h-[400px] rounded-full bg-primary/[0.04] blur-3xl" />
 
-      {/* Top-right soft gradient blob */}
-      <motion.div
-        className="absolute -top-24 -right-24 w-[400px] h-[400px] rounded-full bg-primary/[0.04] blur-3xl"
-        style={{ y: y1 }}
-      />
+    {/* Bottom-left soft gradient blob */}
+    <div className="absolute -bottom-32 -left-24 w-[350px] h-[350px] rounded-full bg-accent/[0.04] blur-3xl" />
 
-      {/* Bottom-left soft gradient blob */}
-      <motion.div
-        className="absolute -bottom-32 -left-24 w-[350px] h-[350px] rounded-full bg-accent/[0.04] blur-3xl"
-        style={{ y: y2 }}
-      />
-
-      {/* Subtle floating circles with parallax */}
-      <motion.div
-        className="absolute top-20 right-[15%] w-3 h-3 rounded-full bg-primary/10"
-        style={{ y: y1 }}
-        animate={{ y: [0, -12, 0] }}
-        transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-      />
-      <motion.div
-        className="absolute top-[40%] left-[10%] w-2 h-2 rounded-full bg-primary/15"
-        style={{ y: y3 }}
-        animate={{ y: [0, 10, 0] }}
-        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-      />
-      <motion.div
-        className="absolute bottom-32 right-[25%] w-2.5 h-2.5 rounded-full bg-accent/10"
-        style={{ y: y2 }}
-        animate={{ y: [0, -8, 0] }}
-        transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 2 }}
-      />
-    </div>
-  );
-};
+    {/* Subtle floating circles */}
+    <motion.div
+      className="absolute top-20 right-[15%] w-3 h-3 rounded-full bg-primary/10"
+      animate={{ y: [0, -12, 0] }}
+      transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+    />
+    <motion.div
+      className="absolute top-[40%] left-[10%] w-2 h-2 rounded-full bg-primary/15"
+      animate={{ y: [0, 10, 0] }}
+      transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+    />
+    <motion.div
+      className="absolute bottom-32 right-[25%] w-2.5 h-2.5 rounded-full bg-accent/10"
+      animate={{ y: [0, -8, 0] }}
+      transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 2 }}
+    />
+  </div>
+);
 
 const NaukriHeroSection = ({
   searchQuery,
@@ -142,13 +124,10 @@ const NaukriHeroSection = ({
   isLoggedIn = false,
   onGetStarted,
 }: NaukriHeroSectionProps) => {
-  const sectionRef = useRef<HTMLElement>(null);
-  const { scrollYProgress } = useScroll({ target: sectionRef, offset: ["start start", "end start"] });
-
   return (
-    <section ref={sectionRef} className="relative bg-background pt-28 pb-20 overflow-hidden">
+    <section className="relative bg-background pt-28 pb-20 overflow-hidden">
       {/* Subtle 2D decorations */}
-      <SubtleDecorations scrollYProgress={scrollYProgress} />
+      <SubtleDecorations />
 
       {/* Subtle top gradient */}
       <div className="absolute top-0 left-0 right-0 h-40 bg-gradient-to-b from-primary/[0.03] to-transparent" />
