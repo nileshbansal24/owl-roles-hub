@@ -96,7 +96,7 @@ const RecruiterSidebar = ({ hasJobs = false }: RecruiterSidebarProps) => {
       tab: "messages",
     },
     {
-      title: "Blockchain",
+      title: "OR Verification",
       icon: Blocks,
       tab: "blockchain",
     },
