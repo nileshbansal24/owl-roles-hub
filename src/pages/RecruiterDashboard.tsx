@@ -25,6 +25,7 @@ import {
   SavedCandidatesTab,
   ApplicationsTab,
   EventsTab,
+  BlockchainCredentialsTab,
 } from "@/components/recruiter/dashboard";
 
 // Hooks and types
@@ -258,6 +259,7 @@ const RecruiterDashboard = () => {
             <TabsTrigger value="applications">Applications</TabsTrigger>
             <TabsTrigger value="jobs">My Jobs</TabsTrigger>
             <TabsTrigger value="messages">Messages</TabsTrigger>
+            <TabsTrigger value="blockchain">Blockchain</TabsTrigger>
           </TabsList>
 
           {/* Find Candidates Tab */}
@@ -335,6 +337,14 @@ const RecruiterDashboard = () => {
           {/* Messages Tab */}
           <TabsContent value="messages">
             <MessageHistoryTab />
+          </TabsContent>
+
+          {/* Blockchain Credentials Tab */}
+          <TabsContent value="blockchain">
+            <BlockchainCredentialsTab
+              candidates={candidates}
+              isLoading={loading}
+            />
           </TabsContent>
         </Tabs>
       </div>
