@@ -370,9 +370,9 @@ const BlockchainCredentialsTab = ({ candidates, isLoading = false }: BlockchainC
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h2 className="text-xl sm:text-2xl font-bold flex items-center gap-2">OR Verification
+        <h2 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
           <Blocks className="h-6 w-6 text-primary" />
-          Blockchain Credential Verification
+          OR Credential Verification
         </h2>
         <p className="text-sm text-muted-foreground mt-1">View on-chain verified credentials for candidates such as degrees, employment, and certifications.
 
