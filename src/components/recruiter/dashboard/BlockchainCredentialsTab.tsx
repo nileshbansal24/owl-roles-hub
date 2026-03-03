@@ -16,8 +16,8 @@ import {
   Fingerprint,
   Blocks,
   Copy,
-  Check,
-} from "lucide-react";
+  Check } from
+"lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -49,18 +49,18 @@ interface CandidateWithCredentials {
   trustScore: number;
 }
 
-const statusConfig: Record<VerificationStatus, { icon: typeof CheckCircle2; label: string; className: string }> = {
+const statusConfig: Record<VerificationStatus, {icon: typeof CheckCircle2;label: string;className: string;}> = {
   verified: { icon: CheckCircle2, label: "Verified", className: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20" },
   pending: { icon: Clock, label: "Pending", className: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20" },
   unverified: { icon: XCircle, label: "Unverified", className: "bg-muted text-muted-foreground border-border" },
-  expired: { icon: XCircle, label: "Expired", className: "bg-destructive/10 text-destructive border-destructive/20" },
+  expired: { icon: XCircle, label: "Expired", className: "bg-destructive/10 text-destructive border-destructive/20" }
 };
 
-const typeConfig: Record<string, { icon: typeof GraduationCap; label: string }> = {
+const typeConfig: Record<string, {icon: typeof GraduationCap;label: string;}> = {
   education: { icon: GraduationCap, label: "Education" },
   employment: { icon: Briefcase, label: "Employment" },
   certification: { icon: Award, label: "Certification" },
-  achievement: { icon: Award, label: "Achievement" },
+  achievement: { icon: Award, label: "Achievement" }
 };
 
 // Generate simulated blockchain credentials from candidate profiles
@@ -79,7 +79,7 @@ const generateCredentials = (candidate: Profile): BlockchainCredential[] => {
       txHash: `0x${baseHash}a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0`,
       blockNumber: 18234567 + Math.floor(Math.random() * 100000),
       network: "Ethereum",
-      verifiedAt: "2024-01-10T10:30:00Z",
+      verifiedAt: "2024-01-10T10:30:00Z"
     });
   }
 
@@ -95,7 +95,7 @@ const generateCredentials = (candidate: Profile): BlockchainCredential[] => {
       txHash: `0x${baseHash}f1e2d3c4b5a6f7e8d9c0b1a2f3e4d5c6b7a8f9e0d1c2b3a4f5e6d7c8b9a0`,
       blockNumber: 19345678 + Math.floor(Math.random() * 100000),
       network: "Polygon",
-      verifiedAt: yearsExp > 3 ? "2024-08-20T14:15:00Z" : undefined,
+      verifiedAt: yearsExp > 3 ? "2024-08-20T14:15:00Z" : undefined
     });
   }
 
@@ -110,7 +110,7 @@ const generateCredentials = (candidate: Profile): BlockchainCredential[] => {
       txHash: `0x${baseHash}1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1`,
       blockNumber: 20456789 + Math.floor(Math.random() * 100000),
       network: "Ethereum",
-      verifiedAt: "2024-09-05T09:00:00Z",
+      verifiedAt: "2024-09-05T09:00:00Z"
     });
   }
 
@@ -124,7 +124,7 @@ const generateCredentials = (candidate: Profile): BlockchainCredential[] => {
       status: Math.random() > 0.3 ? "verified" : "pending",
       txHash: `0x${baseHash}0f1e2d3c4b5a6f7e8d9c0b1a2f3e4d5c6b7a8f9e0d1c2b3a4f5e6d7c8b9`,
       blockNumber: 21567890 + Math.floor(Math.random() * 100000),
-      network: "Polygon",
+      network: "Polygon"
     });
   }
 
@@ -133,8 +133,8 @@ const generateCredentials = (candidate: Profile): BlockchainCredential[] => {
 
 const computeTrustScore = (creds: BlockchainCredential[]): number => {
   if (creds.length === 0) return 0;
-  const verified = creds.filter(c => c.status === "verified").length;
-  return Math.round((verified / creds.length) * 100);
+  const verified = creds.filter((c) => c.status === "verified").length;
+  return Math.round(verified / creds.length * 100);
 };
 
 interface BlockchainCredentialsTabProps {
@@ -142,7 +142,7 @@ interface BlockchainCredentialsTabProps {
   isLoading?: boolean;
 }
 
-const CredentialCard = ({ credential }: { credential: BlockchainCredential }) => {
+const CredentialCard = ({ credential }: {credential: BlockchainCredential;}) => {
   const [expanded, setExpanded] = useState(false);
   const [copied, setCopied] = useState(false);
   const { toast } = useToast();
@@ -161,8 +161,8 @@ const CredentialCard = ({ credential }: { credential: BlockchainCredential }) =>
   return (
     <motion.div
       layout
-      className="border rounded-lg p-4 bg-card hover:shadow-md transition-shadow"
-    >
+      className="border rounded-lg p-4 bg-card hover:shadow-md transition-shadow">
+      
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-start gap-3 min-w-0">
           <div className="rounded-lg bg-primary/10 p-2 shrink-0">
@@ -185,13 +185,13 @@ const CredentialCard = ({ credential }: { credential: BlockchainCredential }) =>
       </div>
 
       <AnimatePresence>
-        {expanded && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            className="overflow-hidden"
-          >
+        {expanded &&
+        <motion.div
+          initial={{ height: 0, opacity: 0 }}
+          animate={{ height: "auto", opacity: 1 }}
+          exit={{ height: 0, opacity: 0 }}
+          className="overflow-hidden">
+          
             <div className="mt-4 pt-4 border-t space-y-3">
               <div className="grid grid-cols-2 gap-3 text-xs">
                 <div>
@@ -209,12 +209,12 @@ const CredentialCard = ({ credential }: { credential: BlockchainCredential }) =>
                   <p className="text-muted-foreground">Issued</p>
                   <p className="font-medium">{new Date(credential.dateIssued).toLocaleDateString()}</p>
                 </div>
-                {credential.verifiedAt && (
-                  <div>
+                {credential.verifiedAt &&
+              <div>
                     <p className="text-muted-foreground">Verified</p>
                     <p className="font-medium">{new Date(credential.verifiedAt).toLocaleDateString()}</p>
                   </div>
-                )}
+              }
               </div>
               <div>
                 <p className="text-xs text-muted-foreground mb-1">Transaction Hash</p>
@@ -236,23 +236,23 @@ const CredentialCard = ({ credential }: { credential: BlockchainCredential }) =>
               </div>
             </div>
           </motion.div>
-        )}
+        }
       </AnimatePresence>
-    </motion.div>
-  );
+    </motion.div>);
+
 };
 
-const CandidateCredentialCard = ({ data }: { data: CandidateWithCredentials }) => {
+const CandidateCredentialCard = ({ data }: {data: CandidateWithCredentials;}) => {
   const [expanded, setExpanded] = useState(false);
   const { candidate, credentials, trustScore } = data;
-  const verifiedCount = credentials.filter(c => c.status === "verified").length;
+  const verifiedCount = credentials.filter((c) => c.status === "verified").length;
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-    >
+      transition={{ duration: 0.3 }}>
+      
       <Card className="overflow-hidden">
         <CardHeader className="pb-3">
           <div className="flex items-start justify-between gap-3">
@@ -295,24 +295,24 @@ const CandidateCredentialCard = ({ data }: { data: CandidateWithCredentials }) =
         </CardHeader>
 
         <AnimatePresence>
-          {expanded && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              className="overflow-hidden"
-            >
+          {expanded &&
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="overflow-hidden">
+            
               <CardContent className="pt-0 space-y-3">
-                {credentials.map((cred) => (
-                  <CredentialCard key={cred.id} credential={cred} />
-                ))}
+                {credentials.map((cred) =>
+              <CredentialCard key={cred.id} credential={cred} />
+              )}
               </CardContent>
             </motion.div>
-          )}
+          }
         </AnimatePresence>
       </Card>
-    </motion.div>
-  );
+    </motion.div>);
+
 };
 
 const BlockchainCredentialsTab = ({ candidates, isLoading = false }: BlockchainCredentialsTabProps) => {
@@ -320,13 +320,13 @@ const BlockchainCredentialsTab = ({ candidates, isLoading = false }: BlockchainC
   const [statusFilter, setStatusFilter] = useState<"all" | VerificationStatus>("all");
 
   const candidatesWithCredentials = useMemo<CandidateWithCredentials[]>(() => {
-    return candidates
-      .map((c) => {
-        const credentials = generateCredentials(c);
-        return { candidate: c, credentials, trustScore: computeTrustScore(credentials) };
-      })
-      .filter((c) => c.credentials.length > 0)
-      .sort((a, b) => b.trustScore - a.trustScore);
+    return candidates.
+    map((c) => {
+      const credentials = generateCredentials(c);
+      return { candidate: c, credentials, trustScore: computeTrustScore(credentials) };
+    }).
+    filter((c) => c.credentials.length > 0).
+    sort((a, b) => b.trustScore - a.trustScore);
   }, [candidates]);
 
   const filtered = useMemo(() => {
@@ -335,9 +335,9 @@ const BlockchainCredentialsTab = ({ candidates, isLoading = false }: BlockchainC
       const q = searchQuery.toLowerCase();
       list = list.filter(
         (c) =>
-          c.candidate.full_name?.toLowerCase().includes(q) ||
-          c.candidate.role?.toLowerCase().includes(q) ||
-          c.candidate.university?.toLowerCase().includes(q)
+        c.candidate.full_name?.toLowerCase().includes(q) ||
+        c.candidate.role?.toLowerCase().includes(q) ||
+        c.candidate.university?.toLowerCase().includes(q)
       );
     }
     if (statusFilter !== "all") {
@@ -352,42 +352,42 @@ const BlockchainCredentialsTab = ({ candidates, isLoading = false }: BlockchainC
       total: all.length,
       verified: all.filter((c) => c.status === "verified").length,
       pending: all.filter((c) => c.status === "pending").length,
-      candidates: candidatesWithCredentials.length,
+      candidates: candidatesWithCredentials.length
     };
   }, [candidatesWithCredentials]);
 
   if (isLoading) {
     return (
       <div className="space-y-4">
-        {[1, 2, 3].map((i) => (
-          <div key={i} className="h-24 bg-muted animate-pulse rounded-lg" />
-        ))}
-      </div>
-    );
+        {[1, 2, 3].map((i) =>
+        <div key={i} className="h-24 bg-muted animate-pulse rounded-lg" />
+        )}
+      </div>);
+
   }
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h2 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
+        <h2 className="text-xl sm:text-2xl font-bold flex items-center gap-2">OR Verification
           <Blocks className="h-6 w-6 text-primary" />
           Blockchain Credential Verification
         </h2>
-        <p className="text-sm text-muted-foreground mt-1">
-          View on-chain verified credentials for candidates — degrees, employment, and certifications anchored to the blockchain.
+        <p className="text-sm text-muted-foreground mt-1">View on-chain verified credentials for candidates such as degrees, employment, and certifications.
+
         </p>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
-          { label: "Total Credentials", value: stats.total, icon: Fingerprint },
-          { label: "Verified On-Chain", value: stats.verified, icon: CheckCircle2 },
-          { label: "Pending Verification", value: stats.pending, icon: Clock },
-          { label: "Candidates", value: stats.candidates, icon: Shield },
-        ].map((stat) => (
-          <Card key={stat.label}>
+        { label: "Total Credentials", value: stats.total, icon: Fingerprint },
+        { label: "Verified On-Chain", value: stats.verified, icon: CheckCircle2 },
+        { label: "Pending Verification", value: stats.pending, icon: Clock },
+        { label: "Candidates", value: stats.candidates, icon: Shield }].
+        map((stat) =>
+        <Card key={stat.label}>
             <CardContent className="p-4 flex items-center gap-3">
               <div className="rounded-lg bg-primary/10 p-2">
                 <stat.icon className="h-4 w-4 text-primary" />
@@ -398,7 +398,7 @@ const BlockchainCredentialsTab = ({ candidates, isLoading = false }: BlockchainC
               </div>
             </CardContent>
           </Card>
-        ))}
+        )}
       </div>
 
       {/* Filters */}
@@ -409,32 +409,32 @@ const BlockchainCredentialsTab = ({ candidates, isLoading = false }: BlockchainC
             placeholder="Search candidates by name, role, university..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9"
-          />
+            className="pl-9" />
+          
         </div>
         <div className="flex gap-2 flex-wrap">
-          {(["all", "verified", "pending", "unverified"] as const).map((s) => (
-            <Button
-              key={s}
-              variant={statusFilter === s ? "default" : "outline"}
-              size="sm"
-              onClick={() => setStatusFilter(s)}
-              className="capitalize"
-            >
+          {(["all", "verified", "pending", "unverified"] as const).map((s) =>
+          <Button
+            key={s}
+            variant={statusFilter === s ? "default" : "outline"}
+            size="sm"
+            onClick={() => setStatusFilter(s)}
+            className="capitalize">
+            
               {s === "all" ? "All" : s}
             </Button>
-          ))}
+          )}
         </div>
       </div>
 
       {/* Candidate List */}
       <div className="space-y-4">
-        {filtered.length > 0 ? (
-          filtered.slice(0, 20).map((data) => (
-            <CandidateCredentialCard key={data.candidate.id} data={data} />
-          ))
-        ) : (
-          <Card>
+        {filtered.length > 0 ?
+        filtered.slice(0, 20).map((data) =>
+        <CandidateCredentialCard key={data.candidate.id} data={data} />
+        ) :
+
+        <Card>
             <CardContent className="p-12 text-center">
               <Blocks className="h-12 w-12 mx-auto text-muted-foreground/40 mb-4" />
               <h3 className="font-semibold text-lg">No blockchain credentials found</h3>
@@ -443,10 +443,10 @@ const BlockchainCredentialsTab = ({ candidates, isLoading = false }: BlockchainC
               </p>
             </CardContent>
           </Card>
-        )}
+        }
       </div>
-    </div>
-  );
+    </div>);
+
 };
 
 export default BlockchainCredentialsTab;
