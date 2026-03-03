@@ -28,6 +28,7 @@ import {
   Moon,
   Sun,
   FileText,
+  Blocks,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -93,6 +94,11 @@ const RecruiterSidebar = ({ hasJobs = false }: RecruiterSidebarProps) => {
       title: "Messages",
       icon: MessageSquare,
       tab: "messages",
+    },
+    {
+      title: "Blockchain",
+      icon: Blocks,
+      tab: "blockchain",
     },
   ];
 
