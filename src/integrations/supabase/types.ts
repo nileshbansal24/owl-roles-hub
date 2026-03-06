@@ -169,6 +169,51 @@ export type Database = {
           },
         ]
       }
+      credential_verifications: {
+        Row: {
+          candidate_id: string
+          created_at: string
+          credential_issuer: string | null
+          credential_title: string
+          credential_type: string
+          id: string
+          recruiter_id: string
+          status: string
+          updated_at: string
+          verification_link: string | null
+          verification_notes: string | null
+          verified_at: string | null
+        }
+        Insert: {
+          candidate_id: string
+          created_at?: string
+          credential_issuer?: string | null
+          credential_title: string
+          credential_type: string
+          id?: string
+          recruiter_id: string
+          status?: string
+          updated_at?: string
+          verification_link?: string | null
+          verification_notes?: string | null
+          verified_at?: string | null
+        }
+        Update: {
+          candidate_id?: string
+          created_at?: string
+          credential_issuer?: string | null
+          credential_title?: string
+          credential_type?: string
+          id?: string
+          recruiter_id?: string
+          status?: string
+          updated_at?: string
+          verification_link?: string | null
+          verification_notes?: string | null
+          verified_at?: string | null
+        }
+        Relationships: []
+      }
       event_questions: {
         Row: {
           correct_answer: string | null
