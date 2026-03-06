@@ -32,16 +32,14 @@ jobs:
       - name: Build
         run: npm run build
         env:
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-      - name: Create 404
-        run: cp ./out/index.html ./out/404.html
+          SUPABASE_URL: "https://cxvfoijklbwzzondmwuw.supabase.co"
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN4dmZvaWprbGJ3enpvbmRtd3V3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg0NDE5ODcsImV4cCI6MjA4NDAxNzk4N30.qLkw6MG8hPMpjw3IFDlWV6KqSqS_bFd5uIWh1YcQTQc"
       - name: Setup Pages
         uses: actions/configure-pages@v3
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './out'
+          path: '.next'
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4

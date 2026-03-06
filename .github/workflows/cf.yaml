@@ -24,10 +24,10 @@ jobs:
         run: npm install
 
       - name: Build (Next.js)
-        run: npm run build
+        run: npx @cloudflare/next-on-pages
         env:
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          SUPABASE_URL: "https://cxvfoijklbwzzondmwuw.supabase.co"
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN4dmZvaWprbGJ3enpvbmRtd3V3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg0NDE5ODcsImV4cCI6MjA4NDAxNzk4N30.qLkw6MG8hPMpjw3IFDlWV6KqSqS_bFd5uIWh1YcQTQc"
 
       - name: Deploy to Cloudflare Pages (Wrangler)
         uses: cloudflare/wrangler-action@v3
@@ -35,6 +35,6 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: >
-            pages deploy out
+            pages deploy .vercel/output/static
             --project-name=owlroles
             --branch=${{ github.head_ref || github.ref_name }}

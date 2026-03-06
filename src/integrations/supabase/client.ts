@@ -2,7 +2,14 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+// On the client (browser), route all Supabase traffic through the Next.js
+// API proxy at /api/supabase to bypass regional domain blocking.
+// On the server (SSR / API routes), connect directly to Supabase.
+const SUPABASE_URL =
+  typeof window !== "undefined"
+    ? `${window.location.origin}/api/supabase`
+    : process.env.SUPABASE_URL!;
+
 const SUPABASE_PUBLISHABLE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
 // Import the supabase client like this:

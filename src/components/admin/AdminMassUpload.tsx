@@ -94,7 +94,7 @@ const AdminMassUpload = ({ loading }: AdminMassUploadProps) => {
       }, 500);
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/admin-mass-upload`,
+        `/api/supabase/functions/v1/admin-mass-upload`,
         {
           method: "POST",
           headers: {
