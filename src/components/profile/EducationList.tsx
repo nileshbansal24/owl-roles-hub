@@ -1,6 +1,7 @@
 import * as React from "react";
 import { motion } from "framer-motion";
 import { GraduationCap } from "lucide-react";
+import { CredentialUploadButton } from "./CredentialUploadButton";
 
 interface EducationItem {
   degree: string;
@@ -11,11 +12,13 @@ interface EducationItem {
 interface EducationListProps {
   items: EducationItem[];
   emptyMessage?: string;
+  showUpload?: boolean;
 }
 
 export const EducationList = ({
   items,
   emptyMessage = "Add your educational background.",
+  showUpload = false,
 }: EducationListProps) => {
   if (items.length === 0) {
     return (
@@ -47,7 +50,26 @@ export const EducationList = ({
             </h4>
             <p className="text-sm text-primary font-medium">{item.institution}</p>
             <p className="text-xs text-muted-foreground mt-1">{item.years}</p>
+            {showUpload && (
+              <div className="mt-2">
+                <CredentialUploadButton
+                  credentialType="education"
+                  credentialTitle={`${item.degree} — ${item.institution}`}
+                  credentialIssuer={item.institution}
+                />
+              </div>
+            )}
           </div>
+          {showUpload && (
+            <div className="shrink-0">
+              <CredentialUploadButton
+                credentialType="education"
+                credentialTitle={`${item.degree} — ${item.institution}`}
+                credentialIssuer={item.institution}
+                compact
+              />
+            </div>
+          )}
         </motion.div>
       ))}
     </div>
