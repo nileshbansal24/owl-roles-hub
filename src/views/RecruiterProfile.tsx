@@ -249,23 +249,23 @@ const RecruiterProfile = () => {
     <div className="min-h-screen bg-background">
       <RecruiterNavbar />
 
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-8 pt-24">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="space-y-8"
         >
           {/* Header */}
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-heading font-bold text-foreground">
+              <h1 className="text-2xl sm:text-3xl font-heading font-bold text-foreground">
                 Recruiter Profile
               </h1>
-              <p className="text-muted-foreground mt-1">
+              <p className="text-muted-foreground mt-1 text-sm sm:text-base">
                 Manage your institution details and contact information
               </p>
             </div>
-            <Button onClick={handleSaveProfile} disabled={saving} className="gap-2">
+            <Button onClick={handleSaveProfile} disabled={saving} className="gap-2 shrink-0 hidden sm:flex">
               {saving ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
