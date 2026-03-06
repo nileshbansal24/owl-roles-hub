@@ -171,43 +171,61 @@ export type Database = {
       }
       credential_verifications: {
         Row: {
+          anchored_at: string | null
           candidate_id: string
           created_at: string
           credential_issuer: string | null
           credential_title: string
           credential_type: string
+          document_hash: string | null
+          document_name: string | null
+          document_url: string | null
+          hash_algorithm: string | null
           id: string
           recruiter_id: string
           status: string
           updated_at: string
+          uploaded_by: string | null
           verification_link: string | null
           verification_notes: string | null
           verified_at: string | null
         }
         Insert: {
+          anchored_at?: string | null
           candidate_id: string
           created_at?: string
           credential_issuer?: string | null
           credential_title: string
           credential_type: string
+          document_hash?: string | null
+          document_name?: string | null
+          document_url?: string | null
+          hash_algorithm?: string | null
           id?: string
           recruiter_id: string
           status?: string
           updated_at?: string
+          uploaded_by?: string | null
           verification_link?: string | null
           verification_notes?: string | null
           verified_at?: string | null
         }
         Update: {
+          anchored_at?: string | null
           candidate_id?: string
           created_at?: string
           credential_issuer?: string | null
           credential_title?: string
           credential_type?: string
+          document_hash?: string | null
+          document_name?: string | null
+          document_url?: string | null
+          hash_algorithm?: string | null
           id?: string
           recruiter_id?: string
           status?: string
           updated_at?: string
+          uploaded_by?: string | null
           verification_link?: string | null
           verification_notes?: string | null
           verified_at?: string | null
