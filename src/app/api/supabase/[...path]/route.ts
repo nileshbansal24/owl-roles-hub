@@ -5,16 +5,17 @@ import { NextRequest, NextResponse } from "next/server";
  * through the Next.js server to bypass regional domain blocking.
  *
  * Works on both Node.js (local dev) and Cloudflare Workers (production).
- * On CF Workers, env vars come from runtime bindings via getRequestContext().
+ * On CF Workers, env vars come from runtime bindings via getCloudflareContext().
  */
 
 export const runtime = "edge";
 
-function getSupabaseUrl(): string {
+async function getSupabaseUrl(): Promise<string> {
   try {
     // Cloudflare Workers: env vars are runtime bindings
-    const { getRequestContext } = require("@cloudflare/next-on-pages");
-    return getRequestContext().env.SUPABASE_URL;
+    const { getCloudflareContext } = await import("@opennextjs/cloudflare");
+    const ctx = await getCloudflareContext();
+    return (ctx.env as Record<string, string>).SUPABASE_URL;
   } catch {
     // Node.js (local dev / non-CF deployment)
     return process.env.SUPABASE_URL!;
@@ -31,10 +32,11 @@ const PASS_THROUGH_HEADERS = [
   "x-supabase-api-version",
 ];
 
-function buildTargetUrl(req: NextRequest): string {
+async function buildTargetUrl(req: NextRequest): Promise<string> {
   const url = new URL(req.url);
   const path = url.pathname.replace(/^\/api\/supabase/, "");
-  return `${getSupabaseUrl()}${path}${url.search}`;
+  const supabaseUrl = await getSupabaseUrl();
+  return `${supabaseUrl}${path}${url.search}`;
 }
 
 function filterHeaders(incoming: Headers): Headers {
@@ -80,7 +82,7 @@ async function proxyRequest(req: NextRequest): Promise<NextResponse> {
     return new NextResponse(null, { status: 204, headers });
   }
 
-  const targetUrl = buildTargetUrl(req);
+  const targetUrl = await buildTargetUrl(req);
   const headers = filterHeaders(req.headers);
 
   const body =
