@@ -184,21 +184,21 @@ const TestimonialsSection = () => {
             variant="outline"
             size="icon"
             onClick={prevSlide}
-            className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 md:-translate-x-12 z-10 h-10 w-10 rounded-full bg-background shadow-lg border-border hover:bg-primary hover:text-primary-foreground transition-all"
+            className="absolute -left-2 sm:left-0 top-1/2 -translate-y-1/2 sm:-translate-x-4 md:-translate-x-12 z-10 h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-background shadow-lg border-border hover:bg-primary hover:text-primary-foreground transition-all"
           >
-            <ChevronLeft className="h-5 w-5" />
+            <ChevronLeft className="h-4 w-4 sm:h-5 sm:w-5" />
           </Button>
           <Button
             variant="outline"
             size="icon"
             onClick={nextSlide}
-            className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 md:translate-x-12 z-10 h-10 w-10 rounded-full bg-background shadow-lg border-border hover:bg-primary hover:text-primary-foreground transition-all"
+            className="absolute -right-2 sm:right-0 top-1/2 -translate-y-1/2 sm:translate-x-4 md:translate-x-12 z-10 h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-background shadow-lg border-border hover:bg-primary hover:text-primary-foreground transition-all"
           >
-            <ChevronRight className="h-5 w-5" />
+            <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5" />
           </Button>
 
           {/* Testimonial Card */}
-          <div className="relative min-h-[360px] flex items-center justify-center px-8">
+          <div className="relative min-h-[400px] sm:min-h-[360px] flex items-center justify-center px-4 sm:px-8">
             <AnimatePresence mode="wait" custom={direction}>
               <motion.div
                 key={currentTestimonial.id}
@@ -207,7 +207,7 @@ const TestimonialsSection = () => {
                 initial="enter"
                 animate="center"
                 exit="exit"
-                className="absolute inset-x-8 bg-card rounded-2xl p-8 md:p-10 shadow-xl border border-border"
+                className="absolute inset-x-2 sm:inset-x-8 bg-card rounded-2xl p-5 sm:p-8 md:p-10 shadow-xl border border-border"
               >
                 {/* Quote Icon */}
                 <div className="absolute -top-5 left-8 w-10 h-10 rounded-full bg-primary flex items-center justify-center shadow-lg">
@@ -229,7 +229,7 @@ const TestimonialsSection = () => {
                 </div>
 
                 {/* Quote */}
-                <blockquote className="text-foreground text-lg md:text-xl leading-relaxed mb-8 italic">
+                <blockquote className="text-foreground text-base sm:text-lg md:text-xl leading-relaxed mb-6 sm:mb-8 italic">
                   "{currentTestimonial.quote}"
                 </blockquote>
 
