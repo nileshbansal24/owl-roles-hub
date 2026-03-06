@@ -1,9 +1,9 @@
 name = "owlroles"
+main = ".open-next/worker.js"
 compatibility_date = "2025-03-01"
 compatibility_flags = ["nodejs_compat"]
 
-# The SUPABASE_URL binding must be set in the Cloudflare dashboard
-# (Workers & Pages > owlroles > Settings > Variables and Secrets)
-# or uncomment below for non-secret usage:
+assets = { directory = ".open-next/assets", binding = "ASSETS" }
+
 [vars]
 SUPABASE_URL = "https://cxvfoijklbwzzondmwuw.supabase.co"
