@@ -1,11 +1,10 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Shield,
   CheckCircle2,
   Clock,
   XCircle,
-  Link2,
   GraduationCap,
   Briefcase,
   Award,
@@ -15,161 +14,205 @@ import {
   ExternalLink,
   Fingerprint,
   Blocks,
-  Copy,
-  Check } from
-"lucide-react";
+  Star,
+  Loader2,
+  FileCheck,
+  Ban,
+} from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import type { Profile } from "@/types/recruiter";
 
-type VerificationStatus = "verified" | "pending" | "unverified" | "expired";
+type VerificationStatus = "verified" | "pending" | "unverified" | "rejected";
 
-interface BlockchainCredential {
+interface Credential {
   id: string;
   type: "education" | "employment" | "certification" | "achievement";
   title: string;
   issuer: string;
-  dateIssued: string;
-  status: VerificationStatus;
-  txHash: string;
-  blockNumber: number;
-  network: string;
-  verifiedAt?: string;
+  verificationLinks: { label: string; url: string }[];
+}
+
+interface StoredVerification {
+  id: string;
+  credential_type: string;
+  credential_title: string;
+  credential_issuer: string | null;
+  status: string;
+  verification_notes: string | null;
+  verification_link: string | null;
+  verified_at: string | null;
+  candidate_id: string;
 }
 
 interface CandidateWithCredentials {
   candidate: Profile;
-  credentials: BlockchainCredential[];
+  credentials: Credential[];
+  verifications: Map<string, StoredVerification>;
   trustScore: number;
 }
 
-const statusConfig: Record<VerificationStatus, {icon: typeof CheckCircle2;label: string;className: string;}> = {
+const statusConfig: Record<VerificationStatus, { icon: typeof CheckCircle2; label: string; className: string }> = {
   verified: { icon: CheckCircle2, label: "Verified", className: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20" },
   pending: { icon: Clock, label: "Pending", className: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20" },
   unverified: { icon: XCircle, label: "Unverified", className: "bg-muted text-muted-foreground border-border" },
-  expired: { icon: XCircle, label: "Expired", className: "bg-destructive/10 text-destructive border-destructive/20" }
+  rejected: { icon: Ban, label: "Rejected", className: "bg-destructive/10 text-destructive border-destructive/20" },
 };
 
-const typeConfig: Record<string, {icon: typeof GraduationCap;label: string;}> = {
+const typeConfig: Record<string, { icon: typeof GraduationCap; label: string }> = {
   education: { icon: GraduationCap, label: "Education" },
   employment: { icon: Briefcase, label: "Employment" },
   certification: { icon: Award, label: "Certification" },
-  achievement: { icon: Award, label: "Achievement" }
+  achievement: { icon: Star, label: "Achievement" },
 };
 
-// Generate simulated blockchain credentials from candidate profiles
-const generateCredentials = (candidate: Profile): BlockchainCredential[] => {
-  const creds: BlockchainCredential[] = [];
-  const baseHash = candidate.id.replace(/-/g, "").slice(0, 16);
+// Extract real credentials from candidate profile data
+const extractCredentials = (candidate: Profile): Credential[] => {
+  const creds: Credential[] = [];
 
-  if (candidate.university) {
+  // Education credentials
+  if (candidate.education && Array.isArray(candidate.education)) {
+    (candidate.education as any[]).forEach((edu, i) => {
+      const degree = edu.degree || edu.title || "Degree";
+      const institution = edu.institution || edu.school || edu.university || candidate.university || "Institution";
+      const links: { label: string; url: string }[] = [];
+      if (institution && institution !== "Institution") {
+        links.push({ label: `Search ${institution}`, url: `https://www.google.com/search?q=${encodeURIComponent(institution + " university official")}` });
+      }
+      creds.push({
+        id: `edu-${candidate.id}-${i}`,
+        type: "education",
+        title: `${degree} — ${institution}`,
+        issuer: institution,
+        verificationLinks: links,
+      });
+    });
+  } else if (candidate.university) {
     creds.push({
-      id: `edu-${candidate.id}`,
+      id: `edu-${candidate.id}-0`,
       type: "education",
-      title: `Degree from ${candidate.university}`,
+      title: `Education at ${candidate.university}`,
       issuer: candidate.university,
-      dateIssued: "2023-06-15",
-      status: "verified",
-      txHash: `0x${baseHash}a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0`,
-      blockNumber: 18234567 + Math.floor(Math.random() * 100000),
-      network: "Ethereum",
-      verifiedAt: "2024-01-10T10:30:00Z"
+      verificationLinks: [
+        { label: `Search ${candidate.university}`, url: `https://www.google.com/search?q=${encodeURIComponent(candidate.university + " official website")}` },
+      ],
     });
   }
 
-  if (candidate.role || candidate.headline) {
-    const yearsExp = candidate.years_experience || 0;
-    creds.push({
-      id: `emp-${candidate.id}`,
-      type: "employment",
-      title: candidate.role || candidate.headline || "Professional Role",
-      issuer: candidate.university || "Employer",
-      dateIssued: "2024-03-01",
-      status: yearsExp > 3 ? "verified" : "pending",
-      txHash: `0x${baseHash}f1e2d3c4b5a6f7e8d9c0b1a2f3e4d5c6b7a8f9e0d1c2b3a4f5e6d7c8b9a0`,
-      blockNumber: 19345678 + Math.floor(Math.random() * 100000),
-      network: "Polygon",
-      verifiedAt: yearsExp > 3 ? "2024-08-20T14:15:00Z" : undefined
+  // Employment credentials from experience
+  if (candidate.experience && Array.isArray(candidate.experience)) {
+    (candidate.experience as any[]).forEach((exp, i) => {
+      const role = exp.role || exp.title || exp.position || "Role";
+      const institution = exp.institution || exp.company || exp.organization || "Employer";
+      const links: { label: string; url: string }[] = [];
+      if (institution !== "Employer") {
+        links.push({ label: `Search ${institution}`, url: `https://www.google.com/search?q=${encodeURIComponent(institution + " official")}` });
+      }
+      creds.push({
+        id: `emp-${candidate.id}-${i}`,
+        type: "employment",
+        title: `${role} at ${institution}`,
+        issuer: institution,
+        verificationLinks: links,
+      });
     });
   }
 
-  if (candidate.skills && candidate.skills.length > 2) {
+  // ORCID link
+  if (candidate.orcid_id) {
     creds.push({
-      id: `cert-${candidate.id}`,
+      id: `cert-orcid-${candidate.id}`,
       type: "certification",
-      title: `${candidate.skills[0]} Professional Certification`,
-      issuer: "Blockchain Skills Registry",
-      dateIssued: "2024-06-01",
-      status: "verified",
-      txHash: `0x${baseHash}1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1`,
-      blockNumber: 20456789 + Math.floor(Math.random() * 100000),
-      network: "Ethereum",
-      verifiedAt: "2024-09-05T09:00:00Z"
+      title: `ORCID Researcher ID`,
+      issuer: "ORCID",
+      verificationLinks: [
+        { label: "Verify on ORCID", url: `https://orcid.org/${candidate.orcid_id}` },
+      ],
     });
   }
 
-  if (candidate.achievements && candidate.achievements.length > 0) {
+  // Scopus link
+  if (candidate.scopus_link) {
     creds.push({
-      id: `ach-${candidate.id}`,
-      type: "achievement",
-      title: candidate.achievements[0],
-      issuer: candidate.university || "Issuing Authority",
-      dateIssued: "2024-01-15",
-      status: Math.random() > 0.3 ? "verified" : "pending",
-      txHash: `0x${baseHash}0f1e2d3c4b5a6f7e8d9c0b1a2f3e4d5c6b7a8f9e0d1c2b3a4f5e6d7c8b9`,
-      blockNumber: 21567890 + Math.floor(Math.random() * 100000),
-      network: "Polygon"
+      id: `cert-scopus-${candidate.id}`,
+      type: "certification",
+      title: `Scopus Author Profile`,
+      issuer: "Scopus / Elsevier",
+      verificationLinks: [
+        { label: "Verify on Scopus", url: candidate.scopus_link },
+      ],
+    });
+  }
+
+  // Achievements
+  if (candidate.achievements && candidate.achievements.length > 0) {
+    candidate.achievements.forEach((ach, i) => {
+      creds.push({
+        id: `ach-${candidate.id}-${i}`,
+        type: "achievement",
+        title: ach,
+        issuer: candidate.university || "Issuing Authority",
+        verificationLinks: [],
+      });
     });
   }
 
   return creds;
 };
 
-const computeTrustScore = (creds: BlockchainCredential[]): number => {
-  if (creds.length === 0) return 0;
-  const verified = creds.filter((c) => c.status === "verified").length;
-  return Math.round(verified / creds.length * 100);
+const credKey = (type: string, title: string) => `${type}::${title}`;
+
+const computeTrustScore = (credentials: Credential[], verifications: Map<string, StoredVerification>): number => {
+  if (credentials.length === 0) return 0;
+  const verified = credentials.filter((c) => {
+    const v = verifications.get(credKey(c.type, c.title));
+    return v?.status === "verified";
+  }).length;
+  return Math.round((verified / credentials.length) * 100);
 };
 
-interface BlockchainCredentialsTabProps {
-  candidates: Profile[];
-  isLoading?: boolean;
+// ─── Credential Card ────────────────────────────────────────────────
+
+interface CredentialCardProps {
+  credential: Credential;
+  verification?: StoredVerification;
+  onUpdateStatus: (credential: Credential, status: VerificationStatus, notes: string) => Promise<void>;
 }
 
-const CredentialCard = ({ credential }: {credential: BlockchainCredential;}) => {
+const CredentialCard = ({ credential, verification, onUpdateStatus }: CredentialCardProps) => {
   const [expanded, setExpanded] = useState(false);
-  const [copied, setCopied] = useState(false);
-  const { toast } = useToast();
-  const config = statusConfig[credential.status];
+  const [notes, setNotes] = useState(verification?.verification_notes || "");
+  const [saving, setSaving] = useState(false);
+  const currentStatus = (verification?.status as VerificationStatus) || "unverified";
+  const config = statusConfig[currentStatus];
   const typeInfo = typeConfig[credential.type];
   const StatusIcon = config.icon;
   const TypeIcon = typeInfo.icon;
 
-  const handleCopyHash = () => {
-    navigator.clipboard.writeText(credential.txHash);
-    setCopied(true);
-    toast({ title: "Copied!", description: "Transaction hash copied to clipboard" });
-    setTimeout(() => setCopied(false), 2000);
+  const handleStatusChange = async (newStatus: VerificationStatus) => {
+    setSaving(true);
+    await onUpdateStatus(credential, newStatus, notes);
+    setSaving(false);
   };
 
   return (
-    <motion.div
-      layout
-      className="border rounded-lg p-4 bg-card hover:shadow-md transition-shadow">
-      
+    <motion.div layout className="border rounded-lg p-4 bg-card hover:shadow-md transition-shadow">
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-start gap-3 min-w-0">
           <div className="rounded-lg bg-primary/10 p-2 shrink-0">
             <TypeIcon className="h-4 w-4 text-primary" />
           </div>
           <div className="min-w-0">
-            <p className="font-medium text-sm truncate">{credential.title}</p>
+            <p className="font-medium text-sm">{credential.title}</p>
             <p className="text-xs text-muted-foreground">{credential.issuer}</p>
           </div>
         </div>
@@ -185,74 +228,110 @@ const CredentialCard = ({ credential }: {credential: BlockchainCredential;}) => 
       </div>
 
       <AnimatePresence>
-        {expanded &&
-        <motion.div
-          initial={{ height: 0, opacity: 0 }}
-          animate={{ height: "auto", opacity: 1 }}
-          exit={{ height: 0, opacity: 0 }}
-          className="overflow-hidden">
-          
-            <div className="mt-4 pt-4 border-t space-y-3">
-              <div className="grid grid-cols-2 gap-3 text-xs">
+        {expanded && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="overflow-hidden"
+          >
+            <div className="mt-4 pt-4 border-t space-y-4">
+              {/* Verification Links */}
+              {credential.verificationLinks.length > 0 && (
                 <div>
-                  <p className="text-muted-foreground">Network</p>
-                  <p className="font-medium flex items-center gap-1">
-                    <Blocks className="h-3 w-3 text-primary" />
-                    {credential.network}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Block #</p>
-                  <p className="font-mono font-medium">{credential.blockNumber.toLocaleString()}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Issued</p>
-                  <p className="font-medium">{new Date(credential.dateIssued).toLocaleDateString()}</p>
-                </div>
-                {credential.verifiedAt &&
-              <div>
-                    <p className="text-muted-foreground">Verified</p>
-                    <p className="font-medium">{new Date(credential.verifiedAt).toLocaleDateString()}</p>
+                  <p className="text-xs font-medium text-muted-foreground mb-2">Verify Externally</p>
+                  <div className="flex flex-wrap gap-2">
+                    {credential.verificationLinks.map((link, i) => (
+                      <Button
+                        key={i}
+                        variant="outline"
+                        size="sm"
+                        className="text-xs gap-1.5"
+                        onClick={() => window.open(link.url, "_blank", "noopener")}
+                      >
+                        <ExternalLink className="h-3 w-3" />
+                        {link.label}
+                      </Button>
+                    ))}
                   </div>
-              }
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground mb-1">Transaction Hash</p>
-                <div className="flex items-center gap-2">
-                  <code className="text-[10px] font-mono bg-muted rounded px-2 py-1 truncate flex-1">
-                    {credential.txHash}
-                  </code>
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={handleCopyHash}>
-                          {copied ? <Check className="h-3 w-3 text-emerald-500" /> : <Copy className="h-3 w-3" />}
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>Copy hash</TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
                 </div>
+              )}
+
+              {/* Verification info */}
+              {verification?.verified_at && (
+                <div className="text-xs text-muted-foreground">
+                  Last updated: {new Date(verification.verified_at).toLocaleDateString()}
+                </div>
+              )}
+
+              {/* Notes */}
+              <div>
+                <p className="text-xs font-medium text-muted-foreground mb-1.5">Verification Notes</p>
+                <Textarea
+                  placeholder="Add notes about this credential verification..."
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  className="text-xs min-h-[60px]"
+                />
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  size="sm"
+                  variant={currentStatus === "verified" ? "default" : "outline"}
+                  className="text-xs gap-1.5"
+                  disabled={saving}
+                  onClick={() => handleStatusChange("verified")}
+                >
+                  <CheckCircle2 className="h-3.5 w-3.5" />
+                  Mark Verified
+                </Button>
+                <Button
+                  size="sm"
+                  variant={currentStatus === "pending" ? "default" : "outline"}
+                  className="text-xs gap-1.5"
+                  disabled={saving}
+                  onClick={() => handleStatusChange("pending")}
+                >
+                  <Clock className="h-3.5 w-3.5" />
+                  Mark Pending
+                </Button>
+                <Button
+                  size="sm"
+                  variant={currentStatus === "rejected" ? "destructive" : "outline"}
+                  className="text-xs gap-1.5"
+                  disabled={saving}
+                  onClick={() => handleStatusChange("rejected")}
+                >
+                  <Ban className="h-3.5 w-3.5" />
+                  Reject
+                </Button>
+                {saving && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
               </div>
             </div>
           </motion.div>
-        }
+        )}
       </AnimatePresence>
-    </motion.div>);
-
+    </motion.div>
+  );
 };
 
-const CandidateCredentialCard = ({ data }: {data: CandidateWithCredentials;}) => {
+// ─── Candidate Card ─────────────────────────────────────────────────
+
+const CandidateCredentialCard = ({
+  data,
+  onUpdateStatus,
+}: {
+  data: CandidateWithCredentials;
+  onUpdateStatus: (candidateId: string, credential: Credential, status: VerificationStatus, notes: string) => Promise<void>;
+}) => {
   const [expanded, setExpanded] = useState(false);
-  const { candidate, credentials, trustScore } = data;
-  const verifiedCount = credentials.filter((c) => c.status === "verified").length;
+  const { candidate, credentials, verifications, trustScore } = data;
+  const verifiedCount = credentials.filter((c) => verifications.get(credKey(c.type, c.title))?.status === "verified").length;
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}>
-      
+    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
       <Card className="overflow-hidden">
         <CardHeader className="pb-3">
           <div className="flex items-start justify-between gap-3">
@@ -275,14 +354,24 @@ const CandidateCredentialCard = ({ data }: {data: CandidateWithCredentials;}) =>
                 <Tooltip>
                   <TooltipTrigger>
                     <div className="text-center">
-                      <div className={`text-lg font-bold ${trustScore >= 75 ? "text-emerald-600 dark:text-emerald-400" : trustScore >= 50 ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground"}`}>
+                      <div
+                        className={`text-lg font-bold ${
+                          trustScore >= 75
+                            ? "text-emerald-600 dark:text-emerald-400"
+                            : trustScore >= 50
+                            ? "text-amber-600 dark:text-amber-400"
+                            : "text-muted-foreground"
+                        }`}
+                      >
                         {trustScore}%
                       </div>
                       <p className="text-[10px] text-muted-foreground">Trust</p>
                     </div>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>{verifiedCount}/{credentials.length} credentials verified on-chain</p>
+                    <p>
+                      {verifiedCount}/{credentials.length} credentials verified
+                    </p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -295,39 +384,144 @@ const CandidateCredentialCard = ({ data }: {data: CandidateWithCredentials;}) =>
         </CardHeader>
 
         <AnimatePresence>
-          {expanded &&
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            className="overflow-hidden">
-            
+          {expanded && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="overflow-hidden"
+            >
               <CardContent className="pt-0 space-y-3">
-                {credentials.map((cred) =>
-              <CredentialCard key={cred.id} credential={cred} />
-              )}
+                {credentials.map((cred) => (
+                  <CredentialCard
+                    key={cred.id}
+                    credential={cred}
+                    verification={verifications.get(credKey(cred.type, cred.title))}
+                    onUpdateStatus={(credential, status, notes) =>
+                      onUpdateStatus(candidate.id, credential, status, notes)
+                    }
+                  />
+                ))}
               </CardContent>
             </motion.div>
-          }
+          )}
         </AnimatePresence>
       </Card>
-    </motion.div>);
-
+    </motion.div>
+  );
 };
+
+// ─── Main Tab ───────────────────────────────────────────────────────
+
+interface BlockchainCredentialsTabProps {
+  candidates: Profile[];
+  isLoading?: boolean;
+}
 
 const BlockchainCredentialsTab = ({ candidates, isLoading = false }: BlockchainCredentialsTabProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | VerificationStatus>("all");
+  const [storedVerifications, setStoredVerifications] = useState<StoredVerification[]>([]);
+  const [loadingVerifications, setLoadingVerifications] = useState(true);
+  const { toast } = useToast();
+  const { user } = useAuth();
 
+  // Fetch stored verifications from DB
+  useEffect(() => {
+    if (!user) return;
+    const fetchVerifications = async () => {
+      setLoadingVerifications(true);
+      const { data, error } = await supabase
+        .from("credential_verifications")
+        .select("id, credential_type, credential_title, credential_issuer, status, verification_notes, verification_link, verified_at, candidate_id")
+        .eq("recruiter_id", user.id);
+
+      if (!error && data) {
+        setStoredVerifications(data as StoredVerification[]);
+      }
+      setLoadingVerifications(false);
+    };
+    fetchVerifications();
+  }, [user]);
+
+  // Build verification lookup per candidate
+  const verificationsByCandidate = useMemo(() => {
+    const map = new Map<string, Map<string, StoredVerification>>();
+    storedVerifications.forEach((v) => {
+      if (!map.has(v.candidate_id)) map.set(v.candidate_id, new Map());
+      map.get(v.candidate_id)!.set(credKey(v.credential_type, v.credential_title), v);
+    });
+    return map;
+  }, [storedVerifications]);
+
+  // Handle status update (upsert)
+  const handleUpdateStatus = useCallback(
+    async (candidateId: string, credential: Credential, status: VerificationStatus, notes: string) => {
+      if (!user) return;
+
+      const existing = verificationsByCandidate.get(candidateId)?.get(credKey(credential.type, credential.title));
+
+      if (existing) {
+        const { error } = await supabase
+          .from("credential_verifications")
+          .update({
+            status,
+            verification_notes: notes || null,
+            verified_at: new Date().toISOString(),
+          })
+          .eq("id", existing.id);
+
+        if (error) {
+          toast({ title: "Error", description: "Failed to update verification", variant: "destructive" });
+          return;
+        }
+        setStoredVerifications((prev) =>
+          prev.map((v) =>
+            v.id === existing.id
+              ? { ...v, status, verification_notes: notes || null, verified_at: new Date().toISOString() }
+              : v
+          )
+        );
+      } else {
+        const { data, error } = await supabase
+          .from("credential_verifications")
+          .insert({
+            recruiter_id: user.id,
+            candidate_id: candidateId,
+            credential_type: credential.type,
+            credential_title: credential.title,
+            credential_issuer: credential.issuer || null,
+            status,
+            verification_notes: notes || null,
+            verified_at: new Date().toISOString(),
+          })
+          .select("id, credential_type, credential_title, credential_issuer, status, verification_notes, verification_link, verified_at, candidate_id")
+          .single();
+
+        if (error) {
+          toast({ title: "Error", description: "Failed to save verification", variant: "destructive" });
+          return;
+        }
+        if (data) setStoredVerifications((prev) => [...prev, data as StoredVerification]);
+      }
+
+      toast({ title: "Updated", description: `Credential marked as ${status}` });
+    },
+    [user, verificationsByCandidate, toast]
+  );
+
+  // Build enriched list
   const candidatesWithCredentials = useMemo<CandidateWithCredentials[]>(() => {
-    return candidates.
-    map((c) => {
-      const credentials = generateCredentials(c);
-      return { candidate: c, credentials, trustScore: computeTrustScore(credentials) };
-    }).
-    filter((c) => c.credentials.length > 0).
-    sort((a, b) => b.trustScore - a.trustScore);
-  }, [candidates]);
+    return candidates
+      .map((c) => {
+        const credentials = extractCredentials(c);
+        const verifications = verificationsByCandidate.get(c.id) || new Map<string, StoredVerification>();
+        const trustScore = computeTrustScore(credentials, verifications);
+        return { candidate: c, credentials, verifications, trustScore };
+      })
+      .filter((c) => c.credentials.length > 0)
+      .sort((a, b) => b.trustScore - a.trustScore);
+  }, [candidates, verificationsByCandidate]);
 
   const filtered = useMemo(() => {
     let list = candidatesWithCredentials;
@@ -335,35 +529,46 @@ const BlockchainCredentialsTab = ({ candidates, isLoading = false }: BlockchainC
       const q = searchQuery.toLowerCase();
       list = list.filter(
         (c) =>
-        c.candidate.full_name?.toLowerCase().includes(q) ||
-        c.candidate.role?.toLowerCase().includes(q) ||
-        c.candidate.university?.toLowerCase().includes(q)
+          c.candidate.full_name?.toLowerCase().includes(q) ||
+          c.candidate.role?.toLowerCase().includes(q) ||
+          c.candidate.university?.toLowerCase().includes(q)
       );
     }
     if (statusFilter !== "all") {
-      list = list.filter((c) => c.credentials.some((cr) => cr.status === statusFilter));
+      list = list.filter((c) =>
+        c.credentials.some((cr) => {
+          const v = c.verifications.get(credKey(cr.type, cr.title));
+          const s = (v?.status as VerificationStatus) || "unverified";
+          return s === statusFilter;
+        })
+      );
     }
     return list;
   }, [candidatesWithCredentials, searchQuery, statusFilter]);
 
   const stats = useMemo(() => {
-    const all = candidatesWithCredentials.flatMap((c) => c.credentials);
+    const allCreds = candidatesWithCredentials.flatMap((c) =>
+      c.credentials.map((cr) => {
+        const v = c.verifications.get(credKey(cr.type, cr.title));
+        return (v?.status as VerificationStatus) || "unverified";
+      })
+    );
     return {
-      total: all.length,
-      verified: all.filter((c) => c.status === "verified").length,
-      pending: all.filter((c) => c.status === "pending").length,
-      candidates: candidatesWithCredentials.length
+      total: allCreds.length,
+      verified: allCreds.filter((s) => s === "verified").length,
+      pending: allCreds.filter((s) => s === "pending").length,
+      candidates: candidatesWithCredentials.length,
     };
   }, [candidatesWithCredentials]);
 
-  if (isLoading) {
+  if (isLoading || loadingVerifications) {
     return (
       <div className="space-y-4">
-        {[1, 2, 3].map((i) =>
-        <div key={i} className="h-24 bg-muted animate-pulse rounded-lg" />
-        )}
-      </div>);
-
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="h-24 bg-muted animate-pulse rounded-lg" />
+        ))}
+      </div>
+    );
   }
 
   return (
@@ -371,23 +576,23 @@ const BlockchainCredentialsTab = ({ candidates, isLoading = false }: BlockchainC
       {/* Header */}
       <div>
         <h2 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
-          <Blocks className="h-6 w-6 text-primary" />
+          <FileCheck className="h-6 w-6 text-primary" />
           OR Credential Verification
         </h2>
-        <p className="text-sm text-muted-foreground mt-1">View on-chain verified credentials for candidates such as degrees, employment, and certifications.
-
+        <p className="text-sm text-muted-foreground mt-1">
+          Review and verify candidate credentials using external links. Mark each credential as verified, pending, or rejected.
         </p>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
-        { label: "Total Credentials", value: stats.total, icon: Fingerprint },
-        { label: "Verified On-Chain", value: stats.verified, icon: CheckCircle2 },
-        { label: "Pending Verification", value: stats.pending, icon: Clock },
-        { label: "Candidates", value: stats.candidates, icon: Shield }].
-        map((stat) =>
-        <Card key={stat.label}>
+          { label: "Total Credentials", value: stats.total, icon: Fingerprint },
+          { label: "Verified", value: stats.verified, icon: CheckCircle2 },
+          { label: "Pending Review", value: stats.pending, icon: Clock },
+          { label: "Candidates", value: stats.candidates, icon: Shield },
+        ].map((stat) => (
+          <Card key={stat.label}>
             <CardContent className="p-4 flex items-center gap-3">
               <div className="rounded-lg bg-primary/10 p-2">
                 <stat.icon className="h-4 w-4 text-primary" />
@@ -398,7 +603,7 @@ const BlockchainCredentialsTab = ({ candidates, isLoading = false }: BlockchainC
               </div>
             </CardContent>
           </Card>
-        )}
+        ))}
       </div>
 
       {/* Filters */}
@@ -409,44 +614,46 @@ const BlockchainCredentialsTab = ({ candidates, isLoading = false }: BlockchainC
             placeholder="Search candidates by name, role, university..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9" />
-          
+            className="pl-9"
+          />
         </div>
         <div className="flex gap-2 flex-wrap">
-          {(["all", "verified", "pending", "unverified"] as const).map((s) =>
-          <Button
-            key={s}
-            variant={statusFilter === s ? "default" : "outline"}
-            size="sm"
-            onClick={() => setStatusFilter(s)}
-            className="capitalize">
-            
+          {(["all", "verified", "pending", "unverified", "rejected"] as const).map((s) => (
+            <Button
+              key={s}
+              variant={statusFilter === s ? "default" : "outline"}
+              size="sm"
+              onClick={() => setStatusFilter(s)}
+              className="capitalize"
+            >
               {s === "all" ? "All" : s}
             </Button>
-          )}
+          ))}
         </div>
       </div>
 
       {/* Candidate List */}
       <div className="space-y-4">
-        {filtered.length > 0 ?
-        filtered.slice(0, 20).map((data) =>
-        <CandidateCredentialCard key={data.candidate.id} data={data} />
-        ) :
-
-        <Card>
+        {filtered.length > 0 ? (
+          filtered.slice(0, 20).map((data) => (
+            <CandidateCredentialCard key={data.candidate.id} data={data} onUpdateStatus={handleUpdateStatus} />
+          ))
+        ) : (
+          <Card>
             <CardContent className="p-12 text-center">
-              <Blocks className="h-12 w-12 mx-auto text-muted-foreground/40 mb-4" />
-              <h3 className="font-semibold text-lg">No blockchain credentials found</h3>
+              <FileCheck className="h-12 w-12 mx-auto text-muted-foreground/40 mb-4" />
+              <h3 className="font-semibold text-lg">No credentials found</h3>
               <p className="text-sm text-muted-foreground mt-1">
-                {searchQuery ? "Try adjusting your search filters." : "Credentials will appear here once candidates have verified records on-chain."}
+                {searchQuery
+                  ? "Try adjusting your search filters."
+                  : "Credentials will appear here when candidates have profile data (education, experience, ORCID, etc)."}
               </p>
             </CardContent>
           </Card>
-        }
+        )}
       </div>
-    </div>);
-
+    </div>
+  );
 };
 
 export default BlockchainCredentialsTab;
