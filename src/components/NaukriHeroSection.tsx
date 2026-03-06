@@ -125,7 +125,7 @@ const NaukriHeroSection = ({
   onGetStarted,
 }: NaukriHeroSectionProps) => {
   return (
-    <section className="relative bg-background pt-28 pb-20 overflow-hidden">
+    <section className="relative bg-background pt-24 sm:pt-28 pb-12 sm:pb-20 overflow-hidden">
       {/* Subtle 2D decorations */}
       <SubtleDecorations />
 
@@ -151,13 +151,13 @@ const NaukriHeroSection = ({
           {/* Main Heading */}
           <motion.h1 
             variants={itemVariants}
-            className="font-heading text-4xl sm:text-5xl md:text-6xl font-extrabold text-foreground mb-2 leading-tight"
+            className="font-heading text-3xl sm:text-5xl md:text-6xl font-extrabold text-foreground mb-2 leading-tight"
           >
             Your Gateway to
           </motion.h1>
           <motion.h1 
             variants={itemVariants}
-            className="font-heading text-4xl sm:text-5xl md:text-6xl font-extrabold mb-6 leading-tight"
+            className="font-heading text-3xl sm:text-5xl md:text-6xl font-extrabold mb-6 leading-tight"
           >
             <span className="text-primary">Academic</span>{" "}
             <span className="relative text-foreground">
@@ -173,7 +173,7 @@ const NaukriHeroSection = ({
           
           <motion.p 
             variants={itemVariants}
-            className="text-muted-foreground text-lg md:text-xl mb-10 max-w-2xl mx-auto font-medium leading-relaxed"
+            className="text-muted-foreground text-base sm:text-lg md:text-xl mb-10 max-w-2xl mx-auto font-medium leading-relaxed px-2"
           >
             Connect with 500+ top universities and discover 2,500+ academic opportunities tailored to your expertise
           </motion.p>

@@ -85,9 +85,9 @@ const Footer = () => {
           </div>
         </div>
 
-        <div className="mt-12 pt-8 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
+        <div className="mt-12 pt-8 border-t border-white/10 flex flex-col items-center justify-between gap-4 text-sm text-muted-foreground sm:flex-row">
           <p>© 2024 OWL ROLES. All rights reserved.</p>
-          <div className="flex gap-6">
+          <div className="flex flex-wrap justify-center gap-4 sm:gap-6">
             <Link to="/" className="hover:text-primary transition-colors">Privacy Policy</Link>
             <Link to="/" className="hover:text-primary transition-colors">Terms of Service</Link>
             <Link to="/" className="hover:text-primary transition-colors">Cookie Policy</Link>
