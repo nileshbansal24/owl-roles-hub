@@ -1016,6 +1016,7 @@ const CandidateDashboard = () => {
           <AchievementsList
             achievements={achievements}
             emptyMessage="Add your achievements."
+            showUpload
           />
         </SidebarCard>
       </motion.div>
@@ -1140,7 +1141,7 @@ const CandidateDashboard = () => {
             </Button>
           }
         >
-          <ExperienceTimeline items={experienceTimeline} />
+          <ExperienceTimeline items={experienceTimeline} showUpload />
         </ProfileCard>
       </motion.div>
 
@@ -1210,7 +1211,7 @@ const CandidateDashboard = () => {
             </Button>
           }
         >
-          <EducationList items={education} />
+          <EducationList items={education} showUpload />
         </ProfileCard>
       </motion.div>
     </motion.div>
@@ -1582,13 +1583,13 @@ const CandidateDashboard = () => {
                         </Button>
                       }
                     >
-                      <ExperienceTimeline items={experienceTimeline} />
+                      <ExperienceTimeline items={experienceTimeline} showUpload />
                     </ProfileCard>
                   </motion.div>
 
                   <motion.div variants={itemVariants} className="mt-5">
                     <ProfileCard title="Education" onEdit={() => {}}>
-                      <EducationList items={education} />
+                      <EducationList items={education} showUpload />
                     </ProfileCard>
                   </motion.div>
                 </motion.div>
@@ -1637,6 +1638,7 @@ const CandidateDashboard = () => {
                   <AchievementsList
                     achievements={achievements}
                     emptyMessage="Add your achievements and awards to showcase your accomplishments."
+                    showUpload
                   />
                 </ProfileCard>
               </div>
