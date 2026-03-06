@@ -3,24 +3,9 @@ import { NextRequest, NextResponse } from "next/server";
 /**
  * Reverse proxy for Supabase — routes all client-side Supabase requests
  * through the Next.js server to bypass regional domain blocking.
- *
- * Works on both Node.js (local dev) and Cloudflare Workers (production).
- * On CF Workers, env vars come from runtime bindings via getCloudflareContext().
  */
 
-export const runtime = "edge";
-
-async function getSupabaseUrl(): Promise<string> {
-  try {
-    // Cloudflare Workers: env vars are runtime bindings
-    const { getCloudflareContext } = await import("@opennextjs/cloudflare");
-    const ctx = await getCloudflareContext();
-    return (ctx.env as Record<string, string>).SUPABASE_URL;
-  } catch {
-    // Node.js (local dev / non-CF deployment)
-    return process.env.SUPABASE_URL!;
-  }
-}
+const SUPABASE_URL = process.env.SUPABASE_URL!;
 
 const PASS_THROUGH_HEADERS = [
   "authorization",
@@ -32,11 +17,10 @@ const PASS_THROUGH_HEADERS = [
   "x-supabase-api-version",
 ];
 
-async function buildTargetUrl(req: NextRequest): Promise<string> {
+function buildTargetUrl(req: NextRequest): string {
   const url = new URL(req.url);
   const path = url.pathname.replace(/^\/api\/supabase/, "");
-  const supabaseUrl = await getSupabaseUrl();
-  return `${supabaseUrl}${path}${url.search}`;
+  return `${SUPABASE_URL}${path}${url.search}`;
 }
 
 function filterHeaders(incoming: Headers): Headers {
@@ -49,8 +33,6 @@ function filterHeaders(incoming: Headers): Headers {
 }
 
 function setCorsHeaders(responseHeaders: Headers, origin: string) {
-  // Remove any CORS headers from Supabase's response — they reference
-  // the Supabase domain which the browser will reject.
   responseHeaders.delete("access-control-allow-origin");
   responseHeaders.delete("access-control-allow-methods");
   responseHeaders.delete("access-control-allow-headers");
@@ -58,7 +40,6 @@ function setCorsHeaders(responseHeaders: Headers, origin: string) {
   responseHeaders.delete("access-control-expose-headers");
   responseHeaders.delete("access-control-max-age");
 
-  // Set our own CORS headers matching the request origin
   responseHeaders.set("access-control-allow-origin", origin);
   responseHeaders.set("access-control-allow-credentials", "true");
   responseHeaders.set(
@@ -75,14 +56,13 @@ function setCorsHeaders(responseHeaders: Headers, origin: string) {
 async function proxyRequest(req: NextRequest): Promise<NextResponse> {
   const origin = req.headers.get("origin") || "*";
 
-  // Handle CORS preflight immediately — no need to forward to Supabase
   if (req.method === "OPTIONS") {
     const headers = new Headers();
     setCorsHeaders(headers, origin);
     return new NextResponse(null, { status: 204, headers });
   }
 
-  const targetUrl = await buildTargetUrl(req);
+  const targetUrl = buildTargetUrl(req);
   const headers = filterHeaders(req.headers);
 
   const body =
@@ -98,11 +78,9 @@ async function proxyRequest(req: NextRequest): Promise<NextResponse> {
       duplex: body ? "half" : undefined,
     });
 
-    // Read the full response body (auto-decompresses gzip/br from Supabase)
     const responseBody = await response.arrayBuffer();
 
     const responseHeaders = new Headers();
-    // Forward safe response headers, skip encoding-related ones
     const skipHeaders = new Set([
       "transfer-encoding",
       "content-encoding",
