@@ -9,22 +9,35 @@ function getSupabaseUrl(): string {
   return process.env.SUPABASE_URL!;
 }
 
-const SUPABASE_PUBLISHABLE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+function getSupabaseKey(): string {
+  return process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+}
 
-// Lazy singleton — ensures the URL is evaluated at runtime, not at bundle time
+// Lazy singleton — ensures the URL and key are evaluated at runtime
 let _supabase: SupabaseClient<Database> | null = null;
+
+function getClient(): SupabaseClient<Database> {
+  if (!_supabase) {
+    const url = getSupabaseUrl();
+    const key = getSupabaseKey();
+    if (!url || !key) {
+      throw new Error(
+        `Supabase config missing: url=${url ? "set" : "MISSING"}, key=${key ? "set" : "MISSING"}`
+      );
+    }
+    _supabase = createClient<Database>(url, key, {
+      auth: {
+        storage: typeof window !== "undefined" ? localStorage : undefined,
+        persistSession: true,
+        autoRefreshToken: true,
+      },
+    });
+  }
+  return _supabase;
+}
 
 export const supabase: SupabaseClient<Database> = new Proxy({} as SupabaseClient<Database>, {
   get(_target, prop) {
-    if (!_supabase) {
-      _supabase = createClient<Database>(getSupabaseUrl(), SUPABASE_PUBLISHABLE_KEY, {
-        auth: {
-          storage: typeof window !== "undefined" ? localStorage : undefined,
-          persistSession: true,
-          autoRefreshToken: true,
-        },
-      });
-    }
-    return (_supabase as any)[prop];
+    return (getClient() as any)[prop];
   },
 });
