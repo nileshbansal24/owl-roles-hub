@@ -27,7 +27,7 @@ import {
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
 import { jobApplicationSchema } from "@/lib/validations";
 
 interface Job {
@@ -65,7 +65,7 @@ interface JobDetailModalProps {
 const JobDetailModal = ({ job, open, onOpenChange }: JobDetailModalProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const navigate = useNavigate();
+  const router = useRouter();
   const [coverLetter, setCoverLetter] = useState("");
   const [applying, setApplying] = useState(false);
   const [hasApplied, setHasApplied] = useState(false);
@@ -150,7 +150,7 @@ const JobDetailModal = ({ job, open, onOpenChange }: JobDetailModalProps) => {
         description: "Please login to apply for this job.",
         variant: "destructive",
       });
-      navigate("/auth");
+      router.push("/auth");
       return;
     }
 

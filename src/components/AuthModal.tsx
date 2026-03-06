@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -33,7 +33,7 @@ const AuthModal = ({
   defaultRole = "candidate" 
 }: AuthModalProps) => {
   const { toast } = useToast();
-  const navigate = useNavigate();
+  const router = useRouter();
   const [mode, setMode] = useState<"login" | "signup">(defaultMode);
   const [role, setRole] = useState<"candidate" | "recruiter">(defaultRole);
   const [step, setStep] = useState<"role" | "form">("role");
@@ -56,9 +56,9 @@ const AuthModal = ({
     // If we know the role from signup, use it directly
     if (selectedRole) {
       if (selectedRole === "recruiter") {
-        navigate("/recruiter-dashboard");
+        router.push("/recruiter-dashboard");
       } else {
-        navigate("/candidate-dashboard");
+        router.push("/candidate-dashboard");
       }
       return;
     }
@@ -71,9 +71,9 @@ const AuthModal = ({
       .maybeSingle();
 
     if (profile?.user_type === "recruiter") {
-      navigate("/recruiter-dashboard");
+      router.push("/recruiter-dashboard");
     } else {
-      navigate("/candidate-dashboard");
+      router.push("/candidate-dashboard");
     }
   };
 

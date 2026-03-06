@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
@@ -69,7 +69,7 @@ const itemVariants = {
 
 const Dashboard = () => {
   const { user, signOut } = useAuth();
-  const navigate = useNavigate();
+  const router = useRouter();
   const { toast } = useToast();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -143,7 +143,7 @@ const Dashboard = () => {
   const handleSignOut = async () => {
     await signOut();
     toast({ title: "Signed out", description: "You have been successfully logged out." });
-    navigate("/");
+    router.push("/");
   };
 
   const handleProfileUpdate = (updatedProfile: Profile) => {
@@ -267,7 +267,7 @@ const Dashboard = () => {
                     <Edit2 className="h-4 w-4 mr-1" />
                     Edit Profile
                   </Button>
-                  <Button size="sm" onClick={() => navigate("/employer")}>
+                  <Button size="sm" onClick={() => router.push("/employer")}>
                     Employer Dashboard
                   </Button>
                 </div>
@@ -505,7 +505,7 @@ const Dashboard = () => {
 
                   {/* Quick Actions */}
                   <motion.div variants={itemVariants} className="space-y-3">
-                    <Button variant="outline" onClick={() => navigate("/employer")} className="w-full gap-2">
+                    <Button variant="outline" onClick={() => router.push("/employer")} className="w-full gap-2">
                       <Briefcase className="h-4 w-4" />
                       View Employer Dashboard
                     </Button>

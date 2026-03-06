@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
@@ -76,7 +76,7 @@ const itemVariants = {
 
 const EmployerDashboard = () => {
   const { user } = useAuth();
-  const navigate = useNavigate();
+  const router = useRouter();
   const { toast } = useToast();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [applications, setApplications] = useState<Application[]>([]);
@@ -237,7 +237,7 @@ const EmployerDashboard = () => {
                 Manage your job postings and review applications
               </p>
             </div>
-            <Button onClick={() => navigate("/post-job")} className="gap-2">
+            <Button onClick={() => router.push("/post-job")} className="gap-2">
               <Plus className="h-4 w-4" />
               Post New Job
             </Button>
@@ -397,7 +397,7 @@ const EmployerDashboard = () => {
                   >
                     <Briefcase className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                     <p className="text-muted-foreground mb-4">No jobs posted yet</p>
-                    <Button onClick={() => navigate("/post-job")}>Post Your First Job</Button>
+                    <Button onClick={() => router.push("/post-job")}>Post Your First Job</Button>
                   </motion.div>
                 ) : (
                   jobs.map((job) => (

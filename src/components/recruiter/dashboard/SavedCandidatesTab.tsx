@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { Users, Bookmark, Search, Heart } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
 import CandidateCard from "./CandidateCard";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CardListSkeleton } from "@/components/ui/loading-skeleton";
@@ -28,7 +28,7 @@ const SavedCandidatesTab = ({
   onSaveNote,
   isLoading = false,
 }: SavedCandidatesTabProps) => {
-  const navigate = useNavigate();
+  const router = useRouter();
   const savedCandidates = candidates.filter((c) => savedCandidateIds.has(c.id));
   
   // Group by notes (candidates with notes first)
@@ -71,7 +71,7 @@ const SavedCandidatesTab = ({
             description="Save candidates you're interested in to keep track of them. You can add private notes to remember why they stood out."
             action={{
               label: "Find Candidates",
-              onClick: () => navigate("/recruiter-dashboard?tab=resdex"),
+              onClick: () => router.push("/recruiter-dashboard?tab=resdex"),
               icon: Search,
             }}
             className="py-8"

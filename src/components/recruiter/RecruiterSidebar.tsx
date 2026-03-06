@@ -1,4 +1,4 @@
-import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import {
@@ -32,8 +32,6 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
-import logoLight from "@/assets/logo-light.png";
-import logoDark from "@/assets/logo-dark.png";
 
 interface RecruiterSidebarProps {
   hasJobs?: boolean;
@@ -42,9 +40,9 @@ interface RecruiterSidebarProps {
 const RecruiterSidebar = ({ hasJobs = false }: RecruiterSidebarProps) => {
   const { user, signOut } = useAuth();
   const { theme, toggleTheme } = useTheme();
-  const navigate = useNavigate();
-  const location = useLocation();
-  const [searchParams] = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { state, setOpenMobile } = useSidebar();
   const isCollapsed = state === "collapsed";
 
@@ -52,7 +50,7 @@ const RecruiterSidebar = ({ hasJobs = false }: RecruiterSidebarProps) => {
 
   const handleSignOut = async () => {
     await signOut();
-    navigate("/");
+    router.push("/");
   };
 
   const getInitials = (email: string) => {
@@ -106,14 +104,14 @@ const RecruiterSidebar = ({ hasJobs = false }: RecruiterSidebarProps) => {
     // Close mobile sidebar on navigation
     setOpenMobile(false);
     if (tab === "resdex") {
-      navigate("/recruiter-dashboard");
+      router.push("/recruiter-dashboard");
     } else {
-      navigate(`/recruiter-dashboard?tab=${tab}`);
+      router.push(`/recruiter-dashboard?tab=${tab}`);
     }
   };
 
   const isActive = (tab: string) => {
-    if (location.pathname !== "/recruiter-dashboard") return false;
+    if (pathname !== "/recruiter-dashboard") return false;
     return currentTab === tab;
   };
 
@@ -122,11 +120,11 @@ const RecruiterSidebar = ({ hasJobs = false }: RecruiterSidebarProps) => {
       {/* Header with Logo */}
       <SidebarHeader className="border-b border-sidebar-border px-4 py-4">
         <button
-          onClick={() => navigate("/recruiter-dashboard")}
+          onClick={() => router.push("/recruiter-dashboard")}
           className="flex items-center"
         >
           <img 
-            src={theme === "dark" ? logoDark : logoLight} 
+            src={theme === "dark" ? "/logo-dark.png" : "/logo-light.png"} 
             alt="OWL Roles" 
             className={cn("w-auto", isCollapsed ? "h-12" : "h-[56px]")}
           />
@@ -140,7 +138,7 @@ const RecruiterSidebar = ({ hasJobs = false }: RecruiterSidebarProps) => {
             <Button
               onClick={() => {
                 setOpenMobile(false);
-                navigate("/post-job");
+                router.push("/post-job");
               }}
               className={cn(
                 "w-full justify-start gap-2",
@@ -202,10 +200,10 @@ const RecruiterSidebar = ({ hasJobs = false }: RecruiterSidebarProps) => {
                 <SidebarMenuButton
                   onClick={() => {
                     setOpenMobile(false);
-                    navigate("/recruiter-profile");
+                    router.push("/recruiter-profile");
                   }}
                   tooltip="My Profile"
-                  isActive={location.pathname === "/recruiter-profile"}
+                  isActive={pathname === "/recruiter-profile"}
                   className="transition-all duration-200"
                 >
                   <Building2 className="h-4 w-4" />

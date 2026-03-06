@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
@@ -50,7 +50,7 @@ interface VerificationRequest {
 
 const AdminVerification = () => {
   const { user } = useAuth();
-  const navigate = useNavigate();
+  const router = useRouter();
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -64,7 +64,7 @@ const AdminVerification = () => {
 
   useEffect(() => {
     if (!user) {
-      navigate("/");
+      router.push("/");
       return;
     }
 
@@ -83,7 +83,7 @@ const AdminVerification = () => {
           description: "You don't have admin privileges.",
           variant: "destructive",
         });
-        navigate("/");
+        router.push("/");
         return;
       }
 
@@ -94,7 +94,7 @@ const AdminVerification = () => {
     };
 
     checkAdminAndFetch();
-  }, [user, navigate, toast]);
+  }, [user, router, toast]);
 
   const fetchRequests = async () => {
     setLoading(true);

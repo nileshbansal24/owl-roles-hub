@@ -94,7 +94,7 @@ const AdminMassUpload = ({ loading }: AdminMassUploadProps) => {
       }, 500);
 
       const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-mass-upload`,
+        `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/admin-mass-upload`,
         {
           method: "POST",
           headers: {
