@@ -1,0 +1,9 @@
+name = "owlroles"
+compatibility_date = "2025-03-01"
+compatibility_flags = ["nodejs_compat"]
+
+# The SUPABASE_URL binding must be set in the Cloudflare dashboard
+# (Workers & Pages > owlroles > Settings > Variables and Secrets)
+# or uncomment below for non-secret usage:
+[vars]
+SUPABASE_URL = "https://cxvfoijklbwzzondmwuw.supabase.co"
