@@ -2,6 +2,10 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
+// Publishable anon key — safe to hardcode (RLS enforces security)
+const SUPABASE_ANON_KEY =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN4dmZvaWprbGJ3enpvbmRtd3V3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg0NDE5ODcsImV4cCI6MjA4NDAxNzk4N30.qLkw6MG8hPMpjw3IFDlWV6KqSqS_bFd5uIWh1YcQTQc";
+
 function getSupabaseUrl(): string {
   if (typeof window !== "undefined") {
     return `${window.location.origin}/api/supabase`;
@@ -9,23 +13,12 @@ function getSupabaseUrl(): string {
   return process.env.SUPABASE_URL!;
 }
 
-function getSupabaseKey(): string {
-  return process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-}
-
-// Lazy singleton — ensures the URL and key are evaluated at runtime
+// Lazy singleton — ensures the URL is evaluated at runtime, not at bundle time
 let _supabase: SupabaseClient<Database> | null = null;
 
 function getClient(): SupabaseClient<Database> {
   if (!_supabase) {
-    const url = getSupabaseUrl();
-    const key = getSupabaseKey();
-    if (!url || !key) {
-      throw new Error(
-        `Supabase config missing: url=${url ? "set" : "MISSING"}, key=${key ? "set" : "MISSING"}`
-      );
-    }
-    _supabase = createClient<Database>(url, key, {
+    _supabase = createClient<Database>(getSupabaseUrl(), SUPABASE_ANON_KEY, {
       auth: {
         storage: typeof window !== "undefined" ? localStorage : undefined,
         persistSession: true,
