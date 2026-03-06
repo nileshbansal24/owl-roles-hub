@@ -1,6 +1,7 @@
 import * as React from "react";
 import { motion } from "framer-motion";
 import { Award, Trophy, Star } from "lucide-react";
+import { CredentialUploadButton } from "./CredentialUploadButton";
 
 interface Achievement {
   title: string;
@@ -11,11 +12,13 @@ interface Achievement {
 interface AchievementsListProps {
   achievements: Achievement[] | string[];
   emptyMessage?: string;
+  showUpload?: boolean;
 }
 
 export const AchievementsList = ({
   achievements,
   emptyMessage = "Add your achievements and awards.",
+  showUpload = false,
 }: AchievementsListProps) => {
   if (achievements.length === 0) {
     return (
@@ -59,7 +62,26 @@ export const AchievementsList = ({
                 {achievement.year}
               </p>
             )}
+            {showUpload && (
+              <div className="mt-1.5">
+                <CredentialUploadButton
+                  credentialType="achievement"
+                  credentialTitle={achievement.title}
+                  credentialIssuer={achievement.organization || "Issuing Authority"}
+                />
+              </div>
+            )}
           </div>
+          {showUpload && (
+            <div className="shrink-0">
+              <CredentialUploadButton
+                credentialType="achievement"
+                credentialTitle={achievement.title}
+                credentialIssuer={achievement.organization || "Issuing Authority"}
+                compact
+              />
+            </div>
+          )}
         </motion.div>
       ))}
     </div>

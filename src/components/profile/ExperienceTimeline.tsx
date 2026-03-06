@@ -1,6 +1,7 @@
 import * as React from "react";
 import { motion } from "framer-motion";
 import { Briefcase } from "lucide-react";
+import { CredentialUploadButton } from "./CredentialUploadButton";
 
 interface ExperienceItem {
   year: string;
@@ -13,11 +14,13 @@ interface ExperienceItem {
 interface ExperienceTimelineProps {
   items: ExperienceItem[];
   emptyMessage?: string;
+  showUpload?: boolean;
 }
 
 export const ExperienceTimeline = ({
   items,
   emptyMessage = "Add your work experience to showcase your career journey.",
+  showUpload = false,
 }: ExperienceTimelineProps) => {
   if (items.length === 0) {
     return (
@@ -63,18 +66,37 @@ export const ExperienceTimeline = ({
                   </h4>
                   <p className="text-sm text-primary font-medium">{item.institution}</p>
                 </div>
-                <span className={`text-xs font-medium px-2.5 py-1 rounded-full shrink-0 ${
-                  item.isCurrent 
-                    ? "bg-primary/10 text-primary" 
-                    : "bg-secondary text-muted-foreground"
-                }`}>
-                  {item.year}
-                </span>
+                <div className="flex items-center gap-2 shrink-0">
+                  {showUpload && (
+                    <CredentialUploadButton
+                      credentialType="employment"
+                      credentialTitle={`${item.role} at ${item.institution}`}
+                      credentialIssuer={item.institution}
+                      compact
+                    />
+                  )}
+                  <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${
+                    item.isCurrent 
+                      ? "bg-primary/10 text-primary" 
+                      : "bg-secondary text-muted-foreground"
+                  }`}>
+                    {item.year}
+                  </span>
+                </div>
               </div>
               {item.description && (
                 <p className="text-sm text-muted-foreground leading-relaxed">
                   {item.description}
                 </p>
+              )}
+              {showUpload && (
+                <div className="mt-2">
+                  <CredentialUploadButton
+                    credentialType="employment"
+                    credentialTitle={`${item.role} at ${item.institution}`}
+                    credentialIssuer={item.institution}
+                  />
+                </div>
               )}
             </div>
           </motion.div>
