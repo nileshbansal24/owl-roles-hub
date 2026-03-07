@@ -66,6 +66,16 @@ export default {
           "blue-light": "hsl(var(--owl-blue-light))",
           navy: "hsl(var(--owl-navy))",
           slate: "hsl(var(--owl-slate))",
+          gold: "hsl(var(--owl-gold))",
+          "gold-light": "hsl(var(--owl-gold-light))",
+        },
+        success: {
+          DEFAULT: "hsl(var(--success))",
+          foreground: "hsl(var(--success-foreground))",
+        },
+        warning: {
+          DEFAULT: "hsl(var(--warning))",
+          foreground: "hsl(var(--warning-foreground))",
         },
       },
       borderRadius: {
