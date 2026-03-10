@@ -69,8 +69,8 @@ const CTASection = ({ onCandidateClick, onRecruiterClick }: CTASectionProps) => 
             </p>
             <Button 
               onClick={onRecruiterClick}
-              variant="outline" 
-              className="w-full gap-2 border-white text-white hover:bg-white/10"
+              variant="secondary" 
+              className="w-full gap-2 bg-white text-primary hover:bg-white/90"
             >
               Post a Job
               <ArrowRight className="w-4 h-4" />
