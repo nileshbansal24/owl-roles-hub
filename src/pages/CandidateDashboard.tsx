@@ -68,6 +68,7 @@ import {
   transformExperienceToDB,
   transformEducationToDB,
 } from "@/lib/profileUtils";
+import { getCandidateCategory } from "@/types/recruiter";
 
 interface ScopusMetrics {
   h_index: number | null;
@@ -1418,6 +1419,7 @@ const CandidateDashboard = () => {
                 </Button>
               }
               ratings={candidateRatings}
+              candidateCategory={getCandidateCategory(profile as any)}
             />
           </div>
 

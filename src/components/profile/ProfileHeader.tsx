@@ -22,6 +22,7 @@ import {
   Star,
   BookOpen,
 } from "lucide-react";
+import CandidateCategoryBadge from "@/components/recruiter/dashboard/CandidateCategoryBadge";
 
 // --- Inline mini star rating ---
 const MiniStarRating = ({ score, size = 14 }: { score: number; size?: number }) => (
@@ -66,6 +67,7 @@ interface ProfileHeaderProps {
   onSyncExperience?: () => void;
   syncingExperience?: boolean;
   ratings?: CandidateRatings | null;
+  candidateCategory?: string | null;
 }
 
 export const ProfileHeader = ({
@@ -85,6 +87,7 @@ export const ProfileHeader = ({
   onSyncExperience,
   syncingExperience = false,
   ratings,
+  candidateCategory,
 }: ProfileHeaderProps) => {
   const getInitials = (fullName: string, fallbackEmail?: string) => {
     if (fullName && fullName !== "Your Name") {
@@ -220,9 +223,12 @@ export const ProfileHeader = ({
 
           {/* Info */}
           <div className="flex-1 min-w-0 py-1">
-            <h1 className="font-heading font-bold text-2xl lg:text-3xl text-foreground mb-2 truncate">
-              {name}
-            </h1>
+            <div className="flex items-center gap-2.5 mb-2">
+              <h1 className="font-heading font-bold text-2xl lg:text-3xl text-foreground truncate">
+                {name}
+              </h1>
+              {candidateCategory && <CandidateCategoryBadge category={candidateCategory} />}
+            </div>
             
             <div className="flex items-center gap-2 flex-wrap mb-4">
               {role && (
@@ -324,9 +330,12 @@ export const ProfileHeader = ({
 
             {/* Info */}
             <div className="flex-1 min-w-0">
-              <h1 className="font-heading font-bold text-xl text-foreground mb-1 truncate">
-                {name}
-              </h1>
+              <div className="flex items-center gap-2 mb-1">
+                <h1 className="font-heading font-bold text-xl text-foreground truncate">
+                  {name}
+                </h1>
+                {candidateCategory && <CandidateCategoryBadge category={candidateCategory} />}
+              </div>
               <p className="text-sm text-muted-foreground line-clamp-2">
                 {role || "Add your role"} {university && `at ${university}`}
               </p>
