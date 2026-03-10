@@ -33,6 +33,7 @@ import {
   PersonalDetailsEditModal,
   CareerInsightsCard,
   CareerPathVisualization,
+  CandidateRatingCard,
 } from "@/components/profile";
 import { OrcidCard } from "@/components/profile/OrcidCard";
 import { PublicationImportButton } from "@/components/profile/PublicationImportButton";
@@ -1405,7 +1406,27 @@ const CandidateDashboard = () => {
             />
           </div>
 
-          {/* Tabbed Navigation */}
+          {/* Candidate Rating */}
+          <div className="mb-6">
+            <CandidateRatingCard
+              education={education}
+              researchPapers={researchPapers}
+              yearsExperience={profile?.years_experience ?? calculatedYearsExperience}
+              skills={skills}
+              hIndex={profile?.scopus_metrics?.h_index || profile?.manual_h_index || null}
+              citations={profile?.scopus_metrics?.citation_count || null}
+              resumeUrl={profile?.resume_url}
+              achievements={achievements}
+              professionalSummary={professionalSummary}
+              role={profile?.role}
+              bio={profile?.bio}
+              avatarUrl={profile?.avatar_url}
+              fullName={profile?.full_name}
+              location={profile?.location}
+              university={profile?.university}
+            />
+          </div>
+
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
             <div className="border-b border-border">
               {/* Desktop Tabs */}
