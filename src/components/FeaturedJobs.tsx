@@ -11,6 +11,8 @@ interface FeaturedJobsProps {
   jobs: JobWithRecruiter[];
   onJobClick: (job: JobWithRecruiter) => void;
   loading: boolean;
+  searchQuery?: string;
+  onClearSearch?: () => void;
 }
 
 const FeaturedJobs = ({ jobs, onJobClick, loading }: FeaturedJobsProps) => {

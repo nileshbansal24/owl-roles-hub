@@ -133,9 +133,6 @@ const Index = () => {
 
       <TestimonialsSection />
 
-      <div id="services">
-        <UniversityPartners />
-      </div>
 
       <CTASection 
         onCandidateClick={() => openAuthModal("signup", "candidate")}
