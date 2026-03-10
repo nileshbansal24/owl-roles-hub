@@ -241,39 +241,71 @@ const ApplicantDetailModal = ({
   const [deletingNoteId, setDeletingNoteId] = useState<string | null>(null);
 
   // Owl Analysis state
-  const [owlAnalysis, setOwlAnalysis] = useState<string | null>(null);
-  const [loadingAnalysis, setLoadingAnalysis] = useState(false);
   const [showAnalysis, setShowAnalysis] = useState(false);
 
-  const handleOwlAnalysis = async () => {
+  const generateLocalAnalysis = (profile: Profile | null, jobTitle?: string, institute?: string) => {
+    if (!profile) return null;
+
+    const category = getCandidateCategory(profile);
+    const categoryInfo = getCategoryStyles(category);
+    const exp = profile.years_experience || 0;
+    const skillCount = profile.skills?.length || 0;
+    const paperCount = profile.research_papers?.length || 0;
+    const hIndex = profile.scopus_metrics?.h_index ?? profile.manual_h_index ?? null;
+    const citations = (profile.scopus_metrics as ScopusMetrics)?.citation_count ?? null;
+    const hasOrcid = !!profile.orcid_id;
+    const hasScopus = !!profile.scopus_link;
+    const achievementCount = profile.achievements?.length || 0;
+    const hasResume = !!profile.resume_url;
+    const hasSummary = !!profile.professional_summary;
+
+    // Strengths
+    const strengths: string[] = [];
+    if (exp >= 15) strengths.push(`Extensive experience of ${exp} years in the academic/professional domain.`);
+    else if (exp >= 5) strengths.push(`Solid experience of ${exp} years showing career progression.`);
+    else if (exp >= 1) strengths.push(`${exp} year(s) of experience — early career with growth potential.`);
+
+    if (skillCount >= 5) strengths.push(`Well-rounded skill set with ${skillCount} listed competencies.`);
+    if (paperCount > 0) strengths.push(`Published ${paperCount} research paper(s), indicating active research involvement.`);
+    if (hIndex && hIndex >= 5) strengths.push(`Strong h-index of ${hIndex}, demonstrating research impact.`);
+    if (citations && citations >= 50) strengths.push(`${citations} citations reflect peer recognition and influence.`);
+    if (hasOrcid || hasScopus) strengths.push("Verified academic identity through ORCID/Scopus profiles.");
+    if (achievementCount > 0) strengths.push(`${achievementCount} notable achievement(s) on record.`);
+    if (hasSummary) strengths.push("Has a well-written professional summary.");
+
+    // Concerns
+    const concerns: string[] = [];
+    if (exp === 0) concerns.push("No prior experience listed — this is a fresher-level candidate.");
+    if (skillCount === 0) concerns.push("No skills listed on the profile.");
+    if (paperCount === 0 && category !== "fresher") concerns.push("No research publications found.");
+    if (!hasResume) concerns.push("Resume has not been uploaded.");
+    if (!hasSummary) concerns.push("Professional summary is missing.");
+    if (!profile.location) concerns.push("Location not provided.");
+    if (hIndex !== null && hIndex < 3 && category !== "fresher") concerns.push(`Low h-index (${hIndex}) for their career stage.`);
+
+    // Verdict
+    let verdict = "";
+    if (category === "gold" && exp >= 10) verdict = "Strong candidate with senior leadership credentials. Highly recommended for review.";
+    else if (category === "silver" && exp >= 5) verdict = "Experienced professional with a solid profile. Good fit for mid-to-senior roles.";
+    else if (category === "bronze") verdict = "Competent candidate suitable for assistant-level or early-career positions.";
+    else if (category === "fresher") verdict = "Entry-level candidate. Consider for junior roles or training-track positions.";
+    else verdict = "Decent profile. Review the specifics before making a decision.";
+
+    // Advice
+    const advice: string[] = [];
+    if (category === "gold") advice.push("Verify leadership claims through references or institutional records.");
+    if (paperCount > 0) advice.push("Review publication quality and relevance to the role.");
+    if (!hasResume) advice.push("Request the candidate to upload a current resume before proceeding.");
+    if (concerns.length >= 3) advice.push("Multiple gaps found — conduct a detailed screening call.");
+    if (exp > 0 && skillCount === 0) advice.push("Ask the candidate to update their skills for a better assessment.");
+    if (advice.length === 0) advice.push("Profile looks complete. Proceed with scheduling an interview.");
+
+    return { category, categoryInfo, strengths, concerns, verdict, advice, exp };
+  };
+
+  const handleOwlAnalysis = () => {
     if (!application?.profiles) return;
-    if (owlAnalysis) {
-      setShowAnalysis(!showAnalysis);
-      return;
-    }
-    setLoadingAnalysis(true);
     setShowAnalysis(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("owl-analysis", {
-        body: {
-          profile: application.profiles,
-          jobTitle: application.jobs?.title,
-          institute: application.jobs?.institute,
-        },
-      });
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
-      setOwlAnalysis(data.analysis);
-    } catch (err: any) {
-      toast({
-        title: "Analysis Failed",
-        description: err.message || "Could not generate analysis",
-        variant: "destructive",
-      });
-      setShowAnalysis(false);
-    } finally {
-      setLoadingAnalysis(false);
-    }
   };
   
   // Fetch notes when modal opens
