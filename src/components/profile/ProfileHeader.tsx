@@ -67,6 +67,7 @@ interface ProfileHeaderProps {
   onSyncExperience?: () => void;
   syncingExperience?: boolean;
   ratings?: CandidateRatings | null;
+  candidateCategory?: string | null;
 }
 
 export const ProfileHeader = ({
