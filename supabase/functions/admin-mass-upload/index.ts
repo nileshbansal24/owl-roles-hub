@@ -281,10 +281,15 @@ Deno.serve(async (req) => {
           continue;
         }
 
-        // Create user with default password
+        // Generate password: First 4 letters of email (uppercase) + 1234
+        const emailPrefix = email.split("@")[0].replace(/[^a-zA-Z]/g, "").substring(0, 4).toUpperCase();
+        const generatedPassword = emailPrefix.padEnd(4, "X") + "1234";
+        console.log(`Generated password for ${email}: ${generatedPassword}`);
+
+        // Create user with generated password
         const { data: newUser, error: createError } = await serviceClient.auth.admin.createUser({
           email: email,
-          password: "123456",
+          password: generatedPassword,
           email_confirm: true,
           user_metadata: {
             full_name: parsedResume.full_name || email.split("@")[0],
