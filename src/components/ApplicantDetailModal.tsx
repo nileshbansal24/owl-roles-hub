@@ -1343,114 +1343,114 @@ const ApplicantDetailModal = ({
           </motion.div>
         </ScrollArea>
       </DialogContent>
+    </Dialog>
 
-      {/* Owl Analysis Dialog */}
-      <Dialog open={showAnalysis} onOpenChange={setShowAnalysis}>
-        <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 font-heading text-xl">
-              <Eye className="h-5 w-5 text-primary" />
-              Owl Analysis
-            </DialogTitle>
-          </DialogHeader>
-          {(() => {
-            const analysis = generateLocalAnalysis(application?.profiles || null);
-            if (!analysis) return <p className="text-muted-foreground text-sm">No profile data available.</p>;
+    {/* Owl Analysis Dialog */}
+    <Dialog open={showAnalysis} onOpenChange={setShowAnalysis}>
+      <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2 font-heading text-xl">
+            <Eye className="h-5 w-5 text-primary" />
+            Owl Analysis
+          </DialogTitle>
+        </DialogHeader>
+        {(() => {
+          const analysis = generateLocalAnalysis(application?.profiles || null);
+          if (!analysis) return <p className="text-muted-foreground text-sm">No profile data available.</p>;
 
-            return (
-              <div className="space-y-5 text-sm">
-                {/* Category */}
-                <div>
-                  <h4 className="font-heading font-semibold text-foreground mb-1">Category & Experience</h4>
-                  <div className="flex items-center gap-2 mb-1">
-                    <Badge className={`${analysis.categoryInfo.bg} ${analysis.categoryInfo.text} border-0`}>
-                      {analysis.categoryInfo.label}
-                    </Badge>
-                    <span className="text-muted-foreground">{analysis.categoryInfo.description}</span>
-                  </div>
-                  <p className="text-muted-foreground">{analysis.exp} year(s) of experience</p>
+          return (
+            <div className="space-y-5 text-sm">
+              {/* Category */}
+              <div>
+                <h4 className="font-heading font-semibold text-foreground mb-1">Category & Experience</h4>
+                <div className="flex items-center gap-2 mb-1">
+                  <Badge className={`${analysis.categoryInfo.bg} ${analysis.categoryInfo.text} border-0`}>
+                    {analysis.categoryInfo.label}
+                  </Badge>
+                  <span className="text-muted-foreground">{analysis.categoryInfo.description}</span>
                 </div>
+                <p className="text-muted-foreground">{analysis.exp} year(s) of experience</p>
+              </div>
 
-                <Separator />
+              <Separator />
 
-                {/* Strengths */}
-                {analysis.strengths.length > 0 && (
-                  <div>
-                    <h4 className="font-heading font-semibold text-foreground mb-2">Strengths</h4>
-                    <ul className="space-y-1.5">
-                      {analysis.strengths.map((s, i) => (
-                        <li key={i} className="flex items-start gap-2 text-muted-foreground">
-                          <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5 shrink-0" />
-                          {s}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-                {/* AI-powered Summary Insights */}
-                {(loadingInsights || summaryInsights.length > 0) && (
-                  <div>
-                    <h4 className="font-heading font-semibold text-foreground mb-2">Profile Summary Insights</h4>
-                    {loadingInsights ? (
-                      <div className="flex items-center gap-2 py-2">
-                        <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                        <span className="text-muted-foreground">Analysing summary...</span>
-                      </div>
-                    ) : (
-                      <ul className="space-y-1.5">
-                        {summaryInsights.map((s, i) => (
-                          <li key={i} className="flex items-start gap-2 text-muted-foreground">
-                            <TrendingUp className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-                            {s}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-                )}
-
-                {/* Concerns */}
-                {analysis.concerns.length > 0 && (
-                  <div>
-                    <h4 className="font-heading font-semibold text-foreground mb-2">Concerns</h4>
-                    <ul className="space-y-1.5">
-                      {analysis.concerns.map((c, i) => (
-                        <li key={i} className="flex items-start gap-2 text-muted-foreground">
-                          <Circle className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" />
-                          {c}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-                <Separator />
-
-                {/* Verdict */}
+              {/* Strengths */}
+              {analysis.strengths.length > 0 && (
                 <div>
-                  <h4 className="font-heading font-semibold text-foreground mb-1">Verdict</h4>
-                  <p className="text-foreground/90">{analysis.verdict}</p>
-                </div>
-
-                {/* Advice */}
-                <div>
-                  <h4 className="font-heading font-semibold text-foreground mb-2">Advice to Recruiter</h4>
+                  <h4 className="font-heading font-semibold text-foreground mb-2">Strengths</h4>
                   <ul className="space-y-1.5">
-                    {analysis.advice.map((a, i) => (
+                    {analysis.strengths.map((s, i) => (
                       <li key={i} className="flex items-start gap-2 text-muted-foreground">
-                        <Lightbulb className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-                        {a}
+                        <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5 shrink-0" />
+                        {s}
                       </li>
                     ))}
                   </ul>
                 </div>
+              )}
+
+              {/* AI-powered Summary Insights */}
+              {(loadingInsights || summaryInsights.length > 0) && (
+                <div>
+                  <h4 className="font-heading font-semibold text-foreground mb-2">Profile Summary Insights</h4>
+                  {loadingInsights ? (
+                    <div className="flex items-center gap-2 py-2">
+                      <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                      <span className="text-muted-foreground">Analysing summary...</span>
+                    </div>
+                  ) : (
+                    <ul className="space-y-1.5">
+                      {summaryInsights.map((s, i) => (
+                        <li key={i} className="flex items-start gap-2 text-muted-foreground">
+                          <TrendingUp className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                          {s}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              )}
+
+              {/* Concerns */}
+              {analysis.concerns.length > 0 && (
+                <div>
+                  <h4 className="font-heading font-semibold text-foreground mb-2">Concerns</h4>
+                  <ul className="space-y-1.5">
+                    {analysis.concerns.map((c, i) => (
+                      <li key={i} className="flex items-start gap-2 text-muted-foreground">
+                        <Circle className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" />
+                        {c}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              <Separator />
+
+              {/* Verdict */}
+              <div>
+                <h4 className="font-heading font-semibold text-foreground mb-1">Verdict</h4>
+                <p className="text-foreground/90">{analysis.verdict}</p>
               </div>
-            );
-          })()}
-        </DialogContent>
-      </Dialog>
-      </Dialog>
+
+              {/* Advice */}
+              <div>
+                <h4 className="font-heading font-semibold text-foreground mb-2">Advice to Recruiter</h4>
+                <ul className="space-y-1.5">
+                  {analysis.advice.map((a, i) => (
+                    <li key={i} className="flex items-start gap-2 text-muted-foreground">
+                      <Lightbulb className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                      {a}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          );
+        })()}
+      </DialogContent>
+    </Dialog>
     </>
   );
 };
