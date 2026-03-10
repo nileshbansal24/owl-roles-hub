@@ -1419,6 +1419,7 @@ const CandidateDashboard = () => {
                 </Button>
               }
               ratings={candidateRatings}
+              candidateCategory={getCandidateCategory(profile as any)}
             />
           </div>
 
