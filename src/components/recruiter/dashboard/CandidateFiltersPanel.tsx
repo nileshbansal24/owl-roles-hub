@@ -18,12 +18,14 @@ export interface CandidateFilters {
   experienceRange: [number, number];
   selectedSkills: string[];
   educationLevel: string;
+  salaryRange: [number, number];
 }
 
 export const defaultFilters: CandidateFilters = {
   experienceRange: [0, 30],
   selectedSkills: [],
   educationLevel: "all",
+  salaryRange: [0, 50],
 };
 
 interface CandidateFiltersPanelProps {
