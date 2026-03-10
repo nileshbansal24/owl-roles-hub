@@ -250,14 +250,39 @@ export const ProfileHeader = ({
             </div>
           </div>
 
-          {/* Actions */}
-          <div className="flex items-center gap-3 shrink-0">
-            {secondaryAction}
-            {primaryAction}
+          {/* Actions + Ratings */}
+          <div className="flex flex-col items-end gap-3 shrink-0">
+            <div className="flex items-center gap-3">
+              {secondaryAction}
+              {primaryAction}
+            </div>
+            {ratings && (
+              <div className="flex items-center gap-4">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="flex items-center gap-1.5 cursor-default">
+                      <GraduationCap className="h-3.5 w-3.5 text-primary" />
+                      <span className="text-xs font-medium text-muted-foreground">Academic</span>
+                      <MiniStarRating score={ratings.academicScore} size={13} />
+                      <span className="text-xs font-semibold text-foreground">{ratings.academicScore}</span>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom"><p className="text-sm">{ratings.academicTooltip}</p></TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="flex items-center gap-1.5 cursor-default">
+                      <BookOpen className="h-3.5 w-3.5 text-primary" />
+                      <span className="text-xs font-medium text-muted-foreground">Research</span>
+                      <MiniStarRating score={ratings.researchScore} size={13} />
+                      <span className="text-xs font-semibold text-foreground">{ratings.researchScore}</span>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom"><p className="text-sm">{ratings.researchTooltip}</p></TooltipContent>
+                </Tooltip>
+              </div>
+            )}
           </div>
-        </div>
-
-        {/* Mobile Layout */}
         <div className="flex flex-col md:hidden">
           <div className="flex items-center gap-4 mb-5">
             {/* Avatar */}
