@@ -10,7 +10,7 @@ import StatsSection from "@/components/StatsSection";
 import JobCategories from "@/components/JobCategories";
 import FeaturedJobs from "@/components/FeaturedJobs";
 import TopCompanies from "@/components/TopCompanies";
-import UniversityPartners from "@/components/UniversityPartners";
+
 import TestimonialsSection from "@/components/TestimonialsSection";
 import CTASection from "@/components/CTASection";
 import HowItWorks from "@/components/HowItWorks";
@@ -124,6 +124,8 @@ const Index = () => {
           jobs={filteredJobs} 
           onJobClick={handleJobClick}
           loading={jobsLoading}
+          searchQuery={searchQuery}
+          onClearSearch={() => setSearchQuery("")}
         />
       </div>
 
@@ -133,9 +135,6 @@ const Index = () => {
 
       <TestimonialsSection />
 
-      <div id="services">
-        <UniversityPartners />
-      </div>
 
       <CTASection 
         onCandidateClick={() => openAuthModal("signup", "candidate")}

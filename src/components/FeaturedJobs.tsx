@@ -1,5 +1,5 @@
-import { motion } from "framer-motion";
-import { MapPin, Clock, DollarSign, Bookmark, ArrowRight, Zap } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { MapPin, Clock, DollarSign, Bookmark, ArrowRight, Zap, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -11,9 +11,11 @@ interface FeaturedJobsProps {
   jobs: JobWithRecruiter[];
   onJobClick: (job: JobWithRecruiter) => void;
   loading: boolean;
+  searchQuery?: string;
+  onClearSearch?: () => void;
 }
 
-const FeaturedJobs = ({ jobs, onJobClick, loading }: FeaturedJobsProps) => {
+const FeaturedJobs = ({ jobs, onJobClick, loading, searchQuery, onClearSearch }: FeaturedJobsProps) => {
   if (loading) {
     return (
       <section className="py-16">
@@ -67,6 +69,29 @@ const FeaturedJobs = ({ jobs, onJobClick, loading }: FeaturedJobsProps) => {
             <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </Button>
         </motion.div>
+
+        <AnimatePresence>
+          {searchQuery && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="mb-6"
+            >
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20">
+                <span className="text-sm text-foreground font-medium">
+                  Showing results for: <span className="text-primary">{searchQuery}</span>
+                </span>
+                <button
+                  onClick={onClearSearch}
+                  className="ml-1 p-0.5 rounded-full hover:bg-primary/20 transition-colors"
+                >
+                  <X className="w-3.5 h-3.5 text-primary" />
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
           {jobs.slice(0, 6).map((job, index) => {
