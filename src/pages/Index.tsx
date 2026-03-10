@@ -121,11 +121,13 @@ const Index = () => {
 
       <HowItWorks />
 
-      <FeaturedJobs 
-        jobs={filteredJobs} 
-        onJobClick={handleJobClick}
-        loading={jobsLoading}
-      />
+      <div id="featured-jobs">
+        <FeaturedJobs 
+          jobs={filteredJobs} 
+          onJobClick={handleJobClick}
+          loading={jobsLoading}
+        />
+      </div>
 
       <div id="institutions">
         <TopCompanies />
