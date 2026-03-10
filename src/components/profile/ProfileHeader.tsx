@@ -330,9 +330,12 @@ export const ProfileHeader = ({
 
             {/* Info */}
             <div className="flex-1 min-w-0">
-              <h1 className="font-heading font-bold text-xl text-foreground mb-1 truncate">
-                {name}
-              </h1>
+              <div className="flex items-center gap-2 mb-1">
+                <h1 className="font-heading font-bold text-xl text-foreground truncate">
+                  {name}
+                </h1>
+                {candidateCategory && <CandidateCategoryBadge category={candidateCategory} />}
+              </div>
               <p className="text-sm text-muted-foreground line-clamp-2">
                 {role || "Add your role"} {university && `at ${university}`}
               </p>
