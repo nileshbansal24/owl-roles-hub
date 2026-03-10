@@ -20,12 +20,21 @@ import AuthModal from "@/components/AuthModal";
 import { Loader2 } from "lucide-react";
 
 const Index = () => {
-  const { user, loading } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [redirecting, setRedirecting] = useState(false);
+  const { jobs, loading: jobsLoading } = useJobsWithRecruiters();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [locationQuery, setLocationQuery] = useState("");
+  const [experienceFilter, setExperienceFilter] = useState("");
+  const [selectedJob, setSelectedJob] = useState<JobWithRecruiter | null>(null);
+  const [jobModalOpen, setJobModalOpen] = useState(false);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [authMode, setAuthMode] = useState<"login" | "signup">("signup");
+  const [authRole, setAuthRole] = useState<"candidate" | "recruiter">("candidate");
 
   useEffect(() => {
-    if (loading || !user) return;
+    if (authLoading || !user) return;
     setRedirecting(true);
     supabase
       .from("profiles")
@@ -38,18 +47,16 @@ const Index = () => {
         } else {
           navigate("/candidate-dashboard", { replace: true });
         }
-      })
-      .catch(() => setRedirecting(false));
-  }, [user, loading, navigate]);
+      });
+  }, [user, authLoading, navigate]);
 
-  if (loading || redirecting) {
+  if (authLoading || redirecting) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
-  const { jobs, loading } = useJobsWithRecruiters();
   const [searchQuery, setSearchQuery] = useState("");
   const [locationQuery, setLocationQuery] = useState("");
   const [experienceFilter, setExperienceFilter] = useState("");
