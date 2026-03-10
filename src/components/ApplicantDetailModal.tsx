@@ -312,6 +312,8 @@ const ApplicantDetailModal = ({
   useEffect(() => {
     if (!open) {
       setNewNote("");
+      setOwlAnalysis(null);
+      setShowAnalysis(false);
     }
   }, [open]);
   
