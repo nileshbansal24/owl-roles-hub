@@ -180,6 +180,34 @@ const CandidateCard = ({
             )}
           </div>
 
+          {/* Academic & Research Ratings */}
+          {(() => {
+            const ratings = computeRatings({
+              education: candidate.education,
+              researchPapers: candidate.research_papers,
+              hIndex: candidate.scopus_metrics?.h_index || candidate.manual_h_index || null,
+              citations: candidate.scopus_metrics?.citation_count || null,
+              achievements: candidate.achievements,
+              university: candidate.university,
+            });
+            return (
+              <div className="flex items-center gap-4 mt-2">
+                <div className="flex items-center gap-1">
+                  <GraduationCap className="h-3.5 w-3.5 text-primary" />
+                  <span className="text-xs text-muted-foreground">Academic</span>
+                  <MiniStars score={ratings.academicScore} />
+                  <span className="text-xs font-semibold text-foreground">{ratings.academicScore}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <BookOpen className="h-3.5 w-3.5 text-primary" />
+                  <span className="text-xs text-muted-foreground">Research</span>
+                  <MiniStars score={ratings.researchScore} />
+                  <span className="text-xs font-semibold text-foreground">{ratings.researchScore}</span>
+                </div>
+              </div>
+            );
+          })()}
+
           {/* Professional Summary Preview */}
           {candidate.professional_summary && candidate.professional_summary.trim().length > 0 && (
             <p className="mt-3 text-sm text-muted-foreground line-clamp-2 leading-relaxed">
