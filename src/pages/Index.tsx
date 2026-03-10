@@ -124,6 +124,8 @@ const Index = () => {
           jobs={filteredJobs} 
           onJobClick={handleJobClick}
           loading={jobsLoading}
+          searchQuery={searchQuery}
+          onClearSearch={() => setSearchQuery("")}
         />
       </div>
 
