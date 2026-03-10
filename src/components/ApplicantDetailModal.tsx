@@ -908,6 +908,34 @@ const ApplicantDetailModal = ({
                     </div>
                   )}
                 </div>
+
+                {/* Candidate Ratings */}
+                {(() => {
+                  const ratings = computeRatings({
+                    education: education,
+                    researchPapers: researchPapers,
+                    hIndex: profile?.scopus_metrics?.h_index || profile?.manual_h_index || null,
+                    citations: profile?.scopus_metrics?.citation_count || null,
+                    achievements: profile?.achievements || null,
+                    university: profile?.university,
+                  });
+                  return (
+                    <div className="flex items-center gap-4 mt-2">
+                      <div className="flex items-center gap-1.5">
+                        <GraduationCap className="h-3.5 w-3.5 text-primary" />
+                        <span className="text-xs font-medium text-muted-foreground">Academic</span>
+                        <InlineStarRating score={ratings.academicScore} size={13} />
+                        <span className="text-xs font-semibold text-foreground">{ratings.academicScore}/5</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <BookOpen className="h-3.5 w-3.5 text-primary" />
+                        <span className="text-xs font-medium text-muted-foreground">Research</span>
+                        <InlineStarRating score={ratings.researchScore} size={13} />
+                        <span className="text-xs font-semibold text-foreground">{ratings.researchScore}/5</span>
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
             </div>
 
