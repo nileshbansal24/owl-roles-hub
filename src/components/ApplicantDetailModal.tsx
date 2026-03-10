@@ -779,6 +779,7 @@ const ApplicantDetailModal = ({
   };
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-3xl max-h-[90vh] p-0 overflow-hidden">
         <DialogHeader className="px-6 pt-6 pb-2 flex flex-row items-center justify-between">
