@@ -38,6 +38,7 @@ import {
   CalendarDays,
   Circle,
   ExternalLink,
+  Eye,
   TrendingUp,
   Quote,
 } from "lucide-react";
