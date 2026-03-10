@@ -15,7 +15,7 @@ interface FeaturedJobsProps {
   onClearSearch?: () => void;
 }
 
-const FeaturedJobs = ({ jobs, onJobClick, loading }: FeaturedJobsProps) => {
+const FeaturedJobs = ({ jobs, onJobClick, loading, searchQuery, onClearSearch }: FeaturedJobsProps) => {
   if (loading) {
     return (
       <section className="py-16">
