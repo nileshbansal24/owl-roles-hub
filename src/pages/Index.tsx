@@ -33,6 +33,22 @@ const Index = () => {
   const [authMode, setAuthMode] = useState<"login" | "signup">("signup");
   const [authRole, setAuthRole] = useState<"candidate" | "recruiter">("candidate");
 
+  const filteredJobs = useMemo(() => {
+    return jobs.filter((job) => {
+      const matchesSearch =
+        searchQuery === "" ||
+        job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        job.institute.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        job.tags?.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
+
+      const matchesLocation =
+        locationQuery === "" ||
+        job.location.toLowerCase().includes(locationQuery.toLowerCase());
+
+      return matchesSearch && matchesLocation;
+    });
+  }, [jobs, searchQuery, locationQuery]);
+
   useEffect(() => {
     if (authLoading || !user) return;
     setRedirecting(true);
@@ -57,22 +73,6 @@ const Index = () => {
       </div>
     );
   }
-
-  const filteredJobs = useMemo(() => {
-    return jobs.filter((job) => {
-      const matchesSearch =
-        searchQuery === "" ||
-        job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        job.institute.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        job.tags?.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
-
-      const matchesLocation =
-        locationQuery === "" ||
-        job.location.toLowerCase().includes(locationQuery.toLowerCase());
-
-      return matchesSearch && matchesLocation;
-    });
-  }, [jobs, searchQuery, locationQuery]);
 
   const handleJobClick = (job: JobWithRecruiter) => {
     setSelectedJob(job);
