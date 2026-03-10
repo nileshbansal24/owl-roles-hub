@@ -33,8 +33,8 @@ import {
   PersonalDetailsEditModal,
   CareerInsightsCard,
   CareerPathVisualization,
-  CandidateRatingCard,
 } from "@/components/profile";
+import { computeRatings } from "@/components/profile/CandidateRatingCard";
 import { OrcidCard } from "@/components/profile/OrcidCard";
 import { PublicationImportButton } from "@/components/profile/PublicationImportButton";
 import { ScopusMetricsCard } from "@/components/profile/ScopusMetricsCard";
