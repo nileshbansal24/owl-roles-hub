@@ -372,7 +372,6 @@ const ApplicantDetailModal = ({
     if (!open) {
       setNewNote("");
       setShowAnalysis(false);
-      setSummaryInsights([]);
     }
   }, [open]);
   
