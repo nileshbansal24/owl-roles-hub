@@ -19,7 +19,11 @@ const companies: Company[] = [
   { name: "IIM Bangalore", logo: "IIM", location: "Bangalore", openings: 15, rating: 4.9, type: "Government" },
 ];
 
-const TopCompanies = () => {
+interface TopCompaniesProps {
+  onViewJobs?: (instituteName: string) => void;
+}
+
+const TopCompanies = ({ onViewJobs }: TopCompaniesProps) => {
   return (
     <section className="py-16">
       <div className="container mx-auto px-4">
