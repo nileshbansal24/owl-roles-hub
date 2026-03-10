@@ -239,6 +239,42 @@ const ApplicantDetailModal = ({
   const [loadingNotes, setLoadingNotes] = useState(false);
   const [savingNote, setSavingNote] = useState(false);
   const [deletingNoteId, setDeletingNoteId] = useState<string | null>(null);
+
+  // Owl Analysis state
+  const [owlAnalysis, setOwlAnalysis] = useState<string | null>(null);
+  const [loadingAnalysis, setLoadingAnalysis] = useState(false);
+  const [showAnalysis, setShowAnalysis] = useState(false);
+
+  const handleOwlAnalysis = async () => {
+    if (!application?.profiles) return;
+    if (owlAnalysis) {
+      setShowAnalysis(!showAnalysis);
+      return;
+    }
+    setLoadingAnalysis(true);
+    setShowAnalysis(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("owl-analysis", {
+        body: {
+          profile: application.profiles,
+          jobTitle: application.jobs?.title,
+          institute: application.jobs?.institute,
+        },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      setOwlAnalysis(data.analysis);
+    } catch (err: any) {
+      toast({
+        title: "Analysis Failed",
+        description: err.message || "Could not generate analysis",
+        variant: "destructive",
+      });
+      setShowAnalysis(false);
+    } finally {
+      setLoadingAnalysis(false);
+    }
+  };
   
   // Fetch notes when modal opens
   useEffect(() => {
