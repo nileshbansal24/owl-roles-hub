@@ -233,6 +233,18 @@ const CandidateDashboard = () => {
   const [professionalSummary, setProfessionalSummary] = useState("");
   const [teachingPhilosophy, setTeachingPhilosophy] = useState("");
 
+  const candidateRatings = useMemo(() => {
+    if (!profile) return null;
+    return computeRatings({
+      education,
+      researchPapers,
+      hIndex: profile.scopus_metrics?.h_index || profile.manual_h_index || null,
+      citations: profile.scopus_metrics?.citation_count || null,
+      achievements,
+      university: profile.university,
+    });
+  }, [profile, education, researchPapers, achievements]);
+
   useEffect(() => {
     const fetchData = async () => {
       if (!user) return;
