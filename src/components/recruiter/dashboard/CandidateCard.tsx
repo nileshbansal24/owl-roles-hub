@@ -159,6 +159,13 @@ const CandidateCard = ({
             )}
           </div>
 
+          {/* Professional Summary Preview */}
+          {candidate.professional_summary && candidate.professional_summary.trim().length > 0 && (
+            <p className="mt-3 text-sm text-muted-foreground line-clamp-2 leading-relaxed">
+              {candidate.professional_summary}
+            </p>
+          )}
+
           {candidate.skills && candidate.skills.length > 0 && (
             <div className="flex flex-wrap gap-2 mt-3">
               {candidate.skills.slice(0, 5).map((skill, skillIndex) => (
