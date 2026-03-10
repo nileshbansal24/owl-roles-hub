@@ -51,7 +51,6 @@ const Index = () => {
 
   useEffect(() => {
     if (authLoading || !user) return;
-    setRedirecting(true);
     supabase
       .from("profiles")
       .select("user_type")
@@ -59,9 +58,8 @@ const Index = () => {
       .maybeSingle()
       .then(({ data }) => {
         if (data?.user_type === "recruiter") {
+          setRedirecting(true);
           navigate("/recruiter-dashboard", { replace: true });
-        } else {
-          navigate("/candidate-dashboard", { replace: true });
         }
       });
   }, [user, authLoading, navigate]);
