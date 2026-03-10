@@ -129,6 +129,16 @@ const FindCandidatesTab = ({
       });
     }
 
+    // Salary range filter
+    const [minSal, maxSal] = advancedFilters.salaryRange;
+    if (minSal !== 0 || maxSal !== 50) {
+      result = result.filter(c => {
+        const salary = (c as any).expected_salary || (c as any).current_salary || 0;
+        const salaryLPA = salary >= 10000 ? Math.round(salary / 100000) : salary;
+        return salaryLPA >= minSal && (maxSal === 50 ? true : salaryLPA <= maxSal);
+      });
+    }
+
     // Education level filter
     if (advancedFilters.educationLevel !== "all") {
       result = result.filter(c => {

@@ -149,6 +149,31 @@ const CandidateFiltersPanel = ({
                 </div>
               </div>
 
+              {/* Salary Range Slider */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium text-foreground">Expected Salary (LPA)</label>
+                  <span className="text-sm text-muted-foreground">
+                    ₹{filters.salaryRange[0]}L – ₹{filters.salaryRange[1] === 50 ? "50+" : filters.salaryRange[1]}L
+                  </span>
+                </div>
+                <Slider
+                  min={0}
+                  max={50}
+                  step={1}
+                  value={filters.salaryRange}
+                  onValueChange={(value) =>
+                    onFiltersChange({ ...filters, salaryRange: value as [number, number] })
+                  }
+                  className="w-full"
+                />
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>₹0L</span>
+                  <span>₹25L</span>
+                  <span>₹50L+</span>
+                </div>
+              </div>
+
               {/* Education Level */}
               <div className="space-y-2">
                 <label className="text-sm font-medium text-foreground">Education Level</label>
