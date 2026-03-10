@@ -1403,6 +1403,7 @@ const CandidateDashboard = () => {
                   {profile?.resume_url ? "Update Resume" : "Upload Resume"}
                 </Button>
               }
+              ratings={candidateRatings}
             />
           </div>
 
