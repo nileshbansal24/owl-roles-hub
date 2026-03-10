@@ -128,7 +128,7 @@ const Index = () => {
       </div>
 
       <div id="institutions">
-        <TopCompanies />
+        <TopCompanies onViewJobs={handleCategoryClick} />
       </div>
 
       <TestimonialsSection />
