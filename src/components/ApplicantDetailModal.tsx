@@ -1352,11 +1352,7 @@ const ApplicantDetailModal = ({
             </DialogTitle>
           </DialogHeader>
           {(() => {
-            const analysis = generateLocalAnalysis(
-              application?.profiles || null,
-              application?.jobs?.title,
-              application?.jobs?.institute
-            );
+            const analysis = generateLocalAnalysis(application?.profiles || null);
             if (!analysis) return <p className="text-muted-foreground text-sm">No profile data available.</p>;
 
             return (
@@ -1387,6 +1383,28 @@ const ApplicantDetailModal = ({
                         </li>
                       ))}
                     </ul>
+                  </div>
+                )}
+
+                {/* AI-powered Summary Insights */}
+                {(loadingInsights || summaryInsights.length > 0) && (
+                  <div>
+                    <h4 className="font-heading font-semibold text-foreground mb-2">Profile Summary Insights</h4>
+                    {loadingInsights ? (
+                      <div className="flex items-center gap-2 py-2">
+                        <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                        <span className="text-muted-foreground">Analysing summary...</span>
+                      </div>
+                    ) : (
+                      <ul className="space-y-1.5">
+                        {summaryInsights.map((s, i) => (
+                          <li key={i} className="flex items-start gap-2 text-muted-foreground">
+                            <TrendingUp className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                            {s}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                   </div>
                 )}
 
