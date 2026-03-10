@@ -239,6 +239,42 @@ const ApplicantDetailModal = ({
   const [loadingNotes, setLoadingNotes] = useState(false);
   const [savingNote, setSavingNote] = useState(false);
   const [deletingNoteId, setDeletingNoteId] = useState<string | null>(null);
+
+  // Owl Analysis state
+  const [owlAnalysis, setOwlAnalysis] = useState<string | null>(null);
+  const [loadingAnalysis, setLoadingAnalysis] = useState(false);
+  const [showAnalysis, setShowAnalysis] = useState(false);
+
+  const handleOwlAnalysis = async () => {
+    if (!application?.profiles) return;
+    if (owlAnalysis) {
+      setShowAnalysis(!showAnalysis);
+      return;
+    }
+    setLoadingAnalysis(true);
+    setShowAnalysis(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("owl-analysis", {
+        body: {
+          profile: application.profiles,
+          jobTitle: application.jobs?.title,
+          institute: application.jobs?.institute,
+        },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      setOwlAnalysis(data.analysis);
+    } catch (err: any) {
+      toast({
+        title: "Analysis Failed",
+        description: err.message || "Could not generate analysis",
+        variant: "destructive",
+      });
+      setShowAnalysis(false);
+    } finally {
+      setLoadingAnalysis(false);
+    }
+  };
   
   // Fetch notes when modal opens
   useEffect(() => {
@@ -276,6 +312,8 @@ const ApplicantDetailModal = ({
   useEffect(() => {
     if (!open) {
       setNewNote("");
+      setOwlAnalysis(null);
+      setShowAnalysis(false);
     }
   }, [open]);
   
@@ -1203,6 +1241,35 @@ const ApplicantDetailModal = ({
 
             <Separator />
 
+            {/* Owl Analysis Panel */}
+            {showAnalysis && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="rounded-xl border-2 border-primary/30 bg-primary/5 p-5 space-y-3"
+              >
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                    <span className="text-lg">🦉</span>
+                  </div>
+                  <h4 className="font-heading font-bold text-foreground text-lg">Owl Analysis</h4>
+                </div>
+                {loadingAnalysis ? (
+                  <div className="flex items-center gap-3 py-6 justify-center">
+                    <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                    <span className="text-sm text-muted-foreground">Analyzing candidate profile...</span>
+                  </div>
+                ) : owlAnalysis ? (
+                  <div className="prose prose-sm dark:prose-invert max-w-none text-foreground/90 whitespace-pre-wrap text-sm leading-relaxed">
+                    {owlAnalysis}
+                  </div>
+                ) : null}
+              </motion.div>
+            )}
+
+            <Separator />
+
             {/* Action Buttons */}
             <div className="flex flex-wrap gap-2 sticky bottom-0 bg-background py-2">
               <Button
@@ -1235,6 +1302,19 @@ const ApplicantDetailModal = ({
                 disabled={application.status === "rejected"}
               >
                 Reject
+              </Button>
+              <Button
+                variant="outline"
+                className="gap-2 border-primary/30 text-primary hover:bg-primary/10 ml-auto"
+                onClick={handleOwlAnalysis}
+                disabled={loadingAnalysis}
+              >
+                {loadingAnalysis ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <span className="text-base">🦉</span>
+                )}
+                Owl Analysis
               </Button>
             </div>
           </motion.div>
