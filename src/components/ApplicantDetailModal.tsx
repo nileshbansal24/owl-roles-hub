@@ -243,8 +243,10 @@ const ApplicantDetailModal = ({
 
   // Owl Analysis state
   const [showAnalysis, setShowAnalysis] = useState(false);
+  const [summaryInsights, setSummaryInsights] = useState<string[]>([]);
+  const [loadingInsights, setLoadingInsights] = useState(false);
 
-  const generateLocalAnalysis = (profile: Profile | null, jobTitle?: string, institute?: string) => {
+  const generateLocalAnalysis = (profile: Profile | null) => {
     if (!profile) return null;
 
     const category = getCandidateCategory(profile);
@@ -260,7 +262,6 @@ const ApplicantDetailModal = ({
     const hasResume = !!profile.resume_url;
     const hasSummary = !!profile.professional_summary;
 
-    // Strengths
     const strengths: string[] = [];
     if (exp >= 15) strengths.push(`Extensive experience of ${exp} years in the academic/professional domain.`);
     else if (exp >= 5) strengths.push(`Solid experience of ${exp} years showing career progression.`);
@@ -272,20 +273,7 @@ const ApplicantDetailModal = ({
     if (citations && citations >= 50) strengths.push(`${citations} citations reflect peer recognition and influence.`);
     if (hasOrcid || hasScopus) strengths.push("Verified academic identity through ORCID/Scopus profiles.");
     if (achievementCount > 0) strengths.push(`${achievementCount} notable achievement(s) on record.`);
-    if (hasSummary && profile.professional_summary) {
-      // Extract key points from the candidate's own summary
-      const summary = profile.professional_summary.trim();
-      const sentences = summary.split(/[.!?]+/).map(s => s.trim()).filter(s => s.length > 15);
-      if (sentences.length > 0) {
-        // Take up to 3 meaningful sentences from their summary
-        const keyPoints = sentences.slice(0, 3);
-        keyPoints.forEach(point => {
-          strengths.push(point.endsWith(".") ? point : point + ".");
-        });
-      }
-    }
 
-    // Concerns
     const concerns: string[] = [];
     if (exp === 0) concerns.push("No prior experience listed — this is a fresher-level candidate.");
     if (skillCount === 0) concerns.push("No skills listed on the profile.");
@@ -295,7 +283,6 @@ const ApplicantDetailModal = ({
     if (!profile.location) concerns.push("Location not provided.");
     if (hIndex !== null && hIndex < 3 && category !== "fresher") concerns.push(`Low h-index (${hIndex}) for their career stage.`);
 
-    // Verdict
     let verdict = "";
     if (category === "gold" && exp >= 10) verdict = "Strong candidate with senior leadership credentials. Highly recommended for review.";
     else if (category === "silver" && exp >= 5) verdict = "Experienced professional with a solid profile. Good fit for mid-to-senior roles.";
@@ -303,7 +290,6 @@ const ApplicantDetailModal = ({
     else if (category === "fresher") verdict = "Entry-level candidate. Consider for junior roles or training-track positions.";
     else verdict = "Decent profile. Review the specifics before making a decision.";
 
-    // Advice
     const advice: string[] = [];
     if (category === "gold") advice.push("Verify leadership claims through references or institutional records.");
     if (paperCount > 0) advice.push("Review publication quality and relevance to the role.");
@@ -315,9 +301,35 @@ const ApplicantDetailModal = ({
     return { category, categoryInfo, strengths, concerns, verdict, advice, exp };
   };
 
-  const handleOwlAnalysis = () => {
+  const handleOwlAnalysis = async () => {
     if (!application?.profiles) return;
     setShowAnalysis(true);
+    setSummaryInsights([]);
+
+    // Fetch AI-powered summary insights if a summary exists
+    const profile = application.profiles;
+    if (profile.professional_summary && profile.professional_summary.trim().length > 10) {
+      setLoadingInsights(true);
+      try {
+        const { data, error } = await supabase.functions.invoke("owl-analysis", {
+          body: {
+            summary: profile.professional_summary,
+            role: profile.role,
+            headline: profile.headline,
+            experience: profile.years_experience,
+            skills: profile.skills,
+          },
+        });
+        if (!error && data?.insights) {
+          setSummaryInsights(data.insights);
+        }
+      } catch {
+        // Silently fail — summary insights are supplementary
+      } finally {
+        setLoadingInsights(false);
+      }
+    }
+  };
   };
   
   // Fetch notes when modal opens
