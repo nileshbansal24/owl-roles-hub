@@ -78,14 +78,10 @@ const App = () => {
                 />
                 {/* Hidden Admin Panel - not linked from anywhere */}
                 <Route path="/adpanel" element={<AdminLogin />} />
-                <Route
-                  path="/adpanel/dashboard"
-                  element={
-                    <ProtectedRoute>
-                      <AdminDashboard />
-                    </ProtectedRoute>
-                  }
-                />
+                <Route path="/adpanel/dashboard" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
+                <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                <Route path="/terms-of-service" element={<TermsOfService />} />
+                <Route path="/cookie-policy" element={<CookiePolicy />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>
