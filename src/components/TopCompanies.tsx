@@ -83,7 +83,10 @@ const TopCompanies = ({ onViewJobs }: TopCompaniesProps) => {
                   <Briefcase className="w-4 h-4 text-primary" />
                   <span className="font-medium text-foreground">{company.openings} openings</span>
                 </div>
-                <button className="text-sm text-primary hover:underline font-medium">
+                <button
+                  onClick={(e) => { e.stopPropagation(); onViewJobs?.(company.name); }}
+                  className="text-sm text-primary hover:underline font-medium"
+                >
                   View Jobs
                 </button>
               </div>
