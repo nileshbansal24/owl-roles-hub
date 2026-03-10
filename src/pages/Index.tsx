@@ -1,6 +1,8 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { useJobsWithRecruiters, JobWithRecruiter } from "@/hooks/useJobsWithRecruiters";
 import Navbar from "@/components/Navbar";
 import NaukriHeroSection from "@/components/NaukriHeroSection";
@@ -15,9 +17,38 @@ import HowItWorks from "@/components/HowItWorks";
 import Footer from "@/components/Footer";
 import JobDetailModal from "@/components/JobDetailModal";
 import AuthModal from "@/components/AuthModal";
+import { Loader2 } from "lucide-react";
 
 const Index = () => {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
+  const navigate = useNavigate();
+  const [redirecting, setRedirecting] = useState(false);
+
+  useEffect(() => {
+    if (loading || !user) return;
+    setRedirecting(true);
+    supabase
+      .from("profiles")
+      .select("user_type")
+      .eq("id", user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data?.user_type === "recruiter") {
+          navigate("/recruiter-dashboard", { replace: true });
+        } else {
+          navigate("/candidate-dashboard", { replace: true });
+        }
+      })
+      .catch(() => setRedirecting(false));
+  }, [user, loading, navigate]);
+
+  if (loading || redirecting) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
   const { jobs, loading } = useJobsWithRecruiters();
   const [searchQuery, setSearchQuery] = useState("");
   const [locationQuery, setLocationQuery] = useState("");
