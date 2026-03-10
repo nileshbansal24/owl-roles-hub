@@ -13,7 +13,6 @@ interface Company {
 
 const companies: Company[] = [
   { name: "Lovely Professional University", logo: "LPU", location: "Punjab", openings: 45, rating: 4.5, type: "Private" },
-  { name: "Chandigarh University", logo: "CU", location: "Punjab", openings: 38, rating: 4.4, type: "Private" },
   { name: "Chitkara University", logo: "CU", location: "Punjab", openings: 28, rating: 4.3, type: "Private" },
   { name: "Amity University", logo: "AU", location: "Noida", openings: 52, rating: 4.2, type: "Private" },
   { name: "IIT Delhi", logo: "IIT", location: "Delhi", openings: 23, rating: 4.8, type: "Government" },
