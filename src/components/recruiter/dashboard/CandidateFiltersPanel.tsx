@@ -71,6 +71,7 @@ const CandidateFiltersPanel = ({
     if (filters.experienceRange[0] !== 0 || filters.experienceRange[1] !== 30) count++;
     if (filters.selectedSkills.length > 0) count++;
     if (filters.educationLevel !== "all") count++;
+    if (filters.salaryRange[0] !== 0 || filters.salaryRange[1] !== 50) count++;
     return count;
   }, [filters]);
 
