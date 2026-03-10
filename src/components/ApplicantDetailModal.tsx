@@ -1450,7 +1450,8 @@ const ApplicantDetailModal = ({
           })()}
         </DialogContent>
       </Dialog>
-    </Dialog>
+      </Dialog>
+    </>
   );
 };
 
