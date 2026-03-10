@@ -19,6 +19,7 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import CookiePolicy from "./pages/CookiePolicy";
 import NotFound from "./pages/NotFound";
+import CookieConsent from "@/components/CookieConsent";
 import ProtectedRoute from "@/components/ProtectedRoute";
 
 const App = () => {
@@ -32,6 +33,7 @@ const App = () => {
           <TooltipProvider>
             <Toaster />
             <Sonner />
+            <CookieConsent />
             <BrowserRouter>
               <Routes>
                 <Route path="/" element={<Index />} />
