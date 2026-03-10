@@ -243,12 +243,46 @@ const ApplicantDetailModal = ({
 
   // Owl Analysis state
   const [showAnalysis, setShowAnalysis] = useState(false);
-  const [summaryInsights, setSummaryInsights] = useState<string[]>([]);
-  const [loadingInsights, setLoadingInsights] = useState(false);
+
+  const extractSummaryInsights = (summary: string): string[] => {
+    const insights: string[] = [];
+    const lower = summary.toLowerCase();
+    const domains = ["management", "engineering", "science", "education", "research", "technology", "finance", "law", "medicine", "architecture", "agriculture", "commerce", "arts", "humanities", "pharmacy"];
+    const foundDomains = domains.filter(d => lower.includes(d));
+    if (foundDomains.length > 0) insights.push(`Domain expertise in ${foundDomains.join(", ")}.`);
+    const leadershipWords = ["led", "managed", "headed", "spearheaded", "directed", "established", "founded", "built", "oversaw", "supervised", "mentored"];
+    const foundLeadership = leadershipWords.filter(w => lower.includes(w));
+    if (foundLeadership.length >= 2) insights.push("Demonstrates strong leadership and initiative across multiple roles.");
+    else if (foundLeadership.length === 1) insights.push("Shows leadership capability in their career trajectory.");
+    if (lower.includes("research") || lower.includes("publication") || lower.includes("journal") || lower.includes("paper")) {
+      insights.push("Actively involved in research and academic publishing.");
+    }
+    if (lower.includes("industry") || lower.includes("collaboration") || lower.includes("partnership") || lower.includes("corporate")) {
+      insights.push("Has experience with industry collaborations or corporate partnerships.");
+    }
+    if (lower.includes("teaching") || lower.includes("curriculum") || lower.includes("training") || lower.includes("pedagogy")) {
+      insights.push("Focused on teaching, curriculum development, or training initiatives.");
+    }
+    if (lower.includes("grant") || lower.includes("funding") || lower.includes("crore") || lower.includes("lakh") || lower.includes("sponsored")) {
+      insights.push("Has secured grants or external funding for projects.");
+    }
+    if (lower.includes("international") || lower.includes("global") || lower.includes("abroad") || lower.includes("overseas") || lower.includes("foreign")) {
+      insights.push("Has international or global exposure in their career.");
+    }
+    if (lower.includes("innovation") || lower.includes("startup") || lower.includes("incubat") || lower.includes("patent") || lower.includes("entrepreneur")) {
+      insights.push("Involved in innovation, entrepreneurship, or incubation efforts.");
+    }
+    if (lower.includes("award") || lower.includes("recogni") || lower.includes("honor") || lower.includes("felicitat")) {
+      insights.push("Has received awards or recognition in their field.");
+    }
+    if (lower.includes("consult") || lower.includes("advisory") || lower.includes("board member") || lower.includes("committee")) {
+      insights.push("Serves in advisory or consultancy roles.");
+    }
+    return insights;
+  };
 
   const generateLocalAnalysis = (profile: Profile | null) => {
     if (!profile) return null;
-
     const category = getCandidateCategory(profile);
     const categoryInfo = getCategoryStyles(category);
     const exp = profile.years_experience || 0;
@@ -261,19 +295,17 @@ const ApplicantDetailModal = ({
     const achievementCount = profile.achievements?.length || 0;
     const hasResume = !!profile.resume_url;
     const hasSummary = !!profile.professional_summary;
-
     const strengths: string[] = [];
     if (exp >= 15) strengths.push(`Extensive experience of ${exp} years in the academic/professional domain.`);
     else if (exp >= 5) strengths.push(`Solid experience of ${exp} years showing career progression.`);
     else if (exp >= 1) strengths.push(`${exp} year(s) of experience — early career with growth potential.`);
-
     if (skillCount >= 5) strengths.push(`Well-rounded skill set with ${skillCount} listed competencies.`);
     if (paperCount > 0) strengths.push(`Published ${paperCount} research paper(s), indicating active research involvement.`);
     if (hIndex && hIndex >= 5) strengths.push(`Strong h-index of ${hIndex}, demonstrating research impact.`);
     if (citations && citations >= 50) strengths.push(`${citations} citations reflect peer recognition and influence.`);
     if (hasOrcid || hasScopus) strengths.push("Verified academic identity through ORCID/Scopus profiles.");
     if (achievementCount > 0) strengths.push(`${achievementCount} notable achievement(s) on record.`);
-
+    const summaryInsights = hasSummary ? extractSummaryInsights(profile.professional_summary!) : [];
     const concerns: string[] = [];
     if (exp === 0) concerns.push("No prior experience listed — this is a fresher-level candidate.");
     if (skillCount === 0) concerns.push("No skills listed on the profile.");
@@ -282,14 +314,12 @@ const ApplicantDetailModal = ({
     if (!hasSummary) concerns.push("Professional summary is missing.");
     if (!profile.location) concerns.push("Location not provided.");
     if (hIndex !== null && hIndex < 3 && category !== "fresher") concerns.push(`Low h-index (${hIndex}) for their career stage.`);
-
     let verdict = "";
     if (category === "gold" && exp >= 10) verdict = "Strong candidate with senior leadership credentials. Highly recommended for review.";
     else if (category === "silver" && exp >= 5) verdict = "Experienced professional with a solid profile. Good fit for mid-to-senior roles.";
     else if (category === "bronze") verdict = "Competent candidate suitable for assistant-level or early-career positions.";
     else if (category === "fresher") verdict = "Entry-level candidate. Consider for junior roles or training-track positions.";
     else verdict = "Decent profile. Review the specifics before making a decision.";
-
     const advice: string[] = [];
     if (category === "gold") advice.push("Verify leadership claims through references or institutional records.");
     if (paperCount > 0) advice.push("Review publication quality and relevance to the role.");
@@ -297,39 +327,12 @@ const ApplicantDetailModal = ({
     if (concerns.length >= 3) advice.push("Multiple gaps found — conduct a detailed screening call.");
     if (exp > 0 && skillCount === 0) advice.push("Ask the candidate to update their skills for a better assessment.");
     if (advice.length === 0) advice.push("Profile looks complete. Proceed with scheduling an interview.");
-
-    return { category, categoryInfo, strengths, concerns, verdict, advice, exp };
+    return { category, categoryInfo, strengths, concerns, verdict, advice, exp, summaryInsights };
   };
 
-  const handleOwlAnalysis = async () => {
+  const handleOwlAnalysis = () => {
     if (!application?.profiles) return;
     setShowAnalysis(true);
-    setSummaryInsights([]);
-
-    // Fetch AI-powered summary insights if a summary exists
-    const profile = application.profiles;
-    if (profile.professional_summary && profile.professional_summary.trim().length > 10) {
-      setLoadingInsights(true);
-      try {
-        const { data, error } = await supabase.functions.invoke("owl-analysis", {
-          body: {
-            summary: profile.professional_summary,
-            role: profile.role,
-            headline: profile.headline,
-            experience: profile.years_experience,
-            skills: profile.skills,
-          },
-        });
-        if (!error && data?.insights) {
-          setSummaryInsights(data.insights);
-        }
-      } catch {
-        // Silently fail — summary insights are supplementary
-      } finally {
-        setLoadingInsights(false);
-      }
-    }
-  };
   };
   
   // Fetch notes when modal opens
