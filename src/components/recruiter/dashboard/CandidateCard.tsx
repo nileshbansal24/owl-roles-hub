@@ -138,10 +138,11 @@ const CandidateCard = ({
                 <span>{candidate.location}</span>
               </div>
             )}
-            {candidate.years_experience !== null && (
+            {candidate.years_experience != null && candidate.years_experience > 0 && (
               <div className="flex items-center gap-1">
                 <Briefcase className="h-4 w-4" />
-                <span>{candidate.years_experience} Years Exp</span>
+                <span className="font-medium text-foreground">{candidate.years_experience}</span>
+                <span>Yrs Experience</span>
               </div>
             )}
             {candidate.current_salary != null && candidate.current_salary > 0 && (
