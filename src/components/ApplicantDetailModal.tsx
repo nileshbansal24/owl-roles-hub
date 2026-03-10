@@ -46,6 +46,26 @@ import { formatDistanceToNow } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { computeRatings } from "@/components/profile/CandidateRatingCard";
+
+// Mini star rating for inline use
+const InlineStarRating = ({ score, size = 14 }: { score: number; size?: number }) => (
+  <div className="flex items-center gap-px">
+    {[1, 2, 3, 4, 5].map((i) => {
+      const fill = score >= i ? 1 : score >= i - 0.5 ? 0.5 : 0;
+      return (
+        <div key={i} className="relative" style={{ width: size, height: size }}>
+          <Star className="absolute inset-0 text-muted-foreground/20" style={{ width: size, height: size }} />
+          {fill > 0 && (
+            <div className="absolute inset-0 overflow-hidden" style={{ width: `${fill * 100}%` }}>
+              <Star className="text-amber-500 fill-amber-500" style={{ width: size, height: size }} />
+            </div>
+          )}
+        </div>
+      );
+    })}
+  </div>
+);
 
 interface RecruiterNote {
   id: string;
@@ -888,6 +908,34 @@ const ApplicantDetailModal = ({
                     </div>
                   )}
                 </div>
+
+                {/* Candidate Ratings */}
+                {(() => {
+                  const ratings = computeRatings({
+                    education: education,
+                    researchPapers: researchPapers,
+                    hIndex: profile?.scopus_metrics?.h_index || profile?.manual_h_index || null,
+                    citations: profile?.scopus_metrics?.citation_count || null,
+                    achievements: profile?.achievements || null,
+                    university: profile?.university,
+                  });
+                  return (
+                    <div className="flex items-center gap-4 mt-2">
+                      <div className="flex items-center gap-1.5">
+                        <GraduationCap className="h-3.5 w-3.5 text-primary" />
+                        <span className="text-xs font-medium text-muted-foreground">Academic</span>
+                        <InlineStarRating score={ratings.academicScore} size={13} />
+                        <span className="text-xs font-semibold text-foreground">{ratings.academicScore}/5</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <BookOpen className="h-3.5 w-3.5 text-primary" />
+                        <span className="text-xs font-medium text-muted-foreground">Research</span>
+                        <InlineStarRating score={ratings.researchScore} size={13} />
+                        <span className="text-xs font-semibold text-foreground">{ratings.researchScore}/5</span>
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
             </div>
 

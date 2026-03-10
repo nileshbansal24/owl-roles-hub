@@ -20,8 +20,29 @@ import {
   TrendingUp,
   ExternalLink,
   IndianRupee,
+  Star,
+  BookOpen,
 } from "lucide-react";
 import type { Profile } from "@/types/recruiter";
+import { computeRatings } from "@/components/profile/CandidateRatingCard";
+
+const MiniStars = ({ score, size = 12 }: { score: number; size?: number }) => (
+  <div className="flex items-center gap-px">
+    {[1, 2, 3, 4, 5].map((i) => {
+      const fill = score >= i ? 1 : score >= i - 0.5 ? 0.5 : 0;
+      return (
+        <div key={i} className="relative" style={{ width: size, height: size }}>
+          <Star className="absolute inset-0 text-muted-foreground/20" style={{ width: size, height: size }} />
+          {fill > 0 && (
+            <div className="absolute inset-0 overflow-hidden" style={{ width: `${fill * 100}%` }}>
+              <Star className="text-amber-500 fill-amber-500" style={{ width: size, height: size }} />
+            </div>
+          )}
+        </div>
+      );
+    })}
+  </div>
+);
 
 interface CandidateCardProps {
   candidate: Profile;
@@ -158,6 +179,34 @@ const CandidateCard = ({
               </div>
             )}
           </div>
+
+          {/* Academic & Research Ratings */}
+          {(() => {
+            const ratings = computeRatings({
+              education: candidate.education,
+              researchPapers: candidate.research_papers,
+              hIndex: candidate.scopus_metrics?.h_index || candidate.manual_h_index || null,
+              citations: candidate.scopus_metrics?.citation_count || null,
+              achievements: candidate.achievements,
+              university: candidate.university,
+            });
+            return (
+              <div className="flex items-center gap-4 mt-2">
+                <div className="flex items-center gap-1">
+                  <GraduationCap className="h-3.5 w-3.5 text-primary" />
+                  <span className="text-xs text-muted-foreground">Academic</span>
+                  <MiniStars score={ratings.academicScore} />
+                  <span className="text-xs font-semibold text-foreground">{ratings.academicScore}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <BookOpen className="h-3.5 w-3.5 text-primary" />
+                  <span className="text-xs text-muted-foreground">Research</span>
+                  <MiniStars score={ratings.researchScore} />
+                  <span className="text-xs font-semibold text-foreground">{ratings.researchScore}</span>
+                </div>
+              </div>
+            );
+          })()}
 
           {/* Professional Summary Preview */}
           {candidate.professional_summary && candidate.professional_summary.trim().length > 0 && (
