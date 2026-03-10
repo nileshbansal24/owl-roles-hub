@@ -81,6 +81,9 @@ const Index = () => {
 
   const handleCategoryClick = (category: string) => {
     setSearchQuery(category);
+    setTimeout(() => {
+      document.getElementById("featured-jobs")?.scrollIntoView({ behavior: "smooth" });
+    }, 100);
   };
 
   const handleSearch = () => {
