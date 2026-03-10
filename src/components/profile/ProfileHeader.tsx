@@ -65,6 +65,7 @@ interface ProfileHeaderProps {
   secondaryAction?: React.ReactNode;
   onSyncExperience?: () => void;
   syncingExperience?: boolean;
+  ratings?: CandidateRatings | null;
 }
 
 export const ProfileHeader = ({
