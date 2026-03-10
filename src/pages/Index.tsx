@@ -57,14 +57,6 @@ const Index = () => {
       </div>
     );
   }
-  const [searchQuery, setSearchQuery] = useState("");
-  const [locationQuery, setLocationQuery] = useState("");
-  const [experienceFilter, setExperienceFilter] = useState("");
-  const [selectedJob, setSelectedJob] = useState<JobWithRecruiter | null>(null);
-  const [jobModalOpen, setJobModalOpen] = useState(false);
-  const [authModalOpen, setAuthModalOpen] = useState(false);
-  const [authMode, setAuthMode] = useState<"login" | "signup">("signup");
-  const [authRole, setAuthRole] = useState<"candidate" | "recruiter">("candidate");
 
   const filteredJobs = useMemo(() => {
     return jobs.filter((job) => {
