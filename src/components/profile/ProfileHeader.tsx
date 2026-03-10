@@ -349,6 +349,22 @@ export const ProfileHeader = ({
             {secondaryAction && <div className="flex-1 [&>button]:w-full">{secondaryAction}</div>}
             {primaryAction && <div className="flex-1 [&>button]:w-full">{primaryAction}</div>}
           </div>
+          {ratings && (
+            <div className="flex items-center gap-4 mt-3 justify-center">
+              <div className="flex items-center gap-1.5">
+                <GraduationCap className="h-3 w-3 text-primary" />
+                <span className="text-xs text-muted-foreground">Academic</span>
+                <MiniStarRating score={ratings.academicScore} size={12} />
+                <span className="text-xs font-semibold text-foreground">{ratings.academicScore}</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <BookOpen className="h-3 w-3 text-primary" />
+                <span className="text-xs text-muted-foreground">Research</span>
+                <MiniStarRating score={ratings.researchScore} size={12} />
+                <span className="text-xs font-semibold text-foreground">{ratings.researchScore}</span>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </motion.div>
