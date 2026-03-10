@@ -20,3 +20,4 @@ export { PersonalDetailsCard } from "./PersonalDetailsCard";
 export { PersonalDetailsEditModal } from "./PersonalDetailsEditModal";
 export { CareerInsightsCard } from "./CareerInsightsCard";
 export { CareerPathVisualization } from "./CareerPathVisualization";
+export { CandidateRatingCard } from "./CandidateRatingCard";
