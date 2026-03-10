@@ -93,7 +93,8 @@ const FeaturedJobs = ({ jobs, onJobClick, loading, searchQuery, onClearSearch }:
           )}
         </AnimatePresence>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {jobs.slice(0, 6).map((job, index) => {
             const timeAgo = formatDistanceToNow(new Date(job.created_at), { addSuffix: true });
             
             return (
