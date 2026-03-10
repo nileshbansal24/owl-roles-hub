@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Building2, MapPin, Briefcase, Star } from "lucide-react";
+import { MapPin, Briefcase, Star, ExternalLink, TrendingUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 interface Company {
@@ -31,65 +31,84 @@ const TopCompanies = ({ onViewJobs }: TopCompaniesProps) => {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
           className="flex items-center justify-between mb-10"
         >
           <div>
-            <h2 className="font-heading text-2xl md:text-3xl font-bold text-foreground mb-2">
+            <span className="inline-block px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-semibold mb-3">
+              Top Institutions
+            </span>
+            <h2 className="font-heading text-2xl md:text-4xl font-extrabold text-foreground mb-2 tracking-tight">
               Top Hiring Universities
             </h2>
-            <p className="text-muted-foreground">
+            <p className="text-muted-foreground font-medium">
               Leading institutions actively recruiting talent
             </p>
           </div>
-          <button className="text-primary hover:underline font-medium hidden sm:block">
-            View all universities →
-          </button>
+          <motion.button
+            whileHover={{ x: 4 }}
+            className="text-primary hover:underline font-semibold hidden sm:flex items-center gap-1.5"
+          >
+            View all universities
+            <ExternalLink className="w-4 h-4" />
+          </motion.button>
         </motion.div>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {companies.map((company, index) => (
             <motion.div
               key={company.name}
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 25 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: index * 0.1 }}
-              whileHover={{ y: -4 }}
-              className="card-elevated p-5 cursor-pointer group"
+              transition={{ delay: index * 0.1, type: "spring", stiffness: 100, damping: 12 }}
+              className="group"
             >
-              <div className="flex items-start gap-4">
-                <div className="w-16 h-16 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 group-hover:bg-primary/20 transition-colors">
-                  <span className="font-heading font-bold text-primary text-lg">{company.logo}</span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-heading font-semibold text-foreground group-hover:text-primary transition-colors truncate">
-                    {company.name}
-                  </h3>
-                  <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
-                    <MapPin className="w-3.5 h-3.5" />
-                    <span>{company.location}</span>
+              <motion.div
+                whileHover={{ y: -6, scale: 1.02 }}
+                transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                className="card-elevated p-5 cursor-pointer h-full"
+              >
+                <div className="flex items-start gap-4">
+                  <motion.div
+                    whileHover={{ rotate: 6, scale: 1.1 }}
+                    transition={{ type: "spring", stiffness: 400 }}
+                    className="w-16 h-16 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 group-hover:bg-primary/20 transition-colors"
+                  >
+                    <span className="font-heading font-extrabold text-primary text-lg">{company.logo}</span>
+                  </motion.div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-heading font-bold text-foreground group-hover:text-primary transition-colors truncate">
+                      {company.name}
+                    </h3>
+                    <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
+                      <MapPin className="w-3.5 h-3.5" />
+                      <span>{company.location}</span>
+                    </div>
+                    <div className="flex items-center gap-3 mt-2">
+                      <Badge variant="secondary" className="gap-1">
+                        <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+                        {company.rating}
+                      </Badge>
+                      <Badge variant="outline">{company.type}</Badge>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-3 mt-2">
-                    <Badge variant="secondary" className="gap-1">
-                      <Star className="w-3 h-3 fill-yellow-500 text-yellow-500" />
-                      {company.rating}
-                    </Badge>
-                    <Badge variant="outline">{company.type}</Badge>
+                </div>
+                <div className="flex items-center justify-between mt-4 pt-4 border-t border-border">
+                  <div className="flex items-center gap-2 text-sm">
+                    <Briefcase className="w-4 h-4 text-primary" />
+                    <span className="font-semibold text-foreground">{company.openings} openings</span>
                   </div>
+                  <motion.button
+                    whileHover={{ x: 3 }}
+                    onClick={(e) => { e.stopPropagation(); onViewJobs?.(company.name); }}
+                    className="text-sm text-primary hover:underline font-semibold flex items-center gap-1"
+                  >
+                    View Jobs
+                    <TrendingUp className="w-3.5 h-3.5" />
+                  </motion.button>
                 </div>
-              </div>
-              <div className="flex items-center justify-between mt-4 pt-4 border-t border-border">
-                <div className="flex items-center gap-2 text-sm">
-                  <Briefcase className="w-4 h-4 text-primary" />
-                  <span className="font-medium text-foreground">{company.openings} openings</span>
-                </div>
-                <button
-                  onClick={(e) => { e.stopPropagation(); onViewJobs?.(company.name); }}
-                  className="text-sm text-primary hover:underline font-medium"
-                >
-                  View Jobs
-                </button>
-              </div>
+              </motion.div>
             </motion.div>
           ))}
         </div>

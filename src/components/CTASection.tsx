@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Upload, Briefcase, ArrowRight } from "lucide-react";
+import { Upload, Briefcase, ArrowRight, Sparkles, Shield } from "lucide-react";
 
 interface CTASectionProps {
   onCandidateClick: () => void;
@@ -19,62 +19,106 @@ const CTASection = ({ onCandidateClick, onRecruiterClick }: CTASectionProps) => 
 
       <motion.div
         className="absolute -top-20 -right-20 w-80 h-80 rounded-full bg-white/5"
-        animate={{ scale: [1, 1.1, 1] }}
+        animate={{ scale: [1, 1.15, 1] }}
         transition={{ duration: 10, repeat: Infinity }}
+      />
+      <motion.div
+        className="absolute -bottom-16 -left-16 w-64 h-64 rounded-full bg-white/5"
+        animate={{ scale: [1, 1.1, 1] }}
+        transition={{ duration: 8, repeat: Infinity, delay: 2 }}
       />
 
       <div className="container mx-auto px-4 relative z-10">
-        <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="text-center mb-12"
+        >
+          <h2 className="font-heading text-3xl md:text-4xl font-extrabold text-white mb-3 tracking-tight">
+            Ready to Shape the Future of Education?
+          </h2>
+          <p className="text-white/70 max-w-xl mx-auto font-medium">
+            Join thousands of educators and institutions building academic excellence together
+          </p>
+        </motion.div>
+
+        <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
           {/* For Candidates */}
           <motion.div
-            initial={{ opacity: 0, x: -20 }}
+            initial={{ opacity: 0, x: -30 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
-            className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/20"
+            transition={{ type: "spring", stiffness: 100, damping: 14 }}
           >
-            <div className="w-14 h-14 rounded-xl bg-white/20 flex items-center justify-center mb-6">
-              <Upload className="w-7 h-7 text-white" />
-            </div>
-            <h3 className="font-heading text-2xl font-bold text-white mb-3">
-              For Job Seekers
-            </h3>
-            <p className="text-white/80 mb-6">
-              Upload your resume and let top universities find you. Get personalized job recommendations.
-            </p>
-            <Button 
-              onClick={onCandidateClick}
-              variant="secondary" 
-              className="w-full gap-2 bg-white text-primary hover:bg-white/90"
+            <motion.div
+              whileHover={{ y: -6, scale: 1.02 }}
+              transition={{ type: "spring", stiffness: 300, damping: 20 }}
+              className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/20 h-full"
             >
-              Register as Candidate
-              <ArrowRight className="w-4 h-4" />
-            </Button>
+              <motion.div
+                className="w-14 h-14 rounded-xl bg-white/20 flex items-center justify-center mb-6"
+                whileHover={{ rotate: 8 }}
+                transition={{ type: "spring", stiffness: 400 }}
+              >
+                <Upload className="w-7 h-7 text-white" />
+              </motion.div>
+              <h3 className="font-heading text-2xl font-bold text-white mb-3">
+                For Job Seekers
+              </h3>
+              <p className="text-white/80 mb-6 leading-relaxed">
+                Upload your resume and let top universities find you. Get personalized job recommendations.
+              </p>
+              <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+                <Button
+                  onClick={onCandidateClick}
+                  variant="secondary"
+                  className="w-full gap-2 bg-white text-primary hover:bg-white/90 font-bold h-12"
+                >
+                  Register as Candidate
+                  <ArrowRight className="w-4 h-4" />
+                </Button>
+              </motion.div>
+            </motion.div>
           </motion.div>
 
           {/* For Recruiters */}
           <motion.div
-            initial={{ opacity: 0, x: 20 }}
+            initial={{ opacity: 0, x: 30 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
-            className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/20"
+            transition={{ type: "spring", stiffness: 100, damping: 14 }}
           >
-            <div className="w-14 h-14 rounded-xl bg-white/20 flex items-center justify-center mb-6">
-              <Briefcase className="w-7 h-7 text-white" />
-            </div>
-            <h3 className="font-heading text-2xl font-bold text-white mb-3">
-              For Recruiters
-            </h3>
-            <p className="text-white/80 mb-6">
-              Access 50,000+ verified academic profiles. Find the perfect candidate for your institution.
-            </p>
-            <Button 
-              onClick={onRecruiterClick}
-              variant="secondary" 
-              className="w-full gap-2 bg-white text-primary hover:bg-white/90"
+            <motion.div
+              whileHover={{ y: -6, scale: 1.02 }}
+              transition={{ type: "spring", stiffness: 300, damping: 20 }}
+              className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/20 h-full"
             >
-              Post a Job
-              <ArrowRight className="w-4 h-4" />
-            </Button>
+              <motion.div
+                className="w-14 h-14 rounded-xl bg-white/20 flex items-center justify-center mb-6"
+                whileHover={{ rotate: 8 }}
+                transition={{ type: "spring", stiffness: 400 }}
+              >
+                <Briefcase className="w-7 h-7 text-white" />
+              </motion.div>
+              <h3 className="font-heading text-2xl font-bold text-white mb-3">
+                For Recruiters
+              </h3>
+              <p className="text-white/80 mb-6 leading-relaxed">
+                Access 50,000+ verified academic profiles. Find the perfect candidate for your institution.
+              </p>
+              <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+                <Button
+                  onClick={onRecruiterClick}
+                  variant="secondary"
+                  className="w-full gap-2 bg-white text-primary hover:bg-white/90 font-bold h-12"
+                >
+                  Post a Job
+                  <ArrowRight className="w-4 h-4" />
+                </Button>
+              </motion.div>
+            </motion.div>
           </motion.div>
         </div>
       </div>
