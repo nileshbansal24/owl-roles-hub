@@ -1272,35 +1272,6 @@ const ApplicantDetailModal = ({
 
             <Separator />
 
-            {/* Owl Analysis Panel */}
-            {showAnalysis && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                className="rounded-xl border-2 border-primary/30 bg-primary/5 p-5 space-y-3"
-              >
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                    <span className="text-lg">🦉</span>
-                  </div>
-                  <h4 className="font-heading font-bold text-foreground text-lg">Owl Analysis</h4>
-                </div>
-                {loadingAnalysis ? (
-                  <div className="flex items-center gap-3 py-6 justify-center">
-                    <Loader2 className="h-5 w-5 animate-spin text-primary" />
-                    <span className="text-sm text-muted-foreground">Analyzing candidate profile...</span>
-                  </div>
-                ) : owlAnalysis ? (
-                  <div className="prose prose-sm dark:prose-invert max-w-none text-foreground/90 whitespace-pre-wrap text-sm leading-relaxed">
-                    {owlAnalysis}
-                  </div>
-                ) : null}
-              </motion.div>
-            )}
-
-            <Separator />
-
             {/* Action Buttons */}
             <div className="flex flex-wrap gap-2 sticky bottom-0 bg-background py-2">
               <Button
@@ -1338,19 +1309,103 @@ const ApplicantDetailModal = ({
                 variant="outline"
                 className="gap-2 border-primary/30 text-primary hover:bg-primary/10 ml-auto"
                 onClick={handleOwlAnalysis}
-                disabled={loadingAnalysis}
               >
-                {loadingAnalysis ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <span className="text-base">🦉</span>
-                )}
+                <Eye className="h-4 w-4" />
                 Owl Analysis
               </Button>
             </div>
           </motion.div>
         </ScrollArea>
       </DialogContent>
+
+      {/* Owl Analysis Dialog */}
+      <Dialog open={showAnalysis} onOpenChange={setShowAnalysis}>
+        <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 font-heading text-xl">
+              <Eye className="h-5 w-5 text-primary" />
+              Owl Analysis
+            </DialogTitle>
+          </DialogHeader>
+          {(() => {
+            const analysis = generateLocalAnalysis(
+              application?.profiles || null,
+              application?.jobs?.title,
+              application?.jobs?.institute
+            );
+            if (!analysis) return <p className="text-muted-foreground text-sm">No profile data available.</p>;
+
+            return (
+              <div className="space-y-5 text-sm">
+                {/* Category */}
+                <div>
+                  <h4 className="font-heading font-semibold text-foreground mb-1">Category & Experience</h4>
+                  <div className="flex items-center gap-2 mb-1">
+                    <Badge className={`${analysis.categoryInfo.bg} ${analysis.categoryInfo.text} border-0`}>
+                      {analysis.categoryInfo.label}
+                    </Badge>
+                    <span className="text-muted-foreground">{analysis.categoryInfo.description}</span>
+                  </div>
+                  <p className="text-muted-foreground">{analysis.exp} year(s) of experience</p>
+                </div>
+
+                <Separator />
+
+                {/* Strengths */}
+                {analysis.strengths.length > 0 && (
+                  <div>
+                    <h4 className="font-heading font-semibold text-foreground mb-2">Strengths</h4>
+                    <ul className="space-y-1.5">
+                      {analysis.strengths.map((s, i) => (
+                        <li key={i} className="flex items-start gap-2 text-muted-foreground">
+                          <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5 shrink-0" />
+                          {s}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* Concerns */}
+                {analysis.concerns.length > 0 && (
+                  <div>
+                    <h4 className="font-heading font-semibold text-foreground mb-2">Concerns</h4>
+                    <ul className="space-y-1.5">
+                      {analysis.concerns.map((c, i) => (
+                        <li key={i} className="flex items-start gap-2 text-muted-foreground">
+                          <Circle className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" />
+                          {c}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                <Separator />
+
+                {/* Verdict */}
+                <div>
+                  <h4 className="font-heading font-semibold text-foreground mb-1">Verdict</h4>
+                  <p className="text-foreground/90">{analysis.verdict}</p>
+                </div>
+
+                {/* Advice */}
+                <div>
+                  <h4 className="font-heading font-semibold text-foreground mb-2">Advice to Recruiter</h4>
+                  <ul className="space-y-1.5">
+                    {analysis.advice.map((a, i) => (
+                      <li key={i} className="flex items-start gap-2 text-muted-foreground">
+                        <Lightbulb className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                        {a}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 };
