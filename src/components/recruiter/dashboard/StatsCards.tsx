@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
-import { Briefcase, Users, FileText, CheckCircle2 } from "lucide-react";
+import { Briefcase, Users, FileText, CheckCircle2, TrendingUp } from "lucide-react";
 import type { Job, Application, Profile } from "@/types/recruiter";
 
 interface StatsCardsProps {
@@ -10,69 +10,79 @@ interface StatsCardsProps {
 }
 
 const StatsCards = ({ jobs, applications, candidates }: StatsCardsProps) => {
+  const shortlisted = applications.filter((app) => app.status === "shortlisted").length;
+  
   const stats = [
     {
       title: "Active Jobs",
       value: jobs.length,
       icon: Briefcase,
-      color: "text-primary",
-      bgColor: "bg-primary/10",
+      trend: "+2 this week",
+      gradient: "from-primary/15 to-primary/5",
+      iconBg: "bg-primary/10",
+      iconColor: "text-primary",
+      borderAccent: "border-l-primary",
     },
     {
       title: "Applications",
       value: applications.length,
       icon: FileText,
-      color: "text-emerald-600 dark:text-emerald-500",
-      bgColor: "bg-emerald-50 dark:bg-emerald-950/30",
+      trend: `${applications.filter(a => a.status === "pending").length} pending`,
+      gradient: "from-emerald-500/10 to-emerald-500/5 dark:from-emerald-500/15 dark:to-emerald-500/5",
+      iconBg: "bg-emerald-500/10",
+      iconColor: "text-emerald-600 dark:text-emerald-400",
+      borderAccent: "border-l-emerald-500",
     },
     {
       title: "Candidates",
       value: candidates.length,
       icon: Users,
-      color: "text-sky-600 dark:text-sky-500",
-      bgColor: "bg-sky-50 dark:bg-sky-950/30",
+      trend: "in talent pool",
+      gradient: "from-sky-500/10 to-sky-500/5 dark:from-sky-500/15 dark:to-sky-500/5",
+      iconBg: "bg-sky-500/10",
+      iconColor: "text-sky-600 dark:text-sky-400",
+      borderAccent: "border-l-sky-500",
     },
     {
       title: "Shortlisted",
-      value: applications.filter((app) => app.status === "shortlisted").length,
+      value: shortlisted,
       icon: CheckCircle2,
-      color: "text-violet-600 dark:text-violet-500",
-      bgColor: "bg-violet-50 dark:bg-violet-950/30",
+      trend: shortlisted > 0 ? `${Math.round((shortlisted / Math.max(applications.length, 1)) * 100)}% rate` : "0% rate",
+      gradient: "from-violet-500/10 to-violet-500/5 dark:from-violet-500/15 dark:to-violet-500/5",
+      iconBg: "bg-violet-500/10",
+      iconColor: "text-violet-600 dark:text-violet-400",
+      borderAccent: "border-l-violet-500",
     },
   ];
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
       {stats.map((stat, index) => (
         <motion.div
           key={stat.title}
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: index * 0.05, duration: 0.3 }}
-          whileHover={{ y: -4, boxShadow: "0 8px 30px rgba(0,0,0,0.08)" }}
+          transition={{ delay: index * 0.06, duration: 0.4, ease: "easeOut" }}
         >
-          <Card className="card-elevated transition-all duration-200 h-full">
-            <CardContent className="p-4 md:p-6">
-              <div className="flex items-center gap-4">
-                <motion.div 
-                  className={`w-10 h-10 md:w-12 md:h-12 rounded-xl ${stat.bgColor} flex items-center justify-center shrink-0`}
-                  whileHover={{ scale: 1.1, rotate: 5 }}
-                  transition={{ type: "spring", stiffness: 300 }}
-                >
-                  <stat.icon className={`h-5 w-5 md:h-6 md:w-6 ${stat.color}`} />
-                </motion.div>
-                <div className="min-w-0">
-                  <motion.p 
-                    className="text-xl md:text-2xl font-bold text-foreground"
-                    initial={{ scale: 0.5 }}
-                    animate={{ scale: 1 }}
-                    transition={{ delay: index * 0.05 + 0.2, type: "spring", stiffness: 200 }}
-                  >
-                    {stat.value}
-                  </motion.p>
-                  <p className="text-xs md:text-sm text-muted-foreground truncate">{stat.title}</p>
+          <Card className={`relative overflow-hidden border-l-[3px] ${stat.borderAccent} hover:shadow-elevated transition-shadow duration-300`}>
+            <div className={`absolute inset-0 bg-gradient-to-br ${stat.gradient} pointer-events-none`} />
+            <CardContent className="p-3.5 sm:p-5 relative">
+              <div className="flex items-start justify-between mb-2 sm:mb-3">
+                <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-lg ${stat.iconBg} flex items-center justify-center`}>
+                  <stat.icon className={`h-4 w-4 sm:h-5 sm:w-5 ${stat.iconColor}`} />
                 </div>
+                <TrendingUp className="h-3.5 w-3.5 text-muted-foreground/50" />
               </div>
+              <motion.p 
+                className="text-2xl sm:text-3xl font-bold font-heading text-foreground tracking-tight"
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: index * 0.06 + 0.2, type: "spring", stiffness: 200 }}
+              >
+                {stat.value}
+              </motion.p>
+              <p className="text-xs sm:text-sm font-medium text-muted-foreground mt-0.5">{stat.title}</p>
+              <p className="text-[10px] sm:text-xs text-muted-foreground/70 mt-1">{stat.trend}</p>
             </CardContent>
           </Card>
         </motion.div>

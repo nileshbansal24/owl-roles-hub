@@ -9,3 +9,5 @@ export { default as ApplicationsTab } from "./ApplicationsTab";
 export { default as SmartCandidateSearch } from "./SmartCandidateSearch";
 export { default as EventsTab } from "./EventsTab";
 export { default as BlockchainCredentialsTab } from "./BlockchainCredentialsTab";
+export { default as StatsCards } from "./StatsCards";
+export { default as WelcomeHeader } from "./WelcomeHeader";

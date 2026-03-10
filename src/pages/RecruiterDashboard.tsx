@@ -26,6 +26,8 @@ import {
   ApplicationsTab,
   EventsTab,
   BlockchainCredentialsTab,
+  StatsCards,
+  WelcomeHeader,
 } from "@/components/recruiter/dashboard";
 
 // Hooks and types
@@ -248,9 +250,13 @@ const RecruiterDashboard = () => {
 
   return (
     <RecruiterLayout hasJobs={jobs.length > 0} title="Recruiter Dashboard">
-      <div className="p-3 sm:p-6 space-y-4 sm:space-y-6">
+      <div className="p-3 sm:p-6 space-y-5 sm:space-y-6">
+        {/* Welcome + Stats */}
+        <WelcomeHeader name={recruiterName} />
+        <StatsCards jobs={jobs} applications={applications} candidates={candidates} />
+
         {/* Tabs - TabsList is hidden since navigation is handled by sidebar */}
-        <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-4">
           <TabsList className="sr-only">
             <TabsTrigger value="resdex">Find Candidates</TabsTrigger>
             <TabsTrigger value="saved">Saved</TabsTrigger>
