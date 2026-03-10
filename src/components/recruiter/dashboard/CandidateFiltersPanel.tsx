@@ -18,12 +18,14 @@ export interface CandidateFilters {
   experienceRange: [number, number];
   selectedSkills: string[];
   educationLevel: string;
+  salaryRange: [number, number];
 }
 
 export const defaultFilters: CandidateFilters = {
   experienceRange: [0, 30],
   selectedSkills: [],
   educationLevel: "all",
+  salaryRange: [0, 50],
 };
 
 interface CandidateFiltersPanelProps {
@@ -69,6 +71,7 @@ const CandidateFiltersPanel = ({
     if (filters.experienceRange[0] !== 0 || filters.experienceRange[1] !== 30) count++;
     if (filters.selectedSkills.length > 0) count++;
     if (filters.educationLevel !== "all") count++;
+    if (filters.salaryRange[0] !== 0 || filters.salaryRange[1] !== 50) count++;
     return count;
   }, [filters]);
 
@@ -143,6 +146,31 @@ const CandidateFiltersPanel = ({
                   <span>0 yrs</span>
                   <span>15 yrs</span>
                   <span>30+ yrs</span>
+                </div>
+              </div>
+
+              {/* Salary Range Slider */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium text-foreground">Expected Salary (LPA)</label>
+                  <span className="text-sm text-muted-foreground">
+                    ₹{filters.salaryRange[0]}L – ₹{filters.salaryRange[1] === 50 ? "50+" : filters.salaryRange[1]}L
+                  </span>
+                </div>
+                <Slider
+                  min={0}
+                  max={50}
+                  step={1}
+                  value={filters.salaryRange}
+                  onValueChange={(value) =>
+                    onFiltersChange({ ...filters, salaryRange: value as [number, number] })
+                  }
+                  className="w-full"
+                />
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>₹0L</span>
+                  <span>₹25L</span>
+                  <span>₹50L+</span>
                 </div>
               </div>
 
