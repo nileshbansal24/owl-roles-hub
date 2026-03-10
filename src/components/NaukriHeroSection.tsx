@@ -173,7 +173,7 @@ const NaukriHeroSection = ({
                 className="absolute -bottom-2 left-0 w-full h-1.5 bg-gradient-to-r from-primary via-primary/80 to-accent rounded-full origin-left"
                 initial={{ scaleX: 0 }}
                 animate={{ scaleX: 1 }}
-                transition={{ delay: 0.7, duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
+                transition={{ delay: 0.7, duration: 0.6, ease: "easeOut" }}
               />
             </span>
           </motion.h1>
