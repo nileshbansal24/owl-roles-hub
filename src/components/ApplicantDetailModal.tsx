@@ -38,6 +38,7 @@ import {
   CalendarDays,
   Circle,
   ExternalLink,
+  Eye,
   TrendingUp,
   Quote,
 } from "lucide-react";
@@ -241,39 +242,71 @@ const ApplicantDetailModal = ({
   const [deletingNoteId, setDeletingNoteId] = useState<string | null>(null);
 
   // Owl Analysis state
-  const [owlAnalysis, setOwlAnalysis] = useState<string | null>(null);
-  const [loadingAnalysis, setLoadingAnalysis] = useState(false);
   const [showAnalysis, setShowAnalysis] = useState(false);
 
-  const handleOwlAnalysis = async () => {
+  const generateLocalAnalysis = (profile: Profile | null, jobTitle?: string, institute?: string) => {
+    if (!profile) return null;
+
+    const category = getCandidateCategory(profile);
+    const categoryInfo = getCategoryStyles(category);
+    const exp = profile.years_experience || 0;
+    const skillCount = profile.skills?.length || 0;
+    const paperCount = profile.research_papers?.length || 0;
+    const hIndex = profile.scopus_metrics?.h_index ?? profile.manual_h_index ?? null;
+    const citations = (profile.scopus_metrics as ScopusMetrics)?.citation_count ?? null;
+    const hasOrcid = !!profile.orcid_id;
+    const hasScopus = !!profile.scopus_link;
+    const achievementCount = profile.achievements?.length || 0;
+    const hasResume = !!profile.resume_url;
+    const hasSummary = !!profile.professional_summary;
+
+    // Strengths
+    const strengths: string[] = [];
+    if (exp >= 15) strengths.push(`Extensive experience of ${exp} years in the academic/professional domain.`);
+    else if (exp >= 5) strengths.push(`Solid experience of ${exp} years showing career progression.`);
+    else if (exp >= 1) strengths.push(`${exp} year(s) of experience — early career with growth potential.`);
+
+    if (skillCount >= 5) strengths.push(`Well-rounded skill set with ${skillCount} listed competencies.`);
+    if (paperCount > 0) strengths.push(`Published ${paperCount} research paper(s), indicating active research involvement.`);
+    if (hIndex && hIndex >= 5) strengths.push(`Strong h-index of ${hIndex}, demonstrating research impact.`);
+    if (citations && citations >= 50) strengths.push(`${citations} citations reflect peer recognition and influence.`);
+    if (hasOrcid || hasScopus) strengths.push("Verified academic identity through ORCID/Scopus profiles.");
+    if (achievementCount > 0) strengths.push(`${achievementCount} notable achievement(s) on record.`);
+    if (hasSummary) strengths.push("Has a well-written professional summary.");
+
+    // Concerns
+    const concerns: string[] = [];
+    if (exp === 0) concerns.push("No prior experience listed — this is a fresher-level candidate.");
+    if (skillCount === 0) concerns.push("No skills listed on the profile.");
+    if (paperCount === 0 && category !== "fresher") concerns.push("No research publications found.");
+    if (!hasResume) concerns.push("Resume has not been uploaded.");
+    if (!hasSummary) concerns.push("Professional summary is missing.");
+    if (!profile.location) concerns.push("Location not provided.");
+    if (hIndex !== null && hIndex < 3 && category !== "fresher") concerns.push(`Low h-index (${hIndex}) for their career stage.`);
+
+    // Verdict
+    let verdict = "";
+    if (category === "gold" && exp >= 10) verdict = "Strong candidate with senior leadership credentials. Highly recommended for review.";
+    else if (category === "silver" && exp >= 5) verdict = "Experienced professional with a solid profile. Good fit for mid-to-senior roles.";
+    else if (category === "bronze") verdict = "Competent candidate suitable for assistant-level or early-career positions.";
+    else if (category === "fresher") verdict = "Entry-level candidate. Consider for junior roles or training-track positions.";
+    else verdict = "Decent profile. Review the specifics before making a decision.";
+
+    // Advice
+    const advice: string[] = [];
+    if (category === "gold") advice.push("Verify leadership claims through references or institutional records.");
+    if (paperCount > 0) advice.push("Review publication quality and relevance to the role.");
+    if (!hasResume) advice.push("Request the candidate to upload a current resume before proceeding.");
+    if (concerns.length >= 3) advice.push("Multiple gaps found — conduct a detailed screening call.");
+    if (exp > 0 && skillCount === 0) advice.push("Ask the candidate to update their skills for a better assessment.");
+    if (advice.length === 0) advice.push("Profile looks complete. Proceed with scheduling an interview.");
+
+    return { category, categoryInfo, strengths, concerns, verdict, advice, exp };
+  };
+
+  const handleOwlAnalysis = () => {
     if (!application?.profiles) return;
-    if (owlAnalysis) {
-      setShowAnalysis(!showAnalysis);
-      return;
-    }
-    setLoadingAnalysis(true);
     setShowAnalysis(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("owl-analysis", {
-        body: {
-          profile: application.profiles,
-          jobTitle: application.jobs?.title,
-          institute: application.jobs?.institute,
-        },
-      });
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
-      setOwlAnalysis(data.analysis);
-    } catch (err: any) {
-      toast({
-        title: "Analysis Failed",
-        description: err.message || "Could not generate analysis",
-        variant: "destructive",
-      });
-      setShowAnalysis(false);
-    } finally {
-      setLoadingAnalysis(false);
-    }
   };
   
   // Fetch notes when modal opens
@@ -312,7 +345,6 @@ const ApplicantDetailModal = ({
   useEffect(() => {
     if (!open) {
       setNewNote("");
-      setOwlAnalysis(null);
       setShowAnalysis(false);
     }
   }, [open]);
@@ -1241,35 +1273,6 @@ const ApplicantDetailModal = ({
 
             <Separator />
 
-            {/* Owl Analysis Panel */}
-            {showAnalysis && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                className="rounded-xl border-2 border-primary/30 bg-primary/5 p-5 space-y-3"
-              >
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                    <span className="text-lg">🦉</span>
-                  </div>
-                  <h4 className="font-heading font-bold text-foreground text-lg">Owl Analysis</h4>
-                </div>
-                {loadingAnalysis ? (
-                  <div className="flex items-center gap-3 py-6 justify-center">
-                    <Loader2 className="h-5 w-5 animate-spin text-primary" />
-                    <span className="text-sm text-muted-foreground">Analyzing candidate profile...</span>
-                  </div>
-                ) : owlAnalysis ? (
-                  <div className="prose prose-sm dark:prose-invert max-w-none text-foreground/90 whitespace-pre-wrap text-sm leading-relaxed">
-                    {owlAnalysis}
-                  </div>
-                ) : null}
-              </motion.div>
-            )}
-
-            <Separator />
-
             {/* Action Buttons */}
             <div className="flex flex-wrap gap-2 sticky bottom-0 bg-background py-2">
               <Button
@@ -1307,19 +1310,103 @@ const ApplicantDetailModal = ({
                 variant="outline"
                 className="gap-2 border-primary/30 text-primary hover:bg-primary/10 ml-auto"
                 onClick={handleOwlAnalysis}
-                disabled={loadingAnalysis}
               >
-                {loadingAnalysis ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <span className="text-base">🦉</span>
-                )}
+                <Eye className="h-4 w-4" />
                 Owl Analysis
               </Button>
             </div>
           </motion.div>
         </ScrollArea>
       </DialogContent>
+
+      {/* Owl Analysis Dialog */}
+      <Dialog open={showAnalysis} onOpenChange={setShowAnalysis}>
+        <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 font-heading text-xl">
+              <Eye className="h-5 w-5 text-primary" />
+              Owl Analysis
+            </DialogTitle>
+          </DialogHeader>
+          {(() => {
+            const analysis = generateLocalAnalysis(
+              application?.profiles || null,
+              application?.jobs?.title,
+              application?.jobs?.institute
+            );
+            if (!analysis) return <p className="text-muted-foreground text-sm">No profile data available.</p>;
+
+            return (
+              <div className="space-y-5 text-sm">
+                {/* Category */}
+                <div>
+                  <h4 className="font-heading font-semibold text-foreground mb-1">Category & Experience</h4>
+                  <div className="flex items-center gap-2 mb-1">
+                    <Badge className={`${analysis.categoryInfo.bg} ${analysis.categoryInfo.text} border-0`}>
+                      {analysis.categoryInfo.label}
+                    </Badge>
+                    <span className="text-muted-foreground">{analysis.categoryInfo.description}</span>
+                  </div>
+                  <p className="text-muted-foreground">{analysis.exp} year(s) of experience</p>
+                </div>
+
+                <Separator />
+
+                {/* Strengths */}
+                {analysis.strengths.length > 0 && (
+                  <div>
+                    <h4 className="font-heading font-semibold text-foreground mb-2">Strengths</h4>
+                    <ul className="space-y-1.5">
+                      {analysis.strengths.map((s, i) => (
+                        <li key={i} className="flex items-start gap-2 text-muted-foreground">
+                          <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5 shrink-0" />
+                          {s}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* Concerns */}
+                {analysis.concerns.length > 0 && (
+                  <div>
+                    <h4 className="font-heading font-semibold text-foreground mb-2">Concerns</h4>
+                    <ul className="space-y-1.5">
+                      {analysis.concerns.map((c, i) => (
+                        <li key={i} className="flex items-start gap-2 text-muted-foreground">
+                          <Circle className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" />
+                          {c}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                <Separator />
+
+                {/* Verdict */}
+                <div>
+                  <h4 className="font-heading font-semibold text-foreground mb-1">Verdict</h4>
+                  <p className="text-foreground/90">{analysis.verdict}</p>
+                </div>
+
+                {/* Advice */}
+                <div>
+                  <h4 className="font-heading font-semibold text-foreground mb-2">Advice to Recruiter</h4>
+                  <ul className="space-y-1.5">
+                    {analysis.advice.map((a, i) => (
+                      <li key={i} className="flex items-start gap-2 text-muted-foreground">
+                        <Lightbulb className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                        {a}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 };
