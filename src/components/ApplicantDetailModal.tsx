@@ -272,7 +272,18 @@ const ApplicantDetailModal = ({
     if (citations && citations >= 50) strengths.push(`${citations} citations reflect peer recognition and influence.`);
     if (hasOrcid || hasScopus) strengths.push("Verified academic identity through ORCID/Scopus profiles.");
     if (achievementCount > 0) strengths.push(`${achievementCount} notable achievement(s) on record.`);
-    if (hasSummary) strengths.push("Has a well-written professional summary.");
+    if (hasSummary && profile.professional_summary) {
+      // Extract key points from the candidate's own summary
+      const summary = profile.professional_summary.trim();
+      const sentences = summary.split(/[.!?]+/).map(s => s.trim()).filter(s => s.length > 15);
+      if (sentences.length > 0) {
+        // Take up to 3 meaningful sentences from their summary
+        const keyPoints = sentences.slice(0, 3);
+        keyPoints.forEach(point => {
+          strengths.push(point.endsWith(".") ? point : point + ".");
+        });
+      }
+    }
 
     // Concerns
     const concerns: string[] = [];
