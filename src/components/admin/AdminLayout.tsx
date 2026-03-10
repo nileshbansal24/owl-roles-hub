@@ -1,5 +1,5 @@
 import { ReactNode, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { 
@@ -38,14 +38,14 @@ const navItems = [
 
 const AdminLayout = ({ children, activeTab, onTabChange, onRefresh, isRefreshing }: AdminLayoutProps) => {
   const { user, signOut } = useAuth();
-  const router = useRouter();
+  const navigate = useNavigate();
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     const checkAdmin = async () => {
       if (!user) {
-        router.push("/adpanel");
+        navigate("/adpanel");
         return;
       }
 
@@ -57,7 +57,7 @@ const AdminLayout = ({ children, activeTab, onTabChange, onRefresh, isRefreshing
         .maybeSingle();
 
       if (!data) {
-        router.push("/adpanel");
+        navigate("/adpanel");
         return;
       }
 
@@ -65,11 +65,11 @@ const AdminLayout = ({ children, activeTab, onTabChange, onRefresh, isRefreshing
     };
 
     checkAdmin();
-  }, [user, router]);
+  }, [user, navigate]);
 
   const handleSignOut = async () => {
     await signOut();
-    router.push("/adpanel");
+    navigate("/adpanel");
   };
 
   if (isAdmin === null) {

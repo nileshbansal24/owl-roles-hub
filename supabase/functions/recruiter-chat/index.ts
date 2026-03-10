@@ -8,7 +8,7 @@ const corsHeaders = {
 
 // Retry wrapper for Supabase queries to handle transient SSL/network failures
 async function queryWithRetry<T>(
-  queryFn: () => PromiseLike<{ data: T | null; error: any }>,
+  queryFn: () => Promise<{ data: T | null; error: any }>,
   maxRetries = 3,
   delayMs = 1000
 ): Promise<{ data: T | null; error: any }> {

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import RecruiterNavbar from "@/components/RecruiterNavbar";
@@ -44,7 +44,7 @@ interface RecruiterProfileData {
 
 const RecruiterProfile = () => {
   const { user } = useAuth();
-  const router = useRouter();
+  const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -65,7 +65,7 @@ const RecruiterProfile = () => {
 
   useEffect(() => {
     if (!user) {
-      router.push("/");
+      navigate("/");
       return;
     }
 
@@ -113,7 +113,7 @@ const RecruiterProfile = () => {
     };
 
     fetchProfileAndVerification();
-  }, [user, router]);
+  }, [user, navigate]);
 
   const handleInputChange = (field: keyof RecruiterProfileData, value: string) => {
     setProfile((prev) => ({ ...prev, [field]: value }));

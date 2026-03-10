@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { Link } from "react-router-dom";
 import { 
   Facebook, 
   Twitter, 
@@ -45,11 +45,11 @@ const Footer = () => {
           <div>
             <h4 className="font-heading font-semibold text-lg mb-4">For Candidates</h4>
             <ul className="space-y-3 text-sm text-muted-foreground">
-              <li><Link href="/" className="hover:text-primary transition-colors">Browse Jobs</Link></li>
-              <li><Link href="/" className="hover:text-primary transition-colors">Upload Resume</Link></li>
-              <li><Link href="/" className="hover:text-primary transition-colors">Career Advice</Link></li>
-              <li><Link href="/" className="hover:text-primary transition-colors">Salary Calculator</Link></li>
-              <li><Link href="/" className="hover:text-primary transition-colors">Interview Tips</Link></li>
+              <li><Link to="/" className="hover:text-primary transition-colors">Browse Jobs</Link></li>
+              <li><Link to="/" className="hover:text-primary transition-colors">Upload Resume</Link></li>
+              <li><Link to="/" className="hover:text-primary transition-colors">Career Advice</Link></li>
+              <li><Link to="/" className="hover:text-primary transition-colors">Salary Calculator</Link></li>
+              <li><Link to="/" className="hover:text-primary transition-colors">Interview Tips</Link></li>
             </ul>
           </div>
 
@@ -57,11 +57,11 @@ const Footer = () => {
           <div>
             <h4 className="font-heading font-semibold text-lg mb-4">For Recruiters</h4>
             <ul className="space-y-3 text-sm text-muted-foreground">
-              <li><Link href="/" className="hover:text-primary transition-colors">Post a Job</Link></li>
-              <li><Link href="/" className="hover:text-primary transition-colors">Search Resumes</Link></li>
-              <li><Link href="/" className="hover:text-primary transition-colors">Employer Branding</Link></li>
-              <li><Link href="/" className="hover:text-primary transition-colors">Recruitment Solutions</Link></li>
-              <li><Link href="/" className="hover:text-primary transition-colors">Pricing Plans</Link></li>
+              <li><Link to="/" className="hover:text-primary transition-colors">Post a Job</Link></li>
+              <li><Link to="/" className="hover:text-primary transition-colors">Search Resumes</Link></li>
+              <li><Link to="/" className="hover:text-primary transition-colors">Employer Branding</Link></li>
+              <li><Link to="/" className="hover:text-primary transition-colors">Recruitment Solutions</Link></li>
+              <li><Link to="/" className="hover:text-primary transition-colors">Pricing Plans</Link></li>
             </ul>
           </div>
 
@@ -87,10 +87,10 @@ const Footer = () => {
 
         <div className="mt-12 pt-8 border-t border-white/10 flex flex-col items-center justify-between gap-4 text-sm text-muted-foreground sm:flex-row">
           <p>© 2024 OWL ROLES. All rights reserved.</p>
-          <div className="flex gap-6">
-            <Link href="/" className="hover:text-primary transition-colors">Privacy Policy</Link>
-            <Link href="/" className="hover:text-primary transition-colors">Terms of Service</Link>
-            <Link href="/" className="hover:text-primary transition-colors">Cookie Policy</Link>
+          <div className="flex flex-wrap justify-center gap-4 sm:gap-6">
+            <Link to="/" className="hover:text-primary transition-colors">Privacy Policy</Link>
+            <Link to="/" className="hover:text-primary transition-colors">Terms of Service</Link>
+            <Link to="/" className="hover:text-primary transition-colors">Cookie Policy</Link>
           </div>
         </div>
       </div>

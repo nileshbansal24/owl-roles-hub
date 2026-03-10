@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -74,7 +74,7 @@ const RecruiterOnboarding = ({
   recruiterName,
   onComplete,
 }: RecruiterOnboardingProps) => {
-  const router = useRouter();
+  const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(0);
   const progress = ((currentStep + 1) / steps.length) * 100;
   const step = steps[currentStep];
@@ -94,7 +94,7 @@ const RecruiterOnboarding = ({
   const handlePostJob = () => {
     onComplete();
     onOpenChange(false);
-    router.push("/post-job");
+    navigate("/post-job");
   };
 
   const handleSkip = () => {

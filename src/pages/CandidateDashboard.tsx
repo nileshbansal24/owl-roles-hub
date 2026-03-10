@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
@@ -154,7 +154,7 @@ const itemVariants = {
 
 const CandidateDashboard = () => {
   const { user, signOut } = useAuth();
-  const router = useRouter();
+  const navigate = useNavigate();
   const { toast } = useToast();
   const isMobile = useIsMobile();
   const resumeInputRef = useRef<HTMLInputElement>(null);
@@ -1097,7 +1097,7 @@ const CandidateDashboard = () => {
               university: profile?.university,
               bio: profile?.bio,
             }}
-            onViewJob={(jobId) => router.push(`/?job=${jobId}`)}
+            onViewJob={(jobId) => navigate(`/?job=${jobId}`)}
             onApply={handleQuickApply}
           />
         </ProfileCard>
@@ -1231,7 +1231,7 @@ const CandidateDashboard = () => {
             <div className="text-center py-8">
               <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
               <p className="text-muted-foreground mb-4">No applications yet.</p>
-              <Button onClick={() => router.push("/")}>Browse Jobs</Button>
+              <Button onClick={() => navigate("/")}>Browse Jobs</Button>
             </div>
           </ProfileCard>
         </motion.div>

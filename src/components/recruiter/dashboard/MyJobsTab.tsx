@@ -3,7 +3,7 @@ import { formatDistanceToNow } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Clock, MapPin, Briefcase, Plus, Users, Eye, TrendingUp } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "react-router-dom";
 import { EmptyState } from "@/components/ui/empty-state";
 import { JobCardSkeleton } from "@/components/ui/loading-skeleton";
 import { staggerContainerVariants, staggerItemVariants } from "@/components/ui/fade-in";
@@ -17,7 +17,7 @@ interface MyJobsTabProps {
 }
 
 const MyJobsTab = ({ jobs, applications, onViewJobApplications, isLoading = false }: MyJobsTabProps) => {
-  const router = useRouter();
+  const navigate = useNavigate();
 
   if (isLoading) {
     return (
@@ -43,7 +43,7 @@ const MyJobsTab = ({ jobs, applications, onViewJobApplications, isLoading = fals
           description="Start attracting top academic talent by posting your first job opening. It only takes a few minutes to create a compelling job listing."
           action={{
             label: "Post Your First Job",
-            onClick: () => router.push("/post-job"),
+            onClick: () => navigate("/post-job"),
             icon: Plus,
           }}
         >
@@ -176,7 +176,7 @@ const MyJobsTab = ({ jobs, applications, onViewJobApplications, isLoading = fals
               variant="outline" 
               size="lg"
               className="gap-2"
-              onClick={() => router.push("/post-job")}
+              onClick={() => navigate("/post-job")}
             >
               <Plus className="h-5 w-5" />
               Post Another Job

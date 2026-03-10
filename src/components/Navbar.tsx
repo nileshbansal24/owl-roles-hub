@@ -1,5 +1,4 @@
-import { useRouter } from "next/navigation";
-import Link from "next/link";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -21,6 +20,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import logoLight from "@/assets/logo-light.png";
+import logoDark from "@/assets/logo-dark.png";
 
 interface NavbarProps {
   onLoginClick?: () => void;
@@ -30,7 +31,7 @@ interface NavbarProps {
 const Navbar = ({ onLoginClick, onSignupClick }: NavbarProps) => {
   const { user, signOut } = useAuth();
   const { theme, toggleTheme } = useTheme();
-  const router = useRouter();
+  const navigate = useNavigate();
   const [userType, setUserType] = useState<string | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -55,7 +56,7 @@ const Navbar = ({ onLoginClick, onSignupClick }: NavbarProps) => {
   const handleSignOut = async () => {
     await signOut();
     setMobileMenuOpen(false);
-    router.push("/");
+    navigate("/");
   };
 
   const getInitials = (email: string) => {
@@ -77,7 +78,7 @@ const Navbar = ({ onLoginClick, onSignupClick }: NavbarProps) => {
 
   const handleNavClick = (to: string, scrollTo?: string | null) => {
     setMobileMenuOpen(false);
-    router.push(to);
+    navigate(to);
     if (scrollTo) {
       setTimeout(() => {
         const el = document.getElementById(scrollTo);
@@ -93,9 +94,9 @@ const Navbar = ({ onLoginClick, onSignupClick }: NavbarProps) => {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link href="/" className="flex items-center py-1">
+          <Link to="/" className="flex items-center py-1">
             <img 
-              src={theme === "dark" ? "/logo-dark.png" : "/logo-light.png"} 
+              src={theme === "dark" ? logoDark : logoLight} 
               alt="OWL Roles" 
               className="h-[56px] w-auto"
             />
@@ -132,7 +133,7 @@ const Navbar = ({ onLoginClick, onSignupClick }: NavbarProps) => {
             {user ? (
               <>
                 {userType === "recruiter" && (
-                  <Link href="/post-job">
+                  <Link to="/post-job">
                     <Button className="hidden sm:flex gap-2">
                       <Plus className="h-4 w-4" />
                       Post Job
@@ -159,14 +160,14 @@ const Navbar = ({ onLoginClick, onSignupClick }: NavbarProps) => {
                     </div>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
-                      <Link href={getDashboardLink()} className="cursor-pointer">
+                      <Link to={getDashboardLink()} className="cursor-pointer">
                         <LayoutDashboard className="mr-2 h-4 w-4" />
                         Dashboard
                       </Link>
                     </DropdownMenuItem>
                     {userType === "recruiter" && (
                       <DropdownMenuItem asChild>
-                        <Link href="/post-job" className="cursor-pointer sm:hidden">
+                        <Link to="/post-job" className="cursor-pointer sm:hidden">
                           <Briefcase className="mr-2 h-4 w-4" />
                           Post Job
                         </Link>
@@ -174,7 +175,7 @@ const Navbar = ({ onLoginClick, onSignupClick }: NavbarProps) => {
                     )}
                     {userType === "candidate" && (
                       <DropdownMenuItem asChild>
-                        <Link href="/candidate-dashboard" className="cursor-pointer">
+                        <Link to="/candidate-dashboard" className="cursor-pointer">
                           <User className="mr-2 h-4 w-4" />
                           My Profile
                         </Link>

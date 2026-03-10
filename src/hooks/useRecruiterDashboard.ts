@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -8,8 +8,8 @@ import type { Profile, Job, Application, EnrichedInterview } from "@/types/recru
 
 export const useRecruiterDashboard = () => {
   const { user } = useAuth();
-  const router = useRouter();
-  const searchParams = useSearchParams();
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { toast } = useToast();
   
   const [loading, setLoading] = useState(true);
@@ -35,11 +35,11 @@ export const useRecruiterDashboard = () => {
   const handleTabChange = useCallback((value: string) => {
     setActiveTab(value);
     if (value === "resdex") {
-      router.push("/recruiter-dashboard");
+      setSearchParams({});
     } else {
-      router.push(`/recruiter-dashboard?tab=${value}`);
+      setSearchParams({ tab: value });
     }
-  }, [router]);
+  }, [setSearchParams]);
   
   // Sync state when URL changes
   useEffect(() => {
@@ -290,7 +290,7 @@ export const useRecruiterDashboard = () => {
   // Initial data fetch
   useEffect(() => {
     if (!user) {
-      router.push("/");
+      navigate("/");
       return;
     }
 
@@ -441,7 +441,7 @@ export const useRecruiterDashboard = () => {
     };
 
     fetchData();
-  }, [user, router]);
+  }, [user, navigate]);
 
   return {
     user,

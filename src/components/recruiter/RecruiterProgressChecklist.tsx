@@ -12,7 +12,7 @@ import {
   Trophy,
   Sparkles 
 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "react-router-dom";
 
 interface RecruiterProgressChecklistProps {
   hasCompletedProfile: boolean;
@@ -27,7 +27,7 @@ const RecruiterProgressChecklist = ({
   hasReviewedCandidate,
   recruiterName,
 }: RecruiterProgressChecklistProps) => {
-  const router = useRouter();
+  const navigate = useNavigate();
   
   const milestones = [
     {
@@ -45,7 +45,7 @@ const RecruiterProgressChecklist = ({
       description: "Start attracting qualified candidates",
       completed: hasPostedJob,
       icon: Briefcase,
-      action: () => router.push("/post-job"),
+      action: () => navigate("/post-job"),
       actionLabel: "Post Job",
     },
     {

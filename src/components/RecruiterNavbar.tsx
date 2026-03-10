@@ -1,5 +1,4 @@
-import { useRouter, usePathname, useSearchParams } from "next/navigation";
-import Link from "next/link";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -20,19 +19,20 @@ import { Moon, Sun, LogOut, Plus, LayoutDashboard, Menu, Calendar, User, Buildin
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useState } from "react";
+import logoLight from "@/assets/logo-light.png";
+import logoDark from "@/assets/logo-dark.png";
 
 const RecruiterNavbar = () => {
   const { user, signOut } = useAuth();
   const { theme, toggleTheme } = useTheme();
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleSignOut = async () => {
     await signOut();
     setMobileMenuOpen(false);
-    router.push("/");
+    navigate("/");
   };
 
   const getInitials = (email: string) => {
@@ -50,19 +50,19 @@ const RecruiterNavbar = () => {
     setMobileMenuOpen(false);
     if (to.includes("?tab=")) {
       const [path, query] = to.split("?");
-      router.push(path + "?" + query);
+      navigate(path + "?" + query);
     } else {
-      router.push(to);
+      navigate(to);
     }
   };
 
   const isActive = (to: string) => {
     if (to.includes("?tab=")) {
       const tabParam = new URLSearchParams(to.split("?")[1]).get("tab");
-      const currentTab = searchParams.get("tab");
-      return pathname === "/recruiter-dashboard" && currentTab === tabParam;
+      const currentTab = new URLSearchParams(location.search).get("tab");
+      return location.pathname === "/recruiter-dashboard" && currentTab === tabParam;
     }
-    return pathname === to && !searchParams.has("tab");
+    return location.pathname === to && !location.search.includes("tab=");
   };
 
   return (
@@ -70,9 +70,9 @@ const RecruiterNavbar = () => {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link href="/recruiter-dashboard" className="flex items-center py-1">
+          <Link to="/recruiter-dashboard" className="flex items-center py-1">
             <img 
-              src={theme === "dark" ? "/logo-dark.png" : "/logo-light.png"} 
+              src={theme === "dark" ? logoDark : logoLight} 
               alt="OWL Roles" 
               className="h-[56px] w-auto"
             />
@@ -132,19 +132,19 @@ const RecruiterNavbar = () => {
                   </div>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
-                    <Link href="/recruiter-profile" className="cursor-pointer">
+                    <Link to="/recruiter-profile" className="cursor-pointer">
                       <Building2 className="mr-2 h-4 w-4" />
                       My Profile
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link href="/recruiter-dashboard" className="cursor-pointer">
+                    <Link to="/recruiter-dashboard" className="cursor-pointer">
                       <LayoutDashboard className="mr-2 h-4 w-4" />
                       Dashboard
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link href="/post-job" className="cursor-pointer">
+                    <Link to="/post-job" className="cursor-pointer">
                       <Plus className="mr-2 h-4 w-4" />
                       Post a Job
                     </Link>

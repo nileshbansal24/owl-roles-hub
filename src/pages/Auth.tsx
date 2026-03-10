@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import Link from "next/link";
+import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -11,14 +10,14 @@ import { Loader2, ArrowLeft } from "lucide-react";
 import { authSchema } from "@/lib/validations";
 
 const Auth = () => {
-  const searchParams = useSearchParams();
+  const [searchParams] = useSearchParams();
   const [isLogin, setIsLogin] = useState(searchParams.get("mode") !== "signup");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [loading, setLoading] = useState(false);
   const { user } = useAuth();
-  const router = useRouter();
+  const navigate = useNavigate();
   const { toast } = useToast();
 
   const redirectBasedOnRole = async (userId: string) => {
@@ -29,9 +28,9 @@ const Auth = () => {
       .maybeSingle();
 
     if (profile?.user_type === "recruiter") {
-      router.push("/recruiter-dashboard");
+      navigate("/recruiter-dashboard");
     } else {
-      router.push("/candidate-dashboard");
+      navigate("/candidate-dashboard");
     }
   };
 
@@ -149,7 +148,7 @@ const Auth = () => {
 
       <div className="w-full max-w-md relative z-10">
         <Link
-          href="/"
+          to="/"
           className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-8 transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />

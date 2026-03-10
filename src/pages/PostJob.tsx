@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import RecruiterNavbar from "@/components/RecruiterNavbar";
@@ -16,14 +16,14 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, ArrowLeft, Briefcase } from "lucide-react";
-import Link from "next/link";
+import { Link } from "react-router-dom";
 import { jobPostingSchema, sanitizeTags } from "@/lib/validations";
 
 const jobTypes = ["Full Time", "Part Time", "Contract", "Visiting"] as const;
 
 const PostJob = () => {
   const { user } = useAuth();
-  const router = useRouter();
+  const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -84,7 +84,7 @@ const PostJob = () => {
           title: "Job posted!",
           description: "Your job listing has been published successfully.",
         });
-        router.push("/recruiter-dashboard");
+        navigate("/recruiter-dashboard");
       }
     } catch (error) {
       toast({
@@ -104,7 +104,7 @@ const PostJob = () => {
       <main className="pt-24 pb-16">
         <div className="container mx-auto px-4 max-w-2xl">
           <Link
-            href="/recruiter-dashboard"
+            to="/recruiter-dashboard"
             className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />
@@ -214,7 +214,7 @@ const PostJob = () => {
               </div>
 
               <div className="flex gap-4 pt-4">
-                <Button type="button" variant="outline" className="flex-1" onClick={() => router.push("/recruiter-dashboard")}>
+                <Button type="button" variant="outline" className="flex-1" onClick={() => navigate("/recruiter-dashboard")}>
                   Cancel
                 </Button>
                 <Button type="submit" className="flex-1" disabled={loading}>
