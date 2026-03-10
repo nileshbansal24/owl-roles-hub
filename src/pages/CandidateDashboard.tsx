@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -33,8 +33,8 @@ import {
   PersonalDetailsEditModal,
   CareerInsightsCard,
   CareerPathVisualization,
-  CandidateRatingCard,
 } from "@/components/profile";
+import { computeRatings } from "@/components/profile/CandidateRatingCard";
 import { OrcidCard } from "@/components/profile/OrcidCard";
 import { PublicationImportButton } from "@/components/profile/PublicationImportButton";
 import { ScopusMetricsCard } from "@/components/profile/ScopusMetricsCard";
@@ -192,6 +192,8 @@ const CandidateDashboard = () => {
   const [calculatedYearsExperience, setCalculatedYearsExperience] = useState<number | null>(null);
   const [syncingExperience, setSyncingExperience] = useState(false);
 
+
+
   const handleQuickApply = async (jobId: string) => {
     // Fetch job details
     const { data: job } = await supabase
@@ -230,6 +232,18 @@ const CandidateDashboard = () => {
   const [achievements, setAchievements] = useState<string[]>([]);
   const [professionalSummary, setProfessionalSummary] = useState("");
   const [teachingPhilosophy, setTeachingPhilosophy] = useState("");
+
+  const candidateRatings = useMemo(() => {
+    if (!profile) return null;
+    return computeRatings({
+      education,
+      researchPapers,
+      hIndex: profile.scopus_metrics?.h_index || profile.manual_h_index || null,
+      citations: profile.scopus_metrics?.citation_count || null,
+      achievements,
+      university: profile.university,
+    });
+  }, [profile, education, researchPapers, achievements]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -1403,29 +1417,11 @@ const CandidateDashboard = () => {
                   {profile?.resume_url ? "Update Resume" : "Upload Resume"}
                 </Button>
               }
+              ratings={candidateRatings}
             />
           </div>
 
-          {/* Candidate Rating */}
-          <div className="mb-6">
-            <CandidateRatingCard
-              education={education}
-              researchPapers={researchPapers}
-              yearsExperience={profile?.years_experience ?? calculatedYearsExperience}
-              skills={skills}
-              hIndex={profile?.scopus_metrics?.h_index || profile?.manual_h_index || null}
-              citations={profile?.scopus_metrics?.citation_count || null}
-              resumeUrl={profile?.resume_url}
-              achievements={achievements}
-              professionalSummary={professionalSummary}
-              role={profile?.role}
-              bio={profile?.bio}
-              avatarUrl={profile?.avatar_url}
-              fullName={profile?.full_name}
-              location={profile?.location}
-              university={profile?.university}
-            />
-          </div>
+
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
             <div className="border-b border-border">

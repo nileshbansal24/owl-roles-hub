@@ -257,4 +257,15 @@ export const CandidateRatingCard = (props: CandidateRatingProps) => {
   );
 };
 
+export function computeRatings(props: CandidateRatingProps) {
+  const academic = calcAcademicScore(props);
+  const research = calcResearchScore(props);
+  return {
+    academicScore: academic.score,
+    academicTooltip: academic.tooltip,
+    researchScore: research.score,
+    researchTooltip: research.tooltip,
+  };
+}
+
 export default CandidateRatingCard;

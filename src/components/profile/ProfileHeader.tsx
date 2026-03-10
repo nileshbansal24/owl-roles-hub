@@ -19,7 +19,35 @@ import {
   AlertCircle,
   RefreshCw,
   Check,
+  Star,
+  BookOpen,
 } from "lucide-react";
+
+// --- Inline mini star rating ---
+const MiniStarRating = ({ score, size = 14 }: { score: number; size?: number }) => (
+  <div className="flex items-center gap-px">
+    {[1, 2, 3, 4, 5].map((i) => {
+      const fill = score >= i ? 1 : score >= i - 0.5 ? 0.5 : 0;
+      return (
+        <div key={i} className="relative" style={{ width: size, height: size }}>
+          <Star className="absolute inset-0 text-muted-foreground/20" style={{ width: size, height: size }} />
+          {fill > 0 && (
+            <div className="absolute inset-0 overflow-hidden" style={{ width: `${fill * 100}%` }}>
+              <Star className="text-amber-500 fill-amber-500" style={{ width: size, height: size }} />
+            </div>
+          )}
+        </div>
+      );
+    })}
+  </div>
+);
+
+export interface CandidateRatings {
+  academicScore: number;
+  academicTooltip: string;
+  researchScore: number;
+  researchTooltip: string;
+}
 
 interface ProfileHeaderProps {
   avatarUrl?: string | null;
@@ -37,6 +65,7 @@ interface ProfileHeaderProps {
   secondaryAction?: React.ReactNode;
   onSyncExperience?: () => void;
   syncingExperience?: boolean;
+  ratings?: CandidateRatings | null;
 }
 
 export const ProfileHeader = ({
@@ -55,6 +84,7 @@ export const ProfileHeader = ({
   secondaryAction,
   onSyncExperience,
   syncingExperience = false,
+  ratings,
 }: ProfileHeaderProps) => {
   const getInitials = (fullName: string, fallbackEmail?: string) => {
     if (fullName && fullName !== "Your Name") {
@@ -220,10 +250,38 @@ export const ProfileHeader = ({
             </div>
           </div>
 
-          {/* Actions */}
-          <div className="flex items-center gap-3 shrink-0">
-            {secondaryAction}
-            {primaryAction}
+          {/* Actions + Ratings */}
+          <div className="flex flex-col items-end gap-3 shrink-0">
+            <div className="flex items-center gap-3">
+              {secondaryAction}
+              {primaryAction}
+            </div>
+            {ratings && (
+              <div className="flex items-center gap-4">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="flex items-center gap-1.5 cursor-default">
+                      <GraduationCap className="h-3.5 w-3.5 text-primary" />
+                      <span className="text-xs font-medium text-muted-foreground">Academic</span>
+                      <MiniStarRating score={ratings.academicScore} size={13} />
+                      <span className="text-xs font-semibold text-foreground">{ratings.academicScore}</span>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom"><p className="text-sm">{ratings.academicTooltip}</p></TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="flex items-center gap-1.5 cursor-default">
+                      <BookOpen className="h-3.5 w-3.5 text-primary" />
+                      <span className="text-xs font-medium text-muted-foreground">Research</span>
+                      <MiniStarRating score={ratings.researchScore} size={13} />
+                      <span className="text-xs font-semibold text-foreground">{ratings.researchScore}</span>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom"><p className="text-sm">{ratings.researchTooltip}</p></TooltipContent>
+                </Tooltip>
+              </div>
+            )}
           </div>
         </div>
 
@@ -291,6 +349,22 @@ export const ProfileHeader = ({
             {secondaryAction && <div className="flex-1 [&>button]:w-full">{secondaryAction}</div>}
             {primaryAction && <div className="flex-1 [&>button]:w-full">{primaryAction}</div>}
           </div>
+          {ratings && (
+            <div className="flex items-center gap-4 mt-3 justify-center">
+              <div className="flex items-center gap-1.5">
+                <GraduationCap className="h-3 w-3 text-primary" />
+                <span className="text-xs text-muted-foreground">Academic</span>
+                <MiniStarRating score={ratings.academicScore} size={12} />
+                <span className="text-xs font-semibold text-foreground">{ratings.academicScore}</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <BookOpen className="h-3 w-3 text-primary" />
+                <span className="text-xs text-muted-foreground">Research</span>
+                <MiniStarRating score={ratings.researchScore} size={12} />
+                <span className="text-xs font-semibold text-foreground">{ratings.researchScore}</span>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </motion.div>
