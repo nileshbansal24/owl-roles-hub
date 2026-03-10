@@ -26,6 +26,8 @@ import {
   ApplicationsTab,
   EventsTab,
   BlockchainCredentialsTab,
+  StatsCards,
+  WelcomeHeader,
 } from "@/components/recruiter/dashboard";
 
 // Hooks and types
