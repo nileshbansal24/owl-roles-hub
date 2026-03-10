@@ -283,6 +283,9 @@ export const ProfileHeader = ({
               </div>
             )}
           </div>
+        </div>
+
+        {/* Mobile Layout */}
         <div className="flex flex-col md:hidden">
           <div className="flex items-center gap-4 mb-5">
             {/* Avatar */}
