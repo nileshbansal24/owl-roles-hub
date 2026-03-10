@@ -22,6 +22,7 @@ import {
   Star,
   BookOpen,
 } from "lucide-react";
+import CandidateCategoryBadge from "@/components/recruiter/dashboard/CandidateCategoryBadge";
 
 // --- Inline mini star rating ---
 const MiniStarRating = ({ score, size = 14 }: { score: number; size?: number }) => (
