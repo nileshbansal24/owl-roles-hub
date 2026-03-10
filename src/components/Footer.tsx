@@ -10,6 +10,13 @@ import {
 } from "lucide-react";
 
 const Footer = () => {
+  const scrollToSection = (id: string) => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
   return (
     <footer className="bg-foreground text-background py-16">
       <div className="container mx-auto px-4">
@@ -45,11 +52,11 @@ const Footer = () => {
           <div>
             <h4 className="font-heading font-semibold text-lg mb-4">For Candidates</h4>
             <ul className="space-y-3 text-sm text-muted-foreground">
-              <li><Link to="/" className="hover:text-primary transition-colors">Browse Jobs</Link></li>
-              <li><Link to="/" className="hover:text-primary transition-colors">Upload Resume</Link></li>
-              <li><Link to="/" className="hover:text-primary transition-colors">Career Advice</Link></li>
-              <li><Link to="/" className="hover:text-primary transition-colors">Salary Calculator</Link></li>
-              <li><Link to="/" className="hover:text-primary transition-colors">Interview Tips</Link></li>
+              <li><button onClick={() => scrollToSection("featured-jobs")} className="hover:text-primary transition-colors">Browse Jobs</button></li>
+              <li><Link to="/auth?mode=signup" className="hover:text-primary transition-colors">Upload Resume</Link></li>
+              <li><Link to="/candidate-dashboard" className="hover:text-primary transition-colors">Career Advice</Link></li>
+              <li><Link to="/candidate-dashboard" className="hover:text-primary transition-colors">Salary Calculator</Link></li>
+              <li><Link to="/candidate-dashboard" className="hover:text-primary transition-colors">Interview Tips</Link></li>
             </ul>
           </div>
 
@@ -57,11 +64,11 @@ const Footer = () => {
           <div>
             <h4 className="font-heading font-semibold text-lg mb-4">For Recruiters</h4>
             <ul className="space-y-3 text-sm text-muted-foreground">
-              <li><Link to="/" className="hover:text-primary transition-colors">Post a Job</Link></li>
-              <li><Link to="/" className="hover:text-primary transition-colors">Search Resumes</Link></li>
-              <li><Link to="/" className="hover:text-primary transition-colors">Employer Branding</Link></li>
-              <li><Link to="/" className="hover:text-primary transition-colors">Recruitment Solutions</Link></li>
-              <li><Link to="/" className="hover:text-primary transition-colors">Pricing Plans</Link></li>
+              <li><Link to="/post-job" className="hover:text-primary transition-colors">Post a Job</Link></li>
+              <li><Link to="/recruiter-dashboard?tab=candidates" className="hover:text-primary transition-colors">Search Resumes</Link></li>
+              <li><Link to="/recruiter-dashboard" className="hover:text-primary transition-colors">Employer Branding</Link></li>
+              <li><Link to="/recruiter-dashboard" className="hover:text-primary transition-colors">Recruitment Solutions</Link></li>
+              <li><Link to="/auth?mode=signup" className="hover:text-primary transition-colors">Pricing Plans</Link></li>
             </ul>
           </div>
 
@@ -71,11 +78,11 @@ const Footer = () => {
             <ul className="space-y-3 text-sm text-muted-foreground">
               <li className="flex items-center gap-2">
                 <Mail className="w-4 h-4 text-primary" />
-                <span>support@owlroles.com</span>
+                <a href="mailto:support@owlroles.com" className="hover:text-primary transition-colors">support@owlroles.com</a>
               </li>
               <li className="flex items-center gap-2">
                 <Phone className="w-4 h-4 text-primary" />
-                <span>+91 1800-123-4567</span>
+                <a href="tel:+911800123456" className="hover:text-primary transition-colors">+91 1800-123-4567</a>
               </li>
               <li className="flex items-start gap-2">
                 <MapPin className="w-4 h-4 text-primary mt-0.5" />
@@ -86,11 +93,11 @@ const Footer = () => {
         </div>
 
         <div className="mt-12 pt-8 border-t border-white/10 flex flex-col items-center justify-between gap-4 text-sm text-muted-foreground sm:flex-row">
-          <p>© 2024 OWL ROLES. All rights reserved.</p>
+          <p>© 2026 OWL ROLES. All rights reserved.</p>
           <div className="flex flex-wrap justify-center gap-4 sm:gap-6">
-            <Link to="/" className="hover:text-primary transition-colors">Privacy Policy</Link>
-            <Link to="/" className="hover:text-primary transition-colors">Terms of Service</Link>
-            <Link to="/" className="hover:text-primary transition-colors">Cookie Policy</Link>
+            <Link to="/privacy-policy" className="hover:text-primary transition-colors">Privacy Policy</Link>
+            <Link to="/terms-of-service" className="hover:text-primary transition-colors">Terms of Service</Link>
+            <Link to="/cookie-policy" className="hover:text-primary transition-colors">Cookie Policy</Link>
           </div>
         </div>
       </div>
