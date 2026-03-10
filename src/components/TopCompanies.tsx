@@ -13,14 +13,17 @@ interface Company {
 
 const companies: Company[] = [
   { name: "Lovely Professional University", logo: "LPU", location: "Punjab", openings: 45, rating: 4.5, type: "Private" },
-  { name: "Chandigarh University", logo: "CU", location: "Punjab", openings: 38, rating: 4.4, type: "Private" },
   { name: "Chitkara University", logo: "CU", location: "Punjab", openings: 28, rating: 4.3, type: "Private" },
   { name: "Amity University", logo: "AU", location: "Noida", openings: 52, rating: 4.2, type: "Private" },
   { name: "IIT Delhi", logo: "IIT", location: "Delhi", openings: 23, rating: 4.8, type: "Government" },
   { name: "IIM Bangalore", logo: "IIM", location: "Bangalore", openings: 15, rating: 4.9, type: "Government" },
 ];
 
-const TopCompanies = () => {
+interface TopCompaniesProps {
+  onViewJobs?: (instituteName: string) => void;
+}
+
+const TopCompanies = ({ onViewJobs }: TopCompaniesProps) => {
   return (
     <section className="py-16">
       <div className="container mx-auto px-4">
@@ -80,7 +83,10 @@ const TopCompanies = () => {
                   <Briefcase className="w-4 h-4 text-primary" />
                   <span className="font-medium text-foreground">{company.openings} openings</span>
                 </div>
-                <button className="text-sm text-primary hover:underline font-medium">
+                <button
+                  onClick={(e) => { e.stopPropagation(); onViewJobs?.(company.name); }}
+                  className="text-sm text-primary hover:underline font-medium"
+                >
                   View Jobs
                 </button>
               </div>
