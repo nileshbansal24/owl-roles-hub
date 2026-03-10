@@ -192,17 +192,7 @@ const CandidateDashboard = () => {
   const [calculatedYearsExperience, setCalculatedYearsExperience] = useState<number | null>(null);
   const [syncingExperience, setSyncingExperience] = useState(false);
 
-  const candidateRatings = React.useMemo(() => {
-    if (!profile) return null;
-    return computeRatings({
-      education,
-      researchPapers,
-      hIndex: profile.scopus_metrics?.h_index || profile.manual_h_index || null,
-      citations: profile.scopus_metrics?.citation_count || null,
-      achievements,
-      university: profile.university,
-    });
-  }, [profile, education, researchPapers, achievements]);
+
 
   const handleQuickApply = async (jobId: string) => {
     // Fetch job details
