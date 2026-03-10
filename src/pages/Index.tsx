@@ -121,7 +121,7 @@ const Index = () => {
       <FeaturedJobs 
         jobs={filteredJobs} 
         onJobClick={handleJobClick}
-        loading={loading}
+        loading={jobsLoading}
       />
 
       <div id="institutions">
