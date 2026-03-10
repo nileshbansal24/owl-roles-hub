@@ -33,6 +33,7 @@ import {
   PersonalDetailsEditModal,
   CareerInsightsCard,
   CareerPathVisualization,
+  CandidateRatingCard,
 } from "@/components/profile";
 import { OrcidCard } from "@/components/profile/OrcidCard";
 import { PublicationImportButton } from "@/components/profile/PublicationImportButton";
