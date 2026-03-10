@@ -20,8 +20,29 @@ import {
   TrendingUp,
   ExternalLink,
   IndianRupee,
+  Star,
+  BookOpen,
 } from "lucide-react";
 import type { Profile } from "@/types/recruiter";
+import { computeRatings } from "@/components/profile/CandidateRatingCard";
+
+const MiniStars = ({ score, size = 12 }: { score: number; size?: number }) => (
+  <div className="flex items-center gap-px">
+    {[1, 2, 3, 4, 5].map((i) => {
+      const fill = score >= i ? 1 : score >= i - 0.5 ? 0.5 : 0;
+      return (
+        <div key={i} className="relative" style={{ width: size, height: size }}>
+          <Star className="absolute inset-0 text-muted-foreground/20" style={{ width: size, height: size }} />
+          {fill > 0 && (
+            <div className="absolute inset-0 overflow-hidden" style={{ width: `${fill * 100}%` }}>
+              <Star className="text-amber-500 fill-amber-500" style={{ width: size, height: size }} />
+            </div>
+          )}
+        </div>
+      );
+    })}
+  </div>
+);
 
 interface CandidateCardProps {
   candidate: Profile;
