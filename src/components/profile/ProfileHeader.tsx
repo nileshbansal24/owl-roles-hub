@@ -87,6 +87,7 @@ export const ProfileHeader = ({
   onSyncExperience,
   syncingExperience = false,
   ratings,
+  candidateCategory,
 }: ProfileHeaderProps) => {
   const getInitials = (fullName: string, fallbackEmail?: string) => {
     if (fullName && fullName !== "Your Name") {
