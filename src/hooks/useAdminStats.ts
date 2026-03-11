@@ -181,6 +181,7 @@ export const useAdminStats = () => {
         .select("id, created_by");
 
       const verificationMap = new Map(verifications?.map(v => [v.recruiter_id, v.status]));
+      const proofMap = new Map(verifications?.map(v => [v.recruiter_id, { proof_url: v.proof_url, proof_file_name: v.proof_file_name }]));
       const jobCounts = new Map<string, number>();
       jobs?.forEach(j => {
         jobCounts.set(j.created_by, (jobCounts.get(j.created_by) || 0) + 1);
