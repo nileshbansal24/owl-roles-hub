@@ -573,6 +573,14 @@ const AdminInstitutions = ({ institutions, loading, onRefetch }: AdminInstitutio
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Profile View Modal */}
+      <AdminProfileModal
+        open={!!viewProfileId}
+        onOpenChange={(open) => !open && setViewProfileId(null)}
+        userId={viewProfileId}
+        userType="recruiter"
+      />
     </div>
   );
 };
