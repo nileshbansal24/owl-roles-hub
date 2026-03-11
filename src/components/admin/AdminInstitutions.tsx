@@ -80,6 +80,8 @@ const AdminInstitutions = ({ institutions, loading, onRefetch }: AdminInstitutio
     open: false,
     institution: null,
   });
+  const [viewProfileId, setViewProfileId] = useState<string | null>(null);
+  const [proofUrls, setProofUrls] = useState<Record<string, { url: string; fileName: string }>>({});
 
   const handleDeleteInstitution = async () => {
     const institution = confirmDelete.institution;
