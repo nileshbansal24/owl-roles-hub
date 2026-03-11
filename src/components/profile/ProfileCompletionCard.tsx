@@ -155,6 +155,22 @@ export const ProfileCompletionCard = ({
       weight: 2,
       tip: "Add research papers or publications",
     },
+    {
+      id: "current_salary",
+      label: "Current Salary",
+      icon: IndianRupee,
+      completed: !!(profile?.current_salary && profile.current_salary > 0),
+      weight: 5,
+      tip: "Add your current salary for better job matching",
+    },
+    {
+      id: "expected_salary",
+      label: "Expected Salary",
+      icon: IndianRupee,
+      completed: !!(profile?.expected_salary && profile.expected_salary > 0),
+      weight: 5,
+      tip: "Add your expected salary to align with recruiters",
+    },
   ];
 
   const completedWeight = completionItems
