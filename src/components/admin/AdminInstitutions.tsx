@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { InstitutionData } from "@/hooks/useAdminStats";
 import { format } from "date-fns";
-import { Building2, CheckCircle, Clock, XCircle, Briefcase, Mail, Loader2, Trash2 } from "lucide-react";
+import { Building2, CheckCircle, Clock, XCircle, Briefcase, Mail, Loader2, Trash2, Eye, FileText, ExternalLink } from "lucide-react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
