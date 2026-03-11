@@ -143,7 +143,7 @@ const AuthModal = ({
 
   const resetModal = () => {
     setStep("role");
-    setFormData({ email: "", password: "", fullName: "", phone: "" });
+    setFormData({ email: "", password: "", fullName: "", phone: "", institutionName: "" });
   };
 
   return (
