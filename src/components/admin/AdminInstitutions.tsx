@@ -314,6 +314,24 @@ const AdminInstitutions = ({ institutions, loading, onRefetch }: AdminInstitutio
                     <div className="flex items-center gap-2">
                       <Button
                         size="sm"
+                        variant="ghost"
+                        onClick={() => setViewProfileId(institution.id)}
+                      >
+                        <Eye className="h-4 w-4 mr-1" />
+                        Profile
+                      </Button>
+                      {institution.proof_url && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleViewProof(institution)}
+                        >
+                          <FileText className="h-4 w-4 mr-1" />
+                          View Proof
+                        </Button>
+                      )}
+                      <Button
+                        size="sm"
                         variant="outline"
                         className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
                         disabled={processingId === institution.id}
