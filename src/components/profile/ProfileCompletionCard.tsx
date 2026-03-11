@@ -20,6 +20,7 @@ import {
   MapPin,
   ChevronDown,
   PartyPopper,
+  IndianRupee,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ProfileMilestoneBadges } from "./ProfileMilestoneBadges";
@@ -33,6 +34,8 @@ interface ProfileCompletionCardProps {
     resume_url?: string | null;
     bio?: string | null;
     headline?: string | null;
+    current_salary?: number | null;
+    expected_salary?: number | null;
   } | null;
   professionalSummary?: string;
   experience?: any[];
@@ -151,6 +154,22 @@ export const ProfileCompletionCard = ({
       completed: researchPapers.length > 0,
       weight: 2,
       tip: "Add research papers or publications",
+    },
+    {
+      id: "current_salary",
+      label: "Current Salary",
+      icon: IndianRupee,
+      completed: !!(profile?.current_salary && profile.current_salary > 0),
+      weight: 5,
+      tip: "Add your current salary for better job matching",
+    },
+    {
+      id: "expected_salary",
+      label: "Expected Salary",
+      icon: IndianRupee,
+      completed: !!(profile?.expected_salary && profile.expected_salary > 0),
+      weight: 5,
+      tip: "Add your expected salary to align with recruiters",
     },
   ];
 
