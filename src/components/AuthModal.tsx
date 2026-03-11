@@ -16,7 +16,8 @@ import {
   EyeOff,
   ArrowRight,
   CheckCircle2,
-  Loader2
+  Loader2,
+  Building2
 } from "lucide-react";
 
 interface AuthModalProps {
@@ -45,6 +46,7 @@ const AuthModal = ({
     password: "",
     fullName: "",
     phone: "",
+    institutionName: "",
   });
 
   const handleRoleSelect = (selectedRole: "candidate" | "recruiter") => {
@@ -91,9 +93,20 @@ const AuthModal = ({
             data: {
               full_name: formData.fullName,
               user_type: role,
+              ...(role === "recruiter" && formData.institutionName ? { institution_name: formData.institutionName } : {}),
             },
           },
         });
+
+        if (error) throw error;
+
+        // If recruiter, update profile with university/institution name
+        if (role === "recruiter" && formData.institutionName && data.user) {
+          await supabase
+            .from("profiles")
+            .update({ university: formData.institutionName })
+            .eq("id", data.user.id);
+        }
 
         if (error) throw error;
 
@@ -142,7 +155,7 @@ const AuthModal = ({
 
   const resetModal = () => {
     setStep("role");
-    setFormData({ email: "", password: "", fullName: "", phone: "" });
+    setFormData({ email: "", password: "", fullName: "", phone: "", institutionName: "" });
   };
 
   return (
@@ -302,6 +315,23 @@ const AuthModal = ({
                     </button>
                   </div>
                 </div>
+
+                {mode === "signup" && role === "recruiter" && (
+                  <div className="space-y-2">
+                    <Label htmlFor="institutionName">Institution / University / Consultancy Name *</Label>
+                    <div className="relative">
+                      <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        id="institutionName"
+                        placeholder="e.g. IIT Delhi, ABC Consultancy"
+                        className="pl-10"
+                        value={formData.institutionName}
+                        onChange={(e) => setFormData({ ...formData, institutionName: e.target.value })}
+                        required
+                      />
+                    </div>
+                  </div>
+                )}
 
                 {mode === "signup" && (
                   <div className="space-y-2">

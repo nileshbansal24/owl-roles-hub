@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { InstitutionData } from "@/hooks/useAdminStats";
 import { format } from "date-fns";
-import { Building2, CheckCircle, Clock, XCircle, Briefcase, Mail, Loader2, Trash2 } from "lucide-react";
+import { Building2, CheckCircle, Clock, XCircle, Briefcase, Mail, Loader2, Trash2, Eye, FileText, ExternalLink } from "lucide-react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -27,6 +27,7 @@ import {
 import { FadeIn, staggerContainerVariants, staggerItemVariants } from "@/components/ui/fade-in";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import AdminProfileModal from "./AdminProfileModal";
 
 interface AdminInstitutionsProps {
   institutions: InstitutionData[];
@@ -79,6 +80,28 @@ const AdminInstitutions = ({ institutions, loading, onRefetch }: AdminInstitutio
     open: false,
     institution: null,
   });
+  const [viewProfileId, setViewProfileId] = useState<string | null>(null);
+  const [proofUrls, setProofUrls] = useState<Record<string, { url: string; fileName: string }>>({});
+
+  const handleViewProof = async (institution: InstitutionData) => {
+    if (!institution.proof_url) {
+      toast({ title: "No Proof", description: "No proof document was uploaded for this verification.", variant: "destructive" });
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase.storage
+        .from("credentials")
+        .createSignedUrl(institution.proof_url, 300);
+
+      if (error) throw error;
+      if (data?.signedUrl) {
+        window.open(data.signedUrl, "_blank");
+      }
+    } catch (error: any) {
+      toast({ title: "Error", description: "Failed to load proof document.", variant: "destructive" });
+    }
+  };
 
   const handleDeleteInstitution = async () => {
     const institution = confirmDelete.institution;
@@ -291,6 +314,24 @@ const AdminInstitutions = ({ institutions, loading, onRefetch }: AdminInstitutio
                     <div className="flex items-center gap-2">
                       <Button
                         size="sm"
+                        variant="ghost"
+                        onClick={() => setViewProfileId(institution.id)}
+                      >
+                        <Eye className="h-4 w-4 mr-1" />
+                        Profile
+                      </Button>
+                      {institution.proof_url && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleViewProof(institution)}
+                        >
+                          <FileText className="h-4 w-4 mr-1" />
+                          View Proof
+                        </Button>
+                      )}
+                      <Button
+                        size="sm"
                         variant="outline"
                         className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
                         disabled={processingId === institution.id}
@@ -400,6 +441,24 @@ const AdminInstitutions = ({ institutions, loading, onRefetch }: AdminInstitutio
                             </TableCell>
                             <TableCell>
                               <div className="flex items-center gap-1">
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-7"
+                                  onClick={() => setViewProfileId(institution.id)}
+                                >
+                                  <Eye className="h-3 w-3" />
+                                </Button>
+                                {institution.proof_url && (
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="h-7 text-primary hover:bg-primary/10"
+                                    onClick={() => handleViewProof(institution)}
+                                  >
+                                    <FileText className="h-3 w-3" />
+                                  </Button>
+                                )}
                                 {institution.verification_status === "pending" && (
                                   <>
                                     <Button
@@ -514,6 +573,14 @@ const AdminInstitutions = ({ institutions, loading, onRefetch }: AdminInstitutio
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Profile View Modal */}
+      <AdminProfileModal
+        open={!!viewProfileId}
+        onOpenChange={(open) => !open && setViewProfileId(null)}
+        userId={viewProfileId}
+        userType="recruiter"
+      />
     </div>
   );
 };

@@ -40,6 +40,8 @@ export interface InstitutionData {
   created_at: string;
   verification_status: string | null;
   jobs_count: number;
+  proof_url: string | null;
+  proof_file_name: string | null;
 }
 
 export interface CandidateData {
@@ -172,13 +174,14 @@ export const useAdminStats = () => {
 
       const { data: verifications } = await supabase
         .from("institution_verifications")
-        .select("recruiter_id, status");
+        .select("recruiter_id, status, proof_url, proof_file_name");
 
       const { data: jobs } = await supabase
         .from("jobs")
         .select("id, created_by");
 
       const verificationMap = new Map(verifications?.map(v => [v.recruiter_id, v.status]));
+      const proofMap = new Map(verifications?.map(v => [v.recruiter_id, { proof_url: v.proof_url, proof_file_name: v.proof_file_name }]));
       const jobCounts = new Map<string, number>();
       jobs?.forEach(j => {
         jobCounts.set(j.created_by, (jobCounts.get(j.created_by) || 0) + 1);
@@ -192,6 +195,8 @@ export const useAdminStats = () => {
         created_at: p.created_at,
         verification_status: verificationMap.get(p.id) || null,
         jobs_count: jobCounts.get(p.id) || 0,
+        proof_url: proofMap.get(p.id)?.proof_url || null,
+        proof_file_name: proofMap.get(p.id)?.proof_file_name || null,
       }));
 
       setInstitutions(institutionsData);

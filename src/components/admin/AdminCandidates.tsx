@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { CandidateData } from "@/hooks/useAdminStats";
 import { format, formatDistanceToNow } from "date-fns";
-import { Users, FileText, MapPin, Mail, GraduationCap, Trash2, Loader2 } from "lucide-react";
+import { Users, FileText, MapPin, Mail, GraduationCap, Trash2, Loader2, Eye } from "lucide-react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -27,6 +27,7 @@ import {
 import { FadeIn } from "@/components/ui/fade-in";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import AdminProfileModal from "./AdminProfileModal";
 
 interface AdminCandidatesProps {
   candidates: CandidateData[];
@@ -41,6 +42,7 @@ const AdminCandidates = ({ candidates, loading, onRefetch }: AdminCandidatesProp
     open: false,
     candidate: null,
   });
+  const [viewProfileId, setViewProfileId] = useState<string | null>(null);
 
   const handleDelete = async () => {
     const candidate = confirmDelete.candidate;
@@ -215,19 +217,29 @@ const AdminCandidates = ({ candidates, loading, onRefetch }: AdminCandidatesProp
                             {format(new Date(candidate.created_at), "MMM d, yyyy")}
                           </TableCell>
                           <TableCell>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-7 text-destructive hover:bg-destructive/10"
-                              disabled={deletingId === candidate.id}
-                              onClick={() => setConfirmDelete({ open: true, candidate })}
-                            >
-                              {deletingId === candidate.id ? (
-                                <Loader2 className="h-3 w-3 animate-spin" />
-                              ) : (
-                                <Trash2 className="h-3 w-3" />
-                              )}
-                            </Button>
+                            <div className="flex items-center gap-1">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-7"
+                                onClick={() => setViewProfileId(candidate.id)}
+                              >
+                                <Eye className="h-3 w-3" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-7 text-destructive hover:bg-destructive/10"
+                                disabled={deletingId === candidate.id}
+                                onClick={() => setConfirmDelete({ open: true, candidate })}
+                              >
+                                {deletingId === candidate.id ? (
+                                  <Loader2 className="h-3 w-3 animate-spin" />
+                                ) : (
+                                  <Trash2 className="h-3 w-3" />
+                                )}
+                              </Button>
+                            </div>
                           </TableCell>
                         </TableRow>
                       );
@@ -257,6 +269,14 @@ const AdminCandidates = ({ candidates, loading, onRefetch }: AdminCandidatesProp
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Profile View Modal */}
+      <AdminProfileModal
+        open={!!viewProfileId}
+        onOpenChange={(open) => !open && setViewProfileId(null)}
+        userId={viewProfileId}
+        userType="candidate"
+      />
     </div>
   );
 };
