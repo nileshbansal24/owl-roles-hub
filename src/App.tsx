@@ -41,7 +41,7 @@ const App = () => {
                 <Route
                   path="/candidate-dashboard"
                   element={
-                    <ProtectedRoute>
+                    <ProtectedRoute requiredRole="candidate">
                       <CandidateDashboard />
                     </ProtectedRoute>
                   }
@@ -49,7 +49,7 @@ const App = () => {
                 <Route
                   path="/recruiter-dashboard"
                   element={
-                    <ProtectedRoute>
+                    <ProtectedRoute requiredRole="recruiter">
                       <RecruiterDashboard />
                     </ProtectedRoute>
                   }
