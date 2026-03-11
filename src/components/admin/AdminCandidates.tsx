@@ -217,19 +217,29 @@ const AdminCandidates = ({ candidates, loading, onRefetch }: AdminCandidatesProp
                             {format(new Date(candidate.created_at), "MMM d, yyyy")}
                           </TableCell>
                           <TableCell>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-7 text-destructive hover:bg-destructive/10"
-                              disabled={deletingId === candidate.id}
-                              onClick={() => setConfirmDelete({ open: true, candidate })}
-                            >
-                              {deletingId === candidate.id ? (
-                                <Loader2 className="h-3 w-3 animate-spin" />
-                              ) : (
-                                <Trash2 className="h-3 w-3" />
-                              )}
-                            </Button>
+                            <div className="flex items-center gap-1">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-7"
+                                onClick={() => setViewProfileId(candidate.id)}
+                              >
+                                <Eye className="h-3 w-3" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-7 text-destructive hover:bg-destructive/10"
+                                disabled={deletingId === candidate.id}
+                                onClick={() => setConfirmDelete({ open: true, candidate })}
+                              >
+                                {deletingId === candidate.id ? (
+                                  <Loader2 className="h-3 w-3 animate-spin" />
+                                ) : (
+                                  <Trash2 className="h-3 w-3" />
+                                )}
+                              </Button>
+                            </div>
                           </TableCell>
                         </TableRow>
                       );
