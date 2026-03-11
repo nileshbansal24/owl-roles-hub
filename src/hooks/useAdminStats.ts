@@ -174,7 +174,7 @@ export const useAdminStats = () => {
 
       const { data: verifications } = await supabase
         .from("institution_verifications")
-        .select("recruiter_id, status");
+        .select("recruiter_id, status, proof_url, proof_file_name");
 
       const { data: jobs } = await supabase
         .from("jobs")
