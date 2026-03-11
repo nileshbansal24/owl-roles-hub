@@ -33,6 +33,8 @@ interface ProfileCompletionCardProps {
     resume_url?: string | null;
     bio?: string | null;
     headline?: string | null;
+    current_salary?: number | null;
+    expected_salary?: number | null;
   } | null;
   professionalSummary?: string;
   experience?: any[];
