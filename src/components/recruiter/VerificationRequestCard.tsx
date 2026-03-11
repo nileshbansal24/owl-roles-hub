@@ -3,6 +3,8 @@ import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import VerificationBadge from "./VerificationBadge";
 import {
@@ -12,6 +14,8 @@ import {
   Send,
   Loader2,
   AlertCircle,
+  Upload,
+  FileText,
 } from "lucide-react";
 
 type VerificationStatus = "verified" | "pending" | "rejected" | "none";
@@ -29,33 +33,70 @@ const VerificationRequestCard = ({
 }: VerificationRequestCardProps) => {
   const { toast } = useToast();
   const [requesting, setRequesting] = useState(false);
+  const [proofFile, setProofFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   const handleRequestVerification = async () => {
+    if (!proofFile) {
+      toast({
+        title: "Proof Required",
+        description: "Please upload a proof document (ID card, letter, certificate) to verify your institution.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setRequesting(true);
+    setUploading(true);
 
     try {
+      // Upload proof file
+      const fileExt = proofFile.name.split('.').pop();
+      const filePath = `verification-proofs/${userId}/${Date.now()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("credentials")
+        .upload(filePath, proofFile);
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data: urlData } = supabase.storage
+        .from("credentials")
+        .getPublicUrl(filePath);
+
+      // Insert verification request with proof
       const { error } = await supabase.from("institution_verifications").insert({
         recruiter_id: userId,
         status: "pending",
+        proof_url: filePath,
+        proof_file_name: proofFile.name,
       });
 
       if (error) {
         if (error.code === "23505") {
-          toast({
-            title: "Already requested",
-            description: "You have already submitted a verification request.",
-            variant: "destructive",
-          });
+          // Already exists, update with proof
+          await supabase
+            .from("institution_verifications")
+            .update({
+              status: "pending",
+              proof_url: filePath,
+              proof_file_name: proofFile.name,
+              verification_notes: null,
+              verified_at: null,
+            })
+            .eq("recruiter_id", userId);
         } else {
           throw error;
         }
-      } else {
-        onStatusChange("pending");
-        toast({
-          title: "Verification requested!",
-          description: "Your institution verification request has been submitted for review.",
-        });
       }
+
+      onStatusChange("pending");
+      setProofFile(null);
+      toast({
+        title: "Verification requested!",
+        description: "Your verification request with proof has been submitted for admin review.",
+      });
     } catch (error: any) {
       console.error("Verification request error:", error);
       toast({
@@ -65,6 +106,7 @@ const VerificationRequestCard = ({
       });
     } finally {
       setRequesting(false);
+      setUploading(false);
     }
   };
 
@@ -76,7 +118,7 @@ const VerificationRequestCard = ({
           Institution Verification
         </CardTitle>
         <CardDescription>
-          Get verified to build trust with candidates
+          Upload proof to verify your institution affiliation
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -110,7 +152,7 @@ const VerificationRequestCard = ({
                 <div>
                   <p className="text-sm font-medium text-foreground">Under Review</p>
                   <p className="text-xs text-muted-foreground">
-                    Your verification request is being reviewed. This usually takes 2-3 business days.
+                    Your verification request is being reviewed by the admin. This usually takes 2-3 business days.
                   </p>
                 </div>
               </div>
@@ -120,9 +162,9 @@ const VerificationRequestCard = ({
               <div className="flex items-start gap-2 p-3 rounded-md bg-destructive/10 border border-destructive/20">
                 <AlertCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-sm font-medium text-foreground">Verification Unsuccessful</p>
+                  <p className="text-sm font-medium text-foreground">Verification Rejected</p>
                   <p className="text-xs text-muted-foreground">
-                    Please ensure your institution details are accurate and try again.
+                    Your verification was not approved. Please upload a clearer proof document and try again.
                   </p>
                 </div>
               </div>
@@ -150,25 +192,48 @@ const VerificationRequestCard = ({
             </div>
           )}
 
-          {/* Request Button */}
+          {/* Proof Upload & Request */}
           {(status === "none" || status === "rejected") && (
-            <Button
-              onClick={handleRequestVerification}
-              disabled={requesting}
-              className="w-full gap-2"
-            >
-              {requesting ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Submitting Request...
-                </>
-              ) : (
-                <>
-                  <Send className="h-4 w-4" />
-                  {status === "rejected" ? "Re-request Verification" : "Request Verification"}
-                </>
-              )}
-            </Button>
+            <div className="space-y-3">
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Upload Proof of Institution *</Label>
+                <p className="text-xs text-muted-foreground">
+                  Upload an ID card, employment letter, or any official document proving you belong to the mentioned institution.
+                </p>
+                <div className="flex items-center gap-3">
+                  <Input
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                    onChange={(e) => setProofFile(e.target.files?.[0] || null)}
+                    className="flex-1"
+                  />
+                </div>
+                {proofFile && (
+                  <div className="flex items-center gap-2 text-sm text-primary">
+                    <FileText className="h-4 w-4" />
+                    {proofFile.name} ({(proofFile.size / 1024).toFixed(0)} KB)
+                  </div>
+                )}
+              </div>
+
+              <Button
+                onClick={handleRequestVerification}
+                disabled={requesting || !proofFile}
+                className="w-full gap-2"
+              >
+                {requesting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    {uploading ? "Uploading Proof..." : "Submitting Request..."}
+                  </>
+                ) : (
+                  <>
+                    <Upload className="h-4 w-4" />
+                    {status === "rejected" ? "Re-submit Verification" : "Submit Verification Request"}
+                  </>
+                )}
+              </Button>
+            </div>
           )}
         </motion.div>
       </CardContent>

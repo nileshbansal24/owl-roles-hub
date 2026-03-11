@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { CandidateData } from "@/hooks/useAdminStats";
 import { format, formatDistanceToNow } from "date-fns";
-import { Users, FileText, MapPin, Mail, GraduationCap, Trash2, Loader2 } from "lucide-react";
+import { Users, FileText, MapPin, Mail, GraduationCap, Trash2, Loader2, Eye } from "lucide-react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -27,6 +27,7 @@ import {
 import { FadeIn } from "@/components/ui/fade-in";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import AdminProfileModal from "./AdminProfileModal";
 
 interface AdminCandidatesProps {
   candidates: CandidateData[];
