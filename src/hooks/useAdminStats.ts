@@ -195,6 +195,8 @@ export const useAdminStats = () => {
         created_at: p.created_at,
         verification_status: verificationMap.get(p.id) || null,
         jobs_count: jobCounts.get(p.id) || 0,
+        proof_url: proofMap.get(p.id)?.proof_url || null,
+        proof_file_name: proofMap.get(p.id)?.proof_file_name || null,
       }));
 
       setInstitutions(institutionsData);
