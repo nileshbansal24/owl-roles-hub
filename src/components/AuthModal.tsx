@@ -16,7 +16,8 @@ import {
   EyeOff,
   ArrowRight,
   CheckCircle2,
-  Loader2
+  Loader2,
+  Building2
 } from "lucide-react";
 
 interface AuthModalProps {
