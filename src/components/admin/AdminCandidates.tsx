@@ -42,6 +42,7 @@ const AdminCandidates = ({ candidates, loading, onRefetch }: AdminCandidatesProp
     open: false,
     candidate: null,
   });
+  const [viewProfileId, setViewProfileId] = useState<string | null>(null);
 
   const handleDelete = async () => {
     const candidate = confirmDelete.candidate;
