@@ -20,6 +20,7 @@ import {
   MapPin,
   ChevronDown,
   PartyPopper,
+  IndianRupee,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ProfileMilestoneBadges } from "./ProfileMilestoneBadges";
