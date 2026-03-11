@@ -269,6 +269,14 @@ const AdminCandidates = ({ candidates, loading, onRefetch }: AdminCandidatesProp
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Profile View Modal */}
+      <AdminProfileModal
+        open={!!viewProfileId}
+        onOpenChange={(open) => !open && setViewProfileId(null)}
+        userId={viewProfileId}
+        userType="candidate"
+      />
     </div>
   );
 };
