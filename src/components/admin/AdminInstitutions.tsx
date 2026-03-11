@@ -83,6 +83,26 @@ const AdminInstitutions = ({ institutions, loading, onRefetch }: AdminInstitutio
   const [viewProfileId, setViewProfileId] = useState<string | null>(null);
   const [proofUrls, setProofUrls] = useState<Record<string, { url: string; fileName: string }>>({});
 
+  const handleViewProof = async (institution: InstitutionData) => {
+    if (!institution.proof_url) {
+      toast({ title: "No Proof", description: "No proof document was uploaded for this verification.", variant: "destructive" });
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase.storage
+        .from("credentials")
+        .createSignedUrl(institution.proof_url, 300);
+
+      if (error) throw error;
+      if (data?.signedUrl) {
+        window.open(data.signedUrl, "_blank");
+      }
+    } catch (error: any) {
+      toast({ title: "Error", description: "Failed to load proof document.", variant: "destructive" });
+    }
+  };
+
   const handleDeleteInstitution = async () => {
     const institution = confirmDelete.institution;
     if (!institution) return;
