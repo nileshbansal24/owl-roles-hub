@@ -24,7 +24,9 @@ import {
   BookOpen,
 } from "lucide-react";
 import type { Profile } from "@/types/recruiter";
+import { getCandidateCategory } from "@/types/recruiter";
 import { computeRatings } from "@/components/profile/CandidateRatingCard";
+import CandidateCategoryBadge from "./CandidateCategoryBadge";
 
 const MiniStars = ({ score, size = 12 }: { score: number; size?: number }) => (
   <div className="flex items-center gap-px">
