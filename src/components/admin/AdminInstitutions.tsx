@@ -441,6 +441,24 @@ const AdminInstitutions = ({ institutions, loading, onRefetch }: AdminInstitutio
                             </TableCell>
                             <TableCell>
                               <div className="flex items-center gap-1">
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-7"
+                                  onClick={() => setViewProfileId(institution.id)}
+                                >
+                                  <Eye className="h-3 w-3" />
+                                </Button>
+                                {institution.proof_url && (
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="h-7 text-primary hover:bg-primary/10"
+                                    onClick={() => handleViewProof(institution)}
+                                  >
+                                    <FileText className="h-3 w-3" />
+                                  </Button>
+                                )}
                                 {institution.verification_status === "pending" && (
                                   <>
                                     <Button
