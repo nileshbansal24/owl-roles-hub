@@ -92,9 +92,20 @@ const AuthModal = ({
             data: {
               full_name: formData.fullName,
               user_type: role,
+              ...(role === "recruiter" && formData.institutionName ? { institution_name: formData.institutionName } : {}),
             },
           },
         });
+
+        if (error) throw error;
+
+        // If recruiter, update profile with university/institution name
+        if (role === "recruiter" && formData.institutionName && data.user) {
+          await supabase
+            .from("profiles")
+            .update({ university: formData.institutionName })
+            .eq("id", data.user.id);
+        }
 
         if (error) throw error;
 
