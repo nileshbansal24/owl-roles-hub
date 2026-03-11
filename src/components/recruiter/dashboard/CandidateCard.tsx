@@ -24,7 +24,9 @@ import {
   BookOpen,
 } from "lucide-react";
 import type { Profile } from "@/types/recruiter";
+import { getCandidateCategory } from "@/types/recruiter";
 import { computeRatings } from "@/components/profile/CandidateRatingCard";
+import CandidateCategoryBadge from "./CandidateCategoryBadge";
 
 const MiniStars = ({ score, size = 12 }: { score: number; size?: number }) => (
   <div className="flex items-center gap-px">
@@ -97,9 +99,12 @@ const CandidateCard = ({
         <div className="flex-1 min-w-0">
           <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
             <div>
-              <h4 className="font-heading font-semibold text-base sm:text-lg text-foreground hover:text-primary transition-colors cursor-pointer truncate" onClick={() => onView(candidate)}>
-                {candidate.full_name || "Anonymous"}
-              </h4>
+              <div className="flex items-center gap-2">
+                <h4 className="font-heading font-semibold text-base sm:text-lg text-foreground hover:text-primary transition-colors cursor-pointer truncate" onClick={() => onView(candidate)}>
+                  {candidate.full_name || "Anonymous"}
+                </h4>
+                <CandidateCategoryBadge category={getCandidateCategory(candidate)} />
+              </div>
               <p className="text-primary font-medium text-sm sm:text-base truncate">
                 {candidate.role || candidate.headline || "Academic Professional"}
               </p>
