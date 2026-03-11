@@ -178,9 +178,24 @@ const AdminInstitutions = ({ institutions, loading, onRefetch }: AdminInstitutio
         if (error) throw error;
       }
 
+      // Send email notification to recruiter
+      try {
+        await supabase.functions.invoke("send-verification-notification", {
+          body: {
+            recruiterEmail: institution.email,
+            recruiterName: institution.full_name || "Recruiter",
+            institutionName: institution.university || "Unknown Institution",
+            status: newStatus as "verified" | "rejected",
+            notes: `${action === "verify" ? "Verified" : "Rejected"} by admin on ${format(new Date(), "MMM d, yyyy")}`,
+          },
+        });
+      } catch (emailErr) {
+        console.error("Failed to send notification email:", emailErr);
+      }
+
       toast({
         title: action === "verify" ? "Institution Verified" : "Institution Rejected",
-        description: `${institution.full_name || "Institution"} has been ${action === "verify" ? "verified" : "rejected"} successfully.`,
+        description: `${institution.full_name || "Institution"} has been ${action === "verify" ? "verified" : "rejected"} successfully. Notification sent.`,
       });
 
       onRefetch();

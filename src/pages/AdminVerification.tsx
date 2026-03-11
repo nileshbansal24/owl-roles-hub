@@ -174,9 +174,24 @@ const AdminVerification = () => {
 
       if (error) throw error;
 
+      // Send email notification to recruiter
+      try {
+        await supabase.functions.invoke("send-verification-notification", {
+          body: {
+            recruiterEmail: selectedRequest.recruiter?.email,
+            recruiterName: selectedRequest.recruiter?.full_name || "Recruiter",
+            institutionName: selectedRequest.recruiter?.university || "Unknown Institution",
+            status: newStatus,
+            notes: notes || undefined,
+          },
+        });
+      } catch (emailErr) {
+        console.error("Failed to send notification email:", emailErr);
+      }
+
       toast({
         title: actionType === "approve" ? "Institution Verified!" : "Request Rejected",
-        description: `The verification request has been ${actionType === "approve" ? "approved" : "rejected"}.`,
+        description: `The verification request has been ${actionType === "approve" ? "approved" : "rejected"}. Notification sent.`,
       });
 
       setActionDialogOpen(false);
