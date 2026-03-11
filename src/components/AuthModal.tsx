@@ -315,6 +315,23 @@ const AuthModal = ({
                   </div>
                 </div>
 
+                {mode === "signup" && role === "recruiter" && (
+                  <div className="space-y-2">
+                    <Label htmlFor="institutionName">Institution / University / Consultancy Name *</Label>
+                    <div className="relative">
+                      <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        id="institutionName"
+                        placeholder="e.g. IIT Delhi, ABC Consultancy"
+                        className="pl-10"
+                        value={formData.institutionName}
+                        onChange={(e) => setFormData({ ...formData, institutionName: e.target.value })}
+                        required
+                      />
+                    </div>
+                  </div>
+                )}
+
                 {mode === "signup" && (
                   <div className="space-y-2">
                     <Label htmlFor="phone">Phone (Optional)</Label>
