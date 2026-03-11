@@ -40,6 +40,8 @@ export interface InstitutionData {
   created_at: string;
   verification_status: string | null;
   jobs_count: number;
+  proof_url: string | null;
+  proof_file_name: string | null;
 }
 
 export interface CandidateData {
