@@ -1,12 +1,23 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
+
+function escapeHtml(str: string): string {
+  if (!str) return "";
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
 
 interface VerificationNotificationRequest {
   recruiterEmail: string;
@@ -22,6 +33,52 @@ serve(async (req: Request) => {
   }
 
   try {
+    // Authenticate the caller
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const anonClient = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_ANON_KEY")!,
+      { global: { headers: { Authorization: authHeader } } }
+    );
+
+    const token = authHeader.replace("Bearer ", "");
+    const { data: claimsData, error: claimsError } = await anonClient.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const userId = claimsData.claims.sub as string;
+
+    // Verify admin role
+    const adminClient = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
+
+    const { data: roleData } = await adminClient
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId)
+      .eq("role", "admin")
+      .maybeSingle();
+
+    if (!roleData) {
+      return new Response(JSON.stringify({ error: "Forbidden: admin only" }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const { recruiterEmail, recruiterName, institutionName, status, notes } =
       (await req.json()) as VerificationNotificationRequest;
 
@@ -32,22 +89,44 @@ serve(async (req: Request) => {
       );
     }
 
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(recruiterEmail)) {
+      return new Response(
+        JSON.stringify({ error: "Invalid email format" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Validate status
+    if (status !== "verified" && status !== "rejected") {
+      return new Response(
+        JSON.stringify({ error: "Invalid status" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // HTML-escape all user-provided content
+    const safeName = escapeHtml(recruiterName);
+    const safeInstitution = escapeHtml(institutionName);
+    const safeNotes = escapeHtml(notes || "");
+
     const isApproved = status === "verified";
     const subject = isApproved
-      ? `✅ Your institution has been verified – ${institutionName}`
-      : `❌ Verification update for ${institutionName}`;
+      ? `✅ Your institution has been verified – ${safeInstitution}`
+      : `❌ Verification update for ${safeInstitution}`;
 
     const heading = isApproved
       ? "Institution Verified!"
       : "Verification Not Approved";
 
     const body = isApproved
-      ? `<p>Great news, <strong>${recruiterName || "Recruiter"}</strong>!</p>
-         <p>Your institution <strong>${institutionName}</strong> has been verified by our admin team. A verification badge will now appear on your profile and job listings, helping candidates trust your postings.</p>
+      ? `<p>Great news, <strong>${safeName || "Recruiter"}</strong>!</p>
+         <p>Your institution <strong>${safeInstitution}</strong> has been verified by our admin team. A verification badge will now appear on your profile and job listings, helping candidates trust your postings.</p>
          <p>You can continue posting jobs with full verified status.</p>`
-      : `<p>Hello <strong>${recruiterName || "Recruiter"}</strong>,</p>
-         <p>Unfortunately, your verification request for <strong>${institutionName}</strong> was not approved at this time.</p>
-         ${notes ? `<p><strong>Reason:</strong> ${notes}</p>` : ""}
+      : `<p>Hello <strong>${safeName || "Recruiter"}</strong>,</p>
+         <p>Unfortunately, your verification request for <strong>${safeInstitution}</strong> was not approved at this time.</p>
+         ${safeNotes ? `<p><strong>Reason:</strong> ${safeNotes}</p>` : ""}
          <p>Please review your submitted documents and re-apply with valid proof of affiliation. If you believe this is an error, please contact our support team.</p>`;
 
     const color = isApproved ? "#10b981" : "#ef4444";
@@ -91,7 +170,7 @@ serve(async (req: Request) => {
     if (!emailResponse.ok) {
       console.error("Resend error:", emailData);
       return new Response(
-        JSON.stringify({ error: "Failed to send email", details: emailData }),
+        JSON.stringify({ error: "Failed to send email" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -103,7 +182,7 @@ serve(async (req: Request) => {
   } catch (error) {
     console.error("Error:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: "Internal server error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
