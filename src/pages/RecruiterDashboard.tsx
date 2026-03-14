@@ -165,7 +165,7 @@ const RecruiterDashboard = () => {
           newStatus: "interview_reminder",
           jobTitle: interview.job_title || app?.jobs?.title || "Position",
           instituteName: interview.institute || app?.jobs?.institute || "Company",
-          candidateEmail: app.applicant_email,
+          interviewId: interview.id,
           confirmedTime,
           interviewType: interview.interview_type,
           meetingLink: interview.meeting_link,

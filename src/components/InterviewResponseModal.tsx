@@ -158,9 +158,9 @@ const InterviewResponseModal = ({
           newStatus: "interview_confirmed",
           jobTitle: interview.job_title || "Position",
           instituteName: interview.institute || "Institution",
+          interviewId: interview.id,
           candidateName: candidateProfile?.full_name || user.email,
           confirmedTime: selectedTimeData?.formatted || format(parseISO(selectedTime), "EEEE, MMMM d, yyyy 'at' h:mm a"),
-          recruiterEmail: recruiterProfile?.email,
           interviewType: getTypeLabel(),
         },
       });
@@ -221,9 +221,9 @@ const InterviewResponseModal = ({
           newStatus: "interview_declined",
           jobTitle: interview.job_title || "Position",
           instituteName: interview.institute || "Institution",
+          interviewId: interview.id,
           candidateName: candidateProfile?.full_name || user.email,
           declineReason: declineReason || undefined,
-          recruiterEmail: recruiterProfile?.email,
         },
       });
 
