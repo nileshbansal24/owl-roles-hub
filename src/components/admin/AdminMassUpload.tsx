@@ -361,6 +361,9 @@ const AdminMassUpload = ({ loading }: AdminMassUploadProps) => {
                       {result.email && (
                         <p className="text-xs text-muted-foreground">{result.email}</p>
                       )}
+                      {result.password && (
+                        <p className="text-xs font-mono text-muted-foreground">Password: {result.password}</p>
+                      )}
                     </div>
                   </div>
                   {result.success ? (
