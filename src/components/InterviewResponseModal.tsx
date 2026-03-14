@@ -221,9 +221,9 @@ const InterviewResponseModal = ({
           newStatus: "interview_declined",
           jobTitle: interview.job_title || "Position",
           instituteName: interview.institute || "Institution",
+          interviewId: interview.id,
           candidateName: candidateProfile?.full_name || user.email,
           declineReason: declineReason || undefined,
-          recruiterEmail: recruiterProfile?.email,
         },
       });
 
