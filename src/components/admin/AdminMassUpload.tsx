@@ -14,6 +14,7 @@ interface UploadResult {
   email?: string;
   error?: string;
   userId?: string;
+  password?: string;
 }
 
 interface AdminMassUploadProps {
