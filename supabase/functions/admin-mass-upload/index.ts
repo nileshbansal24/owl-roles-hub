@@ -356,7 +356,8 @@ Deno.serve(async (req) => {
           filename, 
           success: true, 
           email, 
-          userId: newUser.user.id 
+          userId: newUser.user.id,
+          password: generatedPassword
         });
 
         console.log(`Successfully created user: ${email}`);

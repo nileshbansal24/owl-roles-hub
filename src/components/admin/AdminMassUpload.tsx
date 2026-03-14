@@ -14,6 +14,7 @@ interface UploadResult {
   email?: string;
   error?: string;
   userId?: string;
+  password?: string;
 }
 
 interface AdminMassUploadProps {
@@ -141,11 +142,12 @@ const AdminMassUpload = ({ loading }: AdminMassUploadProps) => {
   const downloadCSV = () => {
     if (results.length === 0) return;
 
-    const headers = ["Filename", "Status", "Email", "User ID", "Error"];
+    const headers = ["Filename", "Status", "Email", "Password", "User ID", "Error"];
     const rows = results.map(r => [
       r.filename,
       r.success ? "Success" : "Failed",
       r.email || "",
+      r.password || "",
       r.userId || "",
       r.error || ""
     ]);
@@ -358,6 +360,9 @@ const AdminMassUpload = ({ loading }: AdminMassUploadProps) => {
                       <p className="text-sm font-medium truncate">{result.filename}</p>
                       {result.email && (
                         <p className="text-xs text-muted-foreground">{result.email}</p>
+                      )}
+                      {result.password && (
+                        <p className="text-xs font-mono text-muted-foreground">Password: {result.password}</p>
                       )}
                     </div>
                   </div>
