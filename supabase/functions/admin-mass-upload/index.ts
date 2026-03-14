@@ -281,10 +281,12 @@ Deno.serve(async (req) => {
           continue;
         }
 
-        // Generate password: First 4 letters of email (uppercase) + 1234
-        const emailPrefix = email.split("@")[0].replace(/[^a-zA-Z]/g, "").substring(0, 4).toUpperCase();
-        const generatedPassword = emailPrefix.padEnd(4, "X") + "1234";
-        console.log(`Generated password for ${email}: ${generatedPassword}`);
+        // Generate cryptographically random password
+        const randomBytes = new Uint8Array(16);
+        crypto.getRandomValues(randomBytes);
+        const generatedPassword = btoa(String.fromCharCode(...randomBytes))
+          .replace(/[+/=]/g, '')
+          .substring(0, 12) + '!Aa1';
 
         // Create user with generated password
         const { data: newUser, error: createError } = await serviceClient.auth.admin.createUser({
