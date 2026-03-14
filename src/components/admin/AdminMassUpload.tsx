@@ -142,11 +142,12 @@ const AdminMassUpload = ({ loading }: AdminMassUploadProps) => {
   const downloadCSV = () => {
     if (results.length === 0) return;
 
-    const headers = ["Filename", "Status", "Email", "User ID", "Error"];
+    const headers = ["Filename", "Status", "Email", "Password", "User ID", "Error"];
     const rows = results.map(r => [
       r.filename,
       r.success ? "Success" : "Failed",
       r.email || "",
+      r.password || "",
       r.userId || "",
       r.error || ""
     ]);
