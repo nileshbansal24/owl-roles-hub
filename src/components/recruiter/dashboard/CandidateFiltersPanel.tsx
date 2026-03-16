@@ -1,10 +1,15 @@
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Filter, X, ChevronDown, ChevronUp } from "lucide-react";
+import {
+  Filter, X, ChevronDown, ChevronUp, MapPin, GraduationCap,
+  Briefcase, FileText, BookOpen, Clock, Building2, UserCheck
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -12,13 +17,30 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import type { Profile } from "@/types/recruiter";
 
+// ─── Filter model ────────────────────────────────────────────────
 export interface CandidateFilters {
   experienceRange: [number, number];
   selectedSkills: string[];
   educationLevel: string;
   salaryRange: [number, number];
+  // New Resdex-style filters
+  selectedDesignations: string[];
+  selectedDepartments: string[];
+  selectedLocations: string[];
+  selectedUniversities: string[];
+  profileFreshness: string;          // "all" | "1" | "3" | "7" | "14" | "30" | "90"
+  employmentStatus: string;          // "all" | "working" | "not_working" | "fresher"
+  hasResume: string;                 // "all" | "yes" | "no"
+  hasResearchPapers: string;         // "all" | "yes" | "no"
+  hIndexRange: [number, number];
 }
 
 export const defaultFilters: CandidateFilters = {
@@ -26,22 +48,70 @@ export const defaultFilters: CandidateFilters = {
   selectedSkills: [],
   educationLevel: "all",
   salaryRange: [0, 50],
+  selectedDesignations: [],
+  selectedDepartments: [],
+  selectedLocations: [],
+  selectedUniversities: [],
+  profileFreshness: "all",
+  employmentStatus: "all",
+  hasResume: "all",
+  hasResearchPapers: "all",
+  hIndexRange: [0, 50],
 };
 
-interface CandidateFiltersPanelProps {
-  candidates: Profile[];
-  filters: CandidateFilters;
-  onFiltersChange: (filters: CandidateFilters) => void;
-}
+// ─── Static options ──────────────────────────────────────────────
+const designations = [
+  "Professor",
+  "Associate Professor",
+  "Assistant Professor",
+  "Dean",
+  "HOD / Head of Department",
+  "Vice Chancellor",
+  "Principal",
+  "Lecturer",
+  "Senior Lecturer",
+  "Research Associate",
+  "Postdoctoral Fellow",
+  "Lab Instructor",
+  "Teaching Assistant",
+  "Visiting Faculty",
+  "Adjunct Faculty",
+];
 
 const educationLevels = [
   { value: "all", label: "All Levels" },
   { value: "phd", label: "PhD / Doctorate" },
   { value: "masters", label: "Master's Degree" },
   { value: "bachelors", label: "Bachelor's Degree" },
-  { value: "diploma", label: "Diploma" },
+  { value: "postdoc", label: "Post-Doctoral" },
+  { value: "diploma", label: "Diploma / Certificate" },
 ];
 
+const freshnessOptions = [
+  { value: "all", label: "Any time" },
+  { value: "1", label: "Last 24 hours" },
+  { value: "3", label: "Last 3 days" },
+  { value: "7", label: "Last 1 week" },
+  { value: "14", label: "Last 2 weeks" },
+  { value: "30", label: "Last 1 month" },
+  { value: "90", label: "Last 3 months" },
+];
+
+const employmentStatuses = [
+  { value: "all", label: "All" },
+  { value: "working", label: "Currently Working" },
+  { value: "not_working", label: "Not Working" },
+  { value: "fresher", label: "Fresher" },
+];
+
+// ─── Props ───────────────────────────────────────────────────────
+interface CandidateFiltersPanelProps {
+  candidates: Profile[];
+  filters: CandidateFilters;
+  onFiltersChange: (filters: CandidateFilters) => void;
+}
+
+// ─── Component ───────────────────────────────────────────────────
 const CandidateFiltersPanel = ({
   candidates,
   filters,
@@ -49,47 +119,133 @@ const CandidateFiltersPanel = ({
 }: CandidateFiltersPanelProps) => {
   const [isOpen, setIsOpen] = useState(false);
 
-  // Extract top skills from all candidates
+  // Derive dynamic options from candidate pool
   const topSkills = useMemo(() => {
-    const skillCount = new Map<string, number>();
-    candidates.forEach((c) => {
-      c.skills?.forEach((skill) => {
-        const normalized = skill.trim().toLowerCase();
-        if (normalized) {
-          skillCount.set(normalized, (skillCount.get(normalized) || 0) + 1);
-        }
-      });
-    });
-    return Array.from(skillCount.entries())
+    const map = new Map<string, number>();
+    candidates.forEach((c) =>
+      c.skills?.forEach((s) => {
+        const n = s.trim().toLowerCase();
+        if (n) map.set(n, (map.get(n) || 0) + 1);
+      })
+    );
+    return Array.from(map.entries())
       .sort((a, b) => b[1] - a[1])
-      .slice(0, 20)
-      .map(([skill]) => skill);
+      .slice(0, 25)
+      .map(([s]) => s);
   }, [candidates]);
 
+  const topLocations = useMemo(() => {
+    const map = new Map<string, number>();
+    candidates.forEach((c) => {
+      const loc = c.location?.trim();
+      if (loc) map.set(loc, (map.get(loc) || 0) + 1);
+    });
+    return Array.from(map.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 20)
+      .map(([l]) => l);
+  }, [candidates]);
+
+  const topUniversities = useMemo(() => {
+    const map = new Map<string, number>();
+    candidates.forEach((c) => {
+      const u = c.university?.trim();
+      if (u) map.set(u, (map.get(u) || 0) + 1);
+    });
+    return Array.from(map.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 20)
+      .map(([u]) => u);
+  }, [candidates]);
+
+  const topDepartments = useMemo(() => {
+    const map = new Map<string, number>();
+    candidates.forEach((c) => {
+      c.subjects?.forEach((s) => {
+        const n = s.trim();
+        if (n) map.set(n, (map.get(n) || 0) + 1);
+      });
+    });
+    return Array.from(map.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 20)
+      .map(([d]) => d);
+  }, [candidates]);
+
+  // Active filter count
   const activeFilterCount = useMemo(() => {
-    let count = 0;
-    if (filters.experienceRange[0] !== 0 || filters.experienceRange[1] !== 30) count++;
-    if (filters.selectedSkills.length > 0) count++;
-    if (filters.educationLevel !== "all") count++;
-    if (filters.salaryRange[0] !== 0 || filters.salaryRange[1] !== 50) count++;
-    return count;
+    let c = 0;
+    if (filters.experienceRange[0] !== 0 || filters.experienceRange[1] !== 30) c++;
+    if (filters.selectedSkills.length > 0) c++;
+    if (filters.educationLevel !== "all") c++;
+    if (filters.salaryRange[0] !== 0 || filters.salaryRange[1] !== 50) c++;
+    if (filters.selectedDesignations.length > 0) c++;
+    if (filters.selectedDepartments.length > 0) c++;
+    if (filters.selectedLocations.length > 0) c++;
+    if (filters.selectedUniversities.length > 0) c++;
+    if (filters.profileFreshness !== "all") c++;
+    if (filters.employmentStatus !== "all") c++;
+    if (filters.hasResume !== "all") c++;
+    if (filters.hasResearchPapers !== "all") c++;
+    if (filters.hIndexRange[0] !== 0 || filters.hIndexRange[1] !== 50) c++;
+    return c;
   }, [filters]);
 
-  const handleSkillToggle = (skill: string) => {
-    const updated = filters.selectedSkills.includes(skill)
-      ? filters.selectedSkills.filter((s) => s !== skill)
-      : [...filters.selectedSkills, skill];
-    onFiltersChange({ ...filters, selectedSkills: updated });
+  // Helpers
+  const toggle = (key: keyof CandidateFilters, value: string) => {
+    const arr = filters[key] as string[];
+    const updated = arr.includes(value)
+      ? arr.filter((v) => v !== value)
+      : [...arr, value];
+    onFiltersChange({ ...filters, [key]: updated });
   };
 
-  const clearFilters = () => {
-    onFiltersChange(defaultFilters);
+  const clearFilters = () => onFiltersChange(defaultFilters);
+
+  // ─── Checkbox list component ────────────────────────────────
+  const CheckboxList = ({
+    items,
+    selected,
+    filterKey,
+    maxVisible = 6,
+  }: {
+    items: string[];
+    selected: string[];
+    filterKey: keyof CandidateFilters;
+    maxVisible?: number;
+  }) => {
+    const [showAll, setShowAll] = useState(false);
+    const visible = showAll ? items : items.slice(0, maxVisible);
+    return (
+      <div className="space-y-2">
+        <div className="flex flex-wrap gap-x-4 gap-y-2 max-h-48 overflow-y-auto">
+          {visible.map((item) => (
+            <label key={item} className="flex items-center gap-1.5 cursor-pointer select-none min-w-[140px]">
+              <Checkbox
+                checked={selected.includes(item)}
+                onCheckedChange={() => toggle(filterKey, item)}
+                className="h-3.5 w-3.5"
+              />
+              <span className="text-xs text-foreground truncate">{item}</span>
+            </label>
+          ))}
+        </div>
+        {items.length > maxVisible && (
+          <button
+            onClick={() => setShowAll(!showAll)}
+            className="text-xs text-primary hover:underline"
+          >
+            {showAll ? "Show less" : `+${items.length - maxVisible} more`}
+          </button>
+        )}
+      </div>
+    );
   };
 
   return (
     <div className="space-y-2">
       {/* Toggle Button */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 flex-wrap">
         <Button
           variant="outline"
           size="sm"
@@ -97,7 +253,7 @@ const CandidateFiltersPanel = ({
           className="gap-2"
         >
           <Filter className="h-4 w-4" />
-          Filters
+          Advanced Filters
           {activeFilterCount > 0 && (
             <Badge variant="default" className="h-5 w-5 p-0 flex items-center justify-center text-xs rounded-full">
               {activeFilterCount}
@@ -107,9 +263,33 @@ const CandidateFiltersPanel = ({
         </Button>
         {activeFilterCount > 0 && (
           <Button variant="ghost" size="sm" onClick={clearFilters} className="gap-1 text-muted-foreground">
-            <X className="h-3 w-3" />
-            Clear
+            <X className="h-3 w-3" /> Clear all ({activeFilterCount})
           </Button>
+        )}
+        {/* Active filter chips */}
+        {activeFilterCount > 0 && (
+          <div className="flex flex-wrap gap-1.5">
+            {filters.selectedDesignations.map((d) => (
+              <Badge key={d} variant="secondary" className="text-xs gap-1 cursor-pointer" onClick={() => toggle("selectedDesignations", d)}>
+                {d} <X className="h-3 w-3" />
+              </Badge>
+            ))}
+            {filters.selectedLocations.map((l) => (
+              <Badge key={l} variant="secondary" className="text-xs gap-1 cursor-pointer" onClick={() => toggle("selectedLocations", l)}>
+                {l} <X className="h-3 w-3" />
+              </Badge>
+            ))}
+            {filters.employmentStatus !== "all" && (
+              <Badge variant="secondary" className="text-xs gap-1 cursor-pointer" onClick={() => onFiltersChange({ ...filters, employmentStatus: "all" })}>
+                {employmentStatuses.find(s => s.value === filters.employmentStatus)?.label} <X className="h-3 w-3" />
+              </Badge>
+            )}
+            {filters.profileFreshness !== "all" && (
+              <Badge variant="secondary" className="text-xs gap-1 cursor-pointer" onClick={() => onFiltersChange({ ...filters, profileFreshness: "all" })}>
+                {freshnessOptions.find(o => o.value === filters.profileFreshness)?.label} <X className="h-3 w-3" />
+              </Badge>
+            )}
+          </div>
         )}
       </div>
 
@@ -123,103 +303,346 @@ const CandidateFiltersPanel = ({
             transition={{ duration: 0.2 }}
             className="overflow-hidden"
           >
-            <div className="border border-border rounded-lg p-4 bg-card space-y-5">
-              {/* Experience Range Slider */}
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <label className="text-sm font-medium text-foreground">Experience (Years)</label>
-                  <span className="text-sm text-muted-foreground">
-                    {filters.experienceRange[0]} – {filters.experienceRange[1]}+ yrs
-                  </span>
-                </div>
-                <Slider
-                  min={0}
-                  max={30}
-                  step={1}
-                  value={filters.experienceRange}
-                  onValueChange={(value) =>
-                    onFiltersChange({ ...filters, experienceRange: value as [number, number] })
-                  }
-                  className="w-full"
-                />
-                <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>0 yrs</span>
-                  <span>15 yrs</span>
-                  <span>30+ yrs</span>
-                </div>
-              </div>
+            <div className="border border-border rounded-lg bg-card">
+              <Accordion type="multiple" defaultValue={["designation", "experience", "location"]} className="w-full">
 
-              {/* Salary Range Slider */}
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <label className="text-sm font-medium text-foreground">Expected Salary (LPA)</label>
-                  <span className="text-sm text-muted-foreground">
-                    ₹{filters.salaryRange[0]}L – ₹{filters.salaryRange[1] === 50 ? "50+" : filters.salaryRange[1]}L
-                  </span>
-                </div>
-                <Slider
-                  min={0}
-                  max={50}
-                  step={1}
-                  value={filters.salaryRange}
-                  onValueChange={(value) =>
-                    onFiltersChange({ ...filters, salaryRange: value as [number, number] })
-                  }
-                  className="w-full"
-                />
-                <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>₹0L</span>
-                  <span>₹25L</span>
-                  <span>₹50L+</span>
-                </div>
-              </div>
+                {/* ─── Designation ─────────────────────────── */}
+                <AccordionItem value="designation" className="border-b border-border px-4">
+                  <AccordionTrigger className="py-3 hover:no-underline">
+                    <div className="flex items-center gap-2 text-sm font-medium">
+                      <UserCheck className="h-4 w-4 text-primary" />
+                      Designation
+                      {filters.selectedDesignations.length > 0 && (
+                        <Badge variant="default" className="h-4 text-[10px] px-1.5 rounded-full">
+                          {filters.selectedDesignations.length}
+                        </Badge>
+                      )}
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="pb-3">
+                    <CheckboxList
+                      items={designations}
+                      selected={filters.selectedDesignations}
+                      filterKey="selectedDesignations"
+                      maxVisible={8}
+                    />
+                  </AccordionContent>
+                </AccordionItem>
 
-              {/* Education Level */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-foreground">Education Level</label>
-                <Select
-                  value={filters.educationLevel}
-                  onValueChange={(value) =>
-                    onFiltersChange({ ...filters, educationLevel: value })
-                  }
-                >
-                  <SelectTrigger className="w-full h-9">
-                    <SelectValue placeholder="Select education level" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {educationLevels.map((level) => (
-                      <SelectItem key={level.value} value={level.value}>
-                        {level.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+                {/* ─── Experience ──────────────────────────── */}
+                <AccordionItem value="experience" className="border-b border-border px-4">
+                  <AccordionTrigger className="py-3 hover:no-underline">
+                    <div className="flex items-center gap-2 text-sm font-medium">
+                      <Briefcase className="h-4 w-4 text-primary" />
+                      Experience
+                      {(filters.experienceRange[0] !== 0 || filters.experienceRange[1] !== 30) && (
+                        <span className="text-xs text-muted-foreground font-normal">
+                          {filters.experienceRange[0]}–{filters.experienceRange[1]}+ yrs
+                        </span>
+                      )}
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="pb-3 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-muted-foreground">
+                        {filters.experienceRange[0]} – {filters.experienceRange[1]}+ years
+                      </span>
+                    </div>
+                    <Slider
+                      min={0} max={30} step={1}
+                      value={filters.experienceRange}
+                      onValueChange={(v) => onFiltersChange({ ...filters, experienceRange: v as [number, number] })}
+                      className="w-full"
+                    />
+                    <div className="flex justify-between text-[10px] text-muted-foreground">
+                      <span>0 yrs</span><span>15 yrs</span><span>30+ yrs</span>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
 
-              {/* Skills Filter */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-foreground">
-                  Skills {filters.selectedSkills.length > 0 && `(${filters.selectedSkills.length} selected)`}
-                </label>
-                <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
-                  {topSkills.map((skill) => (
-                    <label
-                      key={skill}
-                      className="flex items-center gap-1.5 cursor-pointer select-none"
-                    >
-                      <Checkbox
-                        checked={filters.selectedSkills.includes(skill)}
-                        onCheckedChange={() => handleSkillToggle(skill)}
-                        className="h-3.5 w-3.5"
+                {/* ─── Location ────────────────────────────── */}
+                <AccordionItem value="location" className="border-b border-border px-4">
+                  <AccordionTrigger className="py-3 hover:no-underline">
+                    <div className="flex items-center gap-2 text-sm font-medium">
+                      <MapPin className="h-4 w-4 text-primary" />
+                      Location
+                      {filters.selectedLocations.length > 0 && (
+                        <Badge variant="default" className="h-4 text-[10px] px-1.5 rounded-full">
+                          {filters.selectedLocations.length}
+                        </Badge>
+                      )}
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="pb-3">
+                    {topLocations.length > 0 ? (
+                      <CheckboxList
+                        items={topLocations}
+                        selected={filters.selectedLocations}
+                        filterKey="selectedLocations"
                       />
-                      <span className="text-xs capitalize text-foreground">{skill}</span>
-                    </label>
-                  ))}
-                  {topSkills.length === 0 && (
-                    <p className="text-xs text-muted-foreground">No skills data available</p>
-                  )}
-                </div>
-              </div>
+                    ) : (
+                      <p className="text-xs text-muted-foreground">No location data available</p>
+                    )}
+                  </AccordionContent>
+                </AccordionItem>
+
+                {/* ─── Department / Subject ────────────────── */}
+                <AccordionItem value="department" className="border-b border-border px-4">
+                  <AccordionTrigger className="py-3 hover:no-underline">
+                    <div className="flex items-center gap-2 text-sm font-medium">
+                      <BookOpen className="h-4 w-4 text-primary" />
+                      Department / Subject
+                      {filters.selectedDepartments.length > 0 && (
+                        <Badge variant="default" className="h-4 text-[10px] px-1.5 rounded-full">
+                          {filters.selectedDepartments.length}
+                        </Badge>
+                      )}
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="pb-3">
+                    {topDepartments.length > 0 ? (
+                      <CheckboxList
+                        items={topDepartments}
+                        selected={filters.selectedDepartments}
+                        filterKey="selectedDepartments"
+                      />
+                    ) : (
+                      <p className="text-xs text-muted-foreground">No department data available</p>
+                    )}
+                  </AccordionContent>
+                </AccordionItem>
+
+                {/* ─── University / Institute ─────────────── */}
+                <AccordionItem value="university" className="border-b border-border px-4">
+                  <AccordionTrigger className="py-3 hover:no-underline">
+                    <div className="flex items-center gap-2 text-sm font-medium">
+                      <Building2 className="h-4 w-4 text-primary" />
+                      University / Institute
+                      {filters.selectedUniversities.length > 0 && (
+                        <Badge variant="default" className="h-4 text-[10px] px-1.5 rounded-full">
+                          {filters.selectedUniversities.length}
+                        </Badge>
+                      )}
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="pb-3">
+                    {topUniversities.length > 0 ? (
+                      <CheckboxList
+                        items={topUniversities}
+                        selected={filters.selectedUniversities}
+                        filterKey="selectedUniversities"
+                      />
+                    ) : (
+                      <p className="text-xs text-muted-foreground">No university data available</p>
+                    )}
+                  </AccordionContent>
+                </AccordionItem>
+
+                {/* ─── Salary ─────────────────────────────── */}
+                <AccordionItem value="salary" className="border-b border-border px-4">
+                  <AccordionTrigger className="py-3 hover:no-underline">
+                    <div className="flex items-center gap-2 text-sm font-medium">
+                      <span className="text-primary text-sm font-bold">₹</span>
+                      Annual Salary (LPA)
+                      {(filters.salaryRange[0] !== 0 || filters.salaryRange[1] !== 50) && (
+                        <span className="text-xs text-muted-foreground font-normal">
+                          ₹{filters.salaryRange[0]}L–₹{filters.salaryRange[1] === 50 ? "50+" : filters.salaryRange[1]}L
+                        </span>
+                      )}
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="pb-3 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-muted-foreground">
+                        ₹{filters.salaryRange[0]}L – ₹{filters.salaryRange[1] === 50 ? "50+" : filters.salaryRange[1]}L
+                      </span>
+                    </div>
+                    <Slider
+                      min={0} max={50} step={1}
+                      value={filters.salaryRange}
+                      onValueChange={(v) => onFiltersChange({ ...filters, salaryRange: v as [number, number] })}
+                      className="w-full"
+                    />
+                    <div className="flex justify-between text-[10px] text-muted-foreground">
+                      <span>₹0L</span><span>₹25L</span><span>₹50L+</span>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+
+                {/* ─── Education Level ─────────────────────── */}
+                <AccordionItem value="education" className="border-b border-border px-4">
+                  <AccordionTrigger className="py-3 hover:no-underline">
+                    <div className="flex items-center gap-2 text-sm font-medium">
+                      <GraduationCap className="h-4 w-4 text-primary" />
+                      Education Level
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="pb-3">
+                    <Select
+                      value={filters.educationLevel}
+                      onValueChange={(v) => onFiltersChange({ ...filters, educationLevel: v })}
+                    >
+                      <SelectTrigger className="w-full h-9">
+                        <SelectValue placeholder="Select education level" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {educationLevels.map((l) => (
+                          <SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </AccordionContent>
+                </AccordionItem>
+
+                {/* ─── Skills ─────────────────────────────── */}
+                <AccordionItem value="skills" className="border-b border-border px-4">
+                  <AccordionTrigger className="py-3 hover:no-underline">
+                    <div className="flex items-center gap-2 text-sm font-medium">
+                      <Briefcase className="h-4 w-4 text-primary" />
+                      Skills
+                      {filters.selectedSkills.length > 0 && (
+                        <Badge variant="default" className="h-4 text-[10px] px-1.5 rounded-full">
+                          {filters.selectedSkills.length}
+                        </Badge>
+                      )}
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="pb-3">
+                    {topSkills.length > 0 ? (
+                      <CheckboxList
+                        items={topSkills}
+                        selected={filters.selectedSkills}
+                        filterKey="selectedSkills"
+                        maxVisible={10}
+                      />
+                    ) : (
+                      <p className="text-xs text-muted-foreground">No skills data available</p>
+                    )}
+                  </AccordionContent>
+                </AccordionItem>
+
+                {/* ─── Profile Freshness ──────────────────── */}
+                <AccordionItem value="freshness" className="border-b border-border px-4">
+                  <AccordionTrigger className="py-3 hover:no-underline">
+                    <div className="flex items-center gap-2 text-sm font-medium">
+                      <Clock className="h-4 w-4 text-primary" />
+                      Profile Freshness
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="pb-3">
+                    <div className="flex flex-wrap gap-2">
+                      {freshnessOptions.map((opt) => (
+                        <button
+                          key={opt.value}
+                          onClick={() => onFiltersChange({ ...filters, profileFreshness: opt.value })}
+                          className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
+                            filters.profileFreshness === opt.value
+                              ? "bg-primary text-primary-foreground border-primary"
+                              : "bg-background text-foreground border-border hover:bg-accent"
+                          }`}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+
+                {/* ─── Employment Status ──────────────────── */}
+                <AccordionItem value="employment" className="border-b border-border px-4">
+                  <AccordionTrigger className="py-3 hover:no-underline">
+                    <div className="flex items-center gap-2 text-sm font-medium">
+                      <UserCheck className="h-4 w-4 text-primary" />
+                      Employment Status
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="pb-3">
+                    <div className="flex flex-wrap gap-2">
+                      {employmentStatuses.map((s) => (
+                        <button
+                          key={s.value}
+                          onClick={() => onFiltersChange({ ...filters, employmentStatus: s.value })}
+                          className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
+                            filters.employmentStatus === s.value
+                              ? "bg-primary text-primary-foreground border-primary"
+                              : "bg-background text-foreground border-border hover:bg-accent"
+                          }`}
+                        >
+                          {s.label}
+                        </button>
+                      ))}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+
+                {/* ─── H-Index ────────────────────────────── */}
+                <AccordionItem value="hindex" className="border-b border-border px-4">
+                  <AccordionTrigger className="py-3 hover:no-underline">
+                    <div className="flex items-center gap-2 text-sm font-medium">
+                      <BookOpen className="h-4 w-4 text-primary" />
+                      H-Index
+                      {(filters.hIndexRange[0] !== 0 || filters.hIndexRange[1] !== 50) && (
+                        <span className="text-xs text-muted-foreground font-normal">
+                          {filters.hIndexRange[0]}–{filters.hIndexRange[1]}+
+                        </span>
+                      )}
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="pb-3 space-y-3">
+                    <span className="text-xs text-muted-foreground">
+                      {filters.hIndexRange[0]} – {filters.hIndexRange[1]}+
+                    </span>
+                    <Slider
+                      min={0} max={50} step={1}
+                      value={filters.hIndexRange}
+                      onValueChange={(v) => onFiltersChange({ ...filters, hIndexRange: v as [number, number] })}
+                      className="w-full"
+                    />
+                    <div className="flex justify-between text-[10px] text-muted-foreground">
+                      <span>0</span><span>25</span><span>50+</span>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+
+                {/* ─── Quick toggles: Resume & Research ──── */}
+                <AccordionItem value="quickflags" className="px-4">
+                  <AccordionTrigger className="py-3 hover:no-underline">
+                    <div className="flex items-center gap-2 text-sm font-medium">
+                      <FileText className="h-4 w-4 text-primary" />
+                      Quick Filters
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="pb-3 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="has-resume" className="text-xs text-foreground cursor-pointer">Has Resume Attached</Label>
+                      <Select value={filters.hasResume} onValueChange={(v) => onFiltersChange({ ...filters, hasResume: v })}>
+                        <SelectTrigger className="w-24 h-7 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Any</SelectItem>
+                          <SelectItem value="yes">Yes</SelectItem>
+                          <SelectItem value="no">No</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="has-papers" className="text-xs text-foreground cursor-pointer">Has Research Papers</Label>
+                      <Select value={filters.hasResearchPapers} onValueChange={(v) => onFiltersChange({ ...filters, hasResearchPapers: v })}>
+                        <SelectTrigger className="w-24 h-7 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Any</SelectItem>
+                          <SelectItem value="yes">Yes</SelectItem>
+                          <SelectItem value="no">No</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+
+              </Accordion>
             </div>
           </motion.div>
         )}
