@@ -151,6 +151,8 @@ const FindCandidatesTab = ({
         switch (advancedFilters.educationLevel) {
           case "phd":
             return /\b(ph\.?d|doctorate|doctoral)\b/.test(text);
+          case "postdoc":
+            return /\b(post.?doc|postdoctoral)\b/.test(text);
           case "masters":
             return /\b(master'?s?|m\.?s\.?|m\.?a\.?|m\.?tech|m\.?sc|mba)\b/.test(text);
           case "bachelors":
@@ -160,6 +162,89 @@ const FindCandidatesTab = ({
           default:
             return true;
         }
+      });
+    }
+
+    // Designation filter
+    if (advancedFilters.selectedDesignations.length > 0) {
+      result = result.filter(c => {
+        const text = `${c.role || ""} ${c.headline || ""}`.toLowerCase();
+        return advancedFilters.selectedDesignations.some(d => text.includes(d.toLowerCase()));
+      });
+    }
+
+    // Department / Subject filter
+    if (advancedFilters.selectedDepartments.length > 0) {
+      result = result.filter(c => {
+        const subjects = (c.subjects || []).map(s => s.trim());
+        return advancedFilters.selectedDepartments.some(d => subjects.includes(d));
+      });
+    }
+
+    // Location filter
+    if (advancedFilters.selectedLocations.length > 0) {
+      result = result.filter(c => {
+        const loc = c.location?.trim() || "";
+        return advancedFilters.selectedLocations.includes(loc);
+      });
+    }
+
+    // University filter
+    if (advancedFilters.selectedUniversities.length > 0) {
+      result = result.filter(c => {
+        const uni = c.university?.trim() || "";
+        return advancedFilters.selectedUniversities.includes(uni);
+      });
+    }
+
+    // Profile freshness filter
+    if (advancedFilters.profileFreshness !== "all") {
+      const days = parseInt(advancedFilters.profileFreshness, 10);
+      const cutoff = new Date();
+      cutoff.setDate(cutoff.getDate() - days);
+      result = result.filter(c => {
+        if (!c.updated_at) return false;
+        return new Date(c.updated_at) >= cutoff;
+      });
+    }
+
+    // Employment status filter
+    if (advancedFilters.employmentStatus !== "all") {
+      result = result.filter(c => {
+        const exp = Array.isArray(c.experience) ? c.experience : [];
+        if (advancedFilters.employmentStatus === "fresher") return exp.length === 0;
+        const hasCurrentJob = exp.some((e: any) => e.isCurrent === true || e.current === true);
+        if (advancedFilters.employmentStatus === "working") return hasCurrentJob;
+        return !hasCurrentJob && exp.length > 0;
+      });
+    }
+
+    // Has resume filter
+    if (advancedFilters.hasResume === "yes") {
+      result = result.filter(c => !!c.resume_url);
+    } else if (advancedFilters.hasResume === "no") {
+      result = result.filter(c => !c.resume_url);
+    }
+
+    // Has research papers filter
+    if (advancedFilters.hasResearchPapers === "yes") {
+      result = result.filter(c => {
+        const papers = Array.isArray(c.research_papers) ? c.research_papers : [];
+        return papers.length > 0;
+      });
+    } else if (advancedFilters.hasResearchPapers === "no") {
+      result = result.filter(c => {
+        const papers = Array.isArray(c.research_papers) ? c.research_papers : [];
+        return papers.length === 0;
+      });
+    }
+
+    // H-Index range filter
+    const [minH, maxH] = advancedFilters.hIndexRange;
+    if (minH !== 0 || maxH !== 50) {
+      result = result.filter(c => {
+        const hIndex = c.manual_h_index || (c.scopus_metrics as any)?.h_index || 0;
+        return hIndex >= minH && (maxH === 50 ? true : hIndex <= maxH);
       });
     }
 
