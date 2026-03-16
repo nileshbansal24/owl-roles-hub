@@ -28,28 +28,17 @@ export const useRecruiterDashboard = () => {
   const [hasCompletedProfile, setHasCompletedProfile] = useState(false);
   const [hasReviewedCandidate, setHasReviewedCandidate] = useState(false);
 
-  // Tab state
+  // Tab state - derive from URL, use state only as fallback for initial render
   const urlTab = searchParams.get("tab");
-  const [activeTab, setActiveTab] = useState(urlTab || "resdex");
+  const activeTab = urlTab || "resdex";
   
   const handleTabChange = useCallback((value: string) => {
-    setActiveTab(value);
     if (value === "resdex") {
-      setSearchParams({});
+      setSearchParams({}, { replace: true });
     } else {
-      setSearchParams({ tab: value });
+      setSearchParams({ tab: value }, { replace: true });
     }
   }, [setSearchParams]);
-  
-  // Sync state when URL changes
-  useEffect(() => {
-    const tabFromUrl = searchParams.get("tab");
-    if (tabFromUrl && tabFromUrl !== activeTab) {
-      setActiveTab(tabFromUrl);
-    } else if (!tabFromUrl && activeTab !== "resdex") {
-      setActiveTab("resdex");
-    }
-  }, [searchParams, activeTab]);
 
   const sendStatusNotification = useCallback(async (
     applicationId: string, 
