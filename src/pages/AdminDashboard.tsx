@@ -24,7 +24,7 @@ const AdminDashboard = () => {
       case "overview":
         return <AdminOverview stats={stats} loading={loading} />;
       case "emails":
-        return <AdminEmails emails={emails} loading={loading} />;
+        return <AdminEmails emails={emails} loading={loading} onRefetch={refetch} />;
       case "institutions":
         return <AdminInstitutions institutions={institutions} loading={loading} onRefetch={refetch} />;
       case "candidates":
