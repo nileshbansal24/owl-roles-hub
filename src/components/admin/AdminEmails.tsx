@@ -1,5 +1,5 @@
 import { format } from "date-fns";
-import { Mail, Users, Building2, User, Copy, Check } from "lucide-react";
+import { Mail, Building2, User, Copy, Check, Trash2, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -13,9 +13,20 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { FadeIn } from "@/components/ui/fade-in";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface EmailData {
   id: string;
@@ -29,6 +40,7 @@ interface AdminEmailsProps {
   emails: EmailData[];
   loading: boolean;
   recruiterEmails?: RecruiterEmailData[];
+  onRefetch?: () => void;
 }
 
 interface RecruiterEmailData {
@@ -38,10 +50,15 @@ interface RecruiterEmailData {
   university: string | null;
 }
 
-const AdminEmails = ({ emails, loading, recruiterEmails = [] }: AdminEmailsProps) => {
+const AdminEmails = ({ emails, loading, recruiterEmails = [], onRefetch }: AdminEmailsProps) => {
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<{ open: boolean; user: EmailData | null }>({
+    open: false,
+    user: null,
+  });
 
   const filteredEmails = emails.filter(e => {
     const query = searchQuery.toLowerCase();
@@ -80,6 +97,38 @@ const AdminEmails = ({ emails, loading, recruiterEmails = [] }: AdminEmailsProps
     });
   };
 
+  const handleDeleteUser = async () => {
+    const user = confirmDelete.user;
+    if (!user) return;
+
+    setConfirmDelete({ open: false, user: null });
+    setDeletingId(user.id);
+
+    try {
+      const response = await supabase.functions.invoke("admin-delete-user", {
+        body: { userId: user.id },
+      });
+
+      if (response.error) throw new Error(response.error.message);
+
+      toast({
+        title: `${user.user_type === "recruiter" ? "Recruiter" : "User"} Deleted`,
+        description: `${user.full_name || user.email || "User"} and all associated data have been permanently removed.`,
+      });
+
+      onRefetch?.();
+    } catch (error: any) {
+      console.error("Error deleting user:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete user. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   if (loading) {
     return (
       <div className="space-y-4">
@@ -99,6 +148,24 @@ const AdminEmails = ({ emails, loading, recruiterEmails = [] }: AdminEmailsProps
 
   return (
     <div className="space-y-6">
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={confirmDelete.open} onOpenChange={(open) => !open && setConfirmDelete({ open: false, user: null })}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete {confirmDelete.user?.user_type === "recruiter" ? "Recruiter" : "User"} Permanently?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete <strong>{confirmDelete.user?.full_name || confirmDelete.user?.email || "this user"}</strong> and all associated data including jobs, applications, messages, interviews, and events. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteUser} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete Permanently
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -267,11 +334,22 @@ const AdminEmails = ({ emails, loading, recruiterEmails = [] }: AdminEmailsProps
                             {format(new Date(user.created_at), "MMM d, yyyy")}
                           </TableCell>
                           <TableCell>
-                            {user.email && (
-                              <Button size="sm" variant="ghost" className="h-8" onClick={() => copyEmail(user.email!, user.id)}>
-                                {copiedId === user.id ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4" />}
+                            <div className="flex items-center gap-1">
+                              {user.email && (
+                                <Button size="sm" variant="ghost" className="h-8" onClick={() => copyEmail(user.email!, user.id)}>
+                                  {copiedId === user.id ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4" />}
+                                </Button>
+                              )}
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                disabled={deletingId === user.id}
+                                onClick={() => setConfirmDelete({ open: true, user })}
+                              >
+                                {deletingId === user.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
                               </Button>
-                            )}
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))}
@@ -343,11 +421,22 @@ const AdminEmails = ({ emails, loading, recruiterEmails = [] }: AdminEmailsProps
                               {format(new Date(user.created_at), "MMM d, yyyy")}
                             </TableCell>
                             <TableCell>
-                              {user.email && (
-                                <Button size="sm" variant="ghost" className="h-8" onClick={() => copyEmail(user.email!, user.id)}>
-                                  {copiedId === user.id ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4" />}
+                              <div className="flex items-center gap-1">
+                                {user.email && (
+                                  <Button size="sm" variant="ghost" className="h-8" onClick={() => copyEmail(user.email!, user.id)}>
+                                    {copiedId === user.id ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4" />}
+                                  </Button>
+                                )}
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                  disabled={deletingId === user.id}
+                                  onClick={() => setConfirmDelete({ open: true, user })}
+                                >
+                                  {deletingId === user.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
                                 </Button>
-                              )}
+                              </div>
                             </TableCell>
                           </TableRow>
                         ))}
