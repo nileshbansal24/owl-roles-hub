@@ -1,16 +1,13 @@
 import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useJobsWithRecruiters, JobWithRecruiter } from "@/hooks/useJobsWithRecruiters";
 import Navbar from "@/components/Navbar";
 import NaukriHeroSection from "@/components/NaukriHeroSection";
-import StatsSection from "@/components/StatsSection";
 import JobCategories from "@/components/JobCategories";
 import FeaturedJobs from "@/components/FeaturedJobs";
 import TopCompanies from "@/components/TopCompanies";
-
 import TestimonialsSection from "@/components/TestimonialsSection";
 import CTASection from "@/components/CTASection";
 import HowItWorks from "@/components/HowItWorks";
@@ -40,11 +37,9 @@ const Index = () => {
         job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         job.institute.toLowerCase().includes(searchQuery.toLowerCase()) ||
         job.tags?.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
-
       const matchesLocation =
         locationQuery === "" ||
         job.location.toLowerCase().includes(locationQuery.toLowerCase());
-
       return matchesSearch && matchesLocation;
     });
   }, [jobs, searchQuery, locationQuery]);
@@ -84,9 +79,7 @@ const Index = () => {
     }, 100);
   };
 
-  const handleSearch = () => {
-    // Search is already reactive via filteredJobs
-  };
+  const handleSearch = () => {};
 
   const openAuthModal = (mode: "login" | "signup", role: "candidate" | "recruiter") => {
     setAuthMode(mode);
@@ -113,8 +106,6 @@ const Index = () => {
         onGetStarted={() => openAuthModal("signup", "candidate")}
       />
 
-      {/* StatsSection removed */}
-
       <JobCategories onCategoryClick={handleCategoryClick} />
 
       <HowItWorks />
@@ -135,7 +126,6 @@ const Index = () => {
 
       <TestimonialsSection />
 
-
       <CTASection 
         onCandidateClick={() => openAuthModal("signup", "candidate")}
         onRecruiterClick={() => openAuthModal("signup", "recruiter")}
@@ -143,7 +133,6 @@ const Index = () => {
 
       <Footer />
 
-      {/* Modals */}
       <JobDetailModal
         job={selectedJob}
         open={jobModalOpen}
