@@ -57,6 +57,7 @@ serve(async (req) => {
     const { data: jobs, error: jobsError } = await supabase
       .from("jobs")
       .select("id, title, institute, location, description, salary_range, job_type, tags, created_at, created_by")
+      .neq("institute", "Chandigarh University")
       .order("created_at", { ascending: false });
 
     if (jobsError) throw jobsError;
