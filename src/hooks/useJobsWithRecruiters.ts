@@ -18,76 +18,102 @@ export interface JobWithRecruiter {
   } | null;
 }
 
+interface PublicLandingDataResponse {
+  jobs?: JobWithRecruiter[];
+}
+
 export const useJobsWithRecruiters = () => {
   const [jobs, setJobs] = useState<JobWithRecruiter[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let isActive = true;
+
     const fetchJobsWithRecruiters = async () => {
       try {
-        // First fetch jobs from public view
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+
+        if (!session?.user) {
+          const { data, error } = await supabase.functions.invoke("public-landing-data");
+
+          if (error) throw error;
+
+          if (isActive) {
+            setJobs((data as PublicLandingDataResponse | null)?.jobs || []);
+          }
+
+          return;
+        }
+
         const { data: jobsData, error: jobsError } = await supabase
           .from("jobs_public")
           .select("*")
           .order("created_at", { ascending: false });
 
         if (jobsError) {
-          console.error("Error fetching jobs:", jobsError);
-          setLoading(false);
-          return;
+          throw jobsError;
         }
 
-        // Try to fetch full job data with created_by (requires auth)
-        const { data: fullJobsData } = await supabase
+        const { data: fullJobsData, error: fullJobsError } = await supabase
           .from("jobs")
           .select("id, created_by")
           .order("created_at", { ascending: false });
 
-        // Get recruiter IDs
-        const recruiterIds = fullJobsData
-          ?.filter((j) => j.created_by)
-          .map((j) => j.created_by) || [];
+        if (fullJobsError) {
+          throw fullJobsError;
+        }
 
-        // Fetch recruiter profiles
-        const { data: profilesData } = recruiterIds.length > 0
+        const recruiterIds = fullJobsData
+          ?.filter((job) => job.created_by)
+          .map((job) => job.created_by) || [];
+
+        const { data: profilesData, error: profilesError } = recruiterIds.length > 0
           ? await supabase
               .from("profiles_public")
               .select("id, avatar_url, full_name")
               .in("id", recruiterIds)
-          : { data: [] };
+          : { data: [], error: null };
 
-        // Fetch verification statuses
-        const { data: verificationsData } = recruiterIds.length > 0
+        if (profilesError) {
+          throw profilesError;
+        }
+
+        const { data: verificationsData, error: verificationsError } = recruiterIds.length > 0
           ? await supabase
               .from("institution_verifications")
               .select("recruiter_id, status")
               .in("recruiter_id", recruiterIds)
               .eq("status", "verified")
-          : { data: [] };
+          : { data: [], error: null };
 
-        // Create lookup maps
+        if (verificationsError) {
+          throw verificationsError;
+        }
+
         const jobCreatorMap = new Map<string, string>(
-          fullJobsData?.map((j) => [j.id, j.created_by] as [string, string]) || []
+          fullJobsData?.map((job) => [job.id, job.created_by] as [string, string]) || []
         );
-        
+
         interface ProfileData {
           id: string;
           avatar_url: string | null;
           full_name: string | null;
         }
-        
+
         const profileMap = new Map<string, ProfileData>(
-          (profilesData as ProfileData[] | null)?.map((p) => [p.id, p] as [string, ProfileData]) || []
-        );
-        const verificationMap = new Set<string>(
-          verificationsData?.map((v) => v.recruiter_id) || []
+          (profilesData as ProfileData[] | null)?.map((profile) => [profile.id, profile] as [string, ProfileData]) || []
         );
 
-        // Merge data
+        const verificationMap = new Set<string>(
+          verificationsData?.map((verification) => verification.recruiter_id) || []
+        );
+
         const enrichedJobs: JobWithRecruiter[] = (jobsData || []).map((job) => {
           const creatorId = jobCreatorMap.get(job.id!);
           const profile = creatorId ? profileMap.get(creatorId) : null;
-          
+
           return {
             id: job.id!,
             title: job.title!,
@@ -108,15 +134,23 @@ export const useJobsWithRecruiters = () => {
           };
         });
 
-        setJobs(enrichedJobs);
+        if (isActive) {
+          setJobs(enrichedJobs);
+        }
       } catch (error) {
         console.error("Error in useJobsWithRecruiters:", error);
       } finally {
-        setLoading(false);
+        if (isActive) {
+          setLoading(false);
+        }
       }
     };
 
     fetchJobsWithRecruiters();
+
+    return () => {
+      isActive = false;
+    };
   }, []);
 
   return { jobs, loading };
