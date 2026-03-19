@@ -1,29 +1,114 @@
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { MapPin, Briefcase, Star, ExternalLink, TrendingUp } from "lucide-react";
+import { MapPin, Briefcase, TrendingUp, Users, Building2, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { supabase } from "@/integrations/supabase/client";
 
-interface Company {
+interface UniversityStats {
   name: string;
-  logo: string;
-  location: string;
-  openings: number;
-  rating: number;
-  type: string;
+  initials: string;
+  jobCount: number;
+  applicationCount: number;
 }
-
-const companies: Company[] = [
-  { name: "Lovely Professional University", logo: "LPU", location: "Punjab", openings: 45, rating: 4.5, type: "Private" },
-  { name: "Chitkara University", logo: "CU", location: "Punjab", openings: 28, rating: 4.3, type: "Private" },
-  { name: "Amity University", logo: "AU", location: "Noida", openings: 52, rating: 4.2, type: "Private" },
-  { name: "IIT Delhi", logo: "IIT", location: "Delhi", openings: 23, rating: 4.8, type: "Government" },
-  { name: "IIM Bangalore", logo: "IIM", location: "Bangalore", openings: 15, rating: 4.9, type: "Government" },
-];
 
 interface TopCompaniesProps {
   onViewJobs?: (instituteName: string) => void;
 }
 
+const getInitials = (name: string): string => {
+  const words = name.split(/\s+/);
+  if (words.length === 1) return words[0].substring(0, 3).toUpperCase();
+  // Check for common acronyms
+  const upper = name.replace(/[^A-Z]/g, "");
+  if (upper.length >= 2 && upper.length <= 5) return upper;
+  return words.map(w => w[0]).join("").substring(0, 4).toUpperCase();
+};
+
 const TopCompanies = ({ onViewJobs }: TopCompaniesProps) => {
+  const [universities, setUniversities] = useState<UniversityStats[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        // Fetch all jobs to count by institute
+        const { data: jobs } = await supabase
+          .from("jobs_public")
+          .select("id, institute");
+
+        if (!jobs || jobs.length === 0) {
+          setUniversities([]);
+          setLoading(false);
+          return;
+        }
+
+        // Count jobs per institute
+        const jobCountMap = new Map<string, { count: number; ids: string[] }>();
+        jobs.forEach((j) => {
+          const inst = j.institute || "Unknown";
+          const entry = jobCountMap.get(inst) || { count: 0, ids: [] };
+          entry.count++;
+          if (j.id) entry.ids.push(j.id);
+          jobCountMap.set(inst, entry);
+        });
+
+        // Fetch application counts per job
+        const allJobIds = jobs.map((j) => j.id).filter(Boolean) as string[];
+        const { data: applications } = allJobIds.length > 0
+          ? await supabase
+              .from("job_applications")
+              .select("job_id")
+              .in("job_id", allJobIds)
+          : { data: [] };
+
+        // Count applications per institute
+        const appCountMap = new Map<string, number>();
+        const jobToInstitute = new Map<string, string>();
+        jobs.forEach((j) => {
+          if (j.id && j.institute) jobToInstitute.set(j.id, j.institute);
+        });
+
+        applications?.forEach((a) => {
+          const inst = jobToInstitute.get(a.job_id);
+          if (inst) {
+            appCountMap.set(inst, (appCountMap.get(inst) || 0) + 1);
+          }
+        });
+
+        // Build sorted list: sort by jobs + applications combined
+        const stats: UniversityStats[] = Array.from(jobCountMap.entries())
+          .map(([name, { count }]) => ({
+            name,
+            initials: getInitials(name),
+            jobCount: count,
+            applicationCount: appCountMap.get(name) || 0,
+          }))
+          .sort((a, b) => (b.jobCount + b.applicationCount) - (a.jobCount + a.applicationCount))
+          .slice(0, 6);
+
+        setUniversities(stats);
+      } catch (error) {
+        console.error("Error fetching university stats:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStats();
+  }, []);
+
+  if (loading) {
+    return (
+      <section className="py-16">
+        <div className="container mx-auto px-4 flex justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </section>
+    );
+  }
+
+  if (universities.length === 0) return null;
+
   return (
     <section className="py-16">
       <div className="container mx-auto px-4">
@@ -36,28 +121,22 @@ const TopCompanies = ({ onViewJobs }: TopCompaniesProps) => {
         >
           <div>
             <span className="inline-block px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-semibold mb-3">
-              Top Institutions
+              <Building2 className="w-4 h-4 inline mr-1.5 -mt-0.5" />
+              Live Data
             </span>
             <h2 className="font-heading text-2xl md:text-4xl font-extrabold text-foreground mb-2 tracking-tight">
               Top Hiring Universities
             </h2>
             <p className="text-muted-foreground font-medium">
-              Leading institutions actively recruiting talent
+              Institutions with the most openings &amp; hirings — updated in real time
             </p>
           </div>
-          <motion.button
-            whileHover={{ x: 4 }}
-            className="text-primary hover:underline font-semibold hidden sm:flex items-center gap-1.5"
-          >
-            View all universities
-            <ExternalLink className="w-4 h-4" />
-          </motion.button>
         </motion.div>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {companies.map((company, index) => (
+          {universities.map((uni, index) => (
             <motion.div
-              key={company.name}
+              key={uni.name}
               initial={{ opacity: 0, y: 25 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -75,33 +154,33 @@ const TopCompanies = ({ onViewJobs }: TopCompaniesProps) => {
                     transition={{ type: "spring", stiffness: 400 }}
                     className="w-16 h-16 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 group-hover:bg-primary/20 transition-colors"
                   >
-                    <span className="font-heading font-extrabold text-primary text-lg">{company.logo}</span>
+                    <span className="font-heading font-extrabold text-primary text-sm">
+                      {uni.initials}
+                    </span>
                   </motion.div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-heading font-bold text-foreground group-hover:text-primary transition-colors truncate">
-                      {company.name}
+                    <h3 className="font-heading font-bold text-foreground group-hover:text-primary transition-colors line-clamp-2 text-sm md:text-base">
+                      {uni.name}
                     </h3>
-                    <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
-                      <MapPin className="w-3.5 h-3.5" />
-                      <span>{company.location}</span>
-                    </div>
-                    <div className="flex items-center gap-3 mt-2">
+                    <div className="flex items-center gap-3 mt-2 flex-wrap">
                       <Badge variant="secondary" className="gap-1">
-                        <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
-                        {company.rating}
+                        <Briefcase className="w-3 h-3" />
+                        {uni.jobCount} {uni.jobCount === 1 ? "Job" : "Jobs"}
                       </Badge>
-                      <Badge variant="outline">{company.type}</Badge>
+                      <Badge variant="outline" className="gap-1">
+                        <Users className="w-3 h-3" />
+                        {uni.applicationCount} {uni.applicationCount === 1 ? "Application" : "Applications"}
+                      </Badge>
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center justify-between mt-4 pt-4 border-t border-border">
-                  <div className="flex items-center gap-2 text-sm">
-                    <Briefcase className="w-4 h-4 text-primary" />
-                    <span className="font-semibold text-foreground">{company.openings} openings</span>
-                  </div>
+                <div className="flex items-center justify-end mt-4 pt-4 border-t border-border">
                   <motion.button
                     whileHover={{ x: 3 }}
-                    onClick={(e) => { e.stopPropagation(); onViewJobs?.(company.name); }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onViewJobs?.(uni.name);
+                    }}
                     className="text-sm text-primary hover:underline font-semibold flex items-center gap-1"
                   >
                     View Jobs
