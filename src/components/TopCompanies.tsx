@@ -76,13 +76,13 @@ const TopCompanies = ({ onViewJobs }: TopCompaniesProps) => {
           <div>
             <span className="inline-flex items-center px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-semibold mb-3 gap-1.5">
               <Building2 className="w-4 h-4" />
-              Live Data
+              Top Institutions
             </span>
             <h2 className="font-heading text-2xl md:text-4xl font-extrabold text-foreground mb-2 tracking-tight">
               Top Hiring Institutions
             </h2>
             <p className="text-muted-foreground font-medium">
-              Top 6 universities ranked by live job volume and hiring activity
+              Top 6 universities ranked by job volume and hiring activity
             </p>
           </div>
         </motion.div>
