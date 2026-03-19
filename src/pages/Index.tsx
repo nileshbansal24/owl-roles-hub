@@ -113,7 +113,7 @@ const Index = () => {
         onGetStarted={() => openAuthModal("signup", "candidate")}
       />
 
-      <StatsSection />
+      {/* StatsSection removed */}
 
       <JobCategories onCategoryClick={handleCategoryClick} />
 
