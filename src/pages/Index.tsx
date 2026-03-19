@@ -119,17 +119,15 @@ const Index = () => {
 
       <HowItWorks />
 
-      {user && (
-        <div id="featured-jobs">
-          <FeaturedJobs 
-            jobs={filteredJobs} 
-            onJobClick={handleJobClick}
-            loading={jobsLoading}
-            searchQuery={searchQuery}
-            onClearSearch={() => setSearchQuery("")}
-          />
-        </div>
-      )}
+      <div id="featured-jobs">
+        <FeaturedJobs 
+          jobs={filteredJobs} 
+          onJobClick={handleJobClick}
+          loading={jobsLoading}
+          searchQuery={searchQuery}
+          onClearSearch={() => setSearchQuery("")}
+        />
+      </div>
 
       <div id="institutions">
         <TopCompanies onViewJobs={handleCategoryClick} />
