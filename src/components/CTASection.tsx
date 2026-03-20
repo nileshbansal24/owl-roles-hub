@@ -9,7 +9,7 @@ interface CTASectionProps {
 
 const CTASection = ({ onCandidateClick, onRecruiterClick }: CTASectionProps) => {
   return (
-    <section className="py-20 bg-primary relative overflow-hidden">
+    <section className="py-12 bg-primary relative overflow-hidden">
       {/* Subtle pattern */}
       <div className="absolute inset-0 opacity-5">
         <div className="absolute inset-0" style={{
