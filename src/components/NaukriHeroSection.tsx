@@ -121,12 +121,12 @@ const NaukriHeroSection = ({
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.3 }}
-              className="flex flex-wrap gap-3 mb-10"
+              className="flex gap-3 mb-10"
             >
               <Button
                 onClick={onGetStarted}
                 size="lg"
-                className="h-13 px-8 text-base font-semibold gap-2 shadow-lg shadow-primary/25"
+                className="h-11 px-5 text-sm font-semibold gap-1.5 shadow-lg shadow-primary/25"
               >
                 Get Started
                 <ArrowRight className="w-4 h-4" />
@@ -135,11 +135,13 @@ const NaukriHeroSection = ({
                 variant="outline"
                 size="lg"
                 onClick={onGetStarted}
-                className="h-13 px-8 text-base font-semibold gap-2 bg-background/80 backdrop-blur-sm"
+                className="h-11 px-5 text-sm font-semibold gap-1.5 bg-background/80 backdrop-blur-sm"
               >
                 <Upload className="w-4 h-4" />
                 Upload Resume
               </Button>
+
+
             </motion.div>
           )}
 
