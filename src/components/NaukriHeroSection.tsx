@@ -126,10 +126,20 @@ const NaukriHeroSection = ({
               <Button
                 onClick={onGetStarted}
                 size="lg"
-                className="h-13 px-8 text-base font-semibold gap-2 shadow-lg shadow-primary/25"
+                className="h-11 px-5 text-sm font-semibold gap-1.5 shadow-lg shadow-primary/25"
               >
                 Get Started
                 <ArrowRight className="w-4 h-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={onGetStarted}
+                className="h-11 px-5 text-sm font-semibold gap-1.5 bg-background/80 backdrop-blur-sm"
+              >
+                <Upload className="w-4 h-4" />
+                Upload Resume
+              </Button>
               </Button>
               <Button
                 variant="outline"
