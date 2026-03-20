@@ -193,12 +193,12 @@ const NaukriHeroSection = ({
 
             {/* Popular Searches */}
             <div className="flex flex-wrap items-center gap-2 mt-4 pt-3 border-t border-border/50">
-              <span className="text-xs text-muted-foreground font-medium">Popular:</span>
+              <span className="text-xs text-muted-foreground font-medium shrink-0">Popular:</span>
               {popularSearches.map((search) => (
                 <button
                   key={search}
                   onClick={() => setSearchQuery(search)}
-                  className="px-3 py-1 text-xs rounded-full bg-secondary hover:bg-primary/10 hover:text-primary text-muted-foreground transition-colors font-medium"
+                  className="px-4 py-1.5 text-xs rounded-lg bg-secondary/80 border border-border/50 hover:border-primary/40 hover:bg-primary/10 hover:text-primary text-muted-foreground transition-all font-medium"
                 >
                   {search}
                 </button>
