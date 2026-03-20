@@ -45,7 +45,7 @@ const TopCompanies = ({ onViewJobs }: TopCompaniesProps) => {
 
   if (loading) {
     return (
-      <section className="py-20">
+      <section className="py-12">
         <div className="container mx-auto px-4 flex justify-center">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
