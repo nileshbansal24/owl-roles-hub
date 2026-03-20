@@ -106,7 +106,7 @@ const TestimonialsSection = () => {
   const current = testimonials[currentIndex];
 
   return (
-    <section className="py-20 overflow-hidden">
+    <section className="py-12 overflow-hidden">
       <div className="container mx-auto px-4">
         <motion.div
           className="text-center mb-12"

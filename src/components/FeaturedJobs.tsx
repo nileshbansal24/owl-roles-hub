@@ -18,7 +18,7 @@ interface FeaturedJobsProps {
 const FeaturedJobs = ({ jobs, onJobClick, loading, searchQuery, onClearSearch }: FeaturedJobsProps) => {
   if (loading) {
     return (
-      <section className="py-20">
+      <section className="py-12">
         <div className="container mx-auto px-4">
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
             {[...Array(6)].map((_, i) => (
@@ -44,7 +44,7 @@ const FeaturedJobs = ({ jobs, onJobClick, loading, searchQuery, onClearSearch }:
   }
 
   return (
-    <section className="py-20">
+    <section className="py-12">
       <div className="container mx-auto px-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
