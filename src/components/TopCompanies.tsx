@@ -56,7 +56,7 @@ const TopCompanies = ({ onViewJobs }: TopCompaniesProps) => {
   if (universities.length === 0) return null;
 
   return (
-    <section className="py-20 bg-secondary/30">
+    <section className="py-12 bg-secondary/30">
       <div className="container mx-auto px-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
