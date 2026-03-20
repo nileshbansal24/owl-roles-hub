@@ -140,16 +140,8 @@ const NaukriHeroSection = ({
                 <Upload className="w-4 h-4" />
                 Upload Resume
               </Button>
-              </Button>
-              <Button
-                variant="outline"
-                size="lg"
-                onClick={onGetStarted}
-                className="h-13 px-8 text-base font-semibold gap-2 bg-background/80 backdrop-blur-sm"
-              >
-                <Upload className="w-4 h-4" />
-                Upload Resume
-              </Button>
+
+
             </motion.div>
           )}
 
