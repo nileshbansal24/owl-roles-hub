@@ -2,6 +2,7 @@ import { useState, useCallback, useMemo } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Users, X, UserSearch, Sparkles, ChevronLeft, ChevronRight, ArrowUpDown, Clock, User, Briefcase, MapPin } from "lucide-react";
+import { getCandidateCategory, calculateCompleteness } from "@/types/recruiter";
 import { useToast } from "@/hooks/use-toast";
 import {
   Select,
