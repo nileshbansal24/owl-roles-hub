@@ -168,6 +168,55 @@ const genderOptions = [
   { value: "other", label: "Other" },
 ];
 
+const ageGroupOptions = [
+  { value: "all", label: "Any" },
+  { value: "22-30", label: "22-30 yrs" },
+  { value: "31-40", label: "31-40 yrs" },
+  { value: "41-50", label: "41-50 yrs" },
+  { value: "51-60", label: "51-60 yrs" },
+  { value: "60+", label: "60+ yrs" },
+];
+
+const industryTypeOptions = [
+  { value: "all", label: "All" },
+  { value: "university", label: "University" },
+  { value: "college", label: "College" },
+  { value: "iit_nit", label: "IIT / NIT" },
+  { value: "research_institute", label: "Research Institute" },
+  { value: "edtech", label: "EdTech" },
+  { value: "school", label: "School / K-12" },
+  { value: "corporate", label: "Corporate Training" },
+];
+
+const jobTypePreferenceOptions = [
+  { value: "all", label: "Any" },
+  { value: "full_time", label: "Full Time" },
+  { value: "part_time", label: "Part Time" },
+  { value: "contract", label: "Contract" },
+  { value: "visiting", label: "Visiting" },
+  { value: "remote", label: "Remote / Online" },
+];
+
+const institutionTypeOptions = [
+  "Government",
+  "Private",
+  "Deemed University",
+  "Autonomous",
+  "NAAC A+",
+  "NAAC A",
+  "NIRF Top 100",
+  "UGC Recognized",
+];
+
+const lastActiveOptions = [
+  { value: "all", label: "Any time" },
+  { value: "today", label: "Today" },
+  { value: "3days", label: "Last 3 days" },
+  { value: "1week", label: "Last 1 week" },
+  { value: "2weeks", label: "Last 2 weeks" },
+  { value: "1month", label: "Last 1 month" },
+];
+
 // ─── Props ───────────────────────────────────────────────────────
 interface CandidateFiltersPanelProps {
   candidates: Profile[];
