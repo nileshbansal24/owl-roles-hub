@@ -3,7 +3,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Filter, X, ChevronDown, ChevronUp, MapPin, GraduationCap,
   Briefcase, FileText, BookOpen, Clock, Building2, UserCheck,
-  Award, Shield, Linkedin, Globe, Timer, BarChart3, Users
+  Award, Shield, Linkedin, Globe, Timer, BarChart3, Users,
+  CalendarDays, Building, MapPinned, Inbox, Star, Microscope
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
