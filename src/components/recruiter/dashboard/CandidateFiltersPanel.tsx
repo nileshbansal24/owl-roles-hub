@@ -3,7 +3,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Filter, X, ChevronDown, ChevronUp, MapPin, GraduationCap,
   Briefcase, FileText, BookOpen, Clock, Building2, UserCheck,
-  Award, Shield, Linkedin, Globe, Timer, BarChart3, Users
+  Award, Shield, Linkedin, Globe, Timer, BarChart3, Users,
+  CalendarDays, Building, MapPinned, Inbox, Star, Microscope
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -40,7 +41,6 @@ export interface CandidateFilters {
   hasResume: string;
   hasResearchPapers: string;
   hIndexRange: [number, number];
-  // New Naukri-style filters
   noticePeriod: string;
   candidateCategory: string;
   profileCompleteness: number;
@@ -50,6 +50,17 @@ export interface CandidateFilters {
   hasLinkedin: string;
   hasOrcid: string;
   gender: string;
+  // Additional Naukri-style filters
+  ageGroup: string;
+  industryType: string;
+  preferredJobType: string;
+  willingToRelocate: string;
+  appliedToMyJobs: string;
+  lastActive: string;
+  hasScopusProfile: string;
+  selectedInstitutionTypes: string[];
+  ugcNetQualified: string;
+  hasTeachingExperience: string;
 }
 
 export const defaultFilters: CandidateFilters = {
@@ -75,6 +86,16 @@ export const defaultFilters: CandidateFilters = {
   hasLinkedin: "all",
   hasOrcid: "all",
   gender: "all",
+  ageGroup: "all",
+  industryType: "all",
+  preferredJobType: "all",
+  willingToRelocate: "all",
+  appliedToMyJobs: "all",
+  lastActive: "all",
+  hasScopusProfile: "all",
+  selectedInstitutionTypes: [],
+  ugcNetQualified: "all",
+  hasTeachingExperience: "all",
 };
 
 // ─── Static options ──────────────────────────────────────────────
@@ -145,6 +166,55 @@ const genderOptions = [
   { value: "male", label: "Male" },
   { value: "female", label: "Female" },
   { value: "other", label: "Other" },
+];
+
+const ageGroupOptions = [
+  { value: "all", label: "Any" },
+  { value: "22-30", label: "22-30 yrs" },
+  { value: "31-40", label: "31-40 yrs" },
+  { value: "41-50", label: "41-50 yrs" },
+  { value: "51-60", label: "51-60 yrs" },
+  { value: "60+", label: "60+ yrs" },
+];
+
+const industryTypeOptions = [
+  { value: "all", label: "All" },
+  { value: "university", label: "University" },
+  { value: "college", label: "College" },
+  { value: "iit_nit", label: "IIT / NIT" },
+  { value: "research_institute", label: "Research Institute" },
+  { value: "edtech", label: "EdTech" },
+  { value: "school", label: "School / K-12" },
+  { value: "corporate", label: "Corporate Training" },
+];
+
+const jobTypePreferenceOptions = [
+  { value: "all", label: "Any" },
+  { value: "full_time", label: "Full Time" },
+  { value: "part_time", label: "Part Time" },
+  { value: "contract", label: "Contract" },
+  { value: "visiting", label: "Visiting" },
+  { value: "remote", label: "Remote / Online" },
+];
+
+const institutionTypeOptions = [
+  "Government",
+  "Private",
+  "Deemed University",
+  "Autonomous",
+  "NAAC A+",
+  "NAAC A",
+  "NIRF Top 100",
+  "UGC Recognized",
+];
+
+const lastActiveOptions = [
+  { value: "all", label: "Any time" },
+  { value: "today", label: "Today" },
+  { value: "3days", label: "Last 3 days" },
+  { value: "1week", label: "Last 1 week" },
+  { value: "2weeks", label: "Last 2 weeks" },
+  { value: "1month", label: "Last 1 month" },
 ];
 
 // ─── Props ───────────────────────────────────────────────────────
@@ -240,6 +310,16 @@ const CandidateFiltersPanel = ({
     if (filters.hasLinkedin !== "all") c++;
     if (filters.hasOrcid !== "all") c++;
     if (filters.gender !== "all") c++;
+    if (filters.ageGroup !== "all") c++;
+    if (filters.industryType !== "all") c++;
+    if (filters.preferredJobType !== "all") c++;
+    if (filters.willingToRelocate !== "all") c++;
+    if (filters.appliedToMyJobs !== "all") c++;
+    if (filters.lastActive !== "all") c++;
+    if (filters.hasScopusProfile !== "all") c++;
+    if (filters.selectedInstitutionTypes.length > 0) c++;
+    if (filters.ugcNetQualified !== "all") c++;
+    if (filters.hasTeachingExperience !== "all") c++;
     return c;
   }, [filters]);
 
@@ -816,6 +896,117 @@ const CandidateFiltersPanel = ({
                   </AccordionContent>
                 </AccordionItem>
 
+                {/* ─── Age Group ──────────────────────────── */}
+                <AccordionItem value="age" className="border-b border-border px-4">
+                  <AccordionTrigger className="py-3 hover:no-underline">
+                    <div className="flex items-center gap-2 text-sm font-medium">
+                      <CalendarDays className="h-4 w-4 text-primary" />
+                      Age Group
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="pb-3">
+                    <PillSelector
+                      options={ageGroupOptions}
+                      value={filters.ageGroup}
+                      onChange={(v) => onFiltersChange({ ...filters, ageGroup: v })}
+                    />
+                  </AccordionContent>
+                </AccordionItem>
+
+                {/* ─── Industry / Institution Type ────────── */}
+                <AccordionItem value="industry" className="border-b border-border px-4">
+                  <AccordionTrigger className="py-3 hover:no-underline">
+                    <div className="flex items-center gap-2 text-sm font-medium">
+                      <Building className="h-4 w-4 text-primary" />
+                      Industry Type
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="pb-3">
+                    <PillSelector
+                      options={industryTypeOptions}
+                      value={filters.industryType}
+                      onChange={(v) => onFiltersChange({ ...filters, industryType: v })}
+                    />
+                  </AccordionContent>
+                </AccordionItem>
+
+                {/* ─── Institution Accreditation ──────────── */}
+                <AccordionItem value="institutiontype" className="border-b border-border px-4">
+                  <AccordionTrigger className="py-3 hover:no-underline">
+                    <div className="flex items-center gap-2 text-sm font-medium">
+                      <Star className="h-4 w-4 text-primary" />
+                      Institution Accreditation
+                      {filters.selectedInstitutionTypes.length > 0 && (
+                        <Badge variant="default" className="h-4 text-[10px] px-1.5 rounded-full">
+                          {filters.selectedInstitutionTypes.length}
+                        </Badge>
+                      )}
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="pb-3">
+                    <CheckboxList
+                      items={institutionTypeOptions}
+                      selected={filters.selectedInstitutionTypes}
+                      filterKey="selectedInstitutionTypes"
+                    />
+                  </AccordionContent>
+                </AccordionItem>
+
+                {/* ─── Preferred Job Type ─────────────────── */}
+                <AccordionItem value="jobtypepref" className="border-b border-border px-4">
+                  <AccordionTrigger className="py-3 hover:no-underline">
+                    <div className="flex items-center gap-2 text-sm font-medium">
+                      <Briefcase className="h-4 w-4 text-primary" />
+                      Preferred Job Type
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="pb-3">
+                    <PillSelector
+                      options={jobTypePreferenceOptions}
+                      value={filters.preferredJobType}
+                      onChange={(v) => onFiltersChange({ ...filters, preferredJobType: v })}
+                    />
+                  </AccordionContent>
+                </AccordionItem>
+
+                {/* ─── Willingness to Relocate ────────────── */}
+                <AccordionItem value="relocate" className="border-b border-border px-4">
+                  <AccordionTrigger className="py-3 hover:no-underline">
+                    <div className="flex items-center gap-2 text-sm font-medium">
+                      <MapPinned className="h-4 w-4 text-primary" />
+                      Willing to Relocate
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="pb-3">
+                    <PillSelector
+                      options={[
+                        { value: "all", label: "Any" },
+                        { value: "yes", label: "Yes" },
+                        { value: "no", label: "No" },
+                      ]}
+                      value={filters.willingToRelocate}
+                      onChange={(v) => onFiltersChange({ ...filters, willingToRelocate: v })}
+                    />
+                  </AccordionContent>
+                </AccordionItem>
+
+                {/* ─── Last Active ────────────────────────── */}
+                <AccordionItem value="lastactive" className="border-b border-border px-4">
+                  <AccordionTrigger className="py-3 hover:no-underline">
+                    <div className="flex items-center gap-2 text-sm font-medium">
+                      <Clock className="h-4 w-4 text-primary" />
+                      Last Active
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="pb-3">
+                    <PillSelector
+                      options={lastActiveOptions}
+                      value={filters.lastActive}
+                      onChange={(v) => onFiltersChange({ ...filters, lastActive: v })}
+                    />
+                  </AccordionContent>
+                </AccordionItem>
+
                 {/* ─── Quick toggles ─────────────────────── */}
                 <AccordionItem value="quickflags" className="px-4">
                   <AccordionTrigger className="py-3 hover:no-underline">
@@ -896,6 +1087,70 @@ const CandidateFiltersPanel = ({
                           <SelectItem value="all">Any</SelectItem>
                           <SelectItem value="yes">Verified</SelectItem>
                           <SelectItem value="no">Not Verified</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <Microscope className="h-3.5 w-3.5 text-primary" />
+                        <Label className="text-xs text-foreground cursor-pointer">Has Scopus Profile</Label>
+                      </div>
+                      <Select value={filters.hasScopusProfile} onValueChange={(v) => onFiltersChange({ ...filters, hasScopusProfile: v })}>
+                        <SelectTrigger className="w-24 h-7 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Any</SelectItem>
+                          <SelectItem value="yes">Yes</SelectItem>
+                          <SelectItem value="no">No</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <Award className="h-3.5 w-3.5 text-primary" />
+                        <Label className="text-xs text-foreground cursor-pointer">UGC NET Qualified</Label>
+                      </div>
+                      <Select value={filters.ugcNetQualified} onValueChange={(v) => onFiltersChange({ ...filters, ugcNetQualified: v })}>
+                        <SelectTrigger className="w-24 h-7 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Any</SelectItem>
+                          <SelectItem value="yes">Yes</SelectItem>
+                          <SelectItem value="no">No</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <GraduationCap className="h-3.5 w-3.5 text-primary" />
+                        <Label className="text-xs text-foreground cursor-pointer">Teaching Experience</Label>
+                      </div>
+                      <Select value={filters.hasTeachingExperience} onValueChange={(v) => onFiltersChange({ ...filters, hasTeachingExperience: v })}>
+                        <SelectTrigger className="w-24 h-7 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Any</SelectItem>
+                          <SelectItem value="yes">Yes</SelectItem>
+                          <SelectItem value="no">No</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <Inbox className="h-3.5 w-3.5 text-primary" />
+                        <Label className="text-xs text-foreground cursor-pointer">Applied to My Jobs</Label>
+                      </div>
+                      <Select value={filters.appliedToMyJobs} onValueChange={(v) => onFiltersChange({ ...filters, appliedToMyJobs: v })}>
+                        <SelectTrigger className="w-24 h-7 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Any</SelectItem>
+                          <SelectItem value="yes">Yes</SelectItem>
+                          <SelectItem value="no">No</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
