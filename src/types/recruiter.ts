@@ -62,6 +62,7 @@ export interface Profile {
   manual_h_index?: number | null;
   current_salary?: number | null;
   expected_salary?: number | null;
+  linkedin_url?: string | null;
 }
 
 export interface Job {

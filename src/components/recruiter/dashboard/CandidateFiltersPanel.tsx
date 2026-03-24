@@ -2,13 +2,13 @@ import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Filter, X, ChevronDown, ChevronUp, MapPin, GraduationCap,
-  Briefcase, FileText, BookOpen, Clock, Building2, UserCheck
+  Briefcase, FileText, BookOpen, Clock, Building2, UserCheck,
+  Award, Shield, Linkedin, Globe, Timer, BarChart3, Users
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -31,16 +31,25 @@ export interface CandidateFilters {
   selectedSkills: string[];
   educationLevel: string;
   salaryRange: [number, number];
-  // New Resdex-style filters
   selectedDesignations: string[];
   selectedDepartments: string[];
   selectedLocations: string[];
   selectedUniversities: string[];
-  profileFreshness: string;          // "all" | "1" | "3" | "7" | "14" | "30" | "90"
-  employmentStatus: string;          // "all" | "working" | "not_working" | "fresher"
-  hasResume: string;                 // "all" | "yes" | "no"
-  hasResearchPapers: string;         // "all" | "yes" | "no"
+  profileFreshness: string;
+  employmentStatus: string;
+  hasResume: string;
+  hasResearchPapers: string;
   hIndexRange: [number, number];
+  // New Naukri-style filters
+  noticePeriod: string;
+  candidateCategory: string;
+  profileCompleteness: number;
+  publicationsRange: [number, number];
+  citationsRange: [number, number];
+  verifiedProfile: string;
+  hasLinkedin: string;
+  hasOrcid: string;
+  gender: string;
 }
 
 export const defaultFilters: CandidateFilters = {
@@ -57,6 +66,15 @@ export const defaultFilters: CandidateFilters = {
   hasResume: "all",
   hasResearchPapers: "all",
   hIndexRange: [0, 50],
+  noticePeriod: "all",
+  candidateCategory: "all",
+  profileCompleteness: 0,
+  publicationsRange: [0, 100],
+  citationsRange: [0, 1000],
+  verifiedProfile: "all",
+  hasLinkedin: "all",
+  hasOrcid: "all",
+  gender: "all",
 };
 
 // ─── Static options ──────────────────────────────────────────────
@@ -102,6 +120,31 @@ const employmentStatuses = [
   { value: "working", label: "Currently Working" },
   { value: "not_working", label: "Not Working" },
   { value: "fresher", label: "Fresher" },
+];
+
+const noticePeriodOptions = [
+  { value: "all", label: "Any" },
+  { value: "immediate", label: "Immediate" },
+  { value: "15days", label: "15 Days" },
+  { value: "1month", label: "1 Month" },
+  { value: "2months", label: "2 Months" },
+  { value: "3months", label: "3 Months" },
+  { value: "3months+", label: "More than 3 Months" },
+];
+
+const candidateCategoryOptions = [
+  { value: "all", label: "All Categories" },
+  { value: "gold", label: "🥇 Gold" },
+  { value: "silver", label: "🥈 Silver" },
+  { value: "bronze", label: "🥉 Bronze" },
+  { value: "fresher", label: "🆕 Fresher" },
+];
+
+const genderOptions = [
+  { value: "all", label: "All" },
+  { value: "male", label: "Male" },
+  { value: "female", label: "Female" },
+  { value: "other", label: "Other" },
 ];
 
 // ─── Props ───────────────────────────────────────────────────────
@@ -188,6 +231,15 @@ const CandidateFiltersPanel = ({
     if (filters.hasResume !== "all") c++;
     if (filters.hasResearchPapers !== "all") c++;
     if (filters.hIndexRange[0] !== 0 || filters.hIndexRange[1] !== 50) c++;
+    if (filters.noticePeriod !== "all") c++;
+    if (filters.candidateCategory !== "all") c++;
+    if (filters.profileCompleteness > 0) c++;
+    if (filters.publicationsRange[0] !== 0 || filters.publicationsRange[1] !== 100) c++;
+    if (filters.citationsRange[0] !== 0 || filters.citationsRange[1] !== 1000) c++;
+    if (filters.verifiedProfile !== "all") c++;
+    if (filters.hasLinkedin !== "all") c++;
+    if (filters.hasOrcid !== "all") c++;
+    if (filters.gender !== "all") c++;
     return c;
   }, [filters]);
 
@@ -242,6 +294,33 @@ const CandidateFiltersPanel = ({
     );
   };
 
+  // Pill selector helper
+  const PillSelector = ({
+    options,
+    value,
+    onChange,
+  }: {
+    options: { value: string; label: string }[];
+    value: string;
+    onChange: (v: string) => void;
+  }) => (
+    <div className="flex flex-wrap gap-2">
+      {options.map((opt) => (
+        <button
+          key={opt.value}
+          onClick={() => onChange(opt.value)}
+          className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
+            value === opt.value
+              ? "bg-primary text-primary-foreground border-primary"
+              : "bg-background text-foreground border-border hover:bg-accent"
+          }`}
+        >
+          {opt.label}
+        </button>
+      ))}
+    </div>
+  );
+
   return (
     <div className="space-y-2">
       {/* Toggle Button */}
@@ -287,6 +366,21 @@ const CandidateFiltersPanel = ({
             {filters.profileFreshness !== "all" && (
               <Badge variant="secondary" className="text-xs gap-1 cursor-pointer" onClick={() => onFiltersChange({ ...filters, profileFreshness: "all" })}>
                 {freshnessOptions.find(o => o.value === filters.profileFreshness)?.label} <X className="h-3 w-3" />
+              </Badge>
+            )}
+            {filters.candidateCategory !== "all" && (
+              <Badge variant="secondary" className="text-xs gap-1 cursor-pointer" onClick={() => onFiltersChange({ ...filters, candidateCategory: "all" })}>
+                {candidateCategoryOptions.find(o => o.value === filters.candidateCategory)?.label} <X className="h-3 w-3" />
+              </Badge>
+            )}
+            {filters.noticePeriod !== "all" && (
+              <Badge variant="secondary" className="text-xs gap-1 cursor-pointer" onClick={() => onFiltersChange({ ...filters, noticePeriod: "all" })}>
+                Notice: {noticePeriodOptions.find(o => o.value === filters.noticePeriod)?.label} <X className="h-3 w-3" />
+              </Badge>
+            )}
+            {filters.gender !== "all" && (
+              <Badge variant="secondary" className="text-xs gap-1 cursor-pointer" onClick={() => onFiltersChange({ ...filters, gender: "all" })}>
+                {genderOptions.find(o => o.value === filters.gender)?.label} <X className="h-3 w-3" />
               </Badge>
             )}
           </div>
@@ -383,6 +477,57 @@ const CandidateFiltersPanel = ({
                     ) : (
                       <p className="text-xs text-muted-foreground">No location data available</p>
                     )}
+                  </AccordionContent>
+                </AccordionItem>
+
+                {/* ─── Candidate Category (Gold/Silver/Bronze) */}
+                <AccordionItem value="category" className="border-b border-border px-4">
+                  <AccordionTrigger className="py-3 hover:no-underline">
+                    <div className="flex items-center gap-2 text-sm font-medium">
+                      <Award className="h-4 w-4 text-primary" />
+                      Candidate Category
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="pb-3">
+                    <PillSelector
+                      options={candidateCategoryOptions}
+                      value={filters.candidateCategory}
+                      onChange={(v) => onFiltersChange({ ...filters, candidateCategory: v })}
+                    />
+                  </AccordionContent>
+                </AccordionItem>
+
+                {/* ─── Notice Period ──────────────────────── */}
+                <AccordionItem value="notice" className="border-b border-border px-4">
+                  <AccordionTrigger className="py-3 hover:no-underline">
+                    <div className="flex items-center gap-2 text-sm font-medium">
+                      <Timer className="h-4 w-4 text-primary" />
+                      Notice Period
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="pb-3">
+                    <PillSelector
+                      options={noticePeriodOptions}
+                      value={filters.noticePeriod}
+                      onChange={(v) => onFiltersChange({ ...filters, noticePeriod: v })}
+                    />
+                  </AccordionContent>
+                </AccordionItem>
+
+                {/* ─── Gender ─────────────────────────────── */}
+                <AccordionItem value="gender" className="border-b border-border px-4">
+                  <AccordionTrigger className="py-3 hover:no-underline">
+                    <div className="flex items-center gap-2 text-sm font-medium">
+                      <Users className="h-4 w-4 text-primary" />
+                      Gender
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="pb-3">
+                    <PillSelector
+                      options={genderOptions}
+                      value={filters.gender}
+                      onChange={(v) => onFiltersChange({ ...filters, gender: v })}
+                    />
                   </AccordionContent>
                 </AccordionItem>
 
@@ -521,6 +666,93 @@ const CandidateFiltersPanel = ({
                   </AccordionContent>
                 </AccordionItem>
 
+                {/* ─── Profile Completeness ───────────────── */}
+                <AccordionItem value="completeness" className="border-b border-border px-4">
+                  <AccordionTrigger className="py-3 hover:no-underline">
+                    <div className="flex items-center gap-2 text-sm font-medium">
+                      <BarChart3 className="h-4 w-4 text-primary" />
+                      Profile Completeness
+                      {filters.profileCompleteness > 0 && (
+                        <span className="text-xs text-muted-foreground font-normal">
+                          ≥ {filters.profileCompleteness}%
+                        </span>
+                      )}
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="pb-3 space-y-3">
+                    <span className="text-xs text-muted-foreground">
+                      Minimum {filters.profileCompleteness}% complete
+                    </span>
+                    <Slider
+                      min={0} max={100} step={10}
+                      value={[filters.profileCompleteness]}
+                      onValueChange={(v) => onFiltersChange({ ...filters, profileCompleteness: v[0] })}
+                      className="w-full"
+                    />
+                    <div className="flex justify-between text-[10px] text-muted-foreground">
+                      <span>0%</span><span>50%</span><span>100%</span>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+
+                {/* ─── Publications Count ─────────────────── */}
+                <AccordionItem value="publications" className="border-b border-border px-4">
+                  <AccordionTrigger className="py-3 hover:no-underline">
+                    <div className="flex items-center gap-2 text-sm font-medium">
+                      <FileText className="h-4 w-4 text-primary" />
+                      Publications Count
+                      {(filters.publicationsRange[0] !== 0 || filters.publicationsRange[1] !== 100) && (
+                        <span className="text-xs text-muted-foreground font-normal">
+                          {filters.publicationsRange[0]}–{filters.publicationsRange[1]}+
+                        </span>
+                      )}
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="pb-3 space-y-3">
+                    <span className="text-xs text-muted-foreground">
+                      {filters.publicationsRange[0]} – {filters.publicationsRange[1]}+ papers
+                    </span>
+                    <Slider
+                      min={0} max={100} step={1}
+                      value={filters.publicationsRange}
+                      onValueChange={(v) => onFiltersChange({ ...filters, publicationsRange: v as [number, number] })}
+                      className="w-full"
+                    />
+                    <div className="flex justify-between text-[10px] text-muted-foreground">
+                      <span>0</span><span>50</span><span>100+</span>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+
+                {/* ─── Citations ──────────────────────────── */}
+                <AccordionItem value="citations" className="border-b border-border px-4">
+                  <AccordionTrigger className="py-3 hover:no-underline">
+                    <div className="flex items-center gap-2 text-sm font-medium">
+                      <BookOpen className="h-4 w-4 text-primary" />
+                      Total Citations
+                      {(filters.citationsRange[0] !== 0 || filters.citationsRange[1] !== 1000) && (
+                        <span className="text-xs text-muted-foreground font-normal">
+                          {filters.citationsRange[0]}–{filters.citationsRange[1]}+
+                        </span>
+                      )}
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="pb-3 space-y-3">
+                    <span className="text-xs text-muted-foreground">
+                      {filters.citationsRange[0]} – {filters.citationsRange[1]}+ citations
+                    </span>
+                    <Slider
+                      min={0} max={1000} step={10}
+                      value={filters.citationsRange}
+                      onValueChange={(v) => onFiltersChange({ ...filters, citationsRange: v as [number, number] })}
+                      className="w-full"
+                    />
+                    <div className="flex justify-between text-[10px] text-muted-foreground">
+                      <span>0</span><span>500</span><span>1000+</span>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+
                 {/* ─── Profile Freshness ──────────────────── */}
                 <AccordionItem value="freshness" className="border-b border-border px-4">
                   <AccordionTrigger className="py-3 hover:no-underline">
@@ -530,21 +762,11 @@ const CandidateFiltersPanel = ({
                     </div>
                   </AccordionTrigger>
                   <AccordionContent className="pb-3">
-                    <div className="flex flex-wrap gap-2">
-                      {freshnessOptions.map((opt) => (
-                        <button
-                          key={opt.value}
-                          onClick={() => onFiltersChange({ ...filters, profileFreshness: opt.value })}
-                          className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
-                            filters.profileFreshness === opt.value
-                              ? "bg-primary text-primary-foreground border-primary"
-                              : "bg-background text-foreground border-border hover:bg-accent"
-                          }`}
-                        >
-                          {opt.label}
-                        </button>
-                      ))}
-                    </div>
+                    <PillSelector
+                      options={freshnessOptions}
+                      value={filters.profileFreshness}
+                      onChange={(v) => onFiltersChange({ ...filters, profileFreshness: v })}
+                    />
                   </AccordionContent>
                 </AccordionItem>
 
@@ -557,21 +779,11 @@ const CandidateFiltersPanel = ({
                     </div>
                   </AccordionTrigger>
                   <AccordionContent className="pb-3">
-                    <div className="flex flex-wrap gap-2">
-                      {employmentStatuses.map((s) => (
-                        <button
-                          key={s.value}
-                          onClick={() => onFiltersChange({ ...filters, employmentStatus: s.value })}
-                          className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
-                            filters.employmentStatus === s.value
-                              ? "bg-primary text-primary-foreground border-primary"
-                              : "bg-background text-foreground border-border hover:bg-accent"
-                          }`}
-                        >
-                          {s.label}
-                        </button>
-                      ))}
-                    </div>
+                    <PillSelector
+                      options={employmentStatuses}
+                      value={filters.employmentStatus}
+                      onChange={(v) => onFiltersChange({ ...filters, employmentStatus: v })}
+                    />
                   </AccordionContent>
                 </AccordionItem>
 
@@ -604,17 +816,17 @@ const CandidateFiltersPanel = ({
                   </AccordionContent>
                 </AccordionItem>
 
-                {/* ─── Quick toggles: Resume & Research ──── */}
+                {/* ─── Quick toggles ─────────────────────── */}
                 <AccordionItem value="quickflags" className="px-4">
                   <AccordionTrigger className="py-3 hover:no-underline">
                     <div className="flex items-center gap-2 text-sm font-medium">
-                      <FileText className="h-4 w-4 text-primary" />
+                      <Shield className="h-4 w-4 text-primary" />
                       Quick Filters
                     </div>
                   </AccordionTrigger>
                   <AccordionContent className="pb-3 space-y-4">
                     <div className="flex items-center justify-between">
-                      <Label htmlFor="has-resume" className="text-xs text-foreground cursor-pointer">Has Resume Attached</Label>
+                      <Label className="text-xs text-foreground cursor-pointer">Has Resume Attached</Label>
                       <Select value={filters.hasResume} onValueChange={(v) => onFiltersChange({ ...filters, hasResume: v })}>
                         <SelectTrigger className="w-24 h-7 text-xs">
                           <SelectValue />
@@ -627,7 +839,7 @@ const CandidateFiltersPanel = ({
                       </Select>
                     </div>
                     <div className="flex items-center justify-between">
-                      <Label htmlFor="has-papers" className="text-xs text-foreground cursor-pointer">Has Research Papers</Label>
+                      <Label className="text-xs text-foreground cursor-pointer">Has Research Papers</Label>
                       <Select value={filters.hasResearchPapers} onValueChange={(v) => onFiltersChange({ ...filters, hasResearchPapers: v })}>
                         <SelectTrigger className="w-24 h-7 text-xs">
                           <SelectValue />
@@ -636,6 +848,54 @@ const CandidateFiltersPanel = ({
                           <SelectItem value="all">Any</SelectItem>
                           <SelectItem value="yes">Yes</SelectItem>
                           <SelectItem value="no">No</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <Linkedin className="h-3.5 w-3.5 text-primary" />
+                        <Label className="text-xs text-foreground cursor-pointer">Has LinkedIn Profile</Label>
+                      </div>
+                      <Select value={filters.hasLinkedin} onValueChange={(v) => onFiltersChange({ ...filters, hasLinkedin: v })}>
+                        <SelectTrigger className="w-24 h-7 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Any</SelectItem>
+                          <SelectItem value="yes">Yes</SelectItem>
+                          <SelectItem value="no">No</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <Globe className="h-3.5 w-3.5 text-primary" />
+                        <Label className="text-xs text-foreground cursor-pointer">Has ORCID ID</Label>
+                      </div>
+                      <Select value={filters.hasOrcid} onValueChange={(v) => onFiltersChange({ ...filters, hasOrcid: v })}>
+                        <SelectTrigger className="w-24 h-7 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Any</SelectItem>
+                          <SelectItem value="yes">Yes</SelectItem>
+                          <SelectItem value="no">No</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <Shield className="h-3.5 w-3.5 text-primary" />
+                        <Label className="text-xs text-foreground cursor-pointer">Verified Profile</Label>
+                      </div>
+                      <Select value={filters.verifiedProfile} onValueChange={(v) => onFiltersChange({ ...filters, verifiedProfile: v })}>
+                        <SelectTrigger className="w-24 h-7 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Any</SelectItem>
+                          <SelectItem value="yes">Verified</SelectItem>
+                          <SelectItem value="no">Not Verified</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
