@@ -1153,6 +1153,7 @@ const CandidateFiltersPanel = ({
                           <SelectItem value="no">No</SelectItem>
                         </SelectContent>
                       </Select>
+                    </div>
                   </AccordionContent>
                 </AccordionItem>
 
