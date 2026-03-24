@@ -41,7 +41,6 @@ export interface CandidateFilters {
   hasResume: string;
   hasResearchPapers: string;
   hIndexRange: [number, number];
-  // New Naukri-style filters
   noticePeriod: string;
   candidateCategory: string;
   profileCompleteness: number;
@@ -51,6 +50,17 @@ export interface CandidateFilters {
   hasLinkedin: string;
   hasOrcid: string;
   gender: string;
+  // Additional Naukri-style filters
+  ageGroup: string;
+  industryType: string;
+  preferredJobType: string;
+  willingToRelocate: string;
+  appliedToMyJobs: string;
+  lastActive: string;
+  hasScopusProfile: string;
+  selectedInstitutionTypes: string[];
+  ugcNetQualified: string;
+  hasTeachingExperience: string;
 }
 
 export const defaultFilters: CandidateFilters = {
