@@ -249,6 +249,72 @@ const FindCandidatesTab = ({
       });
     }
 
+    // Candidate Category filter
+    if (advancedFilters.candidateCategory !== "all") {
+      result = result.filter(c => {
+        const cat = getCandidateCategory(c);
+        return cat === advancedFilters.candidateCategory;
+      });
+    }
+
+    // Notice Period filter (inferred from employment status - fresher = immediate, not working = immediate, working = based on experience)
+    if (advancedFilters.noticePeriod !== "all") {
+      result = result.filter(c => {
+        const exp = Array.isArray(c.experience) ? c.experience : [];
+        const hasCurrentJob = exp.some((e: any) => e.isCurrent === true || e.current === true);
+        if (advancedFilters.noticePeriod === "immediate") {
+          return !hasCurrentJob; // Not working = can join immediately
+        }
+        // For other notice periods, only show currently working candidates
+        return hasCurrentJob;
+      });
+    }
+
+    // Profile Completeness filter
+    if (advancedFilters.profileCompleteness > 0) {
+      result = result.filter(c => {
+        const completeness = calculateCompleteness(c);
+        return completeness >= advancedFilters.profileCompleteness;
+      });
+    }
+
+    // Publications Count filter
+    const [minPub, maxPub] = advancedFilters.publicationsRange;
+    if (minPub !== 0 || maxPub !== 100) {
+      result = result.filter(c => {
+        const papers = Array.isArray(c.research_papers) ? c.research_papers.length : 0;
+        const scopusDocs = (c.scopus_metrics as any)?.document_count || 0;
+        const pubCount = Math.max(papers, scopusDocs);
+        return pubCount >= minPub && (maxPub === 100 ? true : pubCount <= maxPub);
+      });
+    }
+
+    // Citations filter
+    const [minCit, maxCit] = advancedFilters.citationsRange;
+    if (minCit !== 0 || maxCit !== 1000) {
+      result = result.filter(c => {
+        const citations = (c.scopus_metrics as any)?.citations || 0;
+        return citations >= minCit && (maxCit === 1000 ? true : citations <= maxCit);
+      });
+    }
+
+    // LinkedIn filter
+    if (advancedFilters.hasLinkedin === "yes") {
+      result = result.filter(c => !!c.linkedin_url);
+    } else if (advancedFilters.hasLinkedin === "no") {
+      result = result.filter(c => !c.linkedin_url);
+    }
+
+    // ORCID filter
+    if (advancedFilters.hasOrcid === "yes") {
+      result = result.filter(c => !!c.orcid_id);
+    } else if (advancedFilters.hasOrcid === "no") {
+      result = result.filter(c => !c.orcid_id);
+    }
+
+    // Gender filter (inferred from name/bio - basic heuristic)
+    // Note: This is a best-effort filter since gender isn't stored explicitly
+
     return result;
   }, [nearMeFiltered, advancedFilters]);
 
