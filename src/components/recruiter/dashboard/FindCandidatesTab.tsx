@@ -313,7 +313,120 @@ const FindCandidatesTab = ({
     }
 
     // Gender filter (inferred from name/bio - basic heuristic)
-    // Note: This is a best-effort filter since gender isn't stored explicitly
+
+    // Age Group filter (inferred from years of experience as proxy)
+    if (advancedFilters.ageGroup !== "all") {
+      result = result.filter(c => {
+        const exp = c.years_experience || 0;
+        // Estimate age as ~22 + years_experience
+        const estimatedAge = 22 + exp;
+        switch (advancedFilters.ageGroup) {
+          case "22-30": return estimatedAge >= 22 && estimatedAge <= 30;
+          case "31-40": return estimatedAge >= 31 && estimatedAge <= 40;
+          case "41-50": return estimatedAge >= 41 && estimatedAge <= 50;
+          case "51-60": return estimatedAge >= 51 && estimatedAge <= 60;
+          case "60+": return estimatedAge > 60;
+          default: return true;
+        }
+      });
+    }
+
+    // Industry type filter (inferred from university/headline)
+    if (advancedFilters.industryType !== "all") {
+      result = result.filter(c => {
+        const text = `${c.university || ""} ${c.headline || ""} ${c.role || ""}`.toLowerCase();
+        switch (advancedFilters.industryType) {
+          case "university": return /\buniversit/i.test(text);
+          case "college": return /\bcollege\b/i.test(text);
+          case "iit_nit": return /\b(iit|nit|iiit)\b/i.test(text);
+          case "research_institute": return /\b(research|institute|lab)\b/i.test(text);
+          case "edtech": return /\b(edtech|online|digital|e-learning)\b/i.test(text);
+          case "school": return /\b(school|k-12|k12|secondary|primary)\b/i.test(text);
+          case "corporate": return /\b(corporate|training|industry)\b/i.test(text);
+          default: return true;
+        }
+      });
+    }
+
+    // Institution Accreditation filter
+    if (advancedFilters.selectedInstitutionTypes.length > 0) {
+      result = result.filter(c => {
+        const text = `${c.university || ""} ${c.headline || ""} ${c.bio || ""} ${c.professional_summary || ""}`.toLowerCase();
+        return advancedFilters.selectedInstitutionTypes.some(t => {
+          const keyword = t.toLowerCase();
+          return text.includes(keyword);
+        });
+      });
+    }
+
+    // Preferred Job Type filter (inferred from headline/role)
+    if (advancedFilters.preferredJobType !== "all") {
+      result = result.filter(c => {
+        const text = `${c.role || ""} ${c.headline || ""} ${c.professional_summary || ""}`.toLowerCase();
+        switch (advancedFilters.preferredJobType) {
+          case "full_time": return /\b(full.?time|permanent)\b/.test(text) || !(/\b(part.?time|contract|visiting|remote|freelance)\b/.test(text));
+          case "part_time": return /\b(part.?time)\b/.test(text);
+          case "contract": return /\b(contract|temporary|contractual)\b/.test(text);
+          case "visiting": return /\b(visiting|guest|adjunct)\b/.test(text);
+          case "remote": return /\b(remote|online|virtual|work from home|wfh)\b/.test(text);
+          default: return true;
+        }
+      });
+    }
+
+    // Has Scopus Profile filter
+    if (advancedFilters.hasScopusProfile === "yes") {
+      result = result.filter(c => !!c.scopus_link || !!(c.scopus_metrics as any)?.h_index);
+    } else if (advancedFilters.hasScopusProfile === "no") {
+      result = result.filter(c => !c.scopus_link && !(c.scopus_metrics as any)?.h_index);
+    }
+
+    // UGC NET Qualified filter (inferred from bio/headline/achievements)
+    if (advancedFilters.ugcNetQualified === "yes") {
+      result = result.filter(c => {
+        const text = `${c.bio || ""} ${c.headline || ""} ${c.professional_summary || ""} ${(c.achievements || []).join(" ")}`.toLowerCase();
+        return /\b(ugc.?net|net.?qualified|net.?jrf|csir.?net|slet|set)\b/.test(text);
+      });
+    } else if (advancedFilters.ugcNetQualified === "no") {
+      result = result.filter(c => {
+        const text = `${c.bio || ""} ${c.headline || ""} ${c.professional_summary || ""} ${(c.achievements || []).join(" ")}`.toLowerCase();
+        return !/\b(ugc.?net|net.?qualified|net.?jrf|csir.?net|slet|set)\b/.test(text);
+      });
+    }
+
+    // Teaching Experience filter
+    if (advancedFilters.hasTeachingExperience === "yes") {
+      result = result.filter(c => {
+        const text = `${c.role || ""} ${c.headline || ""} ${c.teaching_philosophy || ""} ${c.professional_summary || ""}`.toLowerCase();
+        const exp = Array.isArray(c.experience) ? c.experience : [];
+        const hasTeaching = /\b(teach|professor|lecturer|instructor|faculty|academic)\b/.test(text);
+        const hasTeachingExp = exp.some((e: any) => /\b(teach|professor|lecturer|instructor|faculty)\b/.test(`${e.role || ""} ${e.title || ""}`.toLowerCase()));
+        return hasTeaching || hasTeachingExp || !!c.teaching_philosophy;
+      });
+    } else if (advancedFilters.hasTeachingExperience === "no") {
+      result = result.filter(c => {
+        const text = `${c.role || ""} ${c.headline || ""}`.toLowerCase();
+        return !/\b(teach|professor|lecturer|instructor|faculty)\b/.test(text) && !c.teaching_philosophy;
+      });
+    }
+
+    // Last Active filter
+    if (advancedFilters.lastActive !== "all") {
+      const now = new Date();
+      let cutoff: Date;
+      switch (advancedFilters.lastActive) {
+        case "today": cutoff = new Date(now.setHours(0, 0, 0, 0)); break;
+        case "3days": cutoff = new Date(Date.now() - 3 * 86400000); break;
+        case "1week": cutoff = new Date(Date.now() - 7 * 86400000); break;
+        case "2weeks": cutoff = new Date(Date.now() - 14 * 86400000); break;
+        case "1month": cutoff = new Date(Date.now() - 30 * 86400000); break;
+        default: cutoff = new Date(0);
+      }
+      result = result.filter(c => {
+        if (!c.updated_at) return false;
+        return new Date(c.updated_at) >= cutoff;
+      });
+    }
 
     return result;
   }, [nearMeFiltered, advancedFilters]);
