@@ -1090,6 +1090,69 @@ const CandidateFiltersPanel = ({
                         </SelectContent>
                       </Select>
                     </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <Microscope className="h-3.5 w-3.5 text-primary" />
+                        <Label className="text-xs text-foreground cursor-pointer">Has Scopus Profile</Label>
+                      </div>
+                      <Select value={filters.hasScopusProfile} onValueChange={(v) => onFiltersChange({ ...filters, hasScopusProfile: v })}>
+                        <SelectTrigger className="w-24 h-7 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Any</SelectItem>
+                          <SelectItem value="yes">Yes</SelectItem>
+                          <SelectItem value="no">No</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <Award className="h-3.5 w-3.5 text-primary" />
+                        <Label className="text-xs text-foreground cursor-pointer">UGC NET Qualified</Label>
+                      </div>
+                      <Select value={filters.ugcNetQualified} onValueChange={(v) => onFiltersChange({ ...filters, ugcNetQualified: v })}>
+                        <SelectTrigger className="w-24 h-7 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Any</SelectItem>
+                          <SelectItem value="yes">Yes</SelectItem>
+                          <SelectItem value="no">No</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <GraduationCap className="h-3.5 w-3.5 text-primary" />
+                        <Label className="text-xs text-foreground cursor-pointer">Teaching Experience</Label>
+                      </div>
+                      <Select value={filters.hasTeachingExperience} onValueChange={(v) => onFiltersChange({ ...filters, hasTeachingExperience: v })}>
+                        <SelectTrigger className="w-24 h-7 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Any</SelectItem>
+                          <SelectItem value="yes">Yes</SelectItem>
+                          <SelectItem value="no">No</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <Inbox className="h-3.5 w-3.5 text-primary" />
+                        <Label className="text-xs text-foreground cursor-pointer">Applied to My Jobs</Label>
+                      </div>
+                      <Select value={filters.appliedToMyJobs} onValueChange={(v) => onFiltersChange({ ...filters, appliedToMyJobs: v })}>
+                        <SelectTrigger className="w-24 h-7 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Any</SelectItem>
+                          <SelectItem value="yes">Yes</SelectItem>
+                          <SelectItem value="no">No</SelectItem>
+                        </SelectContent>
+                      </Select>
                   </AccordionContent>
                 </AccordionItem>
 
