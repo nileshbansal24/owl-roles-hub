@@ -86,6 +86,16 @@ export const defaultFilters: CandidateFilters = {
   hasLinkedin: "all",
   hasOrcid: "all",
   gender: "all",
+  ageGroup: "all",
+  industryType: "all",
+  preferredJobType: "all",
+  willingToRelocate: "all",
+  appliedToMyJobs: "all",
+  lastActive: "all",
+  hasScopusProfile: "all",
+  selectedInstitutionTypes: [],
+  ugcNetQualified: "all",
+  hasTeachingExperience: "all",
 };
 
 // ─── Static options ──────────────────────────────────────────────
