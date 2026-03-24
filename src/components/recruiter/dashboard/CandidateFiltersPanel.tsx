@@ -896,6 +896,117 @@ const CandidateFiltersPanel = ({
                   </AccordionContent>
                 </AccordionItem>
 
+                {/* ─── Age Group ──────────────────────────── */}
+                <AccordionItem value="age" className="border-b border-border px-4">
+                  <AccordionTrigger className="py-3 hover:no-underline">
+                    <div className="flex items-center gap-2 text-sm font-medium">
+                      <CalendarDays className="h-4 w-4 text-primary" />
+                      Age Group
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="pb-3">
+                    <PillSelector
+                      options={ageGroupOptions}
+                      value={filters.ageGroup}
+                      onChange={(v) => onFiltersChange({ ...filters, ageGroup: v })}
+                    />
+                  </AccordionContent>
+                </AccordionItem>
+
+                {/* ─── Industry / Institution Type ────────── */}
+                <AccordionItem value="industry" className="border-b border-border px-4">
+                  <AccordionTrigger className="py-3 hover:no-underline">
+                    <div className="flex items-center gap-2 text-sm font-medium">
+                      <Building className="h-4 w-4 text-primary" />
+                      Industry Type
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="pb-3">
+                    <PillSelector
+                      options={industryTypeOptions}
+                      value={filters.industryType}
+                      onChange={(v) => onFiltersChange({ ...filters, industryType: v })}
+                    />
+                  </AccordionContent>
+                </AccordionItem>
+
+                {/* ─── Institution Accreditation ──────────── */}
+                <AccordionItem value="institutiontype" className="border-b border-border px-4">
+                  <AccordionTrigger className="py-3 hover:no-underline">
+                    <div className="flex items-center gap-2 text-sm font-medium">
+                      <Star className="h-4 w-4 text-primary" />
+                      Institution Accreditation
+                      {filters.selectedInstitutionTypes.length > 0 && (
+                        <Badge variant="default" className="h-4 text-[10px] px-1.5 rounded-full">
+                          {filters.selectedInstitutionTypes.length}
+                        </Badge>
+                      )}
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="pb-3">
+                    <CheckboxList
+                      items={institutionTypeOptions}
+                      selected={filters.selectedInstitutionTypes}
+                      filterKey="selectedInstitutionTypes"
+                    />
+                  </AccordionContent>
+                </AccordionItem>
+
+                {/* ─── Preferred Job Type ─────────────────── */}
+                <AccordionItem value="jobtypepref" className="border-b border-border px-4">
+                  <AccordionTrigger className="py-3 hover:no-underline">
+                    <div className="flex items-center gap-2 text-sm font-medium">
+                      <Briefcase className="h-4 w-4 text-primary" />
+                      Preferred Job Type
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="pb-3">
+                    <PillSelector
+                      options={jobTypePreferenceOptions}
+                      value={filters.preferredJobType}
+                      onChange={(v) => onFiltersChange({ ...filters, preferredJobType: v })}
+                    />
+                  </AccordionContent>
+                </AccordionItem>
+
+                {/* ─── Willingness to Relocate ────────────── */}
+                <AccordionItem value="relocate" className="border-b border-border px-4">
+                  <AccordionTrigger className="py-3 hover:no-underline">
+                    <div className="flex items-center gap-2 text-sm font-medium">
+                      <MapPinned className="h-4 w-4 text-primary" />
+                      Willing to Relocate
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="pb-3">
+                    <PillSelector
+                      options={[
+                        { value: "all", label: "Any" },
+                        { value: "yes", label: "Yes" },
+                        { value: "no", label: "No" },
+                      ]}
+                      value={filters.willingToRelocate}
+                      onChange={(v) => onFiltersChange({ ...filters, willingToRelocate: v })}
+                    />
+                  </AccordionContent>
+                </AccordionItem>
+
+                {/* ─── Last Active ────────────────────────── */}
+                <AccordionItem value="lastactive" className="border-b border-border px-4">
+                  <AccordionTrigger className="py-3 hover:no-underline">
+                    <div className="flex items-center gap-2 text-sm font-medium">
+                      <Clock className="h-4 w-4 text-primary" />
+                      Last Active
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="pb-3">
+                    <PillSelector
+                      options={lastActiveOptions}
+                      value={filters.lastActive}
+                      onChange={(v) => onFiltersChange({ ...filters, lastActive: v })}
+                    />
+                  </AccordionContent>
+                </AccordionItem>
+
                 {/* ─── Quick toggles ─────────────────────── */}
                 <AccordionItem value="quickflags" className="px-4">
                   <AccordionTrigger className="py-3 hover:no-underline">
