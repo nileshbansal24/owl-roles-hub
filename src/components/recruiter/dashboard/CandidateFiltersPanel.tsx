@@ -310,6 +310,16 @@ const CandidateFiltersPanel = ({
     if (filters.hasLinkedin !== "all") c++;
     if (filters.hasOrcid !== "all") c++;
     if (filters.gender !== "all") c++;
+    if (filters.ageGroup !== "all") c++;
+    if (filters.industryType !== "all") c++;
+    if (filters.preferredJobType !== "all") c++;
+    if (filters.willingToRelocate !== "all") c++;
+    if (filters.appliedToMyJobs !== "all") c++;
+    if (filters.lastActive !== "all") c++;
+    if (filters.hasScopusProfile !== "all") c++;
+    if (filters.selectedInstitutionTypes.length > 0) c++;
+    if (filters.ugcNetQualified !== "all") c++;
+    if (filters.hasTeachingExperience !== "all") c++;
     return c;
   }, [filters]);
 
