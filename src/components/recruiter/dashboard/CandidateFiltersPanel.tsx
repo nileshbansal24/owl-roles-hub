@@ -1321,6 +1321,102 @@ const CandidateFiltersPanel = ({
                         </SelectContent>
                       </Select>
                     </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <FileText className="h-3.5 w-3.5 text-primary" />
+                        <Label className="text-xs text-foreground cursor-pointer">Has Patents</Label>
+                      </div>
+                      <Select value={filters.hasPatents} onValueChange={(v) => onFiltersChange({ ...filters, hasPatents: v })}>
+                        <SelectTrigger className="w-24 h-7 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Any</SelectItem>
+                          <SelectItem value="yes">Yes</SelectItem>
+                          <SelectItem value="no">No</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <BookOpen className="h-3.5 w-3.5 text-primary" />
+                        <Label className="text-xs text-foreground cursor-pointer">Book / Chapter Author</Label>
+                      </div>
+                      <Select value={filters.hasBookChapters} onValueChange={(v) => onFiltersChange({ ...filters, hasBookChapters: v })}>
+                        <SelectTrigger className="w-24 h-7 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Any</SelectItem>
+                          <SelectItem value="yes">Yes</SelectItem>
+                          <SelectItem value="no">No</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <Award className="h-3.5 w-3.5 text-primary" />
+                        <Label className="text-xs text-foreground cursor-pointer">FDP / Workshop Attended</Label>
+                      </div>
+                      <Select value={filters.hasFDPWorkshop} onValueChange={(v) => onFiltersChange({ ...filters, hasFDPWorkshop: v })}>
+                        <SelectTrigger className="w-24 h-7 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Any</SelectItem>
+                          <SelectItem value="yes">Yes</SelectItem>
+                          <SelectItem value="no">No</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <Building2 className="h-3.5 w-3.5 text-primary" />
+                        <Label className="text-xs text-foreground cursor-pointer">Administrative Experience</Label>
+                      </div>
+                      <Select value={filters.hasAdminExperience} onValueChange={(v) => onFiltersChange({ ...filters, hasAdminExperience: v })}>
+                        <SelectTrigger className="w-24 h-7 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Any</SelectItem>
+                          <SelectItem value="yes">Yes</SelectItem>
+                          <SelectItem value="no">No</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <Globe className="h-3.5 w-3.5 text-primary" />
+                        <Label className="text-xs text-foreground cursor-pointer">International Exposure</Label>
+                      </div>
+                      <Select value={filters.hasInternationalExposure} onValueChange={(v) => onFiltersChange({ ...filters, hasInternationalExposure: v })}>
+                        <SelectTrigger className="w-24 h-7 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Any</SelectItem>
+                          <SelectItem value="yes">Yes</SelectItem>
+                          <SelectItem value="no">No</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <GraduationCap className="h-3.5 w-3.5 text-primary" />
+                        <Label className="text-xs text-foreground cursor-pointer">PhD Supervision</Label>
+                      </div>
+                      <Select value={filters.hasPhDSupervision} onValueChange={(v) => onFiltersChange({ ...filters, hasPhDSupervision: v })}>
+                        <SelectTrigger className="w-24 h-7 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Any</SelectItem>
+                          <SelectItem value="yes">Yes</SelectItem>
+                          <SelectItem value="no">No</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </AccordionContent>
                 </AccordionItem>
 

@@ -428,6 +428,109 @@ const FindCandidatesTab = ({
       });
     }
 
+    // Functional Area filter
+    if (advancedFilters.selectedFunctionalAreas.length > 0) {
+      result = result.filter(c => {
+        const text = `${c.role || ""} ${c.headline || ""} ${c.professional_summary || ""} ${c.teaching_philosophy || ""} ${(c.subjects || []).join(" ")}`.toLowerCase();
+        return advancedFilters.selectedFunctionalAreas.some(area => text.includes(area.toLowerCase()));
+      });
+    }
+
+    // Language filter
+    if (advancedFilters.selectedLanguages.length > 0) {
+      result = result.filter(c => {
+        const text = `${c.bio || ""} ${c.professional_summary || ""} ${(c.skills || []).join(" ")} ${(c.achievements || []).join(" ")}`.toLowerCase();
+        return advancedFilters.selectedLanguages.some(lang => text.includes(lang.toLowerCase()));
+      });
+    }
+
+    // Patents filter
+    if (advancedFilters.hasPatents === "yes") {
+      result = result.filter(c => {
+        const text = `${c.bio || ""} ${c.professional_summary || ""} ${(c.achievements || []).join(" ")}`.toLowerCase();
+        return /\b(patent|patented|invention)\b/.test(text);
+      });
+    } else if (advancedFilters.hasPatents === "no") {
+      result = result.filter(c => {
+        const text = `${c.bio || ""} ${c.professional_summary || ""} ${(c.achievements || []).join(" ")}`.toLowerCase();
+        return !/\b(patent|patented|invention)\b/.test(text);
+      });
+    }
+
+    // Book/Chapter author filter
+    if (advancedFilters.hasBookChapters === "yes") {
+      result = result.filter(c => {
+        const text = `${c.bio || ""} ${c.professional_summary || ""} ${(c.achievements || []).join(" ")}`.toLowerCase();
+        return /\b(book|chapter|authored|monograph|textbook|edited volume)\b/.test(text);
+      });
+    } else if (advancedFilters.hasBookChapters === "no") {
+      result = result.filter(c => {
+        const text = `${c.bio || ""} ${c.professional_summary || ""} ${(c.achievements || []).join(" ")}`.toLowerCase();
+        return !/\b(book|chapter|authored|monograph|textbook)\b/.test(text);
+      });
+    }
+
+    // FDP/Workshop filter
+    if (advancedFilters.hasFDPWorkshop === "yes") {
+      result = result.filter(c => {
+        const text = `${c.bio || ""} ${c.professional_summary || ""} ${(c.achievements || []).join(" ")}`.toLowerCase();
+        return /\b(fdp|workshop|seminar|conference|symposium|faculty development)\b/.test(text);
+      });
+    } else if (advancedFilters.hasFDPWorkshop === "no") {
+      result = result.filter(c => {
+        const text = `${c.bio || ""} ${c.professional_summary || ""} ${(c.achievements || []).join(" ")}`.toLowerCase();
+        return !/\b(fdp|workshop|seminar|conference|symposium|faculty development)\b/.test(text);
+      });
+    }
+
+    // Administrative Experience filter
+    if (advancedFilters.hasAdminExperience === "yes") {
+      result = result.filter(c => {
+        const text = `${c.role || ""} ${c.headline || ""} ${c.professional_summary || ""} ${c.bio || ""}`.toLowerCase();
+        const exp = Array.isArray(c.experience) ? c.experience : [];
+        const hasAdmin = /\b(dean|hod|head of department|principal|director|registrar|controller|coordinator|chairperson|vice chancellor|provost|warden)\b/.test(text);
+        const hasAdminExp = exp.some((e: any) => /\b(dean|hod|head|principal|director|registrar|coordinator|chairperson)\b/.test(`${e.role || ""} ${e.title || ""}`.toLowerCase()));
+        return hasAdmin || hasAdminExp;
+      });
+    }
+
+    // International Exposure filter
+    if (advancedFilters.hasInternationalExposure === "yes") {
+      result = result.filter(c => {
+        const text = `${c.bio || ""} ${c.professional_summary || ""} ${(c.achievements || []).join(" ")} ${c.headline || ""}`.toLowerCase();
+        return /\b(international|abroad|overseas|foreign|usa|uk|europe|canada|australia|global|postdoc abroad|visiting scholar)\b/.test(text);
+      });
+    }
+
+    // Co-Authors Range filter
+    const [minCoAuth, maxCoAuth] = advancedFilters.coAuthorsRange;
+    if (minCoAuth !== 0 || maxCoAuth !== 50) {
+      result = result.filter(c => {
+        const coAuthors = (c.scopus_metrics as any)?.co_authors?.length || 0;
+        return coAuthors >= minCoAuth && (maxCoAuth === 50 ? true : coAuthors <= maxCoAuth);
+      });
+    }
+
+    // Teaching Experience Range filter
+    const [minTeach, maxTeach] = advancedFilters.teachingExpRange;
+    if (minTeach !== 0 || maxTeach !== 30) {
+      result = result.filter(c => {
+        const text = `${c.role || ""} ${c.headline || ""}`.toLowerCase();
+        const isTeaching = /\b(teach|professor|lecturer|instructor|faculty)\b/.test(text);
+        if (!isTeaching) return minTeach === 0;
+        const exp = c.years_experience || 0;
+        return exp >= minTeach && (maxTeach === 30 ? true : exp <= maxTeach);
+      });
+    }
+
+    // PhD Supervision filter
+    if (advancedFilters.hasPhDSupervision === "yes") {
+      result = result.filter(c => {
+        const text = `${c.bio || ""} ${c.professional_summary || ""} ${(c.achievements || []).join(" ")}`.toLowerCase();
+        return /\b(ph\.?d\.?\s*supervis|doctoral\s*supervis|guided\s*ph\.?d|ph\.?d\.?\s*student|research\s*scholar|m\.?phil\s*supervis)\b/.test(text);
+      });
+    }
+
     return result;
   }, [nearMeFiltered, advancedFilters]);
 
