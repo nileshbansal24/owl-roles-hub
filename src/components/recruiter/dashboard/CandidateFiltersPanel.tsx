@@ -373,6 +373,16 @@ const CandidateFiltersPanel = ({
     if (filters.selectedInstitutionTypes.length > 0) c++;
     if (filters.ugcNetQualified !== "all") c++;
     if (filters.hasTeachingExperience !== "all") c++;
+    if (filters.selectedFunctionalAreas.length > 0) c++;
+    if (filters.hasPatents !== "all") c++;
+    if (filters.hasBookChapters !== "all") c++;
+    if (filters.hasFDPWorkshop !== "all") c++;
+    if (filters.hasAdminExperience !== "all") c++;
+    if (filters.hasInternationalExposure !== "all") c++;
+    if (filters.selectedLanguages.length > 0) c++;
+    if (filters.coAuthorsRange[0] !== 0 || filters.coAuthorsRange[1] !== 50) c++;
+    if (filters.teachingExpRange[0] !== 0 || filters.teachingExpRange[1] !== 30) c++;
+    if (filters.hasPhDSupervision !== "all") c++;
     return c;
   }, [filters]);
 
