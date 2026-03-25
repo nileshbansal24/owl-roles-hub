@@ -197,7 +197,7 @@ const AuthModal = ({
                     <User className="w-7 h-7 text-primary" />
                   </div>
                   <div className="text-left flex-1">
-                    <h3 className="font-heading font-semibold text-foreground">Candidate</h3>
+                    <h3 className="font-heading font-semibold text-foreground">Job Seeker</h3>
                     <p className="text-sm text-muted-foreground">Find your dream academic job</p>
                   </div>
                   <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
