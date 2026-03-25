@@ -61,6 +61,17 @@ export interface CandidateFilters {
   selectedInstitutionTypes: string[];
   ugcNetQualified: string;
   hasTeachingExperience: string;
+  // New filters
+  selectedFunctionalAreas: string[];
+  hasPatents: string;
+  hasBookChapters: string;
+  hasFDPWorkshop: string;
+  hasAdminExperience: string;
+  hasInternationalExposure: string;
+  selectedLanguages: string[];
+  coAuthorsRange: [number, number];
+  teachingExpRange: [number, number];
+  hasPhDSupervision: string;
 }
 
 export const defaultFilters: CandidateFilters = {
