@@ -61,6 +61,17 @@ export interface CandidateFilters {
   selectedInstitutionTypes: string[];
   ugcNetQualified: string;
   hasTeachingExperience: string;
+  // New filters
+  selectedFunctionalAreas: string[];
+  hasPatents: string;
+  hasBookChapters: string;
+  hasFDPWorkshop: string;
+  hasAdminExperience: string;
+  hasInternationalExposure: string;
+  selectedLanguages: string[];
+  coAuthorsRange: [number, number];
+  teachingExpRange: [number, number];
+  hasPhDSupervision: string;
 }
 
 export const defaultFilters: CandidateFilters = {
@@ -96,6 +107,16 @@ export const defaultFilters: CandidateFilters = {
   selectedInstitutionTypes: [],
   ugcNetQualified: "all",
   hasTeachingExperience: "all",
+  selectedFunctionalAreas: [],
+  hasPatents: "all",
+  hasBookChapters: "all",
+  hasFDPWorkshop: "all",
+  hasAdminExperience: "all",
+  hasInternationalExposure: "all",
+  selectedLanguages: [],
+  coAuthorsRange: [0, 50],
+  teachingExpRange: [0, 30],
+  hasPhDSupervision: "all",
 };
 
 // ─── Static options ──────────────────────────────────────────────
@@ -217,6 +238,38 @@ const lastActiveOptions = [
   { value: "1month", label: "Last 1 month" },
 ];
 
+const functionalAreaOptions = [
+  "Teaching & Academics",
+  "Research & Development",
+  "Administration & Management",
+  "Training & Development",
+  "Curriculum Design",
+  "Examination & Assessment",
+  "Student Affairs",
+  "Library & Information Science",
+  "Placement & Career Services",
+  "Sports & Physical Education",
+  "Counseling & Psychology",
+  "IT & Systems",
+];
+
+const languageOptions = [
+  "English",
+  "Hindi",
+  "Tamil",
+  "Telugu",
+  "Kannada",
+  "Malayalam",
+  "Bengali",
+  "Marathi",
+  "Gujarati",
+  "Punjabi",
+  "Urdu",
+  "Sanskrit",
+  "French",
+  "German",
+];
+
 // ─── Props ───────────────────────────────────────────────────────
 interface CandidateFiltersPanelProps {
   candidates: Profile[];
@@ -320,6 +373,16 @@ const CandidateFiltersPanel = ({
     if (filters.selectedInstitutionTypes.length > 0) c++;
     if (filters.ugcNetQualified !== "all") c++;
     if (filters.hasTeachingExperience !== "all") c++;
+    if (filters.selectedFunctionalAreas.length > 0) c++;
+    if (filters.hasPatents !== "all") c++;
+    if (filters.hasBookChapters !== "all") c++;
+    if (filters.hasFDPWorkshop !== "all") c++;
+    if (filters.hasAdminExperience !== "all") c++;
+    if (filters.hasInternationalExposure !== "all") c++;
+    if (filters.selectedLanguages.length > 0) c++;
+    if (filters.coAuthorsRange[0] !== 0 || filters.coAuthorsRange[1] !== 50) c++;
+    if (filters.teachingExpRange[0] !== 0 || filters.teachingExpRange[1] !== 30) c++;
+    if (filters.hasPhDSupervision !== "all") c++;
     return c;
   }, [filters]);
 
@@ -1007,6 +1070,110 @@ const CandidateFiltersPanel = ({
                   </AccordionContent>
                 </AccordionItem>
 
+                {/* ─── Functional Area ─────────────────────── */}
+                <AccordionItem value="functionalarea" className="border-b border-border px-4">
+                  <AccordionTrigger className="py-3 hover:no-underline">
+                    <div className="flex items-center gap-2 text-sm font-medium">
+                      <Briefcase className="h-4 w-4 text-primary" />
+                      Functional Area
+                      {filters.selectedFunctionalAreas.length > 0 && (
+                        <Badge variant="default" className="h-4 text-[10px] px-1.5 rounded-full">
+                          {filters.selectedFunctionalAreas.length}
+                        </Badge>
+                      )}
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="pb-3">
+                    <CheckboxList
+                      items={functionalAreaOptions}
+                      selected={filters.selectedFunctionalAreas}
+                      filterKey="selectedFunctionalAreas"
+                      maxVisible={8}
+                    />
+                  </AccordionContent>
+                </AccordionItem>
+
+                {/* ─── Language Proficiency ───────────────── */}
+                <AccordionItem value="languages" className="border-b border-border px-4">
+                  <AccordionTrigger className="py-3 hover:no-underline">
+                    <div className="flex items-center gap-2 text-sm font-medium">
+                      <Globe className="h-4 w-4 text-primary" />
+                      Language Proficiency
+                      {filters.selectedLanguages.length > 0 && (
+                        <Badge variant="default" className="h-4 text-[10px] px-1.5 rounded-full">
+                          {filters.selectedLanguages.length}
+                        </Badge>
+                      )}
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="pb-3">
+                    <CheckboxList
+                      items={languageOptions}
+                      selected={filters.selectedLanguages}
+                      filterKey="selectedLanguages"
+                      maxVisible={8}
+                    />
+                  </AccordionContent>
+                </AccordionItem>
+
+                {/* ─── Teaching Experience Range ──────────── */}
+                <AccordionItem value="teachingexprange" className="border-b border-border px-4">
+                  <AccordionTrigger className="py-3 hover:no-underline">
+                    <div className="flex items-center gap-2 text-sm font-medium">
+                      <GraduationCap className="h-4 w-4 text-primary" />
+                      Teaching Experience (Years)
+                      {(filters.teachingExpRange[0] !== 0 || filters.teachingExpRange[1] !== 30) && (
+                        <span className="text-xs text-muted-foreground font-normal">
+                          {filters.teachingExpRange[0]}–{filters.teachingExpRange[1]}+ yrs
+                        </span>
+                      )}
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="pb-3 space-y-3">
+                    <span className="text-xs text-muted-foreground">
+                      {filters.teachingExpRange[0]} – {filters.teachingExpRange[1]}+ years
+                    </span>
+                    <Slider
+                      min={0} max={30} step={1}
+                      value={filters.teachingExpRange}
+                      onValueChange={(v) => onFiltersChange({ ...filters, teachingExpRange: v as [number, number] })}
+                      className="w-full"
+                    />
+                    <div className="flex justify-between text-[10px] text-muted-foreground">
+                      <span>0 yrs</span><span>15 yrs</span><span>30+ yrs</span>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+
+                {/* ─── Co-Authors Count ───────────────────── */}
+                <AccordionItem value="coauthors" className="border-b border-border px-4">
+                  <AccordionTrigger className="py-3 hover:no-underline">
+                    <div className="flex items-center gap-2 text-sm font-medium">
+                      <Users className="h-4 w-4 text-primary" />
+                      Co-Authors Network
+                      {(filters.coAuthorsRange[0] !== 0 || filters.coAuthorsRange[1] !== 50) && (
+                        <span className="text-xs text-muted-foreground font-normal">
+                          {filters.coAuthorsRange[0]}–{filters.coAuthorsRange[1]}+
+                        </span>
+                      )}
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="pb-3 space-y-3">
+                    <span className="text-xs text-muted-foreground">
+                      {filters.coAuthorsRange[0]} – {filters.coAuthorsRange[1]}+ co-authors
+                    </span>
+                    <Slider
+                      min={0} max={50} step={1}
+                      value={filters.coAuthorsRange}
+                      onValueChange={(v) => onFiltersChange({ ...filters, coAuthorsRange: v as [number, number] })}
+                      className="w-full"
+                    />
+                    <div className="flex justify-between text-[10px] text-muted-foreground">
+                      <span>0</span><span>25</span><span>50+</span>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+
                 {/* ─── Quick toggles ─────────────────────── */}
                 <AccordionItem value="quickflags" className="px-4">
                   <AccordionTrigger className="py-3 hover:no-underline">
@@ -1144,6 +1311,102 @@ const CandidateFiltersPanel = ({
                         <Label className="text-xs text-foreground cursor-pointer">Applied to My Jobs</Label>
                       </div>
                       <Select value={filters.appliedToMyJobs} onValueChange={(v) => onFiltersChange({ ...filters, appliedToMyJobs: v })}>
+                        <SelectTrigger className="w-24 h-7 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Any</SelectItem>
+                          <SelectItem value="yes">Yes</SelectItem>
+                          <SelectItem value="no">No</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <FileText className="h-3.5 w-3.5 text-primary" />
+                        <Label className="text-xs text-foreground cursor-pointer">Has Patents</Label>
+                      </div>
+                      <Select value={filters.hasPatents} onValueChange={(v) => onFiltersChange({ ...filters, hasPatents: v })}>
+                        <SelectTrigger className="w-24 h-7 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Any</SelectItem>
+                          <SelectItem value="yes">Yes</SelectItem>
+                          <SelectItem value="no">No</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <BookOpen className="h-3.5 w-3.5 text-primary" />
+                        <Label className="text-xs text-foreground cursor-pointer">Book / Chapter Author</Label>
+                      </div>
+                      <Select value={filters.hasBookChapters} onValueChange={(v) => onFiltersChange({ ...filters, hasBookChapters: v })}>
+                        <SelectTrigger className="w-24 h-7 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Any</SelectItem>
+                          <SelectItem value="yes">Yes</SelectItem>
+                          <SelectItem value="no">No</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <Award className="h-3.5 w-3.5 text-primary" />
+                        <Label className="text-xs text-foreground cursor-pointer">FDP / Workshop Attended</Label>
+                      </div>
+                      <Select value={filters.hasFDPWorkshop} onValueChange={(v) => onFiltersChange({ ...filters, hasFDPWorkshop: v })}>
+                        <SelectTrigger className="w-24 h-7 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Any</SelectItem>
+                          <SelectItem value="yes">Yes</SelectItem>
+                          <SelectItem value="no">No</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <Building2 className="h-3.5 w-3.5 text-primary" />
+                        <Label className="text-xs text-foreground cursor-pointer">Administrative Experience</Label>
+                      </div>
+                      <Select value={filters.hasAdminExperience} onValueChange={(v) => onFiltersChange({ ...filters, hasAdminExperience: v })}>
+                        <SelectTrigger className="w-24 h-7 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Any</SelectItem>
+                          <SelectItem value="yes">Yes</SelectItem>
+                          <SelectItem value="no">No</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <Globe className="h-3.5 w-3.5 text-primary" />
+                        <Label className="text-xs text-foreground cursor-pointer">International Exposure</Label>
+                      </div>
+                      <Select value={filters.hasInternationalExposure} onValueChange={(v) => onFiltersChange({ ...filters, hasInternationalExposure: v })}>
+                        <SelectTrigger className="w-24 h-7 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Any</SelectItem>
+                          <SelectItem value="yes">Yes</SelectItem>
+                          <SelectItem value="no">No</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <GraduationCap className="h-3.5 w-3.5 text-primary" />
+                        <Label className="text-xs text-foreground cursor-pointer">PhD Supervision</Label>
+                      </div>
+                      <Select value={filters.hasPhDSupervision} onValueChange={(v) => onFiltersChange({ ...filters, hasPhDSupervision: v })}>
                         <SelectTrigger className="w-24 h-7 text-xs">
                           <SelectValue />
                         </SelectTrigger>
