@@ -107,6 +107,16 @@ export const defaultFilters: CandidateFilters = {
   selectedInstitutionTypes: [],
   ugcNetQualified: "all",
   hasTeachingExperience: "all",
+  selectedFunctionalAreas: [],
+  hasPatents: "all",
+  hasBookChapters: "all",
+  hasFDPWorkshop: "all",
+  hasAdminExperience: "all",
+  hasInternationalExposure: "all",
+  selectedLanguages: [],
+  coAuthorsRange: [0, 50],
+  teachingExpRange: [0, 30],
+  hasPhDSupervision: "all",
 };
 
 // ─── Static options ──────────────────────────────────────────────
