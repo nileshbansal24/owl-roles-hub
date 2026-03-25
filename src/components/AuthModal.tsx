@@ -258,7 +258,7 @@ const AuthModal = ({
                   <h2 className="font-heading text-xl font-bold text-foreground">
                     {mode === "login" ? "Login" : "Create Account"}
                   </h2>
-                  <p className="text-sm text-muted-foreground capitalize">{role} Account</p>
+                  <p className="text-sm text-muted-foreground">{role === "candidate" ? "Job Seeker" : "Recruiter"} Account</p>
                 </div>
               </div>
 

@@ -232,7 +232,7 @@ const Navbar = ({ onLoginClick, onSignupClick }: NavbarProps) => {
                       {/* User Info */}
                       <div className="px-3 py-2 mb-2">
                         <p className="text-sm font-medium">{user.email}</p>
-                        <p className="text-xs text-muted-foreground capitalize">{userType} Account</p>
+                        <p className="text-xs text-muted-foreground">{userType === "candidate" ? "Job Seeker" : "Recruiter"} Account</p>
                       </div>
 
                       <Button

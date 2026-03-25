@@ -50,7 +50,7 @@ const Footer = () => {
 
           {/* For Candidates */}
           <div>
-            <h4 className="font-heading font-semibold text-lg mb-4">For Candidates</h4>
+            <h4 className="font-heading font-semibold text-lg mb-4">For Job Seekers</h4>
             <ul className="space-y-3 text-sm text-muted-foreground">
               <li><button onClick={() => scrollToSection("featured-jobs")} className="hover:text-primary transition-colors">Browse Jobs</button></li>
               <li><Link to="/auth?mode=signup" className="hover:text-primary transition-colors">Upload Resume</Link></li>

@@ -29,7 +29,7 @@ const useCountUp = (end: number, duration: number = 2000, shouldStart: boolean =
 
 const stats = [
   { icon: Briefcase, value: 2500, suffix: "+", label: "Active Jobs", gradient: "from-primary/15 to-primary/5", iconBg: "bg-primary/10", iconColor: "text-primary" },
-  { icon: Users, value: 50000, suffix: "+", label: "Registered Candidates", gradient: "from-emerald-500/15 to-emerald-500/5", iconBg: "bg-emerald-500/10", iconColor: "text-emerald-600 dark:text-emerald-400" },
+  { icon: Users, value: 50000, suffix: "+", label: "Registered Job Seekers", gradient: "from-emerald-500/15 to-emerald-500/5", iconBg: "bg-emerald-500/10", iconColor: "text-emerald-600 dark:text-emerald-400" },
   { icon: Building2, value: 500, suffix: "+", label: "Universities", gradient: "from-violet-500/15 to-violet-500/5", iconBg: "bg-violet-500/10", iconColor: "text-violet-600 dark:text-violet-400" },
   { icon: Award, value: 1200, suffix: "+", label: "Placements/Month", gradient: "from-amber-500/15 to-amber-500/5", iconBg: "bg-amber-500/10", iconColor: "text-amber-600 dark:text-amber-400" },
 ];
