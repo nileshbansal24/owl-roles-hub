@@ -238,6 +238,38 @@ const lastActiveOptions = [
   { value: "1month", label: "Last 1 month" },
 ];
 
+const functionalAreaOptions = [
+  "Teaching & Academics",
+  "Research & Development",
+  "Administration & Management",
+  "Training & Development",
+  "Curriculum Design",
+  "Examination & Assessment",
+  "Student Affairs",
+  "Library & Information Science",
+  "Placement & Career Services",
+  "Sports & Physical Education",
+  "Counseling & Psychology",
+  "IT & Systems",
+];
+
+const languageOptions = [
+  "English",
+  "Hindi",
+  "Tamil",
+  "Telugu",
+  "Kannada",
+  "Malayalam",
+  "Bengali",
+  "Marathi",
+  "Gujarati",
+  "Punjabi",
+  "Urdu",
+  "Sanskrit",
+  "French",
+  "German",
+];
+
 // ─── Props ───────────────────────────────────────────────────────
 interface CandidateFiltersPanelProps {
   candidates: Profile[];
