@@ -1070,6 +1070,110 @@ const CandidateFiltersPanel = ({
                   </AccordionContent>
                 </AccordionItem>
 
+                {/* ─── Functional Area ─────────────────────── */}
+                <AccordionItem value="functionalarea" className="border-b border-border px-4">
+                  <AccordionTrigger className="py-3 hover:no-underline">
+                    <div className="flex items-center gap-2 text-sm font-medium">
+                      <Briefcase className="h-4 w-4 text-primary" />
+                      Functional Area
+                      {filters.selectedFunctionalAreas.length > 0 && (
+                        <Badge variant="default" className="h-4 text-[10px] px-1.5 rounded-full">
+                          {filters.selectedFunctionalAreas.length}
+                        </Badge>
+                      )}
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="pb-3">
+                    <CheckboxList
+                      items={functionalAreaOptions}
+                      selected={filters.selectedFunctionalAreas}
+                      filterKey="selectedFunctionalAreas"
+                      maxVisible={8}
+                    />
+                  </AccordionContent>
+                </AccordionItem>
+
+                {/* ─── Language Proficiency ───────────────── */}
+                <AccordionItem value="languages" className="border-b border-border px-4">
+                  <AccordionTrigger className="py-3 hover:no-underline">
+                    <div className="flex items-center gap-2 text-sm font-medium">
+                      <Globe className="h-4 w-4 text-primary" />
+                      Language Proficiency
+                      {filters.selectedLanguages.length > 0 && (
+                        <Badge variant="default" className="h-4 text-[10px] px-1.5 rounded-full">
+                          {filters.selectedLanguages.length}
+                        </Badge>
+                      )}
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="pb-3">
+                    <CheckboxList
+                      items={languageOptions}
+                      selected={filters.selectedLanguages}
+                      filterKey="selectedLanguages"
+                      maxVisible={8}
+                    />
+                  </AccordionContent>
+                </AccordionItem>
+
+                {/* ─── Teaching Experience Range ──────────── */}
+                <AccordionItem value="teachingexprange" className="border-b border-border px-4">
+                  <AccordionTrigger className="py-3 hover:no-underline">
+                    <div className="flex items-center gap-2 text-sm font-medium">
+                      <GraduationCap className="h-4 w-4 text-primary" />
+                      Teaching Experience (Years)
+                      {(filters.teachingExpRange[0] !== 0 || filters.teachingExpRange[1] !== 30) && (
+                        <span className="text-xs text-muted-foreground font-normal">
+                          {filters.teachingExpRange[0]}–{filters.teachingExpRange[1]}+ yrs
+                        </span>
+                      )}
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="pb-3 space-y-3">
+                    <span className="text-xs text-muted-foreground">
+                      {filters.teachingExpRange[0]} – {filters.teachingExpRange[1]}+ years
+                    </span>
+                    <Slider
+                      min={0} max={30} step={1}
+                      value={filters.teachingExpRange}
+                      onValueChange={(v) => onFiltersChange({ ...filters, teachingExpRange: v as [number, number] })}
+                      className="w-full"
+                    />
+                    <div className="flex justify-between text-[10px] text-muted-foreground">
+                      <span>0 yrs</span><span>15 yrs</span><span>30+ yrs</span>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+
+                {/* ─── Co-Authors Count ───────────────────── */}
+                <AccordionItem value="coauthors" className="border-b border-border px-4">
+                  <AccordionTrigger className="py-3 hover:no-underline">
+                    <div className="flex items-center gap-2 text-sm font-medium">
+                      <Users className="h-4 w-4 text-primary" />
+                      Co-Authors Network
+                      {(filters.coAuthorsRange[0] !== 0 || filters.coAuthorsRange[1] !== 50) && (
+                        <span className="text-xs text-muted-foreground font-normal">
+                          {filters.coAuthorsRange[0]}–{filters.coAuthorsRange[1]}+
+                        </span>
+                      )}
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="pb-3 space-y-3">
+                    <span className="text-xs text-muted-foreground">
+                      {filters.coAuthorsRange[0]} – {filters.coAuthorsRange[1]}+ co-authors
+                    </span>
+                    <Slider
+                      min={0} max={50} step={1}
+                      value={filters.coAuthorsRange}
+                      onValueChange={(v) => onFiltersChange({ ...filters, coAuthorsRange: v as [number, number] })}
+                      className="w-full"
+                    />
+                    <div className="flex justify-between text-[10px] text-muted-foreground">
+                      <span>0</span><span>25</span><span>50+</span>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+
                 {/* ─── Quick toggles ─────────────────────── */}
                 <AccordionItem value="quickflags" className="px-4">
                   <AccordionTrigger className="py-3 hover:no-underline">
