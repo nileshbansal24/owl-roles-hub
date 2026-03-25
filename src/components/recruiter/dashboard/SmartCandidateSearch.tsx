@@ -374,7 +374,7 @@ const SmartCandidateSearch = ({
           </div>
           <div className="flex flex-wrap gap-2">
             <span className="text-xs text-muted-foreground">Quick add:</span>
-            {["Vice Chancellor", "Dean", "15+ years", "Research", "Professor", "HOD"].map((tag) => (
+            {["Vice Chancellor", "Dean", "15+ years", "Research", "Professor", "HOD", "Principal", "PhD Guide", "UGC NET", "Postdoc", "Admin Experience", "Patent Holder"].map((tag) => (
               <Badge 
                 key={tag}
                 variant="outline" 
