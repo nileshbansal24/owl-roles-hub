@@ -155,7 +155,7 @@ const Navbar = ({ onLoginClick, onSignupClick }: NavbarProps) => {
                     <div className="flex items-center justify-start gap-2 p-2">
                       <div className="flex flex-col space-y-1 leading-none">
                         <p className="font-medium text-sm">{user.email}</p>
-                        <p className="text-xs text-muted-foreground capitalize">{userType} Account</p>
+                        <p className="text-xs text-muted-foreground">{userType === "candidate" ? "Job Seeker" : "Recruiter"} Account</p>
                       </div>
                     </div>
                     <DropdownMenuSeparator />
@@ -232,7 +232,7 @@ const Navbar = ({ onLoginClick, onSignupClick }: NavbarProps) => {
                       {/* User Info */}
                       <div className="px-3 py-2 mb-2">
                         <p className="text-sm font-medium">{user.email}</p>
-                        <p className="text-xs text-muted-foreground capitalize">{userType} Account</p>
+                        <p className="text-xs text-muted-foreground">{userType === "candidate" ? "Job Seeker" : "Recruiter"} Account</p>
                       </div>
 
                       <Button

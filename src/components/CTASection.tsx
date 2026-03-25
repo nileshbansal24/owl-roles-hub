@@ -53,7 +53,7 @@ const CTASection = ({ onCandidateClick, onRecruiterClick }: CTASectionProps) => 
               variant="secondary"
               className="w-full gap-2 bg-primary-foreground text-primary hover:bg-primary-foreground/90 font-semibold"
             >
-              Register as Candidate
+              Register as Job Seeker
               <ArrowRight className="w-4 h-4" />
             </Button>
           </motion.div>

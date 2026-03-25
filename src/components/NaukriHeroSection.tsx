@@ -218,7 +218,7 @@ const NaukriHeroSection = ({
             {[
               { value: "2,500+", label: "Active Jobs" },
               { value: "500+", label: "Universities" },
-              { value: "50,000+", label: "Candidates" },
+              { value: "50,000+", label: "Job Seekers" },
             ].map((stat) => (
               <div key={stat.label}>
                 <p className="font-heading text-2xl md:text-3xl font-extrabold text-foreground">

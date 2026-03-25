@@ -216,7 +216,7 @@ export const CandidateRatingCard = (props: CandidateRatingProps) => {
     >
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-heading font-semibold text-sm md:text-base text-foreground">
-          Candidate Rating
+          Your Rating
         </h3>
         <div className="flex items-center gap-2">
           <StarRating score={overallScore} size={18} />
