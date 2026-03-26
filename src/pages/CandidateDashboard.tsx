@@ -69,6 +69,7 @@ import {
   transformEducationToDB,
 } from "@/lib/profileUtils";
 import { getCandidateCategory } from "@/types/recruiter";
+import { JobSeekerOnboarding } from "@/components/onboarding/JobSeekerOnboarding";
 
 interface ScopusMetrics {
   h_index: number | null;
