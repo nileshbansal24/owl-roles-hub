@@ -346,6 +346,14 @@ const CandidateDashboard = () => {
       }
 
       setLoading(false);
+
+      // Check if first-time user (no full_name means fresh profile)
+      if (!onboardingChecked.current && profileData && !profileData.full_name) {
+        onboardingChecked.current = true;
+        setOnboardingOpen(true);
+      } else {
+        onboardingChecked.current = true;
+      }
     };
 
     fetchData();
