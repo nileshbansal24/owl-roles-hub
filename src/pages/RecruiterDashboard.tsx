@@ -249,8 +249,8 @@ const RecruiterDashboard = () => {
   }
 
   return (
-    <RecruiterLayout hasJobs={jobs.length > 0} title="Recruiter Dashboard">
-      <div className="p-3 sm:p-6 space-y-5 sm:space-y-6">
+    <RecruiterLayout hasJobs={jobs.length > 0} title="Dashboard">
+      <div className="p-4 sm:p-6 lg:p-8 space-y-5 max-w-[1600px] mx-auto">
         {/* Welcome + Stats */}
         <WelcomeHeader name={recruiterName} />
         <StatsCards jobs={jobs} applications={applications} candidates={candidates} />
