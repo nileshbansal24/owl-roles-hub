@@ -194,12 +194,15 @@ export const JobSeekerOnboarding = ({
                   <p className="text-sm text-muted-foreground max-w-sm mb-2">
                     Let's set up your profile so recruiters can discover you and match you with the perfect opportunities.
                   </p>
-                  <p className="text-xs text-muted-foreground/70">
+                  <p className="text-xs text-muted-foreground/70 mb-6">
                     This takes about 2 minutes
                   </p>
-                  <div className="mt-8">
-                    <Button onClick={goNext} className="gap-2 px-6">
-                      Let's Get Started <ArrowRight className="h-4 w-4" />
+                  <div className="flex flex-col sm:flex-row gap-3 w-full max-w-sm">
+                    <Button onClick={goNext} className="flex-1 gap-2">
+                      <Sparkles className="h-4 w-4" /> Guide Me Through
+                    </Button>
+                    <Button variant="outline" onClick={handleFinish} className="flex-1 gap-2">
+                      I'll Explore on My Own
                     </Button>
                   </div>
                 </div>
