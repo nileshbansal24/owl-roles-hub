@@ -69,6 +69,7 @@ import {
   transformEducationToDB,
 } from "@/lib/profileUtils";
 import { getCandidateCategory } from "@/types/recruiter";
+import { JobSeekerOnboarding } from "@/components/onboarding/JobSeekerOnboarding";
 
 interface ScopusMetrics {
   h_index: number | null;
@@ -192,7 +193,8 @@ const CandidateDashboard = () => {
   const [personalDetailsEditOpen, setPersonalDetailsEditOpen] = useState(false);
   const [calculatedYearsExperience, setCalculatedYearsExperience] = useState<number | null>(null);
   const [syncingExperience, setSyncingExperience] = useState(false);
-
+  const [onboardingOpen, setOnboardingOpen] = useState(false);
+  const onboardingChecked = useRef(false);
 
 
   const handleQuickApply = async (jobId: string) => {
@@ -344,6 +346,14 @@ const CandidateDashboard = () => {
       }
 
       setLoading(false);
+
+      // Check if first-time user (no full_name means fresh profile)
+      if (!onboardingChecked.current && profileData && !profileData.full_name) {
+        onboardingChecked.current = true;
+        setOnboardingOpen(true);
+      } else {
+        onboardingChecked.current = true;
+      }
     };
 
     fetchData();
@@ -1788,6 +1798,46 @@ const CandidateDashboard = () => {
         }}
         onSave={handlePersonalDetailsSave}
         academicField={profile?.role || profile?.headline}
+      />
+
+      {/* Onboarding Wizard */}
+      <JobSeekerOnboarding
+        open={onboardingOpen}
+        onOpenChange={setOnboardingOpen}
+        userName={profile?.full_name}
+        onChooseResume={() => {
+          // Trigger resume upload after onboarding closes
+          setTimeout(() => resumeInputRef.current?.click(), 300);
+        }}
+        onChooseManual={() => {
+          // Will show the guide step then land on dashboard
+        }}
+        onSaveBasicInfo={async (data) => {
+          if (!user) return;
+          const { error } = await supabase
+            .from("profiles")
+            .update({
+              full_name: data.full_name || null,
+              role: data.role || null,
+              university: data.university || null,
+              location: data.location || null,
+            })
+            .eq("id", user.id);
+          if (error) {
+            toast({ title: "Error", description: "Failed to save basic info.", variant: "destructive" });
+            throw error;
+          }
+          setProfile((prev) => prev ? {
+            ...prev,
+            full_name: data.full_name,
+            role: data.role,
+            university: data.university,
+            location: data.location,
+          } : null);
+        }}
+        onComplete={() => {
+          setOnboardingOpen(false);
+        }}
       />
 
     </div>
