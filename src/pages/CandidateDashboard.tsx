@@ -1800,6 +1800,46 @@ const CandidateDashboard = () => {
         academicField={profile?.role || profile?.headline}
       />
 
+      {/* Onboarding Wizard */}
+      <JobSeekerOnboarding
+        open={onboardingOpen}
+        onOpenChange={setOnboardingOpen}
+        userName={profile?.full_name}
+        onChooseResume={() => {
+          // Trigger resume upload after onboarding closes
+          setTimeout(() => resumeInputRef.current?.click(), 300);
+        }}
+        onChooseManual={() => {
+          // Will show the guide step then land on dashboard
+        }}
+        onSaveBasicInfo={async (data) => {
+          if (!user) return;
+          const { error } = await supabase
+            .from("profiles")
+            .update({
+              full_name: data.full_name || null,
+              role: data.role || null,
+              university: data.university || null,
+              location: data.location || null,
+            })
+            .eq("id", user.id);
+          if (error) {
+            toast({ title: "Error", description: "Failed to save basic info.", variant: "destructive" });
+            throw error;
+          }
+          setProfile((prev) => prev ? {
+            ...prev,
+            full_name: data.full_name,
+            role: data.role,
+            university: data.university,
+            location: data.location,
+          } : null);
+        }}
+        onComplete={() => {
+          setOnboardingOpen(false);
+        }}
+      />
+
     </div>
   );
 };
