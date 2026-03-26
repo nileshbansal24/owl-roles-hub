@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { format } from "date-fns";
-import { Sparkles } from "lucide-react";
+import { Activity } from "lucide-react";
 
 interface WelcomeHeaderProps {
   name?: string;
@@ -13,26 +13,23 @@ const WelcomeHeader = ({ name }: WelcomeHeaderProps) => {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: -8 }}
+      initial={{ opacity: 0, y: -6 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
-      className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-1"
+      transition={{ duration: 0.35, ease: "easeOut" }}
+      className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2"
     >
-      <div>
-        <div className="flex items-center gap-2">
-          <h2 className="text-xl sm:text-2xl font-heading font-bold text-foreground">
-            {greeting}, {displayName}
-          </h2>
-          <motion.div
-            animate={{ rotate: [0, 14, -8, 14, -4, 10, 0] }}
-            transition={{ duration: 2.5, delay: 0.5 }}
-          >
-            <Sparkles className="h-5 w-5 text-primary" />
-          </motion.div>
+      <div className="space-y-0.5">
+        <h2 className="text-lg sm:text-xl font-heading font-semibold text-foreground tracking-tight">
+          {greeting}, {displayName}
+        </h2>
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <span>{format(new Date(), "EEEE, MMMM d, yyyy")}</span>
+          <span className="text-border">•</span>
+          <span className="flex items-center gap-1">
+            <Activity className="h-3 w-3 text-primary" />
+            Hiring overview
+          </span>
         </div>
-        <p className="text-sm text-muted-foreground mt-0.5">
-          {format(new Date(), "EEEE, MMMM d, yyyy")} — Here's your hiring overview
-        </p>
       </div>
     </motion.div>
   );
