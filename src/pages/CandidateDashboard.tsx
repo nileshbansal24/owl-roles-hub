@@ -193,7 +193,8 @@ const CandidateDashboard = () => {
   const [personalDetailsEditOpen, setPersonalDetailsEditOpen] = useState(false);
   const [calculatedYearsExperience, setCalculatedYearsExperience] = useState<number | null>(null);
   const [syncingExperience, setSyncingExperience] = useState(false);
-
+  const [onboardingOpen, setOnboardingOpen] = useState(false);
+  const onboardingChecked = useRef(false);
 
 
   const handleQuickApply = async (jobId: string) => {
