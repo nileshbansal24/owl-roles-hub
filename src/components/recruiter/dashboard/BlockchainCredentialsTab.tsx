@@ -579,7 +579,7 @@ const BlockchainCredentialsTab = ({ candidates: _allCandidates, isLoading = fals
         .select("*")
         .in("id", uniqueCandidateIds);
 
-      setShortlistedCandidates((profiles as Profile[]) || []);
+      setShortlistedCandidates((profiles as unknown as Profile[]) || []);
     } catch (err) {
       console.error("Error fetching shortlisted candidates:", err);
       setShortlistedCandidates([]);
