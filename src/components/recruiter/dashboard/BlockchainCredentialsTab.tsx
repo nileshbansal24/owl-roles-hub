@@ -763,7 +763,9 @@ const BlockchainCredentialsTab = ({ candidates: _allCandidates, isLoading = fals
               <FileCheck className="h-12 w-12 mx-auto text-muted-foreground/40 mb-4" />
               <h3 className="font-semibold text-lg">No credentials found</h3>
               <p className="text-sm text-muted-foreground mt-1">
-                {searchQuery ? "Try adjusting your search filters." : "Credentials will appear here when candidates have profile data (education, experience, ORCID, etc)."}
+                {searchQuery
+                  ? "Try adjusting your search filters."
+                  : "Only shortlisted candidates appear here. Shortlist candidates from the Applications tab to verify their credentials."}
               </p>
             </CardContent>
           </Card>
