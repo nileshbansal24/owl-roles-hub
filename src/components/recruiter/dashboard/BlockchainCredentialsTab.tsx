@@ -617,7 +617,7 @@ const BlockchainCredentialsTab = ({ candidates: _allCandidates, isLoading = fals
   }, [storedVerifications]);
 
   const candidatesWithCredentials = useMemo<CandidateWithCredentials[]>(() => {
-    return candidates
+    return shortlistedCandidates
       .map((c) => {
         const credentials = extractCredentials(c);
         const verifications = verificationsByCandidate.get(c.id) || new Map<string, StoredVerification>();
@@ -626,7 +626,7 @@ const BlockchainCredentialsTab = ({ candidates: _allCandidates, isLoading = fals
       })
       .filter((c) => c.credentials.length > 0)
       .sort((a, b) => b.trustScore - a.trustScore);
-  }, [candidates, verificationsByCandidate]);
+  }, [shortlistedCandidates, verificationsByCandidate]);
 
   const filtered = useMemo(() => {
     let list = candidatesWithCredentials;
