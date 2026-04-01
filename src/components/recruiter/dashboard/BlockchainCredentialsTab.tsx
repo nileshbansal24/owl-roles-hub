@@ -667,7 +667,7 @@ const BlockchainCredentialsTab = ({ candidates: _allCandidates, isLoading = fals
     };
   }, [candidatesWithCredentials, storedVerifications]);
 
-  if (isLoading || loadingVerifications) {
+  if (isLoading || loadingVerifications || loadingShortlisted) {
     return (
       <div className="space-y-4">
         {[1, 2, 3].map((i) => (
