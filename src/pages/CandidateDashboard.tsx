@@ -53,6 +53,7 @@ import {
   GraduationCap,
   User,
   TrendingUp,
+  Rocket,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
