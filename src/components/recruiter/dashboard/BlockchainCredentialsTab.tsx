@@ -529,13 +529,64 @@ interface BlockchainCredentialsTabProps {
   isLoading?: boolean;
 }
 
-const BlockchainCredentialsTab = ({ candidates, isLoading = false }: BlockchainCredentialsTabProps) => {
+const BlockchainCredentialsTab = ({ candidates: _allCandidates, isLoading = false }: BlockchainCredentialsTabProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | VerificationStatus>("all");
   const [storedVerifications, setStoredVerifications] = useState<StoredVerification[]>([]);
   const [loadingVerifications, setLoadingVerifications] = useState(true);
+  const [shortlistedCandidates, setShortlistedCandidates] = useState<Profile[]>([]);
+  const [loadingShortlisted, setLoadingShortlisted] = useState(true);
   const { toast } = useToast();
   const { user } = useAuth();
+
+  // Fetch only shortlisted candidates for the recruiter's jobs
+  const fetchShortlistedCandidates = useCallback(async () => {
+    if (!user) return;
+    setLoadingShortlisted(true);
+    try {
+      // Get recruiter's jobs
+      const { data: recruiterJobs } = await supabase
+        .from("jobs")
+        .select("id")
+        .eq("created_by", user.id);
+
+      if (!recruiterJobs || recruiterJobs.length === 0) {
+        setShortlistedCandidates([]);
+        setLoadingShortlisted(false);
+        return;
+      }
+
+      const jobIds = recruiterJobs.map((j) => j.id);
+
+      // Get shortlisted applications for those jobs
+      const { data: shortlistedApps } = await supabase
+        .from("job_applications")
+        .select("applicant_id")
+        .in("job_id", jobIds)
+        .eq("status", "shortlisted");
+
+      if (!shortlistedApps || shortlistedApps.length === 0) {
+        setShortlistedCandidates([]);
+        setLoadingShortlisted(false);
+        return;
+      }
+
+      const uniqueCandidateIds = [...new Set(shortlistedApps.map((a) => a.applicant_id))];
+
+      // Fetch full profiles for shortlisted candidates
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("*")
+        .in("id", uniqueCandidateIds);
+
+      setShortlistedCandidates((profiles as unknown as Profile[]) || []);
+    } catch (err) {
+      console.error("Error fetching shortlisted candidates:", err);
+      setShortlistedCandidates([]);
+    } finally {
+      setLoadingShortlisted(false);
+    }
+  }, [user]);
 
   const fetchVerifications = useCallback(async () => {
     if (!user) return;
@@ -553,7 +604,8 @@ const BlockchainCredentialsTab = ({ candidates, isLoading = false }: BlockchainC
 
   useEffect(() => {
     fetchVerifications();
-  }, [fetchVerifications]);
+    fetchShortlistedCandidates();
+  }, [fetchVerifications, fetchShortlistedCandidates]);
 
   const verificationsByCandidate = useMemo(() => {
     const map = new Map<string, Map<string, StoredVerification>>();
@@ -565,7 +617,7 @@ const BlockchainCredentialsTab = ({ candidates, isLoading = false }: BlockchainC
   }, [storedVerifications]);
 
   const candidatesWithCredentials = useMemo<CandidateWithCredentials[]>(() => {
-    return candidates
+    return shortlistedCandidates
       .map((c) => {
         const credentials = extractCredentials(c);
         const verifications = verificationsByCandidate.get(c.id) || new Map<string, StoredVerification>();
@@ -574,7 +626,7 @@ const BlockchainCredentialsTab = ({ candidates, isLoading = false }: BlockchainC
       })
       .filter((c) => c.credentials.length > 0)
       .sort((a, b) => b.trustScore - a.trustScore);
-  }, [candidates, verificationsByCandidate]);
+  }, [shortlistedCandidates, verificationsByCandidate]);
 
   const filtered = useMemo(() => {
     let list = candidatesWithCredentials;
@@ -615,7 +667,7 @@ const BlockchainCredentialsTab = ({ candidates, isLoading = false }: BlockchainC
     };
   }, [candidatesWithCredentials, storedVerifications]);
 
-  if (isLoading || loadingVerifications) {
+  if (isLoading || loadingVerifications || loadingShortlisted) {
     return (
       <div className="space-y-4">
         {[1, 2, 3].map((i) => (
@@ -711,7 +763,9 @@ const BlockchainCredentialsTab = ({ candidates, isLoading = false }: BlockchainC
               <FileCheck className="h-12 w-12 mx-auto text-muted-foreground/40 mb-4" />
               <h3 className="font-semibold text-lg">No credentials found</h3>
               <p className="text-sm text-muted-foreground mt-1">
-                {searchQuery ? "Try adjusting your search filters." : "Credentials will appear here when candidates have profile data (education, experience, ORCID, etc)."}
+                {searchQuery
+                  ? "Try adjusting your search filters."
+                  : "Only shortlisted candidates appear here. Shortlist candidates from the Applications tab to verify their credentials."}
               </p>
             </CardContent>
           </Card>
