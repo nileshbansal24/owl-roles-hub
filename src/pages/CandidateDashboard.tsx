@@ -53,6 +53,7 @@ import {
   GraduationCap,
   User,
   TrendingUp,
+  Rocket,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
@@ -916,6 +917,19 @@ const CandidateDashboard = () => {
       animate="visible"
       className="space-y-4"
     >
+      {/* Onboarding Guide Trigger */}
+      <motion.div variants={itemVariants}>
+        <Button
+          variant="outline"
+          size="sm"
+          className="w-full gap-2 text-muted-foreground hover:text-primary"
+          onClick={() => setOnboardingOpen(true)}
+        >
+          <Rocket className="h-4 w-4" />
+          Restart Dashboard Guide
+        </Button>
+      </motion.div>
+
       {/* Profile Completion */}
       <motion.div variants={itemVariants}>
         <ProfileCompletionCard
