@@ -12,11 +12,11 @@ interface RecruiterLayoutProps {
   pendingVerificationCount?: number;
 }
 
-const RecruiterLayout = ({ children, hasJobs = false, title }: RecruiterLayoutProps) => {
+const RecruiterLayout = ({ children, hasJobs = false, title, pendingVerificationCount = 0 }: RecruiterLayoutProps) => {
   return (
     <SidebarProvider defaultOpen={true}>
       <div className="min-h-screen flex w-full bg-background">
-        <RecruiterSidebar hasJobs={hasJobs} />
+        <RecruiterSidebar hasJobs={hasJobs} pendingVerificationCount={pendingVerificationCount} />
         
         <main className="flex-1 flex flex-col min-h-screen overflow-hidden min-w-0">
           {/* Refined top header */}
