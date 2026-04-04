@@ -9,6 +9,7 @@ interface RecruiterLayoutProps {
   children: React.ReactNode;
   hasJobs?: boolean;
   title?: string;
+  pendingVerificationCount?: number;
 }
 
 const RecruiterLayout = ({ children, hasJobs = false, title }: RecruiterLayoutProps) => {
