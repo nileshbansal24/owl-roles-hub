@@ -482,5 +482,6 @@ export const useRecruiterDashboard = () => {
     completeOnboarding,
     setApplications,
     toast,
+    pendingVerificationCount,
   };
 };
