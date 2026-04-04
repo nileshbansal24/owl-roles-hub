@@ -84,6 +84,14 @@ export const useRecruiterDashboard = () => {
         description: `Application marked as ${newStatus}`,
       });
       
+      if (newStatus === "shortlisted") {
+        toast({
+          title: "🔔 Credential Verification Pending",
+          description: `${app?.profiles?.full_name || "Candidate"} has been shortlisted. Please verify their credentials in the OR Verification tab.`,
+        });
+        setPendingVerificationCount(prev => prev + 1);
+      }
+      
       if (app) {
         sendStatusNotification(appId, newStatus, app.jobs.title, app.jobs.institute);
       }
