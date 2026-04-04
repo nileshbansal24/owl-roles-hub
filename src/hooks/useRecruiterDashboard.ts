@@ -20,6 +20,7 @@ export const useRecruiterDashboard = () => {
   const [interviews, setInterviews] = useState<EnrichedInterview[]>([]);
   const [savedCandidateIds, setSavedCandidateIds] = useState<Set<string>>(new Set());
   const [savedCandidateNotes, setSavedCandidateNotes] = useState<Record<string, string>>({});
+  const [pendingVerificationCount, setPendingVerificationCount] = useState(0);
   
   // Onboarding state
   const [showOnboarding, setShowOnboarding] = useState(false);
