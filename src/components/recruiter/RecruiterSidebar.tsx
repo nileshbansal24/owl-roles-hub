@@ -55,7 +55,7 @@ const manageNavItems = [
   { title: "OR Verification", icon: Blocks, tab: "blockchain" },
 ];
 
-const RecruiterSidebar = ({ hasJobs = false }: RecruiterSidebarProps) => {
+const RecruiterSidebar = ({ hasJobs = false, pendingVerificationCount = 0 }: RecruiterSidebarProps) => {
   const { user, signOut } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
