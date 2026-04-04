@@ -20,6 +20,7 @@ export const useRecruiterDashboard = () => {
   const [interviews, setInterviews] = useState<EnrichedInterview[]>([]);
   const [savedCandidateIds, setSavedCandidateIds] = useState<Set<string>>(new Set());
   const [savedCandidateNotes, setSavedCandidateNotes] = useState<Record<string, string>>({});
+  const [pendingVerificationCount, setPendingVerificationCount] = useState(0);
   
   // Onboarding state
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -427,6 +428,27 @@ export const useRecruiterDashboard = () => {
         setInterviews(enrichedInterviews as EnrichedInterview[]);
       }
 
+      // Calculate pending verification count
+      const shortlistedIds = applicationsWithProfiles
+        .filter(a => a.status === "shortlisted")
+        .map(a => a.applicant_id);
+      
+      if (shortlistedIds.length > 0) {
+        const uniqueIds = [...new Set(shortlistedIds)];
+        const { data: verifiedData } = await supabase
+          .from("credential_verifications")
+          .select("candidate_id, status")
+          .eq("recruiter_id", user.id)
+          .in("candidate_id", uniqueIds)
+          .eq("status", "verified");
+        
+        const verifiedCandidateIds = new Set((verifiedData || []).map(v => v.candidate_id));
+        const pendingCount = uniqueIds.filter(id => !verifiedCandidateIds.has(id)).length;
+        setPendingVerificationCount(pendingCount);
+      } else {
+        setPendingVerificationCount(0);
+      }
+
       setLoading(false);
     };
 
@@ -460,5 +482,6 @@ export const useRecruiterDashboard = () => {
     completeOnboarding,
     setApplications,
     toast,
+    pendingVerificationCount,
   };
 };

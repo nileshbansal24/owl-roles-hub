@@ -38,6 +38,7 @@ import logoDark from "@/assets/logo-dark.png";
 
 interface RecruiterSidebarProps {
   hasJobs?: boolean;
+  pendingVerificationCount?: number;
 }
 
 const mainNavItems = [
@@ -54,7 +55,7 @@ const manageNavItems = [
   { title: "OR Verification", icon: Blocks, tab: "blockchain" },
 ];
 
-const RecruiterSidebar = ({ hasJobs = false }: RecruiterSidebarProps) => {
+const RecruiterSidebar = ({ hasJobs = false, pendingVerificationCount = 0 }: RecruiterSidebarProps) => {
   const { user, signOut } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
@@ -114,7 +115,17 @@ const RecruiterSidebar = ({ hasJobs = false }: RecruiterSidebarProps) => {
                     />
                   )}
                   <item.icon className={cn("h-4 w-4 shrink-0", active && "text-primary")} />
-                  {!isCollapsed && <span className="text-[13px]">{item.title}</span>}
+                  {!isCollapsed && <span className="text-[13px] flex-1">{item.title}</span>}
+                  {!isCollapsed && item.tab === "blockchain" && pendingVerificationCount > 0 && (
+                    <span className="ml-auto inline-flex items-center justify-center h-5 min-w-5 px-1.5 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold">
+                      {pendingVerificationCount}
+                    </span>
+                  )}
+                  {isCollapsed && item.tab === "blockchain" && pendingVerificationCount > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 h-4 min-w-4 px-1 rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold flex items-center justify-center">
+                      {pendingVerificationCount}
+                    </span>
+                  )}
                 </SidebarMenuButton>
               </SidebarMenuItem>
             );

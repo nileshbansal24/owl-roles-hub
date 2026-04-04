@@ -59,6 +59,7 @@ const RecruiterDashboard = () => {
     completeOnboarding,
     setApplications,
     toast,
+    pendingVerificationCount,
   } = useRecruiterDashboard();
 
   // Modal states
@@ -249,7 +250,7 @@ const RecruiterDashboard = () => {
   }
 
   return (
-    <RecruiterLayout hasJobs={jobs.length > 0} title="Dashboard">
+    <RecruiterLayout hasJobs={jobs.length > 0} title="Dashboard" pendingVerificationCount={pendingVerificationCount}>
       <div className="p-4 sm:p-6 lg:p-8 space-y-5 max-w-[1600px] mx-auto">
         {/* Welcome + Stats */}
         <WelcomeHeader name={recruiterName} />
