@@ -38,6 +38,7 @@ import logoDark from "@/assets/logo-dark.png";
 
 interface RecruiterSidebarProps {
   hasJobs?: boolean;
+  pendingVerificationCount?: number;
 }
 
 const mainNavItems = [
