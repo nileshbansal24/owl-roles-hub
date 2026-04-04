@@ -59,6 +59,7 @@ const RecruiterDashboard = () => {
     completeOnboarding,
     setApplications,
     toast,
+    pendingVerificationCount,
   } = useRecruiterDashboard();
 
   // Modal states
