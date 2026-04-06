@@ -539,6 +539,7 @@ const CandidateCredentialCard = ({
                     credential={cred}
                     verification={verifications.get(credKey(cred.type, cred.title))}
                     candidateId={candidate.id}
+                    candidateName={candidate.full_name || "Candidate"}
                     onVerificationUpdate={onVerificationUpdate}
                   />
                 ))}
