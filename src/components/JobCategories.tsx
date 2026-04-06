@@ -1,4 +1,3 @@
-import { motion } from "framer-motion";
 import { 
   GraduationCap, Microscope, Code, BookOpen, Users, Building2,
   Stethoscope, Calculator, Palette, Globe
@@ -32,35 +31,24 @@ const JobCategories = ({ onCategoryClick }: JobCategoriesProps) => {
   return (
     <section className="py-12 pb-6">
       <div className="container mx-auto px-4">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="text-center mb-12"
-        >
+        <div className="text-center mb-12">
           <h2 className="font-heading text-2xl md:text-4xl font-extrabold text-foreground mb-3 tracking-tight">
             Popular Job Categories
           </h2>
           <p className="text-muted-foreground max-w-lg mx-auto">
             Find opportunities in your field of expertise
           </p>
-        </motion.div>
+        </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
-          {categories.map((category, index) => (
-            <motion.button
+          {categories.map((category) => (
+            <button
               key={category.name}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: index * 0.05 }}
-              whileHover={{ y: -6, scale: 1.02 }}
-              whileTap={{ scale: 0.97 }}
               onClick={() => onCategoryClick(category.name)}
-              className="card-elevated p-5 text-center group cursor-pointer"
+              className="card-elevated p-5 text-center group cursor-pointer transition-shadow"
             >
               <div className="w-12 h-12 mx-auto mb-3 rounded-xl bg-secondary flex items-center justify-center group-hover:bg-primary/10 transition-colors">
-                <category.icon className={`w-6 h-6 ${category.color} group-hover:scale-110 transition-transform`} />
+                <category.icon className={`w-6 h-6 ${category.color}`} />
               </div>
               <h3 className="font-heading font-semibold text-sm text-foreground group-hover:text-primary transition-colors mb-1">
                 {category.name}
@@ -68,7 +56,7 @@ const JobCategories = ({ onCategoryClick }: JobCategoriesProps) => {
               <span className="text-xs text-muted-foreground">
                 {category.count} jobs
               </span>
-            </motion.button>
+            </button>
           ))}
         </div>
       </div>

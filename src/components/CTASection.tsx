@@ -1,4 +1,3 @@
-import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Upload, Briefcase, ArrowRight } from "lucide-react";
 
@@ -10,7 +9,6 @@ interface CTASectionProps {
 const CTASection = ({ onCandidateClick, onRecruiterClick }: CTASectionProps) => {
   return (
     <section className="py-12 bg-primary relative overflow-hidden">
-      {/* Subtle pattern */}
       <div className="absolute inset-0 opacity-5">
         <div className="absolute inset-0" style={{
           backgroundImage: `radial-gradient(circle at 1px 1px, white 1px, transparent 0)`,
@@ -19,28 +17,17 @@ const CTASection = ({ onCandidateClick, onRecruiterClick }: CTASectionProps) => 
       </div>
 
       <div className="container mx-auto px-4 relative z-10">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="text-center mb-12"
-        >
+        <div className="text-center mb-12">
           <h2 className="font-heading text-3xl md:text-4xl font-extrabold text-primary-foreground mb-3 tracking-tight">
             Ready to Take the Next Step?
           </h2>
           <p className="text-primary-foreground/70 max-w-xl mx-auto">
             Join thousands of educators and institutions building academic excellence together
           </p>
-        </motion.div>
+        </div>
 
         <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            whileHover={{ y: -4 }}
-            className="bg-primary-foreground/10 backdrop-blur-sm rounded-2xl p-8 border border-primary-foreground/20"
-          >
+          <div className="bg-primary-foreground/10 backdrop-blur-sm rounded-2xl p-8 border border-primary-foreground/20">
             <Upload className="w-8 h-8 text-primary-foreground mb-4" />
             <h3 className="font-heading text-xl font-bold text-primary-foreground mb-2">
               For Job Seekers
@@ -56,15 +43,9 @@ const CTASection = ({ onCandidateClick, onRecruiterClick }: CTASectionProps) => 
               Register as Job Seeker
               <ArrowRight className="w-4 h-4" />
             </Button>
-          </motion.div>
+          </div>
 
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            whileHover={{ y: -4 }}
-            className="bg-primary-foreground/10 backdrop-blur-sm rounded-2xl p-8 border border-primary-foreground/20"
-          >
+          <div className="bg-primary-foreground/10 backdrop-blur-sm rounded-2xl p-8 border border-primary-foreground/20">
             <Briefcase className="w-8 h-8 text-primary-foreground mb-4" />
             <h3 className="font-heading text-xl font-bold text-primary-foreground mb-2">
               For Recruiters
@@ -80,7 +61,7 @@ const CTASection = ({ onCandidateClick, onRecruiterClick }: CTASectionProps) => 
               Post a Job
               <ArrowRight className="w-4 h-4" />
             </Button>
-          </motion.div>
+          </div>
         </div>
       </div>
     </section>
