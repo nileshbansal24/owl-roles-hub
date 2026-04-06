@@ -1,4 +1,3 @@
-import { motion, AnimatePresence } from "framer-motion";
 import { MapPin, Clock, DollarSign, Bookmark, ArrowRight, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -46,12 +45,7 @@ const FeaturedJobs = ({ jobs, onJobClick, loading, searchQuery, onClearSearch }:
   return (
     <section className="py-12">
       <div className="container mx-auto px-4">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="flex items-end justify-between mb-10"
-        >
+        <div className="flex items-end justify-between mb-10">
           <div>
             <h2 className="font-heading text-2xl md:text-4xl font-extrabold text-foreground mb-2 tracking-tight">
               Featured Jobs
@@ -64,51 +58,38 @@ const FeaturedJobs = ({ jobs, onJobClick, loading, searchQuery, onClearSearch }:
             View All Jobs
             <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </Button>
-        </motion.div>
+        </div>
 
-        <AnimatePresence>
-          {searchQuery && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              className="mb-6"
-            >
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20">
-                <span className="text-sm text-foreground font-medium">
-                  Showing results for: <span className="text-primary">{searchQuery}</span>
-                </span>
-                <button
-                  onClick={onClearSearch}
-                  className="ml-1 p-0.5 rounded-full hover:bg-primary/20 transition-colors"
-                >
-                  <X className="w-3.5 h-3.5 text-primary" />
-                </button>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {searchQuery && (
+          <div className="mb-6">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20">
+              <span className="text-sm text-foreground font-medium">
+                Showing results for: <span className="text-primary">{searchQuery}</span>
+              </span>
+              <button
+                onClick={onClearSearch}
+                className="ml-1 p-0.5 rounded-full hover:bg-primary/20 transition-colors"
+              >
+                <X className="w-3.5 h-3.5 text-primary" />
+              </button>
+            </div>
+          </div>
+        )}
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {jobs.slice(0, 6).map((job, index) => {
+          {jobs.slice(0, 6).map((job) => {
             const timeAgo = formatDistanceToNow(new Date(job.created_at), { addSuffix: true });
             
             return (
-              <motion.div
+              <div
                 key={job.id}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.05 }}
-                whileHover={{ y: -4 }}
                 onClick={() => onJobClick(job)}
-                className="card-elevated p-5 rounded-2xl cursor-pointer group hover:border-primary/30 transition-colors"
+                className="card-elevated p-5 rounded-2xl cursor-pointer group hover:border-primary/30 transition-colors relative"
               >
                 <button className="absolute top-4 right-4 p-2 rounded-full hover:bg-secondary transition-all opacity-0 group-hover:opacity-100">
                   <Bookmark className="w-4 h-4 text-muted-foreground" />
                 </button>
 
-                {/* Institution Header */}
                 <div className="flex items-start gap-3 mb-4">
                   <Avatar className="h-11 w-11 border-2 border-border shrink-0">
                     <AvatarImage src={job.recruiter?.avatar_url || undefined} alt={job.institute} />
@@ -160,7 +141,7 @@ const FeaturedJobs = ({ jobs, onJobClick, loading, searchQuery, onClearSearch }:
                     Apply Now →
                   </Button>
                 </div>
-              </motion.div>
+              </div>
             );
           })}
         </div>

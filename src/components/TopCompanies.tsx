@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
-import { Briefcase, Building2, Loader2, ArrowRight, Users } from "lucide-react";
+import { Briefcase, Loader2, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 
 interface UniversityStats {
@@ -58,29 +56,19 @@ const TopCompanies = ({ onViewJobs }: TopCompaniesProps) => {
   return (
     <section className="py-12 bg-secondary/30">
       <div className="container mx-auto px-4">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="text-center mb-12"
-        >
+        <div className="text-center mb-12">
           <h2 className="font-heading text-2xl md:text-4xl font-extrabold text-foreground mb-3 tracking-tight">
             Top Hiring Institutions
           </h2>
           <p className="text-muted-foreground max-w-lg mx-auto">
             Leading universities and colleges actively hiring on our platform
           </p>
-        </motion.div>
+        </div>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-5xl mx-auto">
-          {universities.map((university, index) => (
-            <motion.div
+          {universities.map((university) => (
+            <div
               key={university.name}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: index * 0.08 }}
-              whileHover={{ y: -4 }}
               className="card-elevated p-5 cursor-pointer group hover:border-primary/30 transition-colors"
               onClick={() => onViewJobs?.(university.name)}
             >
@@ -106,7 +94,7 @@ const TopCompanies = ({ onViewJobs }: TopCompaniesProps) => {
                   </div>
                 </div>
               </div>
-            </motion.div>
+            </div>
           ))}
         </div>
       </div>
