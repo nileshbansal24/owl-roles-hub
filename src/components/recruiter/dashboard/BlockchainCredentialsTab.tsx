@@ -172,10 +172,11 @@ interface CredentialCardProps {
   credential: Credential;
   verification?: StoredVerification;
   candidateId: string;
+  candidateName: string;
   onVerificationUpdate: () => void;
 }
 
-const CredentialCard = ({ credential, verification, candidateId, onVerificationUpdate }: CredentialCardProps) => {
+const CredentialCard = ({ credential, verification, candidateId, candidateName, onVerificationUpdate }: CredentialCardProps) => {
   const [expanded, setExpanded] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [verifying, setVerifying] = useState(false);
