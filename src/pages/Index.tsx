@@ -94,6 +94,7 @@ const Index = () => {
         onSignupClick={() => openAuthModal("signup", "candidate")}
       />
 
+      {/* Hero */}
       <NaukriHeroSection
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
@@ -106,11 +107,18 @@ const Index = () => {
         onGetStarted={() => openAuthModal("signup", "candidate")}
       />
 
-      <JobCategories onCategoryClick={handleCategoryClick} />
+      {/* Categories — subtle alternate bg */}
+      <div className="bg-secondary/30">
+        <JobCategories onCategoryClick={handleCategoryClick} />
+      </div>
 
-      <HowItWorks />
+      {/* How It Works */}
+      <div className="border-t border-border/40">
+        <HowItWorks />
+      </div>
 
-      <div id="featured-jobs">
+      {/* Featured Jobs — alternate bg */}
+      <div id="featured-jobs" className="bg-secondary/30 border-t border-border/40">
         <FeaturedJobs 
           jobs={filteredJobs} 
           onJobClick={handleJobClick}
@@ -120,16 +128,23 @@ const Index = () => {
         />
       </div>
 
-      <div id="institutions">
+      {/* Top Institutions */}
+      <div id="institutions" className="border-t border-border/40">
         <TopCompanies onViewJobs={handleCategoryClick} />
       </div>
 
-      <TestimonialsSection />
+      {/* Testimonials — alternate bg */}
+      <div className="bg-secondary/30 border-t border-border/40">
+        <TestimonialsSection />
+      </div>
 
-      <CTASection 
-        onCandidateClick={() => openAuthModal("signup", "candidate")}
-        onRecruiterClick={() => openAuthModal("signup", "recruiter")}
-      />
+      {/* CTA */}
+      <div className="border-t border-border/40">
+        <CTASection 
+          onCandidateClick={() => openAuthModal("signup", "candidate")}
+          onRecruiterClick={() => openAuthModal("signup", "recruiter")}
+        />
+      </div>
 
       <Footer />
 
