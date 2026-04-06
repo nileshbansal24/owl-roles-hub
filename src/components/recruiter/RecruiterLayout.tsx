@@ -1,9 +1,10 @@
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import RecruiterSidebar from "./RecruiterSidebar";
-import { Bell, Search, Command } from "lucide-react";
+import { Search, Command } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import NotificationCenter from "./NotificationCenter";
 
 interface RecruiterLayoutProps {
   children: React.ReactNode;
@@ -46,10 +47,7 @@ const RecruiterLayout = ({ children, hasJobs = false, title, pendingVerification
                   </kbd>
                 </div>
               </div>
-              <Button variant="ghost" size="icon" className="h-8 w-8 relative rounded-lg text-muted-foreground hover:text-foreground">
-                <Bell className="h-4 w-4" />
-                <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-primary ring-2 ring-background" />
-              </Button>
+              <NotificationCenter />
             </div>
           </header>
           
