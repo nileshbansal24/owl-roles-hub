@@ -860,6 +860,45 @@ export type Database = {
           },
         ]
       }
+      recruiter_notifications: {
+        Row: {
+          created_at: string
+          id: string
+          is_read: boolean
+          message: string
+          recruiter_id: string
+          related_candidate_id: string | null
+          related_candidate_name: string | null
+          related_credential_id: string | null
+          title: string
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message: string
+          recruiter_id: string
+          related_candidate_id?: string | null
+          related_candidate_name?: string | null
+          related_credential_id?: string | null
+          title: string
+          type?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message?: string
+          recruiter_id?: string
+          related_candidate_id?: string | null
+          related_candidate_name?: string | null
+          related_credential_id?: string | null
+          title?: string
+          type?: string
+        }
+        Relationships: []
+      }
       saved_candidates: {
         Row: {
           candidate_id: string

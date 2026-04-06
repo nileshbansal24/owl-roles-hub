@@ -84,12 +84,23 @@ export const useRecruiterDashboard = () => {
         description: `Application marked as ${newStatus}`,
       });
       
-      if (newStatus === "shortlisted") {
+      if (newStatus === "shortlisted" && user) {
+        const candidateName = app?.profiles?.full_name || "Candidate";
         toast({
           title: "🔔 Credential Verification Pending",
-          description: `${app?.profiles?.full_name || "Candidate"} has been shortlisted. Please verify their credentials in the OR Verification tab.`,
+          description: `${candidateName} has been shortlisted. Please verify their credentials in the OR Verification tab.`,
         });
         setPendingVerificationCount(prev => prev + 1);
+        
+        // Persist notification to database
+        await supabase.from("recruiter_notifications").insert({
+          recruiter_id: user.id,
+          type: "shortlisted",
+          title: "Candidate Shortlisted",
+          message: `${candidateName} has been shortlisted for ${app?.jobs?.title || "a position"}. Credential verification is pending.`,
+          related_candidate_id: app?.applicant_id || null,
+          related_candidate_name: candidateName,
+        });
       }
       
       if (app) {

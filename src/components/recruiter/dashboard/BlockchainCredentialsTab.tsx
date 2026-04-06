@@ -172,10 +172,11 @@ interface CredentialCardProps {
   credential: Credential;
   verification?: StoredVerification;
   candidateId: string;
+  candidateName: string;
   onVerificationUpdate: () => void;
 }
 
-const CredentialCard = ({ credential, verification, candidateId, onVerificationUpdate }: CredentialCardProps) => {
+const CredentialCard = ({ credential, verification, candidateId, candidateName, onVerificationUpdate }: CredentialCardProps) => {
   const [expanded, setExpanded] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [verifying, setVerifying] = useState(false);
@@ -269,6 +270,20 @@ const CredentialCard = ({ credential, verification, candidateId, onVerificationU
           .update({ status: "verified", verified_at: new Date().toISOString() })
           .eq("id", verification.id);
         toast({ title: "✅ Document Verified!", description: "SHA-256 hash matches the anchored record. This document is authentic." });
+        
+        // Persist notification
+        if (user) {
+          await supabase.from("recruiter_notifications").insert({
+            recruiter_id: user.id,
+            type: "verification",
+            title: "Credential Verified",
+            message: `${credential.title} for ${candidateName} has been verified successfully.`,
+            related_candidate_id: candidateId,
+            related_candidate_name: candidateName,
+            related_credential_id: verification.id,
+          });
+        }
+        
         onVerificationUpdate();
       } else {
         await supabase
@@ -276,6 +291,20 @@ const CredentialCard = ({ credential, verification, candidateId, onVerificationU
           .update({ status: "rejected", verified_at: new Date().toISOString() })
           .eq("id", verification.id);
         toast({ title: "⚠️ Hash Mismatch!", description: "This document does NOT match the anchored hash. It may have been tampered with.", variant: "destructive" });
+        
+        // Persist notification
+        if (user) {
+          await supabase.from("recruiter_notifications").insert({
+            recruiter_id: user.id,
+            type: "credential_pending",
+            title: "Credential Rejected",
+            message: `${credential.title} for ${candidateName} failed hash verification — possible tampering detected.`,
+            related_candidate_id: candidateId,
+            related_candidate_name: candidateName,
+            related_credential_id: verification.id,
+          });
+        }
+        
         onVerificationUpdate();
       }
     } catch (err) {
@@ -510,6 +539,7 @@ const CandidateCredentialCard = ({
                     credential={cred}
                     verification={verifications.get(credKey(cred.type, cred.title))}
                     candidateId={candidate.id}
+                    candidateName={candidate.full_name || "Candidate"}
                     onVerificationUpdate={onVerificationUpdate}
                   />
                 ))}
