@@ -10,6 +10,9 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const escapeHtml = (str: string): string =>
+  str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+
 interface MessageRequest {
   to: string;
   subject: string;
@@ -127,10 +130,10 @@ const handler = async (req: Request): Promise<Response> => {
     console.log(`Subject: ${subject}`);
     console.log(`Message ID for tracking: ${messageId}`);
 
-    // Convert plain text message to HTML with proper formatting
+    // Convert plain text message to HTML with proper formatting (escape user input)
     const htmlMessage = message
       .split("\n")
-      .map((line: string) => line.trim() === "" ? "<br>" : `<p style="margin: 0 0 10px 0;">${line}</p>`)
+      .map((line: string) => line.trim() === "" ? "<br>" : `<p style="margin: 0 0 10px 0;">${escapeHtml(line)}</p>`)
       .join("");
 
     const emailResponse = await resend.emails.send({

@@ -961,6 +961,47 @@ export type Database = {
       }
     }
     Views: {
+      event_questions_safe: {
+        Row: {
+          created_at: string | null
+          event_id: string | null
+          id: string | null
+          options: Json | null
+          order_index: number | null
+          points: number | null
+          question_text: string | null
+          question_type: Database["public"]["Enums"]["question_type"] | null
+        }
+        Insert: {
+          created_at?: string | null
+          event_id?: string | null
+          id?: string | null
+          options?: Json | null
+          order_index?: number | null
+          points?: number | null
+          question_text?: string | null
+          question_type?: Database["public"]["Enums"]["question_type"] | null
+        }
+        Update: {
+          created_at?: string | null
+          event_id?: string | null
+          id?: string | null
+          options?: Json | null
+          order_index?: number | null
+          points?: number | null
+          question_text?: string | null
+          question_type?: Database["public"]["Enums"]["question_type"] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_questions_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       jobs_public: {
         Row: {
           created_at: string | null

@@ -100,15 +100,24 @@ const handler = async (req: Request): Promise<Response> => {
 
       console.log("Click event tracked successfully");
 
-      // Redirect to the original URL
+      // Redirect to the original URL (with allowlist validation)
       if (redirectUrl) {
-        return new Response(null, {
-          status: 302,
-          headers: {
-            Location: decodeURIComponent(redirectUrl),
-            ...corsHeaders,
-          },
-        });
+        const ALLOWED_HOSTS = ['owlroles.com', 'www.owlroles.com', 'owl-roles-hub.lovable.app'];
+        try {
+          const parsed = new URL(decodeURIComponent(redirectUrl));
+          if (!ALLOWED_HOSTS.includes(parsed.hostname)) {
+            return new Response("Forbidden redirect target", { status: 403, headers: corsHeaders });
+          }
+          return new Response(null, {
+            status: 302,
+            headers: {
+              Location: parsed.href,
+              ...corsHeaders,
+            },
+          });
+        } catch {
+          return new Response("Invalid URL", { status: 400, headers: corsHeaders });
+        }
       }
 
       return new Response("Click tracked", { status: 200, headers: corsHeaders });

@@ -6,7 +6,7 @@ import { useState, useEffect } from "react";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  requiredRole?: "candidate" | "recruiter";
+  requiredRole?: "candidate" | "recruiter" | "admin";
 }
 
 const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
@@ -20,16 +20,29 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
       return;
     }
 
-    supabase
-      .from("profiles")
-      .select("user_type")
-      .eq("id", user.id)
-      .maybeSingle()
-      .then(({ data }) => {
-        const userType = data?.user_type || "candidate";
-        setHasAccess(userType === requiredRole);
-        setRoleChecked(true);
-      });
+    if (requiredRole === "admin") {
+      supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id)
+        .eq("role", "admin")
+        .maybeSingle()
+        .then(({ data }) => {
+          setHasAccess(!!data);
+          setRoleChecked(true);
+        });
+    } else {
+      supabase
+        .from("profiles")
+        .select("user_type")
+        .eq("id", user.id)
+        .maybeSingle()
+        .then(({ data }) => {
+          const userType = data?.user_type || "candidate";
+          setHasAccess(userType === requiredRole);
+          setRoleChecked(true);
+        });
+    }
   }, [user, requiredRole]);
 
   if (loading || !roleChecked) {
@@ -45,6 +58,9 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
   }
 
   if (!hasAccess) {
+    if (requiredRole === "admin") {
+      return <Navigate to="/adpanel" replace />;
+    }
     const redirect = requiredRole === "recruiter" ? "/candidate-dashboard" : "/recruiter-dashboard";
     return <Navigate to={redirect} replace />;
   }
