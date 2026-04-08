@@ -130,10 +130,10 @@ const handler = async (req: Request): Promise<Response> => {
     console.log(`Subject: ${subject}`);
     console.log(`Message ID for tracking: ${messageId}`);
 
-    // Convert plain text message to HTML with proper formatting
+    // Convert plain text message to HTML with proper formatting (escape user input)
     const htmlMessage = message
       .split("\n")
-      .map((line: string) => line.trim() === "" ? "<br>" : `<p style="margin: 0 0 10px 0;">${line}</p>`)
+      .map((line: string) => line.trim() === "" ? "<br>" : `<p style="margin: 0 0 10px 0;">${escapeHtml(line)}</p>`)
       .join("");
 
     const emailResponse = await resend.emails.send({
