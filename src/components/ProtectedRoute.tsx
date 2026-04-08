@@ -58,6 +58,9 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
   }
 
   if (!hasAccess) {
+    if (requiredRole === "admin") {
+      return <Navigate to="/adpanel" replace />;
+    }
     const redirect = requiredRole === "recruiter" ? "/candidate-dashboard" : "/recruiter-dashboard";
     return <Navigate to={redirect} replace />;
   }
