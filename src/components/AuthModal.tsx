@@ -95,18 +95,21 @@ const AuthModal = ({
               full_name: formData.fullName,
               user_type: role,
               ...(role === "recruiter" && formData.institutionName ? { institution_name: formData.institutionName } : {}),
+              ...(role === "recruiter" && formData.designation ? { designation: formData.designation } : {}),
             },
           },
         });
 
         if (error) throw error;
 
-        // If recruiter, update profile with university/institution name
-        if (role === "recruiter" && formData.institutionName && data.user) {
-          await supabase
-            .from("profiles")
-            .update({ university: formData.institutionName })
-            .eq("id", data.user.id);
+        // If recruiter, update profile with university/institution name and designation
+        if (role === "recruiter" && data.user) {
+          const updates: Record<string, string> = {};
+          if (formData.institutionName) updates.university = formData.institutionName;
+          if (formData.designation) updates.designation = formData.designation;
+          if (Object.keys(updates).length > 0) {
+            await supabase.from("profiles").update(updates).eq("id", data.user.id);
+          }
         }
 
         if (error) throw error;
