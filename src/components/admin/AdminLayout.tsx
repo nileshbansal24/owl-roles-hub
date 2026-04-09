@@ -13,7 +13,8 @@ import {
   X,
   RefreshCw,
   Upload,
-  Mail
+  Mail,
+  UserCheck
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -29,6 +30,7 @@ interface AdminLayoutProps {
 
 const navItems = [
   { id: "overview", label: "Overview", icon: LayoutDashboard },
+  { id: "approvals", label: "Recruiter Approvals", icon: UserCheck },
   { id: "emails", label: "All Emails", icon: Mail },
   { id: "institutions", label: "Institutions", icon: Building2 },
   { id: "candidates", label: "Candidates", icon: Users },

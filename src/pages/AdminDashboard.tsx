@@ -6,6 +6,7 @@ import AdminCandidates from "@/components/admin/AdminCandidates";
 import AdminJobs from "@/components/admin/AdminJobs";
 import AdminMassUpload from "@/components/admin/AdminMassUpload";
 import AdminEmails from "@/components/admin/AdminEmails";
+import AdminRecruiterApprovals from "@/components/admin/AdminRecruiterApprovals";
 import { useAdminStats } from "@/hooks/useAdminStats";
 
 const AdminDashboard = () => {
@@ -23,6 +24,8 @@ const AdminDashboard = () => {
     switch (activeTab) {
       case "overview":
         return <AdminOverview stats={stats} loading={loading} />;
+      case "approvals":
+        return <AdminRecruiterApprovals loading={loading} onRefetch={refetch} />;
       case "emails":
         return <AdminEmails emails={emails} loading={loading} onRefetch={refetch} />;
       case "institutions":
