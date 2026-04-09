@@ -47,6 +47,7 @@ const AuthModal = ({
     fullName: "",
     phone: "",
     institutionName: "",
+    designation: "",
   });
 
   const handleRoleSelect = (selectedRole: "candidate" | "recruiter") => {
@@ -54,10 +55,24 @@ const AuthModal = ({
     setStep("form");
   };
 
-  const redirectBasedOnRole = async (userId: string, selectedRole?: string) => {
-    // If we know the role from signup, use it directly
+  const redirectBasedOnRole = async (userId: string, selectedRole?: string, isNewSignup?: boolean) => {
+    // If new recruiter signup, always go to pending page
+    if (isNewSignup && selectedRole === "recruiter") {
+      navigate("/recruiter-pending");
+      return;
+    }
     if (selectedRole) {
       if (selectedRole === "recruiter") {
+        // Check approval status for login
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("approval_status")
+          .eq("id", userId)
+          .maybeSingle();
+        if (profile?.approval_status !== "approved") {
+          navigate("/recruiter-pending");
+          return;
+        }
         navigate("/recruiter-dashboard");
       } else {
         navigate("/candidate-dashboard");
@@ -68,12 +83,16 @@ const AuthModal = ({
     // For login, fetch the user type from the database
     const { data: profile } = await supabase
       .from("profiles")
-      .select("user_type")
+      .select("user_type, approval_status")
       .eq("id", userId)
       .maybeSingle();
 
     if (profile?.user_type === "recruiter") {
-      navigate("/recruiter-dashboard");
+      if (profile?.approval_status !== "approved") {
+        navigate("/recruiter-pending");
+      } else {
+        navigate("/recruiter-dashboard");
+      }
     } else {
       navigate("/candidate-dashboard");
     }
@@ -94,31 +113,36 @@ const AuthModal = ({
               full_name: formData.fullName,
               user_type: role,
               ...(role === "recruiter" && formData.institutionName ? { institution_name: formData.institutionName } : {}),
+              ...(role === "recruiter" && formData.designation ? { designation: formData.designation } : {}),
             },
           },
         });
 
         if (error) throw error;
 
-        // If recruiter, update profile with university/institution name
-        if (role === "recruiter" && formData.institutionName && data.user) {
-          await supabase
-            .from("profiles")
-            .update({ university: formData.institutionName })
-            .eq("id", data.user.id);
+        // If recruiter, update profile with university/institution name and designation
+        if (role === "recruiter" && data.user) {
+          const updates: Record<string, string> = {};
+          if (formData.institutionName) updates.university = formData.institutionName;
+          if (formData.designation) updates.designation = formData.designation;
+          if (Object.keys(updates).length > 0) {
+            await supabase.from("profiles").update(updates).eq("id", data.user.id);
+          }
         }
 
         if (error) throw error;
 
         toast({
           title: "Account created!",
-          description: "Welcome to OWL ROLES!",
+          description: role === "recruiter" 
+            ? "Your account is pending admin approval." 
+            : "Welcome to OWL ROLES!",
         });
         onOpenChange(false);
         
         // Redirect based on selected role
         if (data.user) {
-          redirectBasedOnRole(data.user.id, role);
+          redirectBasedOnRole(data.user.id, role, true);
         }
       } else {
         const { data, error } = await supabase.auth.signInWithPassword({
@@ -155,7 +179,7 @@ const AuthModal = ({
 
   const resetModal = () => {
     setStep("role");
-    setFormData({ email: "", password: "", fullName: "", phone: "", institutionName: "" });
+    setFormData({ email: "", password: "", fullName: "", phone: "", institutionName: "", designation: "" });
   };
 
   return (
@@ -327,6 +351,23 @@ const AuthModal = ({
                         className="pl-10"
                         value={formData.institutionName}
                         onChange={(e) => setFormData({ ...formData, institutionName: e.target.value })}
+                        required
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {mode === "signup" && role === "recruiter" && (
+                  <div className="space-y-2">
+                    <Label htmlFor="designation">Designation / Role *</Label>
+                    <div className="relative">
+                      <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        id="designation"
+                        placeholder="e.g. Professor, HR Manager, Dean"
+                        className="pl-10"
+                        value={formData.designation}
+                        onChange={(e) => setFormData({ ...formData, designation: e.target.value })}
                         required
                       />
                     </div>

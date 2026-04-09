@@ -19,6 +19,7 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import CookiePolicy from "./pages/CookiePolicy";
 import NotFound from "./pages/NotFound";
+import RecruiterPendingApproval from "./pages/RecruiterPendingApproval";
 import CookieConsent from "@/components/CookieConsent";
 import ProtectedRoute from "@/components/ProtectedRoute";
 
@@ -79,6 +80,7 @@ const App = () => {
                   }
                 />
                 {/* Hidden Admin Panel - not linked from anywhere */}
+                <Route path="/recruiter-pending" element={<RecruiterPendingApproval />} />
                 <Route path="/adpanel" element={<AdminLogin />} />
                 <Route path="/adpanel/dashboard" element={<ProtectedRoute requiredRole="admin"><AdminDashboard /></ProtectedRoute>} />
                 <Route path="/privacy-policy" element={<PrivacyPolicy />} />
