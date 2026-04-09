@@ -55,10 +55,24 @@ const AuthModal = ({
     setStep("form");
   };
 
-  const redirectBasedOnRole = async (userId: string, selectedRole?: string) => {
-    // If we know the role from signup, use it directly
+  const redirectBasedOnRole = async (userId: string, selectedRole?: string, isNewSignup?: boolean) => {
+    // If new recruiter signup, always go to pending page
+    if (isNewSignup && selectedRole === "recruiter") {
+      navigate("/recruiter-pending");
+      return;
+    }
     if (selectedRole) {
       if (selectedRole === "recruiter") {
+        // Check approval status for login
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("approval_status")
+          .eq("id", userId)
+          .maybeSingle();
+        if (profile?.approval_status !== "approved") {
+          navigate("/recruiter-pending");
+          return;
+        }
         navigate("/recruiter-dashboard");
       } else {
         navigate("/candidate-dashboard");
