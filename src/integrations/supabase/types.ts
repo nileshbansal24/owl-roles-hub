@@ -592,10 +592,12 @@ export type Database = {
       profiles: {
         Row: {
           achievements: string[] | null
+          approval_status: string
           avatar_url: string | null
           bio: string | null
           created_at: string
           current_salary: number | null
+          designation: string | null
           education: Json | null
           email: string | null
           expected_salary: number | null
@@ -628,10 +630,12 @@ export type Database = {
         }
         Insert: {
           achievements?: string[] | null
+          approval_status?: string
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
           current_salary?: number | null
+          designation?: string | null
           education?: Json | null
           email?: string | null
           expected_salary?: number | null
@@ -664,10 +668,12 @@ export type Database = {
         }
         Update: {
           achievements?: string[] | null
+          approval_status?: string
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
           current_salary?: number | null
+          designation?: string | null
           education?: Json | null
           email?: string | null
           expected_salary?: number | null
