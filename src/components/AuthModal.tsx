@@ -134,13 +134,15 @@ const AuthModal = ({
 
         toast({
           title: "Account created!",
-          description: "Welcome to OWL ROLES!",
+          description: role === "recruiter" 
+            ? "Your account is pending admin approval." 
+            : "Welcome to OWL ROLES!",
         });
         onOpenChange(false);
         
         // Redirect based on selected role
         if (data.user) {
-          redirectBasedOnRole(data.user.id, role);
+          redirectBasedOnRole(data.user.id, role, true);
         }
       } else {
         const { data, error } = await supabase.auth.signInWithPassword({
