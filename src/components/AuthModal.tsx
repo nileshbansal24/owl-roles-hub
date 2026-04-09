@@ -47,6 +47,7 @@ const AuthModal = ({
     fullName: "",
     phone: "",
     institutionName: "",
+    designation: "",
   });
 
   const handleRoleSelect = (selectedRole: "candidate" | "recruiter") => {
