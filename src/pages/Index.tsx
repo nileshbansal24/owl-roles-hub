@@ -119,13 +119,29 @@ const Index = () => {
 
       {/* Featured Jobs — alternate bg */}
       <div id="featured-jobs" className="bg-secondary/30 border-t border-border/40">
-        <FeaturedJobs 
-          jobs={filteredJobs} 
-          onJobClick={handleJobClick}
-          loading={jobsLoading}
-          searchQuery={searchQuery}
-          onClearSearch={() => setSearchQuery("")}
-        />
+        {user ? (
+          <FeaturedJobs 
+            jobs={filteredJobs} 
+            onJobClick={handleJobClick}
+            loading={jobsLoading}
+            searchQuery={searchQuery}
+            onClearSearch={() => setSearchQuery("")}
+          />
+        ) : (
+          <section className="py-16">
+            <div className="container mx-auto px-4 text-center">
+              <h2 className="font-heading text-2xl md:text-4xl font-extrabold text-foreground mb-3 tracking-tight">
+                Featured Jobs
+              </h2>
+              <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                Sign in to browse hand-picked opportunities from top institutions
+              </p>
+              <Button onClick={() => openAuthModal("login", "candidate")} className="gap-2">
+                Log in to view jobs
+              </Button>
+            </div>
+          </section>
+        )}
       </div>
 
       {/* Top Institutions */}
