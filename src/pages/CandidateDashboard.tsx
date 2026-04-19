@@ -348,12 +348,17 @@ const CandidateDashboard = () => {
 
       setLoading(false);
 
-      // Check if first-time user (no full_name means fresh profile)
-      if (!onboardingChecked.current && profileData && !profileData.full_name) {
+      // Auto-start the guided tour once per login session.
+      // Always show for brand-new profiles (no full_name); for returning users,
+      // show on each fresh login but not on every page refresh.
+      if (!onboardingChecked.current && profileData && user) {
         onboardingChecked.current = true;
-        setOnboardingOpen(true);
-      } else {
-        onboardingChecked.current = true;
+        const sessionKey = `onboarding_shown_${user.id}`;
+        const alreadyShownThisSession = sessionStorage.getItem(sessionKey);
+        if (!profileData.full_name || !alreadyShownThisSession) {
+          sessionStorage.setItem(sessionKey, "1");
+          setOnboardingOpen(true);
+        }
       }
     };
 
