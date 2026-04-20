@@ -1819,10 +1819,20 @@ const CandidateDashboard = () => {
       {/* Onboarding Wizard */}
       <JobSeekerOnboarding
         open={onboardingOpen}
-        onOpenChange={setOnboardingOpen}
+        onOpenChange={(open) => {
+          setOnboardingOpen(open);
+          if (!open && user) {
+            supabase
+              .from("profiles")
+              .update({ onboarding_completed: true } as any)
+              .eq("id", user.id)
+              .then(() => {
+                setProfile((prev) => prev ? ({ ...prev, onboarding_completed: true } as any) : null);
+              });
+          }
+        }}
         userName={profile?.full_name}
         onChooseResume={() => {
-          // Trigger resume upload after onboarding closes
           setTimeout(() => resumeInputRef.current?.click(), 300);
         }}
         onChooseManual={() => {
@@ -1851,7 +1861,14 @@ const CandidateDashboard = () => {
             location: data.location,
           } : null);
         }}
-        onComplete={() => {
+        onComplete={async () => {
+          if (user) {
+            await supabase
+              .from("profiles")
+              .update({ onboarding_completed: true } as any)
+              .eq("id", user.id);
+            setProfile((prev) => prev ? ({ ...prev, onboarding_completed: true } as any) : null);
+          }
           setOnboardingOpen(false);
         }}
       />
