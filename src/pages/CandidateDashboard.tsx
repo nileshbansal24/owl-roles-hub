@@ -348,15 +348,12 @@ const CandidateDashboard = () => {
 
       setLoading(false);
 
-      // Auto-start the guided tour once per login session.
-      // Always show for brand-new profiles (no full_name); for returning users,
-      // show on each fresh login but not on every page refresh.
+      // Auto-start the guided tour for users who haven't completed/dismissed it.
+      // Once they finish or close it explicitly, the flag is persisted and we
+      // never auto-open it again (they can still relaunch from the sidebar).
       if (!onboardingChecked.current && profileData && user) {
         onboardingChecked.current = true;
-        const sessionKey = `onboarding_shown_${user.id}`;
-        const alreadyShownThisSession = sessionStorage.getItem(sessionKey);
-        if (!profileData.full_name || !alreadyShownThisSession) {
-          sessionStorage.setItem(sessionKey, "1");
+        if (!(profileData as any).onboarding_completed) {
           setOnboardingOpen(true);
         }
       }
@@ -1822,10 +1819,20 @@ const CandidateDashboard = () => {
       {/* Onboarding Wizard */}
       <JobSeekerOnboarding
         open={onboardingOpen}
-        onOpenChange={setOnboardingOpen}
+        onOpenChange={(open) => {
+          setOnboardingOpen(open);
+          if (!open && user) {
+            supabase
+              .from("profiles")
+              .update({ onboarding_completed: true } as any)
+              .eq("id", user.id)
+              .then(() => {
+                setProfile((prev) => prev ? ({ ...prev, onboarding_completed: true } as any) : null);
+              });
+          }
+        }}
         userName={profile?.full_name}
         onChooseResume={() => {
-          // Trigger resume upload after onboarding closes
           setTimeout(() => resumeInputRef.current?.click(), 300);
         }}
         onChooseManual={() => {
@@ -1854,7 +1861,14 @@ const CandidateDashboard = () => {
             location: data.location,
           } : null);
         }}
-        onComplete={() => {
+        onComplete={async () => {
+          if (user) {
+            await supabase
+              .from("profiles")
+              .update({ onboarding_completed: true } as any)
+              .eq("id", user.id);
+            setProfile((prev) => prev ? ({ ...prev, onboarding_completed: true } as any) : null);
+          }
           setOnboardingOpen(false);
         }}
       />

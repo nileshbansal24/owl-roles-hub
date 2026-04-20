@@ -610,6 +610,7 @@ export type Database = {
           linkedin_url: string | null
           location: string | null
           manual_h_index: number | null
+          onboarding_completed: boolean
           orcid_id: string | null
           phone: string | null
           professional_summary: string | null
@@ -648,6 +649,7 @@ export type Database = {
           linkedin_url?: string | null
           location?: string | null
           manual_h_index?: number | null
+          onboarding_completed?: boolean
           orcid_id?: string | null
           phone?: string | null
           professional_summary?: string | null
@@ -686,6 +688,7 @@ export type Database = {
           linkedin_url?: string | null
           location?: string | null
           manual_h_index?: number | null
+          onboarding_completed?: boolean
           orcid_id?: string | null
           phone?: string | null
           professional_summary?: string | null
