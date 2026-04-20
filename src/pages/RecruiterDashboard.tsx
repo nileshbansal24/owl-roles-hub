@@ -424,6 +424,7 @@ const RecruiterDashboard = () => {
         onOpenChange={setShowOnboarding}
         recruiterName={recruiterName}
         onComplete={completeOnboarding}
+        onDismiss={completeOnboarding}
       />
 
       {/* Candidate Message Modal */}
