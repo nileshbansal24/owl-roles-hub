@@ -313,7 +313,7 @@ export const useRecruiterDashboard = () => {
       // Fetch recruiter's profile for name and check completeness
       const { data: profileData } = await supabase
         .from("profiles")
-        .select("full_name, bio, university, location, headline")
+        .select("full_name, bio, university, location, headline, recruiter_onboarding_completed")
         .eq("id", user.id)
         .maybeSingle();
 
