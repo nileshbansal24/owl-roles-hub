@@ -214,11 +214,15 @@ export const useRecruiterDashboard = () => {
     }
   }, [user]);
 
-  const completeOnboarding = useCallback(() => {
+  const completeOnboarding = useCallback(async () => {
     if (user) {
-      localStorage.setItem(`recruiter_onboarding_${user.id}`, "true");
+      // Save to database
+      await supabase
+        .from("profiles")
+        .update({ recruiter_onboarding_completed: true })
+        .eq("id", user.id);
+      setHasCompletedOnboarding(true);
     }
-    setHasCompletedOnboarding(true);
   }, [user]);
 
   // Refetch applications helper for realtime updates
