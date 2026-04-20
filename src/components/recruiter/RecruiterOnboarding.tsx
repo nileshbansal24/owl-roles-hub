@@ -22,6 +22,7 @@ interface RecruiterOnboardingProps {
   onOpenChange: (open: boolean) => void;
   recruiterName?: string;
   onComplete: () => void;
+  onDismiss?: () => void;
 }
 
 const steps = [
@@ -73,6 +74,7 @@ const RecruiterOnboarding = ({
   onOpenChange,
   recruiterName,
   onComplete,
+  onDismiss,
 }: RecruiterOnboardingProps) => {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(0);
@@ -99,11 +101,19 @@ const RecruiterOnboarding = ({
 
   const handleSkip = () => {
     onComplete();
+    onDismiss?.();
     onOpenChange(false);
   };
 
+  const handleOpenChange = (open: boolean) => {
+    if (!open && onDismiss) {
+      onDismiss();
+    }
+    onOpenChange(open);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-[600px] p-0 overflow-hidden bg-card">
         {/* Progress bar */}
         <div className="px-6 pt-6">
