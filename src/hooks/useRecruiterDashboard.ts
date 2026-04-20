@@ -214,11 +214,15 @@ export const useRecruiterDashboard = () => {
     }
   }, [user]);
 
-  const completeOnboarding = useCallback(() => {
+  const completeOnboarding = useCallback(async () => {
     if (user) {
-      localStorage.setItem(`recruiter_onboarding_${user.id}`, "true");
+      // Save to database
+      await supabase
+        .from("profiles")
+        .update({ recruiter_onboarding_completed: true })
+        .eq("id", user.id);
+      setHasCompletedOnboarding(true);
     }
-    setHasCompletedOnboarding(true);
   }, [user]);
 
   // Refetch applications helper for realtime updates
@@ -309,7 +313,7 @@ export const useRecruiterDashboard = () => {
       // Fetch recruiter's profile for name and check completeness
       const { data: profileData } = await supabase
         .from("profiles")
-        .select("full_name, bio, university, location, headline")
+        .select("full_name, bio, university, location, headline, recruiter_onboarding_completed")
         .eq("id", user.id)
         .maybeSingle();
 
@@ -330,7 +334,7 @@ export const useRecruiterDashboard = () => {
       setHasCompletedProfile(completedFields >= 3);
 
       const onboardingKey = `recruiter_onboarding_${user.id}`;
-      const completedOnboarding = localStorage.getItem(onboardingKey);
+      const completedOnboarding = localStorage.getItem(onboardingKey) === "true" || (profileData as any)?.recruiter_onboarding_completed;
       
       const reviewedKey = `recruiter_reviewed_${user.id}`;
       const hasReviewed = localStorage.getItem(reviewedKey);

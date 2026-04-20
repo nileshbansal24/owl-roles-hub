@@ -616,6 +616,7 @@ export type Database = {
           professional_summary: string | null
           quotes: string | null
           recommended_books: string[] | null
+          recruiter_onboarding_completed: boolean
           research_papers: Json | null
           resume_url: string | null
           role: string | null
@@ -655,6 +656,7 @@ export type Database = {
           professional_summary?: string | null
           quotes?: string | null
           recommended_books?: string[] | null
+          recruiter_onboarding_completed?: boolean
           research_papers?: Json | null
           resume_url?: string | null
           role?: string | null
@@ -694,6 +696,7 @@ export type Database = {
           professional_summary?: string | null
           quotes?: string | null
           recommended_books?: string[] | null
+          recruiter_onboarding_completed?: boolean
           research_papers?: Json | null
           resume_url?: string | null
           role?: string | null
