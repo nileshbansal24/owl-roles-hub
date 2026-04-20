@@ -334,7 +334,7 @@ export const useRecruiterDashboard = () => {
       setHasCompletedProfile(completedFields >= 3);
 
       const onboardingKey = `recruiter_onboarding_${user.id}`;
-      const completedOnboarding = localStorage.getItem(onboardingKey);
+      const completedOnboarding = localStorage.getItem(onboardingKey) === "true" || (profileData as any)?.recruiter_onboarding_completed;
       
       const reviewedKey = `recruiter_reviewed_${user.id}`;
       const hasReviewed = localStorage.getItem(reviewedKey);
