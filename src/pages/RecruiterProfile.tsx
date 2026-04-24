@@ -49,6 +49,7 @@ const RecruiterProfile = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [resettingTour, setResettingTour] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [verificationStatus, setVerificationStatus] = useState<VerificationStatus>("none");
   const [profile, setProfile] = useState<RecruiterProfileData>({
