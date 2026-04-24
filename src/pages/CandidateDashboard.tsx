@@ -253,29 +253,35 @@ const CandidateDashboard = () => {
     const fetchData = async () => {
       if (!user) return;
 
-      const { data: profileData, error: profileError } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", user.id)
-        .maybeSingle();
+      // Fire profile, applications, and interviews queries in parallel
+      // (previously sequential — saved ~2 round-trips of latency)
+      const [profileRes, appsRes, interviewsRes] = await Promise.all([
+        supabase.from("profiles").select("*").eq("id", user.id).maybeSingle(),
+        supabase
+          .from("job_applications")
+          .select(`*, jobs(title, institute, location)`)
+          .eq("applicant_id", user.id)
+          .order("created_at", { ascending: false }),
+        supabase
+          .from("interviews")
+          .select("*")
+          .eq("candidate_id", user.id)
+          .order("created_at", { ascending: false }),
+      ]);
 
+      const { data: profileData, error: profileError } = profileRes;
       if (profileError) {
         console.error("Error fetching profile:", profileError);
       } else if (profileData) {
-        // Cast to Profile type (with personal details fields)
         setProfile(profileData as unknown as Profile);
         if (profileData.skills) setSkills(profileData.skills);
-        
-        // Transform DB format to display format for experience
+
         if (profileData.experience && Array.isArray(profileData.experience)) {
           const dbExperience = profileData.experience as unknown as DBExperience[];
-          const displayExp = transformExperienceToDisplay(dbExperience);
-          setExperienceTimeline(displayExp);
-          // Calculate and set years of experience
+          setExperienceTimeline(transformExperienceToDisplay(dbExperience));
           const calculatedYears = calculateTotalExperience(dbExperience);
           setCalculatedYearsExperience(calculatedYears);
-          
-          // Auto-sync years_experience to DB if it differs from calculated
+
           if (calculatedYears > 0 && calculatedYears !== profileData.years_experience) {
             supabase
               .from("profiles")
@@ -283,74 +289,67 @@ const CandidateDashboard = () => {
               .eq("id", user.id)
               .then(({ error }) => {
                 if (!error) {
-                  setProfile((prev) => prev ? { ...prev, years_experience: calculatedYears } : null);
+                  setProfile((prev) =>
+                    prev ? { ...prev, years_experience: calculatedYears } : null,
+                  );
                 }
               });
           }
         }
-        
-        // Transform DB format to display format for education
+
         if (profileData.education && Array.isArray(profileData.education)) {
-          const dbEducation = profileData.education as unknown as DBEducation[];
-          setEducation(transformEducationToDisplay(dbEducation));
+          setEducation(
+            transformEducationToDisplay(profileData.education as unknown as DBEducation[]),
+          );
         }
-        
-        // Transform DB format to display format for research papers
         if (profileData.research_papers && Array.isArray(profileData.research_papers)) {
-          const dbPapers = profileData.research_papers as unknown as DBResearchPaper[];
-          setResearchPapers(transformResearchToDisplay(dbPapers));
+          setResearchPapers(
+            transformResearchToDisplay(profileData.research_papers as unknown as DBResearchPaper[]),
+          );
         }
-        
         if (profileData.achievements) setAchievements(profileData.achievements);
         if (profileData.subjects) setSubjects(profileData.subjects);
         if (profileData.teaching_philosophy) setTeachingPhilosophy(profileData.teaching_philosophy);
         if (profileData.professional_summary) setProfessionalSummary(profileData.professional_summary);
       }
 
-      const { data: appsData, error: appsError } = await supabase
-        .from("job_applications")
-        .select(`*, jobs(title, institute, location)`)
-        .eq("applicant_id", user.id)
-        .order("created_at", { ascending: false });
-
-      if (appsError) {
-        console.error("Error fetching applications:", appsError);
+      if (appsRes.error) {
+        console.error("Error fetching applications:", appsRes.error);
       } else {
-        setApplications((appsData as unknown as Application[]) || []);
+        setApplications((appsRes.data as unknown as Application[]) || []);
       }
 
-      // Fetch interviews for this candidate
-      const { data: interviewsData, error: interviewsError } = await supabase
-        .from("interviews")
-        .select("*")
-        .eq("candidate_id", user.id)
-        .order("created_at", { ascending: false });
-
-      if (interviewsError) {
-        console.error("Error fetching interviews:", interviewsError);
-      } else if (interviewsData) {
-        // Enrich with job info
-        const enrichedInterviews = await Promise.all(
-          interviewsData.map(async (interview) => {
-            const { data: jobData } = await supabase
-              .from("jobs_public")
-              .select("title, institute, location")
-              .eq("id", interview.job_id)
-              .maybeSingle();
-            return {
-              ...interview,
-              job: jobData || { title: "Unknown Position", institute: "Unknown", location: "" },
-            };
-          })
+      // Enrich interviews with job info using a single batched query
+      // (previously N+1: one query per interview)
+      if (interviewsRes.error) {
+        console.error("Error fetching interviews:", interviewsRes.error);
+      } else if (interviewsRes.data && interviewsRes.data.length > 0) {
+        const jobIds = Array.from(
+          new Set(interviewsRes.data.map((i: any) => i.job_id).filter(Boolean)),
         );
-        setInterviews(enrichedInterviews);
+        const { data: jobsData } = await supabase
+          .from("jobs_public")
+          .select("id, title, institute, location")
+          .in("id", jobIds);
+        const jobMap = new Map((jobsData || []).map((j: any) => [j.id, j]));
+        setInterviews(
+          interviewsRes.data.map((interview: any) => ({
+            ...interview,
+            job:
+              jobMap.get(interview.job_id) || {
+                title: "Unknown Position",
+                institute: "Unknown",
+                location: "",
+              },
+          })),
+        );
+      } else {
+        setInterviews([]);
       }
 
       setLoading(false);
 
-      // Auto-start the guided tour for users who haven't completed/dismissed it.
-      // Once they finish or close it explicitly, the flag is persisted and we
-      // never auto-open it again (they can still relaunch from the sidebar).
+      // Auto-start guided tour for users who haven't completed/dismissed it.
       if (!onboardingChecked.current && profileData && user) {
         onboardingChecked.current = true;
         if (!(profileData as any).onboarding_completed) {
@@ -360,7 +359,7 @@ const CandidateDashboard = () => {
     };
 
     fetchData();
-  }, [user]);
+  }, [user?.id]);
 
   const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
