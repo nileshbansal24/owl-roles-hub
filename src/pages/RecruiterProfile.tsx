@@ -230,6 +230,30 @@ const RecruiterProfile = () => {
     }
   };
 
+  const handleResetTour = async () => {
+    if (!user) return;
+    setResettingTour(true);
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ recruiter_onboarding_completed: false } as any)
+        .eq("id", user.id);
+      if (error) throw error;
+      toast({
+        title: "Onboarding tour reset",
+        description: "The guided tour will start again next time you visit the dashboard.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Reset failed",
+        description: error.message || "Could not reset the onboarding tour",
+        variant: "destructive",
+      });
+    } finally {
+      setResettingTour(false);
+    }
+  };
+
   const getInitials = (name: string) => {
     return name
       .split(" ")
