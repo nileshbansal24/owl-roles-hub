@@ -511,6 +511,37 @@ const RecruiterProfile = () => {
             </CardContent>
           </Card>
 
+          {/* Onboarding Tour Reset */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <RotateCcw className="h-5 w-5 text-primary" />
+                Guided Tour
+              </CardTitle>
+              <CardDescription>
+                Replay the recruiter onboarding walkthrough at any time
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <p className="text-sm text-muted-foreground">
+                Reset the guided tour so it starts again the next time you open your dashboard.
+              </p>
+              <Button
+                variant="outline"
+                onClick={handleResetTour}
+                disabled={resettingTour}
+                className="gap-2 shrink-0"
+              >
+                {resettingTour ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <RotateCcw className="h-4 w-4" />
+                )}
+                Reset Onboarding Tour
+              </Button>
+            </CardContent>
+          </Card>
+
           {/* Save Button (Mobile) */}
           <div className="lg:hidden">
             <Button onClick={handleSaveProfile} disabled={saving} className="w-full gap-2">
