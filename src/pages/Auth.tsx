@@ -145,32 +145,34 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center px-4">
+    <div className="min-h-screen bg-background flex items-center justify-center px-4 py-12 relative overflow-hidden">
       {/* Background decoration */}
-      <div className="blob-gradient blob-blue w-[300px] h-[300px] top-20 left-10 animate-float" />
-      <div className="blob-gradient blob-purple w-[200px] h-[200px] bottom-20 right-10 animate-float" style={{ animationDelay: "-2s" }} />
+      <div className="blob-gradient blob-blue w-[420px] h-[420px] top-10 -left-20 animate-float" />
+      <div className="blob-gradient blob-purple w-[300px] h-[300px] bottom-10 -right-10 animate-float" style={{ animationDelay: "-2s" }} />
 
       <div className="w-full max-w-md relative z-10">
         <Link
           to="/"
-          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-8 transition-colors"
+          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
           Back to home
         </Link>
 
-        <div className="card-elevated p-8">
+        <div className="card-elevated p-8 sm:p-10 shadow-xl">
           <div className="text-center mb-8">
-            <div className="w-12 h-12 rounded-lg bg-primary flex items-center justify-center mx-auto mb-4">
-              <span className="text-primary-foreground font-heading font-bold text-xl">O</span>
-            </div>
-            <h1 className="font-heading font-bold text-2xl text-foreground">
-              {isLogin ? "Welcome back" : "Create an account"}
+            <Link to="/" className="inline-flex items-center justify-center mb-5">
+              <div className="w-14 h-14 rounded-2xl bg-primary flex items-center justify-center shadow-lg shadow-primary/25">
+                <span className="text-primary-foreground font-heading font-bold text-2xl">O</span>
+              </div>
+            </Link>
+            <h1 className="font-heading font-bold text-2xl sm:text-3xl text-foreground tracking-tight">
+              {isLogin ? "Welcome back" : "Create your account"}
             </h1>
-            <p className="text-muted-foreground mt-2">
+            <p className="text-muted-foreground mt-2 text-sm sm:text-base">
               {isLogin
                 ? "Log in to access your dashboard"
-                : "Sign up to post jobs and track applications"}
+                : "Join thousands of academics and recruiters on OWL ROLES"}
             </p>
           </div>
 
@@ -215,7 +217,7 @@ const Auth = () => {
               />
             </div>
 
-            <Button type="submit" className="w-full h-11" disabled={loading}>
+            <Button type="submit" className="w-full h-11 mt-2 shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/30 transition-shadow" disabled={loading}>
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -237,17 +239,29 @@ const Auth = () => {
               {isLogin ? (
                 <>
                   Don't have an account?{" "}
-                  <span className="font-medium text-primary">Sign up</span>
+                  <span className="font-semibold text-primary">Sign up</span>
                 </>
               ) : (
                 <>
                   Already have an account?{" "}
-                  <span className="font-medium text-primary">Log in</span>
+                  <span className="font-semibold text-primary">Log in</span>
                 </>
               )}
             </button>
           </div>
         </div>
+
+        <p className="text-center text-xs text-muted-foreground mt-6">
+          By continuing, you agree to our{" "}
+          <Link to="/terms-of-service" className="underline hover:text-foreground">
+            Terms
+          </Link>{" "}
+          and{" "}
+          <Link to="/privacy-policy" className="underline hover:text-foreground">
+            Privacy Policy
+          </Link>
+          .
+        </p>
       </div>
     </div>
   );
