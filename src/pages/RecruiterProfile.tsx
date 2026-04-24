@@ -24,6 +24,7 @@ import {
   Loader2,
   FileText,
   Camera,
+  RotateCcw,
 } from "lucide-react";
 import { motion } from "framer-motion";
 
