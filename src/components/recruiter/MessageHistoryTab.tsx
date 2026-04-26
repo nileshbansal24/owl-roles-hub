@@ -274,14 +274,6 @@ const MessageHistoryTab = () => {
                     <TableHead>Subject</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Candidate</TableHead>
-                    <TableHead>Subject</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead
                       className="cursor-pointer hover:text-foreground"
                       onClick={() => handleSort("open_count")}
                     >
