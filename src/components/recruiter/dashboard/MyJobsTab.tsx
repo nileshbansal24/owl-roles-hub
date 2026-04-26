@@ -37,6 +37,25 @@ const MyJobsTab = ({ jobs, applications, onViewJobApplications, isLoading = fals
       animate="visible"
       className="space-y-6"
     >
+      <TabHeader
+        icon={Briefcase}
+        title="My Jobs"
+        description="Manage your active job postings and track applications"
+        badge={
+          jobs.length > 0 ? (
+            <Badge variant="secondary" className="ml-1">{jobs.length}</Badge>
+          ) : null
+        }
+        actions={
+          jobs.length > 0 ? (
+            <Button size="sm" onClick={() => navigate("/post-job")} className="gap-2">
+              <Plus className="h-4 w-4" />
+              <span className="hidden sm:inline">Post Job</span>
+            </Button>
+          ) : null
+        }
+      />
+
       {jobs.length === 0 ? (
         <EmptyState
           icon={Briefcase}

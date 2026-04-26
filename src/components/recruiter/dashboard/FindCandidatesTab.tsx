@@ -16,6 +16,8 @@ import SmartCandidateSearch from "./SmartCandidateSearch";
 import { Checkbox } from "@/components/ui/checkbox";
 import CandidateFiltersPanel, { type CandidateFilters, defaultFilters } from "./CandidateFiltersPanel";
 import { EmptyState } from "@/components/ui/empty-state";
+import { Badge } from "@/components/ui/badge";
+import TabHeader from "./TabHeader";
 import { CardListSkeleton } from "@/components/ui/loading-skeleton";
 import { staggerContainerVariants, staggerItemVariants } from "@/components/ui/fade-in";
 import type { Profile } from "@/types/recruiter";
@@ -591,6 +593,17 @@ const FindCandidatesTab = ({
       animate="visible"
       className="space-y-6"
     >
+      <TabHeader
+        icon={UserSearch}
+        title="Find Candidates"
+        description="Search the talent pool with smart filters and AI-powered matching"
+        badge={
+          sortedCandidates.length > 0 ? (
+            <Badge variant="secondary" className="ml-1">{sortedCandidates.length}</Badge>
+          ) : null
+        }
+      />
+
       {/* Smart Candidate Search */}
       <SmartCandidateSearch
         candidates={candidates}

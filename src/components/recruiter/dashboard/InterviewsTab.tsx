@@ -45,6 +45,17 @@ const InterviewsTab = ({
       animate="visible"
       className="space-y-6"
     >
+      <TabHeader
+        icon={CalendarDays}
+        title="Interviews"
+        description="Track upcoming interviews and follow up on pending confirmations"
+        badge={
+          interviews.length > 0 ? (
+            <Badge variant="secondary" className="ml-1">{interviews.length}</Badge>
+          ) : null
+        }
+      />
+
       {/* Upcoming Interviews */}
       <motion.div variants={staggerItemVariants} className="card-elevated p-6">
         <h3 className="font-heading font-semibold text-lg mb-4 flex items-center gap-2">
