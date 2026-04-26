@@ -35,6 +35,9 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Skeleton } from "@/components/ui/skeleton";
+import TabHeader from "./dashboard/TabHeader";
 
 interface Message {
   id: string;
@@ -142,7 +145,7 @@ const MessageHistoryTab = () => {
   const getStatusBadge = (message: Message) => {
     if (message.click_count > 0) {
       return (
-        <Badge className="bg-green-500/10 text-green-600 hover:bg-green-500/20">
+        <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/15">
           <MousePointerClick className="h-3 w-3 mr-1" />
           Clicked
         </Badge>
@@ -150,7 +153,7 @@ const MessageHistoryTab = () => {
     }
     if (message.open_count > 0) {
       return (
-        <Badge className="bg-blue-500/10 text-blue-600 hover:bg-blue-500/20">
+        <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 hover:bg-primary/15">
           <Eye className="h-3 w-3 mr-1" />
           Opened
         </Badge>
@@ -166,116 +169,102 @@ const MessageHistoryTab = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="space-y-6">
+        <TabHeader
+          icon={Mail}
+          title="Messages"
+          description="Track outreach engagement and follow up with candidates"
+        />
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <Skeleton key={i} className="h-20 rounded-xl" />
+          ))}
+        </div>
+        <Skeleton className="h-[400px] rounded-xl" />
       </div>
     );
   }
 
+  const statCards = [
+    { label: "Total Sent", value: analytics.totalSent, icon: Send, color: "text-primary", bg: "bg-primary/10" },
+    { label: "Opened", value: analytics.totalOpened, icon: Eye, color: "text-sky-600 dark:text-sky-400", bg: "bg-sky-500/10" },
+    { label: "Clicked", value: analytics.totalClicked, icon: MousePointerClick, color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-500/10" },
+    { label: "Open Rate", value: `${analytics.openRate.toFixed(1)}%`, icon: BarChart3, color: "text-violet-600 dark:text-violet-400", bg: "bg-violet-500/10" },
+    { label: "Click Rate", value: `${analytics.clickRate.toFixed(1)}%`, icon: TrendingUp, color: "text-amber-600 dark:text-amber-400", bg: "bg-amber-500/10" },
+  ];
+
   return (
     <div className="space-y-6">
+      <TabHeader
+        icon={Mail}
+        title="Messages"
+        description="Track outreach engagement and follow up with candidates"
+        badge={
+          messages.length > 0 && (
+            <Badge variant="secondary" className="ml-1">
+              {messages.length}
+            </Badge>
+          )
+        }
+        actions={
+          <Button variant="outline" size="sm" onClick={fetchMessages} className="gap-2">
+            <RefreshCw className="h-4 w-4" />
+            <span className="hidden sm:inline">Refresh</span>
+          </Button>
+        }
+      />
+
       {/* Analytics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-        <Card>
-          <CardContent className="pt-6">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+        {statCards.map((stat) => (
+          <div
+            key={stat.label}
+            className="rounded-xl border border-border/60 bg-card p-4 hover:border-border hover:shadow-[var(--shadow-soft)] transition-all duration-200"
+          >
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-primary/10">
-                <Send className="h-5 w-5 text-primary" />
+              <div className={`h-9 w-9 rounded-lg ${stat.bg} flex items-center justify-center shrink-0`}>
+                <stat.icon className={`h-4 w-4 ${stat.color}`} />
               </div>
-              <div>
-                <p className="text-2xl font-bold">{analytics.totalSent}</p>
-                <p className="text-xs text-muted-foreground">Total Sent</p>
+              <div className="min-w-0">
+                <p className="font-heading text-xl font-bold text-foreground tracking-tight leading-none">
+                  {stat.value}
+                </p>
+                <p className="text-[11px] text-muted-foreground mt-1">{stat.label}</p>
               </div>
             </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-blue-500/10">
-                <Eye className="h-5 w-5 text-blue-500" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{analytics.totalOpened}</p>
-                <p className="text-xs text-muted-foreground">Opened</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-green-500/10">
-                <MousePointerClick className="h-5 w-5 text-green-500" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{analytics.totalClicked}</p>
-                <p className="text-xs text-muted-foreground">Clicked</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-purple-500/10">
-                <BarChart3 className="h-5 w-5 text-purple-500" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{analytics.openRate.toFixed(1)}%</p>
-                <p className="text-xs text-muted-foreground">Open Rate</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-orange-500/10">
-                <TrendingUp className="h-5 w-5 text-orange-500" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{analytics.clickRate.toFixed(1)}%</p>
-                <p className="text-xs text-muted-foreground">Click Rate</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+          </div>
+        ))}
       </div>
 
       {/* Message History Table */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
-            <Mail className="h-5 w-5" />
+      <Card className="border-border/60">
+        <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4">
+          <CardTitle className="font-heading text-base flex items-center gap-2">
+            <Mail className="h-4 w-4 text-primary" />
             Message History
           </CardTitle>
-          <div className="flex items-center gap-2">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search messages..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 w-64"
-              />
-            </div>
-            <Button variant="outline" size="icon" onClick={fetchMessages}>
-              <RefreshCw className="h-4 w-4" />
-            </Button>
+          <div className="relative w-full sm:w-64">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search messages..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9 h-9"
+            />
           </div>
         </CardHeader>
         <CardContent>
           {filteredMessages.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">
-              <Mail className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>No messages sent yet</p>
-              <p className="text-sm">Messages you send to candidates will appear here</p>
-            </div>
+            <EmptyState
+              icon={Mail}
+              title={searchQuery ? "No messages match your search" : "No messages sent yet"}
+              description={
+                searchQuery
+                  ? "Try adjusting your search to find what you're looking for."
+                  : "Messages you send to candidates will appear here with engagement tracking."
+              }
+              className="border-0 shadow-none p-8"
+            />
           ) : (
             <div className="overflow-x-auto">
               <Table>

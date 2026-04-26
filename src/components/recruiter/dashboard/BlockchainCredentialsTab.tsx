@@ -28,6 +28,8 @@ import {
   Check,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import TabHeader from "./TabHeader";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -699,26 +701,40 @@ const BlockchainCredentialsTab = ({ candidates: _allCandidates, isLoading = fals
 
   if (isLoading || loadingVerifications || loadingShortlisted) {
     return (
-      <div className="space-y-4">
-        {[1, 2, 3].map((i) => (
-          <div key={i} className="h-24 bg-muted animate-pulse rounded-lg" />
-        ))}
+      <div className="space-y-6">
+        <TabHeader
+          icon={FileCheck}
+          title="OR Credential Verification"
+          description="Tamper-proof credential verification using SHA-256 document hashing"
+        />
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="h-20 rounded-xl bg-muted animate-pulse" />
+          ))}
+        </div>
+        <div className="space-y-4">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="h-32 rounded-xl bg-muted animate-pulse" />
+          ))}
+        </div>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h2 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
-          <FileCheck className="h-6 w-6 text-primary" />
-          OR Credential Verification
-        </h2>
-        <p className="text-sm text-muted-foreground mt-1">
-          Upload credential documents to generate SHA-256 hashes for tamper-proof verification. Re-verify any document by comparing its hash against the anchored record.
-        </p>
-      </div>
+      <TabHeader
+        icon={FileCheck}
+        title="OR Credential Verification"
+        description="Upload credential documents to generate SHA-256 hashes for tamper-proof verification. Re-verify any document by comparing its hash against the anchored record."
+        badge={
+          stats.candidates > 0 ? (
+            <Badge variant="secondary" className="ml-1">
+              {stats.candidates}
+            </Badge>
+          ) : null
+        }
+      />
 
       {/* How it works */}
       <Card className="border-primary/20 bg-primary/5">
@@ -788,17 +804,15 @@ const BlockchainCredentialsTab = ({ candidates: _allCandidates, isLoading = fals
             <CandidateCredentialCard key={data.candidate.id} data={data} onVerificationUpdate={fetchVerifications} />
           ))
         ) : (
-          <Card>
-            <CardContent className="p-12 text-center">
-              <FileCheck className="h-12 w-12 mx-auto text-muted-foreground/40 mb-4" />
-              <h3 className="font-semibold text-lg">No credentials found</h3>
-              <p className="text-sm text-muted-foreground mt-1">
-                {searchQuery
-                  ? "Try adjusting your search filters."
-                  : "Only shortlisted candidates appear here. Shortlist candidates from the Applications tab to verify their credentials."}
-              </p>
-            </CardContent>
-          </Card>
+          <EmptyState
+            icon={FileCheck}
+            title="No credentials found"
+            description={
+              searchQuery
+                ? "Try adjusting your search filters."
+                : "Only shortlisted candidates appear here. Shortlist candidates from the Applications tab to verify their credentials."
+            }
+          />
         )}
       </div>
     </div>
