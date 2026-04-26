@@ -35,6 +35,9 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Skeleton } from "@/components/ui/skeleton";
+import TabHeader from "./dashboard/TabHeader";
 
 interface Message {
   id: string;
@@ -142,7 +145,7 @@ const MessageHistoryTab = () => {
   const getStatusBadge = (message: Message) => {
     if (message.click_count > 0) {
       return (
-        <Badge className="bg-green-500/10 text-green-600 hover:bg-green-500/20">
+        <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/15">
           <MousePointerClick className="h-3 w-3 mr-1" />
           Clicked
         </Badge>
@@ -150,7 +153,7 @@ const MessageHistoryTab = () => {
     }
     if (message.open_count > 0) {
       return (
-        <Badge className="bg-blue-500/10 text-blue-600 hover:bg-blue-500/20">
+        <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 hover:bg-primary/15">
           <Eye className="h-3 w-3 mr-1" />
           Opened
         </Badge>
@@ -166,8 +169,18 @@ const MessageHistoryTab = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="space-y-6">
+        <TabHeader
+          icon={Mail}
+          title="Messages"
+          description="Track outreach engagement and follow up with candidates"
+        />
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <Skeleton key={i} className="h-20 rounded-xl" />
+          ))}
+        </div>
+        <Skeleton className="h-[400px] rounded-xl" />
       </div>
     );
   }
