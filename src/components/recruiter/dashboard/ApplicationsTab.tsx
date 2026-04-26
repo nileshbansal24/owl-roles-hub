@@ -266,8 +266,21 @@ const ApplicationsTab = ({
       animate="visible"
       className="space-y-6"
     >
+      <TabHeader
+        icon={FileText}
+        title="Applications"
+        description="Review, shortlist, and schedule interviews with candidates who have applied to your jobs"
+        badge={
+          applications.length > 0 ? (
+            <Badge variant="secondary" className="ml-1">
+              {applications.length}
+            </Badge>
+          ) : null
+        }
+      />
+
       {/* Filters */}
-      <motion.div variants={itemVariants} className="flex flex-wrap items-center gap-4">
+      <motion.div variants={itemVariants} className="flex flex-wrap items-center gap-3 p-3 rounded-xl border border-border/60 bg-card">
         <Select value={selectedJobFilter} onValueChange={setSelectedJobFilter}>
           <SelectTrigger className="w-[250px]">
             <SelectValue placeholder="Filter by job" />
