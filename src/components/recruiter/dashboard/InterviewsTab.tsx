@@ -4,6 +4,8 @@ import InterviewCard from "@/components/InterviewCard";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CardGridSkeleton } from "@/components/ui/loading-skeleton";
 import { staggerContainerVariants, staggerItemVariants } from "@/components/ui/fade-in";
+import { Badge } from "@/components/ui/badge";
+import TabHeader from "./TabHeader";
 import type { EnrichedInterview } from "@/types/recruiter";
 
 interface InterviewsTabProps {

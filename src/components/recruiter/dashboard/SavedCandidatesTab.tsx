@@ -5,6 +5,8 @@ import CandidateCard from "./CandidateCard";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CardListSkeleton } from "@/components/ui/loading-skeleton";
 import { staggerContainerVariants, staggerItemVariants } from "@/components/ui/fade-in";
+import TabHeader from "./TabHeader";
+import { Badge } from "@/components/ui/badge";
 import type { Profile } from "@/types/recruiter";
 
 interface SavedCandidatesTabProps {
@@ -46,23 +48,27 @@ const SavedCandidatesTab = ({
       animate="visible"
       className="space-y-6"
     >
+      <TabHeader
+        icon={Bookmark}
+        title="Saved Candidates"
+        description="Bookmark and add private notes to candidates you want to keep track of"
+        badge={
+          savedCandidates.length > 0 ? (
+            <Badge variant="secondary" className="ml-1">
+              {savedCandidates.length}
+            </Badge>
+          ) : null
+        }
+      />
+
       <motion.div variants={staggerItemVariants} className="card-elevated p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="font-heading font-semibold text-lg flex items-center gap-2">
-            <Bookmark className="h-5 w-5 text-primary" />
-            Saved Candidates
-            {savedCandidates.length > 0 && (
-              <span className="ml-2 bg-primary/10 text-primary text-sm px-2 py-0.5 rounded-full">
-                {savedCandidates.length}
-              </span>
-            )}
-          </h3>
-          {savedCandidates.length > 0 && (
+        {savedCandidates.length > 0 && (
+          <div className="flex items-center justify-between mb-4">
             <p className="text-sm text-muted-foreground">
-              {withNotes.length} with notes
+              {withNotes.length} with notes • {withoutNotes.length} without notes
             </p>
-          )}
-        </div>
+          </div>
+        )}
         
         {savedCandidates.length === 0 ? (
           <EmptyState

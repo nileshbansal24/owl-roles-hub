@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { EmptyState } from "@/components/ui/empty-state";
 import { JobCardSkeleton } from "@/components/ui/loading-skeleton";
 import { staggerContainerVariants, staggerItemVariants } from "@/components/ui/fade-in";
+import TabHeader from "./TabHeader";
 import type { Job, Application } from "@/types/recruiter";
 
 interface MyJobsTabProps {
