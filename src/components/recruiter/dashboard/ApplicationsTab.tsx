@@ -409,10 +409,15 @@ const ApplicationsTab = ({
 
       {/* Applications List */}
       {filteredApplications.length === 0 ? (
-        <motion.div variants={itemVariants} className="card-elevated p-12 text-center">
-          <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <p className="text-muted-foreground">No applications found.</p>
-        </motion.div>
+        <EmptyState
+          icon={FileText}
+          title={applications.length === 0 ? "No applications yet" : "No applications match your filters"}
+          description={
+            applications.length === 0
+              ? "Once candidates start applying to your jobs, you'll be able to review, shortlist, and schedule interviews here."
+              : "Try adjusting your filters to find what you're looking for."
+          }
+        />
       ) : (
         <motion.div variants={itemVariants} className="grid gap-4">
           {filteredApplications.map((app, index) => (
