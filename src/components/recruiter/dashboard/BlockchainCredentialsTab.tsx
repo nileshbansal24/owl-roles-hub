@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import TabHeader from "./TabHeader";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -803,17 +804,15 @@ const BlockchainCredentialsTab = ({ candidates: _allCandidates, isLoading = fals
             <CandidateCredentialCard key={data.candidate.id} data={data} onVerificationUpdate={fetchVerifications} />
           ))
         ) : (
-          <Card>
-            <CardContent className="p-12 text-center">
-              <FileCheck className="h-12 w-12 mx-auto text-muted-foreground/40 mb-4" />
-              <h3 className="font-semibold text-lg">No credentials found</h3>
-              <p className="text-sm text-muted-foreground mt-1">
-                {searchQuery
-                  ? "Try adjusting your search filters."
-                  : "Only shortlisted candidates appear here. Shortlist candidates from the Applications tab to verify their credentials."}
-              </p>
-            </CardContent>
-          </Card>
+          <EmptyState
+            icon={FileCheck}
+            title="No credentials found"
+            description={
+              searchQuery
+                ? "Try adjusting your search filters."
+                : "Only shortlisted candidates appear here. Shortlist candidates from the Applications tab to verify their credentials."
+            }
+          />
         )}
       </div>
     </div>
