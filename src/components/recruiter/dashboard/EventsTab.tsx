@@ -107,7 +107,7 @@ const EventsTab = ({ jobs }: EventsTabProps) => {
         <TabHeader
           icon={Calendar}
           title="Events"
-          description="Create and manage webinars, quizzes, and assignments for your applicants"
+          description="Run webinars, quizzes and assignments to engage applicants beyond the resume."
         />
         <CardGridSkeleton count={6} />
       </div>
@@ -119,7 +119,7 @@ const EventsTab = ({ jobs }: EventsTabProps) => {
       <TabHeader
         icon={Calendar}
         title="Events"
-        description="Create and manage webinars, quizzes, and assignments for your applicants"
+        description="Run webinars, quizzes and assignments to engage applicants beyond the resume."
         badge={
           events.length > 0 && (
             <Badge variant="secondary" className="ml-1">
@@ -158,8 +158,8 @@ const EventsTab = ({ jobs }: EventsTabProps) => {
       {filteredEvents.length === 0 ? (
         <EmptyState
           icon={Calendar}
-          title={activeFilter === 'all' ? 'No events yet' : `No ${activeFilter}s yet`}
-          description="Create your first event to engage with applicants through webinars, quizzes, or assignments."
+          title={activeFilter === 'all' ? 'No events scheduled' : `No ${activeFilter}s scheduled`}
+          description="Create your first event and give applicants something more meaningful than a form."
           action={{
             label: 'Create Event',
             onClick: () => setCreateModalOpen(true),

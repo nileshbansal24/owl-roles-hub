@@ -59,8 +59,8 @@ const MyJobsTab = ({ jobs, applications, onViewJobApplications, isLoading = fals
       {jobs.length === 0 ? (
         <EmptyState
           icon={Briefcase}
-          title="No jobs posted yet"
-          description="Start attracting top academic talent by posting your first job opening. It only takes a few minutes to create a compelling job listing."
+          title="No openings posted yet"
+          description="Post your first role and start meeting verified educators in minutes — it takes about three."
           action={{
             label: "Post Your First Job",
             onClick: () => navigate("/post-job"),

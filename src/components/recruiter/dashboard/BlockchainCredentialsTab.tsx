@@ -704,8 +704,8 @@ const BlockchainCredentialsTab = ({ candidates: _allCandidates, isLoading = fals
       <div className="space-y-6">
         <TabHeader
           icon={FileCheck}
-          title="OR Credential Verification"
-          description="Tamper-proof credential verification using SHA-256 document hashing"
+          title="Credential Verification"
+          description="Tamper-proof checks for academic credentials using SHA-256 document hashing."
         />
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {Array.from({ length: 4 }).map((_, i) => (
@@ -725,8 +725,8 @@ const BlockchainCredentialsTab = ({ candidates: _allCandidates, isLoading = fals
     <div className="space-y-6">
       <TabHeader
         icon={FileCheck}
-        title="OR Credential Verification"
-        description="Upload credential documents to generate SHA-256 hashes for tamper-proof verification. Re-verify any document by comparing its hash against the anchored record."
+        title="Credential Verification"
+        description="Upload an educator's credential to generate a SHA-256 hash. Re-verify any future copy by matching it against the original anchor."
         badge={
           stats.candidates > 0 ? (
             <Badge variant="secondary" className="ml-1">

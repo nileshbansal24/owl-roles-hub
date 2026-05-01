@@ -172,8 +172,8 @@ const MessageHistoryTab = () => {
       <div className="space-y-6">
         <TabHeader
           icon={Mail}
-          title="Messages"
-          description="Track outreach engagement and follow up with candidates"
+          title="Outreach"
+          description="See who opened, who replied, and follow up at exactly the right moment."
         />
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
           {Array.from({ length: 5 }).map((_, i) => (
@@ -197,8 +197,8 @@ const MessageHistoryTab = () => {
     <div className="space-y-6">
       <TabHeader
         icon={Mail}
-        title="Messages"
-        description="Track outreach engagement and follow up with candidates"
+        title="Outreach"
+        description="See who opened, who replied, and follow up at exactly the right moment."
         badge={
           messages.length > 0 && (
             <Badge variant="secondary" className="ml-1">
@@ -257,7 +257,7 @@ const MessageHistoryTab = () => {
           {filteredMessages.length === 0 ? (
             <EmptyState
               icon={Mail}
-              title={searchQuery ? "No messages match your search" : "No messages sent yet"}
+              title={searchQuery ? "Nothing matches that search" : "No outreach sent yet"}
               description={
                 searchQuery
                   ? "Try adjusting your search to find what you're looking for."
