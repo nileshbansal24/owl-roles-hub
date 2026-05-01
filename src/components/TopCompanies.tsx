@@ -58,10 +58,10 @@ const TopCompanies = ({ onViewJobs }: TopCompaniesProps) => {
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
           <h2 className="font-heading text-2xl md:text-4xl font-extrabold text-foreground mb-3 tracking-tight">
-            Top Hiring Institutions
+            Universities Hiring Right Now
           </h2>
           <p className="text-muted-foreground max-w-lg mx-auto">
-            Leading universities and colleges actively hiring on our platform
+            India's leading universities and colleges actively recruiting on OWL ROLES this week.
           </p>
         </div>
 

@@ -48,7 +48,7 @@ const InterviewsTab = ({
       <TabHeader
         icon={CalendarDays}
         title="Interviews"
-        description="Track upcoming interviews and follow up on pending confirmations"
+        description="Track upcoming conversations and chase any pending confirmations."
         badge={
           interviews.length > 0 ? (
             <Badge variant="secondary" className="ml-1">{interviews.length}</Badge>
@@ -70,8 +70,8 @@ const InterviewsTab = ({
         {upcomingInterviews.length === 0 ? (
           <EmptyState
             icon={Calendar}
-            title="No upcoming interviews"
-            description="You don't have any confirmed interviews scheduled. Once candidates confirm their interview times, they'll appear here."
+            title="Nothing on the calendar yet"
+            description="Once a candidate confirms their slot, the interview will land here automatically."
             className="py-8"
           >
             <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 px-4 py-2 rounded-full">
@@ -138,7 +138,7 @@ const InterviewsTab = ({
         <EmptyState
           icon={Video}
           title="No interviews scheduled"
-          description="You haven't scheduled any interviews yet. Start by reviewing applications and scheduling interviews with promising candidates."
+          description="Open an application and propose a few time slots — your first interview is one click away."
         />
       )}
     </motion.div>

@@ -595,8 +595,8 @@ const FindCandidatesTab = ({
     >
       <TabHeader
         icon={UserSearch}
-        title="Find Candidates"
-        description="Search the talent pool with smart filters and AI-powered matching"
+        title="Find Educators & Researchers"
+        description="Search India's higher-education talent pool with academic-aware filters and AI matching."
         badge={
           sortedCandidates.length > 0 ? (
             <Badge variant="secondary" className="ml-1">{sortedCandidates.length}</Badge>
@@ -708,8 +708,8 @@ const FindCandidatesTab = ({
           hasSearched ? (
             <EmptyState
               icon={UserSearch}
-              title="No matching candidates"
-              description="We couldn't find any candidates matching your search criteria. Try adjusting your search terms."
+              title="No matches yet"
+              description="Try loosening a filter or two — the right educator might be one keyword away."
               action={{
                 label: "Clear Search",
                 onClick: clearSearch,
@@ -719,8 +719,8 @@ const FindCandidatesTab = ({
           ) : (
             <EmptyState
               icon={Users}
-              title="No candidates available"
-              description="There are no candidates in the database yet. Check back later as new professionals join the platform."
+              title="The talent pool is warming up"
+              description="New educators join every day. Check back soon — or post a role to attract them faster."
             >
               <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 px-4 py-2 rounded-full">
                 <Sparkles className="h-4 w-4 text-primary" />

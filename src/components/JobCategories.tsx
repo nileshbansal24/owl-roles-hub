@@ -33,10 +33,10 @@ const JobCategories = ({ onCategoryClick }: JobCategoriesProps) => {
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
           <h2 className="font-heading text-2xl md:text-4xl font-extrabold text-foreground mb-3 tracking-tight">
-            Popular Job Categories
+            Browse Higher Education Careers by Field
           </h2>
           <p className="text-muted-foreground max-w-lg mx-auto">
-            Find opportunities in your field of expertise
+            Pick your discipline and see what's hiring across Indian universities right now.
           </p>
         </div>
 

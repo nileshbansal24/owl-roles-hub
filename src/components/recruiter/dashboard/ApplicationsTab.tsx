@@ -268,8 +268,8 @@ const ApplicationsTab = ({
     >
       <TabHeader
         icon={FileText}
-        title="Applications"
-        description="Review, shortlist, and schedule interviews with candidates who have applied to your jobs"
+        title="Applications Inbox"
+        description="Read, shortlist and schedule interviews with the educators applying to your roles."
         badge={
           applications.length > 0 ? (
             <Badge variant="secondary" className="ml-1">
@@ -424,7 +424,7 @@ const ApplicationsTab = ({
       {filteredApplications.length === 0 ? (
         <EmptyState
           icon={FileText}
-          title={applications.length === 0 ? "No applications yet" : "No applications match your filters"}
+          title={applications.length === 0 ? "No applications yet" : "Nothing matches those filters"}
           description={
             applications.length === 0
               ? "Once candidates start applying to your jobs, you'll be able to review, shortlist, and schedule interviews here."

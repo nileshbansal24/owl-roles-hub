@@ -50,8 +50,8 @@ const SavedCandidatesTab = ({
     >
       <TabHeader
         icon={Bookmark}
-        title="Saved Candidates"
-        description="Bookmark and add private notes to candidates you want to keep track of"
+        title="Saved Educators"
+        description="Bookmark promising profiles and jot down private notes — only you can see them."
         badge={
           savedCandidates.length > 0 ? (
             <Badge variant="secondary" className="ml-1">
@@ -73,8 +73,8 @@ const SavedCandidatesTab = ({
         {savedCandidates.length === 0 ? (
           <EmptyState
             icon={Heart}
-            title="No saved candidates yet"
-            description="Save candidates you're interested in to keep track of them. You can add private notes to remember why they stood out."
+            title="Your shortlist is empty"
+            description="Save educators you'd like to come back to. Add private notes so you remember what made them stand out."
             action={{
               label: "Find Candidates",
               onClick: () => navigate("/recruiter-dashboard?tab=resdex"),

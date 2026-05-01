@@ -39,8 +39,8 @@ const MyJobsTab = ({ jobs, applications, onViewJobApplications, isLoading = fals
     >
       <TabHeader
         icon={Briefcase}
-        title="My Jobs"
-        description="Manage your active job postings and track applications"
+        title="My Job Postings"
+        description="Keep your openings fresh and watch the right educators apply."
         badge={
           jobs.length > 0 ? (
             <Badge variant="secondary" className="ml-1">{jobs.length}</Badge>
@@ -59,8 +59,8 @@ const MyJobsTab = ({ jobs, applications, onViewJobApplications, isLoading = fals
       {jobs.length === 0 ? (
         <EmptyState
           icon={Briefcase}
-          title="No jobs posted yet"
-          description="Start attracting top academic talent by posting your first job opening. It only takes a few minutes to create a compelling job listing."
+          title="No openings posted yet"
+          description="Post your first role and start meeting verified educators in minutes — it takes about three."
           action={{
             label: "Post Your First Job",
             onClick: () => navigate("/post-job"),

@@ -1601,7 +1601,7 @@ const CandidateDashboard = () => {
                 <MainContent />
                 <div className="border-t border-border pt-6">
                   <h3 className="font-heading font-semibold text-lg text-foreground mb-4">
-                    Additional Information
+                    More about you
                   </h3>
                   <SidebarContent />
                 </div>

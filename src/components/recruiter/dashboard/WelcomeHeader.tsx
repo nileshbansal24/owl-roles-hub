@@ -27,7 +27,7 @@ const WelcomeHeader = ({ name }: WelcomeHeaderProps) => {
           <span className="text-border">•</span>
           <span className="flex items-center gap-1">
             <Activity className="h-3 w-3 text-primary" />
-            Hiring overview
+            Here's what's moving in your hiring today
           </span>
         </div>
       </div>

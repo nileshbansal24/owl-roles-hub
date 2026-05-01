@@ -3,21 +3,21 @@ import { Search, FileText, CheckCircle } from "lucide-react";
 const steps = [
   {
     icon: Search,
-    title: "Search Jobs",
+    title: "Search That Speaks Academic",
     description:
-      "Browse thousands of academic positions from top universities matching your expertise.",
+      "Filter by department, NET/SET, publications and more — built for how higher education actually hires.",
   },
   {
     icon: FileText,
-    title: "Apply Online",
+    title: "Apply in One Click",
     description:
-      "Submit your application with one click. Our AI optimizes your profile for each role.",
+      "Your profile travels with you. Send applications to multiple universities without retyping a thing.",
   },
   {
     icon: CheckCircle,
-    title: "Get Hired",
+    title: "Get Hired, Stress Less",
     description:
-      "Connect with institutions, schedule interviews, and land your dream academic position.",
+      "Hear back faster, schedule interviews in-app, and start the next chapter of your academic career.",
   },
 ];
 
@@ -27,13 +27,13 @@ const HowItWorks = () => {
       <div className="container mx-auto px-4">
         <div className="text-center mb-12 md:mb-14">
           <span className="inline-block text-xs font-semibold uppercase tracking-wider text-primary mb-3">
-            Get Started
+            Getting Started
           </span>
           <h2 className="font-heading text-3xl md:text-4xl font-bold text-foreground mb-3 tracking-tight">
-            How It Works
+            How OWL ROLES Works
           </h2>
           <p className="text-muted-foreground max-w-lg mx-auto">
-            Three simple steps to your next academic career move
+            Three simple steps from "I'm looking" to "I got the offer."
           </p>
         </div>
 

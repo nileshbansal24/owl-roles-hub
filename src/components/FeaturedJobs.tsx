@@ -48,10 +48,10 @@ const FeaturedJobs = ({ jobs, onJobClick, loading, searchQuery, onClearSearch }:
         <div className="flex items-end justify-between mb-10">
           <div>
             <h2 className="font-heading text-2xl md:text-4xl font-extrabold text-foreground mb-2 tracking-tight">
-              Featured Jobs
+              Featured Faculty & Research Jobs
             </h2>
             <p className="text-muted-foreground">
-              Hand-picked opportunities from top institutions
+              Fresh openings from universities hiring this week.
             </p>
           </div>
           <Button variant="outline" className="hidden sm:flex gap-2 group">
