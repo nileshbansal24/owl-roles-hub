@@ -39,8 +39,8 @@ const MyJobsTab = ({ jobs, applications, onViewJobApplications, isLoading = fals
     >
       <TabHeader
         icon={Briefcase}
-        title="My Jobs"
-        description="Manage your active job postings and track applications"
+        title="My Job Postings"
+        description="Keep your openings fresh and watch the right educators apply."
         badge={
           jobs.length > 0 ? (
             <Badge variant="secondary" className="ml-1">{jobs.length}</Badge>
