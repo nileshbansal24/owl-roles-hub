@@ -30,7 +30,7 @@ const Footer = () => {
               <span className="font-heading font-bold text-xl tracking-tight">OWL ROLES</span>
             </div>
             <p className="text-white/60 text-sm leading-relaxed mb-6 max-w-xs">
-              India's #1 Academic Job Portal. Connecting talented educators with leading universities.
+              India's home for higher education careers. Connecting educators, researchers and universities — without the noise.
             </p>
             <div className="flex gap-2.5">
               {[

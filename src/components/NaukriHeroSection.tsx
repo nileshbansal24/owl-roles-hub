@@ -33,15 +33,15 @@ const experienceOptions = [
 ];
 
 const popularSearches = [
-  "Professor",
   "Assistant Professor",
-  "Research Associate",
+  "Research Scholar",
   "Lecturer",
+  "PhD Position",
+  "Postdoc",
   "Dean",
-  "Lab Technician",
 ];
 
-const rotatingWords = ["Dream Job", "Academic Career", "Research Role", "Teaching Position"];
+const rotatingWords = ["Teaching Role", "Research Career", "Faculty Position", "Higher Ed Job"];
 
 const NaukriHeroSection = ({
   searchQuery,
@@ -78,7 +78,7 @@ const NaukriHeroSection = ({
       <div className="container mx-auto px-4 relative z-10 pt-24 pb-16">
         <div className="max-w-3xl">
           <h1 className="font-heading text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-foreground mb-4 leading-[1.1] tracking-tight">
-            Find Your{" "}
+            Your Next{" "}
             <span className="relative inline-block h-[1.15em] align-bottom overflow-hidden">
               <AnimatePresence mode="wait">
                 <motion.span
@@ -94,11 +94,11 @@ const NaukriHeroSection = ({
               </AnimatePresence>
             </span>
             <br />
-            Today
+            Starts Here
           </h1>
 
           <p className="text-muted-foreground text-lg md:text-xl mb-8 max-w-xl leading-relaxed">
-            Explore thousands of opportunities from top universities and institutions. Your next career breakthrough starts here.
+            A friendlier home for higher education careers in India. Browse verified faculty, lecturer, PhD and research jobs from universities that actually want to hear from you.
           </p>
 
           {!isLoggedIn && (
@@ -181,9 +181,9 @@ const NaukriHeroSection = ({
 
           <div className="flex flex-wrap gap-8 mt-10">
             {[
-              { value: "2,500+", label: "Active Jobs" },
-              { value: "500+", label: "Universities" },
-              { value: "50,000+", label: "Job Seekers" },
+              { value: "2,500+", label: "Live academic roles" },
+              { value: "500+", label: "Indian universities" },
+              { value: "50,000+", label: "Educators on board" },
             ].map((stat) => (
               <div key={stat.label}>
                 <p className="font-heading text-2xl md:text-3xl font-extrabold text-foreground">

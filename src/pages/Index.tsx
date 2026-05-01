@@ -132,13 +132,13 @@ const Index = () => {
           <section className="py-16">
             <div className="container mx-auto px-4 text-center">
               <h2 className="font-heading text-2xl md:text-4xl font-extrabold text-foreground mb-3 tracking-tight">
-                Featured Jobs
+                Featured Faculty & Research Jobs
               </h2>
               <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-                Sign in to browse hand-picked opportunities from top institutions
+                Sign in to unlock fresh openings from universities hiring this week.
               </p>
               <Button onClick={() => openAuthModal("login", "candidate")} className="gap-2">
-                Log in to view jobs
+                Log in to view openings
               </Button>
             </div>
           </section>
