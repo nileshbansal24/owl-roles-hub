@@ -95,7 +95,7 @@ const NaukriHeroSection = ({
 
             <div className="mt-8 flex flex-wrap items-center gap-3">
               <Button
-                onClick={() => setShowSearch(true)}
+                onClick={handleFindJobs}
                 size="lg"
                 className="h-12 px-6 text-sm font-semibold gap-2 shadow-lg shadow-primary/20"
               >
@@ -105,11 +105,11 @@ const NaukriHeroSection = ({
               <Button
                 variant="outline"
                 size="lg"
-                onClick={onGetStarted}
+                onClick={handleUploadResume}
                 className="h-12 px-6 text-sm font-semibold gap-2"
               >
                 <Upload className="w-4 h-4" />
-                Upload Resume
+                {isLoggedIn ? "Update Resume" : "Upload Resume"}
               </Button>
             </div>
 
