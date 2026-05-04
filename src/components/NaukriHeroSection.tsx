@@ -67,47 +67,32 @@ const NaukriHeroSection = ({
             className="max-w-xl"
           >
             <h1 className="font-heading font-extrabold text-foreground tracking-tight text-5xl sm:text-6xl lg:text-7xl leading-[1.05]">
-              Hire Smarter.
-              <br />
-              Assign Roles{" "}
-              <span className="text-gradient">Faster.</span>
+              Connecting Great Teachers with{" "}
+              <span className="text-gradient">Right Institutes</span>
             </h1>
 
             <p className="mt-6 text-lg md:text-xl text-muted-foreground leading-relaxed">
-              We're more than a job board. OWL ROLES is a calmer home for higher education careers in India — built for educators, researchers and the institutions that hire them.
+              Discover personalized job opportunities and connect with top companies hiring now.
             </p>
 
             <div className="mt-8 flex flex-wrap items-center gap-3">
-              {!isLoggedIn ? (
-                <>
-                  <Button
-                    onClick={onGetStarted}
-                    size="lg"
-                    className="h-12 px-6 text-sm font-semibold gap-2 shadow-lg shadow-primary/20"
-                  >
-                    Get started — it's free
-                    <ArrowRight className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="lg"
-                    onClick={() => setShowSearch((s) => !s)}
-                    className="h-12 px-6 text-sm font-semibold gap-2"
-                  >
-                    <Search className="w-4 h-4" />
-                    Browse jobs
-                  </Button>
-                </>
-              ) : (
-                <Button
-                  onClick={() => setShowSearch((s) => !s)}
-                  size="lg"
-                  className="h-12 px-6 text-sm font-semibold gap-2 shadow-lg shadow-primary/20"
-                >
-                  <Search className="w-4 h-4" />
-                  Search higher education jobs
-                </Button>
-              )}
+              <Button
+                onClick={() => setShowSearch(true)}
+                size="lg"
+                className="h-12 px-6 text-sm font-semibold gap-2 shadow-lg shadow-primary/20"
+              >
+                <Search className="w-4 h-4" />
+                Find Jobs Now
+              </Button>
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={onGetStarted}
+                className="h-12 px-6 text-sm font-semibold gap-2"
+              >
+                <Upload className="w-4 h-4" />
+                Upload Resume
+              </Button>
             </div>
 
             {/* Trusted by */}
