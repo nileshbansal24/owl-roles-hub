@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { useState } from "react";
+import { motion } from "framer-motion";
 import { Search, MapPin, Briefcase, ArrowRight, Upload } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import heroBg from "@/assets/hero-bg.jpg";
+import heroIllustration from "@/assets/hero-illustration.png";
 
 interface NaukriHeroSectionProps {
   searchQuery: string;
@@ -38,10 +38,9 @@ const popularSearches = [
   "Lecturer",
   "PhD Position",
   "Postdoc",
-  "Dean",
 ];
 
-const rotatingWords = ["Teaching Role", "Research Career", "Faculty Position", "Higher Ed Job"];
+const trustedBy = ["LPU", "Chitkara", "Amity", "IIT Delhi", "IIM Bangalore"];
 
 const NaukriHeroSection = ({
   searchQuery,
@@ -54,82 +53,116 @@ const NaukriHeroSection = ({
   isLoggedIn = false,
   onGetStarted,
 }: NaukriHeroSectionProps) => {
-  const [currentWordIndex, setCurrentWordIndex] = useState(0);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentWordIndex((prev) => (prev + 1) % rotatingWords.length);
-    }, 3000);
-    return () => clearInterval(interval);
-  }, []);
+  const [showSearch, setShowSearch] = useState(false);
 
   return (
-    <section className="relative min-h-[75vh] flex items-center overflow-hidden">
-      <div className="absolute inset-0">
-        <img
-          src={heroBg}
-          alt="Modern workspace"
-          className="w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-r from-background/95 via-background/85 to-background/60" />
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-background/40" />
-      </div>
+    <section className="relative bg-background overflow-hidden">
+      <div className="container mx-auto px-4 pt-28 pb-16 md:pt-32 md:pb-20">
+        <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+          {/* Left: copy */}
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+            className="max-w-xl"
+          >
+            <h1 className="font-heading font-extrabold text-foreground tracking-tight text-5xl sm:text-6xl lg:text-7xl leading-[1.05]">
+              Hire Smarter.
+              <br />
+              Assign Roles{" "}
+              <span className="text-gradient">Faster.</span>
+            </h1>
 
-      <div className="container mx-auto px-4 relative z-10 pt-24 pb-16">
-        <div className="max-w-3xl">
-          <h1 className="font-heading text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-foreground mb-4 leading-[1.1] tracking-tight">
-            Your Next{" "}
-            <span className="relative inline-block h-[1.15em] align-bottom overflow-hidden">
-              <AnimatePresence mode="wait">
-                <motion.span
-                  key={currentWordIndex}
-                  initial={{ y: 60, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  exit={{ y: -60, opacity: 0 }}
-                  transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                  className="text-gradient inline-block"
+            <p className="mt-6 text-lg md:text-xl text-muted-foreground leading-relaxed">
+              We're more than a job board. OWL ROLES is a calmer home for higher education careers in India — built for educators, researchers and the institutions that hire them.
+            </p>
+
+            <div className="mt-8 flex flex-wrap items-center gap-3">
+              {!isLoggedIn ? (
+                <>
+                  <Button
+                    onClick={onGetStarted}
+                    size="lg"
+                    className="h-12 px-6 text-sm font-semibold gap-2 shadow-lg shadow-primary/20"
+                  >
+                    Get started — it's free
+                    <ArrowRight className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    onClick={() => setShowSearch((s) => !s)}
+                    className="h-12 px-6 text-sm font-semibold gap-2"
+                  >
+                    <Search className="w-4 h-4" />
+                    Browse jobs
+                  </Button>
+                </>
+              ) : (
+                <Button
+                  onClick={() => setShowSearch((s) => !s)}
+                  size="lg"
+                  className="h-12 px-6 text-sm font-semibold gap-2 shadow-lg shadow-primary/20"
                 >
-                  {rotatingWords[currentWordIndex]}
-                </motion.span>
-              </AnimatePresence>
-            </span>
-            <br />
-            Starts Here
-          </h1>
-
-          <p className="text-muted-foreground text-lg md:text-xl mb-8 max-w-xl leading-relaxed">
-            A friendlier home for higher education careers in India. Browse verified faculty, lecturer, PhD and research jobs from universities that actually want to hear from you.
-          </p>
-
-          {!isLoggedIn && (
-            <div className="flex gap-3 mb-10">
-              <Button
-                onClick={onGetStarted}
-                size="lg"
-                className="h-11 px-5 text-sm font-semibold gap-1.5 shadow-lg shadow-primary/25"
-              >
-                Get Started
-                <ArrowRight className="w-4 h-4" />
-              </Button>
-              <Button
-                variant="outline"
-                size="lg"
-                onClick={onGetStarted}
-                className="h-11 px-5 text-sm font-semibold gap-1.5 bg-background/80 backdrop-blur-sm"
-              >
-                <Upload className="w-4 h-4" />
-                Upload Resume
-              </Button>
+                  <Search className="w-4 h-4" />
+                  Search higher education jobs
+                </Button>
+              )}
             </div>
-          )}
 
-          <div className="bg-card/95 backdrop-blur-md rounded-2xl p-4 md:p-5 shadow-2xl border border-border/60 max-w-2xl">
+            {/* Trusted by */}
+            <div className="mt-10">
+              <p className="text-xs font-semibold tracking-[0.18em] uppercase text-muted-foreground mb-3">
+                Trusted by teams at
+              </p>
+              <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+                {trustedBy.map((name) => (
+                  <span
+                    key={name}
+                    className="font-heading font-bold text-base md:text-lg text-foreground/70"
+                  >
+                    {name}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Right: illustration */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.96 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.6, ease: "easeOut", delay: 0.1 }}
+            className="relative hidden lg:block"
+          >
+            <img
+              src={heroIllustration}
+              alt="Educators and recruiters collaborating on OWL ROLES"
+              width={1024}
+              height={896}
+              className="w-full h-auto max-w-[560px] mx-auto"
+            />
+          </motion.div>
+        </div>
+
+        {/* Expandable search bar */}
+        <motion.div
+          initial={false}
+          animate={{
+            height: showSearch ? "auto" : 0,
+            opacity: showSearch ? 1 : 0,
+            marginTop: showSearch ? 32 : 0,
+          }}
+          transition={{ duration: 0.3, ease: "easeOut" }}
+          className="overflow-hidden"
+        >
+          <div className="bg-card rounded-2xl p-4 md:p-5 shadow-xl border border-border max-w-3xl">
             <div className="flex flex-col sm:flex-row gap-3">
               <div className="flex-1 relative group">
                 <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                 <Input
                   placeholder="Job title, keywords..."
-                  className="pl-10 h-12 text-sm border-border bg-secondary/50 focus-visible:ring-primary"
+                  className="pl-10 h-12 text-sm border-border bg-secondary/50"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
@@ -138,7 +171,7 @@ const NaukriHeroSection = ({
                 <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors z-10" />
                 <Input
                   placeholder="Location"
-                  className="pl-10 h-12 text-sm border-border bg-secondary/50 focus-visible:ring-primary"
+                  className="pl-10 h-12 text-sm border-border bg-secondary/50"
                   value={locationQuery}
                   onChange={(e) => setLocationQuery(e.target.value)}
                 />
@@ -161,39 +194,23 @@ const NaukriHeroSection = ({
                 onClick={onSearch}
                 className="h-12 px-6 text-sm font-semibold w-full sm:w-auto"
               >
-                Search Jobs
+                Search
               </Button>
             </div>
-
-            <div className="flex flex-wrap items-center gap-2 mt-4 pt-3 border-t border-border/50">
+            <div className="flex flex-wrap items-center gap-2 mt-4 pt-3 border-t border-border/60">
               <span className="text-xs text-muted-foreground font-medium shrink-0">Popular:</span>
-              {popularSearches.map((search) => (
+              {popularSearches.map((s) => (
                 <button
-                  key={search}
-                  onClick={() => setSearchQuery(search)}
-                  className="px-4 py-1.5 text-xs rounded-lg bg-secondary/80 border border-border/50 hover:border-primary/40 hover:bg-primary/10 hover:text-primary text-muted-foreground transition-all font-medium"
+                  key={s}
+                  onClick={() => setSearchQuery(s)}
+                  className="px-3 py-1.5 text-xs rounded-lg bg-secondary border border-border/50 hover:border-primary/40 hover:bg-primary/10 hover:text-primary text-muted-foreground transition-all font-medium"
                 >
-                  {search}
+                  {s}
                 </button>
               ))}
             </div>
           </div>
-
-          <div className="flex flex-wrap gap-8 mt-10">
-            {[
-              { value: "2,500+", label: "Live academic roles" },
-              { value: "500+", label: "Indian universities" },
-              { value: "50,000+", label: "Educators on board" },
-            ].map((stat) => (
-              <div key={stat.label}>
-                <p className="font-heading text-2xl md:text-3xl font-extrabold text-foreground">
-                  {stat.value}
-                </p>
-                <p className="text-sm text-muted-foreground">{stat.label}</p>
-              </div>
-            ))}
-          </div>
-        </div>
+        </motion.div>
       </div>
     </section>
   );
