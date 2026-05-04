@@ -55,6 +55,23 @@ const NaukriHeroSection = ({
   onGetStarted,
 }: NaukriHeroSectionProps) => {
   const [showSearch, setShowSearch] = useState(false);
+  const navigate = useNavigate();
+
+  const handleFindJobs = () => {
+    if (isLoggedIn) {
+      document.getElementById("featured-jobs")?.scrollIntoView({ behavior: "smooth" });
+    } else {
+      setShowSearch(true);
+    }
+  };
+
+  const handleUploadResume = () => {
+    if (isLoggedIn) {
+      navigate("/candidate-dashboard");
+    } else {
+      onGetStarted?.();
+    }
+  };
 
   return (
     <section className="relative bg-background overflow-hidden">
