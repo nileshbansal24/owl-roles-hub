@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Search, MapPin, Briefcase, ArrowRight, Upload } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -54,6 +55,23 @@ const NaukriHeroSection = ({
   onGetStarted,
 }: NaukriHeroSectionProps) => {
   const [showSearch, setShowSearch] = useState(false);
+  const navigate = useNavigate();
+
+  const handleFindJobs = () => {
+    if (isLoggedIn) {
+      document.getElementById("featured-jobs")?.scrollIntoView({ behavior: "smooth" });
+    } else {
+      setShowSearch(true);
+    }
+  };
+
+  const handleUploadResume = () => {
+    if (isLoggedIn) {
+      navigate("/candidate-dashboard");
+    } else {
+      onGetStarted?.();
+    }
+  };
 
   return (
     <section className="relative bg-background overflow-hidden">
@@ -77,7 +95,7 @@ const NaukriHeroSection = ({
 
             <div className="mt-8 flex flex-wrap items-center gap-3">
               <Button
-                onClick={() => setShowSearch(true)}
+                onClick={handleFindJobs}
                 size="lg"
                 className="h-12 px-6 text-sm font-semibold gap-2 shadow-lg shadow-primary/20"
               >
@@ -87,11 +105,11 @@ const NaukriHeroSection = ({
               <Button
                 variant="outline"
                 size="lg"
-                onClick={onGetStarted}
+                onClick={handleUploadResume}
                 className="h-12 px-6 text-sm font-semibold gap-2"
               >
                 <Upload className="w-4 h-4" />
-                Upload Resume
+                {isLoggedIn ? "Update Resume" : "Upload Resume"}
               </Button>
             </div>
 
