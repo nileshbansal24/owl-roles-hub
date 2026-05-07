@@ -138,14 +138,12 @@ const NaukriHeroSection = ({
             transition={{ duration: 0.6, ease: "easeOut", delay: 0.1 }}
             className="relative hidden lg:block"
           >
-            <motion.img
+            <img
               src={heroIllustration}
               alt="Owl mascot with educators and researchers on OWL ROLES"
               width={1024}
               height={896}
               className="w-full h-auto max-w-[560px] mx-auto"
-              animate={{ y: [0, -12, 0] }}
-              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
             />
           </motion.div>
         </div>
