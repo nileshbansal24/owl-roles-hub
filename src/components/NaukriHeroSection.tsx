@@ -41,7 +41,7 @@ const popularSearches = [
   "Postdoc",
 ];
 
-const trustedBy = ["LPU", "Chitkara", "Amity", "SRM", "IIM Bangalore"];
+const trustedBy = ["LPU", "Chitkara", "Amity", "SRM"];
 
 const NaukriHeroSection = ({
   searchQuery,
@@ -90,7 +90,7 @@ const NaukriHeroSection = ({
             </h1>
 
             <p className="mt-6 text-lg md:text-xl text-muted-foreground leading-relaxed">
-              Explore verified opportunities across universities, colleges, and research institutions—all in one platform built exclusively for higher education careers.
+              Explore 1000+ verified opportunities across universities, colleges, and research institutions. A unified platform built exclusively for higher education careers.
             </p>
 
             <div className="mt-8 flex flex-wrap items-center gap-3">
