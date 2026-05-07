@@ -85,8 +85,7 @@ const CookiePolicy = () => {
             <h2 className="font-heading text-xl font-semibold text-foreground mb-3">7. Contact Us</h2>
             <p className="text-muted-foreground leading-relaxed">
               If you have questions about our use of cookies, please contact us at:<br />
-              Email: support@owlroles.com<br />
-              Address: Sector 62, Noida, Uttar Pradesh, India
+              Email: support@owlroles.com
             </p>
           </section>
         </div>

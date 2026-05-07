@@ -130,16 +130,6 @@ const Footer = () => {
                   support@owlroles.com
                 </a>
               </li>
-              <li className="flex items-center gap-2.5">
-                <Phone className="w-4 h-4 text-primary shrink-0" />
-                <a href="tel:+911800123456" className="hover:text-white transition-colors">
-                  +91 1800-123-4567
-                </a>
-              </li>
-              <li className="flex items-start gap-2.5">
-                <MapPin className="w-4 h-4 text-primary mt-0.5 shrink-0" />
-                <span>Sector 62, Noida, Uttar Pradesh, India</span>
-              </li>
             </ul>
           </div>
         </div>
