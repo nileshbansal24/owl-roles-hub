@@ -5,8 +5,6 @@ import {
   Linkedin,
   Instagram,
   Mail,
-  Phone,
-  MapPin,
 } from "lucide-react";
 
 const Footer = () => {
