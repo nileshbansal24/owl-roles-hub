@@ -36,7 +36,7 @@ const JobCategories = ({ onCategoryClick }: JobCategoriesProps) => {
             Browse Higher Education Careers by Field
           </h2>
           <p className="text-muted-foreground max-w-lg mx-auto">
-            Pick your discipline and see what's hiring across Indian universities right now.
+            Choose your field and see what's hiring across Indian universities right now.
           </p>
         </div>
 
