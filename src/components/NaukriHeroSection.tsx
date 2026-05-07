@@ -85,8 +85,8 @@ const NaukriHeroSection = ({
             className="max-w-xl"
           >
             <h1 className="font-heading font-extrabold text-foreground tracking-tight text-5xl sm:text-6xl lg:text-7xl leading-[1.05]">
-              Connecting Great Teachers with{" "}
-              <span className="text-gradient">Right Institutes</span>
+              India's Dedicated Platform for{" "}
+              <span className="text-gradient">Academic</span> Careers
             </h1>
 
             <p className="mt-6 text-lg md:text-xl text-muted-foreground leading-relaxed">
