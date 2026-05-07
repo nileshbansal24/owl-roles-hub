@@ -73,7 +73,7 @@ const Navbar = ({ onLoginClick, onSignupClick }: NavbarProps) => {
   const navLinks = [
     { label: "Home", to: "/", icon: Home, scrollTo: null },
     { label: "Institutions", to: "/", icon: Building, scrollTo: "institutions" },
-    { label: "Services", to: "/", icon: Wrench, scrollTo: "services" },
+    { label: "Jobs", to: "/", icon: Briefcase, scrollTo: "featured-jobs" },
   ];
 
   const handleNavClick = (to: string, scrollTo?: string | null) => {
