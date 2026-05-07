@@ -97,7 +97,7 @@ const TermsOfService = () => {
           <section>
             <h2 className="font-heading text-xl font-semibold text-foreground mb-3">10. Governing Law</h2>
             <p className="text-muted-foreground leading-relaxed">
-              These Terms shall be governed by and construed in accordance with the laws of India. Any disputes arising out of these Terms shall be subject to the exclusive jurisdiction of the courts in Noida, Uttar Pradesh, India.
+              These Terms shall be governed by and construed in accordance with the laws of India.
             </p>
           </section>
 
@@ -105,8 +105,7 @@ const TermsOfService = () => {
             <h2 className="font-heading text-xl font-semibold text-foreground mb-3">11. Contact</h2>
             <p className="text-muted-foreground leading-relaxed">
               For questions about these Terms, contact us at:<br />
-              Email: support@owlroles.com<br />
-              Address: Sector 62, Noida, Uttar Pradesh, India
+              Email: support@owlroles.com
             </p>
           </section>
         </div>
