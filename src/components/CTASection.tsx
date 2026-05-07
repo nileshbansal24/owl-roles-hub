@@ -33,14 +33,14 @@ const CTASection = ({ onCandidateClick, onRecruiterClick }: CTASectionProps) => 
               For Educators & Researchers
             </h3>
             <p className="text-primary-foreground/70 mb-6 text-sm leading-relaxed">
-              Upload your CV once and let universities come to you. Personalised faculty and research roles, no spam.
+              Create your profile once and get access to leading opportunities that matches your academic careers.
             </p>
             <Button
               onClick={onCandidateClick}
               variant="secondary"
               className="w-full gap-2 bg-primary-foreground text-primary hover:bg-primary-foreground/90 font-semibold"
             >
-              Create Your Profile
+              Get Started
               <ArrowRight className="w-4 h-4" />
             </Button>
           </div>
@@ -48,10 +48,10 @@ const CTASection = ({ onCandidateClick, onRecruiterClick }: CTASectionProps) => 
           <div className="bg-primary-foreground/10 backdrop-blur-sm rounded-2xl p-8 border border-primary-foreground/20">
             <Briefcase className="w-8 h-8 text-primary-foreground mb-4" />
             <h3 className="font-heading text-xl font-bold text-primary-foreground mb-2">
-              For Universities & Institutions
+              For Employers
             </h3>
             <p className="text-primary-foreground/70 mb-6 text-sm leading-relaxed">
-              Reach 50,000+ verified academics — from PhD scholars to seasoned professors — and hire faster.
+              Reach qualified educators, researchers, and professionals. Access a focused talent pool with better matches.
             </p>
             <Button
               onClick={onRecruiterClick}
