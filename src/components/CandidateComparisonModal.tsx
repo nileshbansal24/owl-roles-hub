@@ -96,7 +96,7 @@ const filterPresets: FilterPreset[] = [
     id: "overview",
     label: "Quick Overview",
     icon: <User className="h-3.5 w-3.5" />,
-    metrics: ["completeness", "experience", "education", "skills", "resume"],
+    metrics: ["experience", "education", "skills", "resume"],
   },
   {
     id: "institution",
@@ -119,7 +119,6 @@ const metricCategories: MetricCategory[] = [
     label: "Profile Overview",
     icon: <FileText className="h-4 w-4" />,
     metrics: [
-      { key: "completeness", label: "Profile Completeness" },
       { key: "resume", label: "Resume" },
     ],
   },

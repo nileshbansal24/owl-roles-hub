@@ -809,35 +809,6 @@ const CandidateFiltersPanel = ({
                   </AccordionContent>
                 </AccordionItem>
 
-                {/* ─── Profile Completeness ───────────────── */}
-                <AccordionItem value="completeness" className="border-b border-border px-4">
-                  <AccordionTrigger className="py-3 hover:no-underline">
-                    <div className="flex items-center gap-2 text-sm font-medium">
-                      <BarChart3 className="h-4 w-4 text-primary" />
-                      Profile Completeness
-                      {filters.profileCompleteness > 0 && (
-                        <span className="text-xs text-muted-foreground font-normal">
-                          ≥ {filters.profileCompleteness}%
-                        </span>
-                      )}
-                    </div>
-                  </AccordionTrigger>
-                  <AccordionContent className="pb-3 space-y-3">
-                    <span className="text-xs text-muted-foreground">
-                      Minimum {filters.profileCompleteness}% complete
-                    </span>
-                    <Slider
-                      min={0} max={100} step={10}
-                      value={[filters.profileCompleteness]}
-                      onValueChange={(v) => onFiltersChange({ ...filters, profileCompleteness: v[0] })}
-                      className="w-full"
-                    />
-                    <div className="flex justify-between text-[10px] text-muted-foreground">
-                      <span>0%</span><span>50%</span><span>100%</span>
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-
                 {/* ─── Publications Count ─────────────────── */}
                 <AccordionItem value="publications" className="border-b border-border px-4">
                   <AccordionTrigger className="py-3 hover:no-underline">

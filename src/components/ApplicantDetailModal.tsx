@@ -824,38 +824,6 @@ const ApplicantDetailModal = ({
             transition={{ duration: 0.3 }}
             className="space-y-6"
           >
-            {/* Profile Completeness Indicator */}
-            <div className="p-4 rounded-lg bg-muted/50 border">
-              <div className="flex items-center justify-between mb-2">
-                <h4 className="text-sm font-medium text-foreground">Profile Completeness</h4>
-                <span className={`text-lg font-bold ${getCompletenessColor(completenessPercent)}`}>
-                  {completenessPercent}%
-                </span>
-              </div>
-              <div className="h-2 bg-muted rounded-full overflow-hidden mb-3">
-                <motion.div
-                  initial={{ width: 0 }}
-                  animate={{ width: `${completenessPercent}%` }}
-                  transition={{ duration: 0.5, ease: "easeOut" }}
-                  className={`h-full rounded-full ${getProgressColor(completenessPercent)}`}
-                />
-              </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                {profileFields.map((field) => (
-                  <div key={field.name} className="flex items-center gap-1.5 text-xs">
-                    {field.filled ? (
-                      <CheckCircle2 className="h-3.5 w-3.5 text-green-500 flex-shrink-0" />
-                    ) : (
-                      <Circle className="h-3.5 w-3.5 text-muted-foreground/50 flex-shrink-0" />
-                    )}
-                    <span className={field.filled ? "text-foreground" : "text-muted-foreground"}>
-                      {field.name}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
             {/* Category Badge */}
             <div className="flex justify-center">
               <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full ${categoryStyles.bg} ${categoryStyles.text} shadow-lg`}>

@@ -43,7 +43,6 @@ import { CardListSkeleton } from "@/components/ui/loading-skeleton";
 import { 
   containerVariants, 
   itemVariants, 
-  calculateCompleteness, 
   getEmploymentStatus,
   getCandidateCategory,
   getStatusColor 
@@ -77,7 +76,6 @@ const ApplicationsTab = ({
   const [selectedJobFilter, setSelectedJobFilter] = useState<string>("all");
   const [selectedStatusFilter, setSelectedStatusFilter] = useState<string>("all");
   const [employmentStatusFilter, setEmploymentStatusFilter] = useState<string>("all");
-  const [completenessFilter, setCompletenessFilter] = useState(false);
   const [selectedAppIds, setSelectedAppIds] = useState<Set<string>>(new Set());
   const [bulkActionLoading, setBulkActionLoading] = useState(false);
   const [showRejectConfirm, setShowRejectConfirm] = useState(false);
@@ -85,15 +83,13 @@ const ApplicationsTab = ({
   const filteredApplications = applications.filter((app) => {
     const matchesJob = selectedJobFilter === "all" || app.job_id === selectedJobFilter;
     const matchesStatus = selectedStatusFilter === "all" || app.status === selectedStatusFilter;
-    const matchesCompleteness = !completenessFilter || calculateCompleteness(app.profiles) >= 80;
-    
     let matchesEmployment = true;
     if (employmentStatusFilter !== "all") {
       const status = getEmploymentStatus(app.profiles);
       matchesEmployment = status === employmentStatusFilter;
     }
     
-    return matchesJob && matchesStatus && matchesCompleteness && matchesEmployment;
+    return matchesJob && matchesStatus && matchesEmployment;
   });
 
   const toggleSelectApp = (appId: string) => {
@@ -134,12 +130,11 @@ const ApplicationsTab = ({
 
     const headers = [
       "Name", "Email", "Role", "University", "Location", "Years Experience",
-      "Skills", "Job Applied", "Institute", "Application Status", "Applied Date", "Profile Completeness"
+      "Skills", "Job Applied", "Institute", "Application Status", "Applied Date"
     ];
 
     const rows = selectedApps.map(app => {
       const profile = app.profiles;
-      const completeness = calculateCompleteness(profile);
       return [
         profile?.full_name || "N/A",
         app.applicant_email || "N/A",
@@ -152,7 +147,6 @@ const ApplicationsTab = ({
         app.jobs?.institute || "N/A",
         app.status || "pending",
         app.created_at ? format(new Date(app.created_at), "yyyy-MM-dd") : "N/A",
-        `${completeness}%`
       ];
     });
 
@@ -317,17 +311,6 @@ const ApplicationsTab = ({
             <SelectItem value="working">Working</SelectItem>
           </SelectContent>
         </Select>
-        
-        <div className="flex items-center space-x-2 bg-secondary/50 px-3 py-1.5 rounded-lg">
-          <Switch
-            id="completeness-filter"
-            checked={completenessFilter}
-            onCheckedChange={setCompletenessFilter}
-          />
-          <Label htmlFor="completeness-filter" className="text-sm cursor-pointer whitespace-nowrap">
-            80%+ Complete
-          </Label>
-        </div>
         
         <p className="text-sm text-muted-foreground">
           {filteredApplications.length} application{filteredApplications.length !== 1 ? "s" : ""}
