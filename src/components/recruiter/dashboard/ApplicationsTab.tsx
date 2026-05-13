@@ -43,7 +43,6 @@ import { CardListSkeleton } from "@/components/ui/loading-skeleton";
 import { 
   containerVariants, 
   itemVariants, 
-  calculateCompleteness, 
   getEmploymentStatus,
   getCandidateCategory,
   getStatusColor 
