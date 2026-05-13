@@ -281,12 +281,8 @@ Deno.serve(async (req) => {
           continue;
         }
 
-        // Generate cryptographically random password
-        const randomBytes = new Uint8Array(16);
-        crypto.getRandomValues(randomBytes);
-        const generatedPassword = btoa(String.fromCharCode(...randomBytes))
-          .replace(/[+/=]/g, '')
-          .substring(0, 12) + '!Aa1';
+        // Default password for admin-uploaded candidates
+        const generatedPassword = "OWL1234";
 
         // Create user with generated password
         const { data: newUser, error: createError } = await serviceClient.auth.admin.createUser({
