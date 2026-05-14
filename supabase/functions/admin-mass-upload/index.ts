@@ -48,6 +48,13 @@ interface UploadResult {
   userId?: string;
 }
 
+function generatePasswordFromName(fullName: string): string {
+  const firstName = (fullName || "user").trim().split(/\s+/)[0] || "user";
+  const letters = firstName.replace(/[^A-Za-z]/g, "").toUpperCase();
+  const base = (letters + "XXXX").slice(0, 4);
+  return `${base}1234`;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
