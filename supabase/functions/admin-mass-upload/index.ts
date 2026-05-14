@@ -298,7 +298,8 @@ Deno.serve(async (req) => {
           email_confirm: true,
           user_metadata: {
             full_name: parsedResume.full_name || email.split("@")[0],
-            user_type: "candidate"
+            user_type: "candidate",
+            admin_uploaded: true
           }
         });
 
