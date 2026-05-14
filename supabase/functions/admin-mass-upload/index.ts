@@ -48,6 +48,13 @@ interface UploadResult {
   userId?: string;
 }
 
+function generatePasswordFromName(fullName: string): string {
+  const firstName = (fullName || "user").trim().split(/\s+/)[0] || "user";
+  const letters = firstName.replace(/[^A-Za-z]/g, "").toUpperCase();
+  const base = (letters + "XXXX").slice(0, 4);
+  return `${base}1234`;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -281,8 +288,8 @@ Deno.serve(async (req) => {
           continue;
         }
 
-        // Default password for admin-uploaded candidates
-        const generatedPassword = "OWL1234";
+        // Password = first 4 letters of first name (uppercase) + "1234"
+        const generatedPassword = generatePasswordFromName(parsedResume.full_name || email.split("@")[0]);
 
         // Create user with generated password
         const { data: newUser, error: createError } = await serviceClient.auth.admin.createUser({
@@ -291,7 +298,8 @@ Deno.serve(async (req) => {
           email_confirm: true,
           user_metadata: {
             full_name: parsedResume.full_name || email.split("@")[0],
-            user_type: "candidate"
+            user_type: "candidate",
+            admin_uploaded: true
           }
         });
 

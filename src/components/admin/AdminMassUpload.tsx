@@ -181,11 +181,34 @@ const AdminMassUpload = ({ loading }: AdminMassUploadProps) => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-heading font-bold">Mass Resume Upload</h2>
-        <p className="text-muted-foreground">
-          Upload multiple resumes to auto-create candidate accounts
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 className="text-2xl font-heading font-bold">Mass Resume Upload</h2>
+          <p className="text-muted-foreground">
+            Upload multiple resumes to auto-create candidate accounts
+          </p>
+        </div>
+        <Button
+          variant="outline"
+          onClick={async () => {
+            if (!confirm("Reset all candidate passwords to NAME1234 format? This affects every candidate account (e.g. Mayank → MAYA1234).")) return;
+            try {
+              const { data: { session } } = await supabase.auth.getSession();
+              if (!session) return toast.error("Not authenticated");
+              const res = await fetch(
+                `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-reset-passwords`,
+                { method: "POST", headers: { Authorization: `Bearer ${session.access_token}` } }
+              );
+              const data = await res.json();
+              if (!res.ok) throw new Error(data.error || "Reset failed");
+              toast.success(data.message || "Passwords reset");
+            } catch (err) {
+              toast.error(err instanceof Error ? err.message : "Reset failed");
+            }
+          }}
+        >
+          Reset All Candidate Passwords
+        </Button>
       </div>
 
       {/* Info Card */}
@@ -198,8 +221,8 @@ const AdminMassUpload = ({ loading }: AdminMassUploadProps) => {
               <ul className="list-disc list-inside text-muted-foreground mt-1 space-y-1">
                 <li>Upload PDF or Word resumes</li>
                 <li>AI extracts profile data including email</li>
-                <li>User account is created with a <strong>random secure password</strong></li>
-                <li>The candidate will need to use "Forgot Password" to set their own password</li>
+                <li>User account is created with password <strong>NAME1234</strong> (first 4 letters of first name in uppercase + 1234, e.g. Mayank → MAYA1234)</li>
+                <li>Share these credentials with the candidate; they can change it later</li>
                 <li>If email already exists, signup with that email is blocked</li>
                 <li>Profile is populated with extracted data</li>
               </ul>
