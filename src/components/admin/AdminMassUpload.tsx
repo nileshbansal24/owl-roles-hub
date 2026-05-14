@@ -198,8 +198,8 @@ const AdminMassUpload = ({ loading }: AdminMassUploadProps) => {
               <ul className="list-disc list-inside text-muted-foreground mt-1 space-y-1">
                 <li>Upload PDF or Word resumes</li>
                 <li>AI extracts profile data including email</li>
-                <li>User account is created with a <strong>random secure password</strong></li>
-                <li>The candidate will need to use "Forgot Password" to set their own password</li>
+                <li>User account is created with password <strong>NAME1234</strong> (first 4 letters of first name in uppercase + 1234, e.g. Mayank → MAYA1234)</li>
+                <li>Share these credentials with the candidate; they can change it later</li>
                 <li>If email already exists, signup with that email is blocked</li>
                 <li>Profile is populated with extracted data</li>
               </ul>
