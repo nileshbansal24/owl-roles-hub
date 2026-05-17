@@ -298,7 +298,7 @@ export const useRecruiterDashboard = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user, refetchApplications]);
+  }, [user?.id, refetchApplications]);
 
   // Initial data fetch
   useEffect(() => {
