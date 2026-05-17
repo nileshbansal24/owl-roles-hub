@@ -272,7 +272,7 @@ export const useRecruiterDashboard = () => {
     }
 
     setApplications(applicationsWithProfiles);
-  }, [user]);
+  }, [user?.id]);
 
   // Realtime subscription for job_applications
   useEffect(() => {
@@ -298,7 +298,7 @@ export const useRecruiterDashboard = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user, refetchApplications]);
+  }, [user?.id, refetchApplications]);
 
   // Initial data fetch
   useEffect(() => {
@@ -476,7 +476,9 @@ export const useRecruiterDashboard = () => {
     };
 
     fetchData();
-  }, [user, navigate]);
+    // Only refetch when the user identity changes, not on every auth object reference change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
   return {
     user,
