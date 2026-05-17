@@ -476,7 +476,9 @@ export const useRecruiterDashboard = () => {
     };
 
     fetchData();
-  }, [user, navigate]);
+    // Only refetch when the user identity changes, not on every auth object reference change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
   return {
     user,
