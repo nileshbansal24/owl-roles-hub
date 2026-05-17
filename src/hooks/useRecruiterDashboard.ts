@@ -272,7 +272,7 @@ export const useRecruiterDashboard = () => {
     }
 
     setApplications(applicationsWithProfiles);
-  }, [user]);
+  }, [user?.id]);
 
   // Realtime subscription for job_applications
   useEffect(() => {
