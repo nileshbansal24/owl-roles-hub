@@ -147,17 +147,10 @@
     text-wrap: balance;
   }
 
-  h1 { @apply text-4xl md:text-5xl font-bold; letter-spacing: -0.03em; }
-  h2 { @apply text-3xl md:text-4xl font-semibold; letter-spacing: -0.025em; }
-  h3 { @apply text-2xl md:text-3xl font-semibold; }
-  h4 { @apply text-xl md:text-2xl font-semibold; }
-  h5 { @apply text-lg font-semibold; }
-  h6 { @apply text-base font-semibold; }
+  h1 { letter-spacing: -0.03em; }
+  h2 { letter-spacing: -0.025em; }
 
   p { text-wrap: pretty; }
-
-  /* Consistent vertical rhythm helpers */
-  section { @apply py-12 md:py-16; }
 
   /* Stronger focus rings for a11y + premium feel */
   :focus-visible {
