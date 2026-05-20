@@ -143,6 +143,8 @@ const RecruiterSidebar = ({ hasJobs = false, pendingVerificationCount = 0 }: Rec
           <img
             src={theme === "dark" ? logoDark : logoLight}
             alt="OWL Roles"
+            width={321}
+            height={193}
             className={cn("w-auto transition-all", isCollapsed ? "h-10" : "h-12")}
           />
         </button>
