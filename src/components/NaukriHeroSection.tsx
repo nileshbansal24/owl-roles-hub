@@ -143,6 +143,9 @@ const NaukriHeroSection = ({
               alt="Owl mascot with educators and researchers on OWL ROLES"
               width={1024}
               height={896}
+              loading="eager"
+              fetchPriority="high"
+              decoding="async"
               className="w-full h-auto max-w-[560px] mx-auto"
             />
           </motion.div>
