@@ -98,6 +98,8 @@ const Navbar = ({ onLoginClick, onSignupClick }: NavbarProps) => {
             <img 
               src={theme === "dark" ? logoDark : logoLight} 
               alt="OWL Roles" 
+              width={321}
+              height={193}
               className="h-[56px] w-auto"
             />
           </Link>
