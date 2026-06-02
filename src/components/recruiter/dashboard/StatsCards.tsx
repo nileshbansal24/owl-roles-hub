@@ -73,7 +73,11 @@ const StatsCards = ({ jobs, applications, candidates, onCardClick }: StatsCardsP
           transition={{ delay: index * 0.05, duration: 0.35, ease: "easeOut" }}
           className="group"
         >
-          <div className="relative rounded-xl border border-border/60 bg-card p-4 sm:p-5 hover:border-border hover:shadow-[var(--shadow-soft)] transition-all duration-200">
+          <button
+            type="button"
+            onClick={() => onCardClick?.(stat.tab)}
+            className="w-full text-left relative rounded-xl border border-border/60 bg-card p-4 sm:p-5 hover:border-primary/40 hover:shadow-[var(--shadow-soft)] hover:-translate-y-0.5 transition-all duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
             <div className="flex items-center justify-between mb-3">
               <div className={`w-9 h-9 rounded-lg ${stat.accent} flex items-center justify-center`}>
                 <stat.icon className={`h-4 w-4 ${stat.iconColor}`} />
@@ -90,7 +94,8 @@ const StatsCards = ({ jobs, applications, candidates, onCardClick }: StatsCardsP
             </motion.p>
             <p className="text-[13px] font-medium text-foreground/80 mt-1.5">{stat.title}</p>
             <p className="text-[11px] text-muted-foreground mt-0.5">{stat.subtitle}</p>
-          </div>
+          </button>
+
         </motion.div>
       ))}
     </div>
