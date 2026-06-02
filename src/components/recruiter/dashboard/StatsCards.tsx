@@ -25,6 +25,7 @@ const StatsCards = ({ jobs, applications, candidates, onCardClick }: StatsCardsP
       trendColor: jobs.length > 0 ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground",
       accent: "bg-primary/8 dark:bg-primary/15",
       iconColor: "text-primary",
+      tab: "jobs",
     },
     {
       title: "Applications",
@@ -35,6 +36,7 @@ const StatsCards = ({ jobs, applications, candidates, onCardClick }: StatsCardsP
       trendColor: pending > 0 ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground",
       accent: "bg-amber-500/8 dark:bg-amber-500/15",
       iconColor: "text-amber-600 dark:text-amber-400",
+      tab: "applications",
     },
     {
       title: "Talent Pool",
@@ -45,6 +47,7 @@ const StatsCards = ({ jobs, applications, candidates, onCardClick }: StatsCardsP
       trendColor: candidates.length > 0 ? "text-sky-600 dark:text-sky-400" : "text-muted-foreground",
       accent: "bg-sky-500/8 dark:bg-sky-500/15",
       iconColor: "text-sky-600 dark:text-sky-400",
+      tab: "resdex",
     },
     {
       title: "Shortlisted",
@@ -55,8 +58,10 @@ const StatsCards = ({ jobs, applications, candidates, onCardClick }: StatsCardsP
       trendColor: shortlistRate > 20 ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground",
       accent: "bg-emerald-500/8 dark:bg-emerald-500/15",
       iconColor: "text-emerald-600 dark:text-emerald-400",
+      tab: "applications",
     },
   ];
+
 
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
