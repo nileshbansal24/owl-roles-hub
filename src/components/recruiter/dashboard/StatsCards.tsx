@@ -6,9 +6,11 @@ interface StatsCardsProps {
   jobs: Job[];
   applications: Application[];
   candidates: Profile[];
+  onCardClick?: (tab: string) => void;
 }
 
-const StatsCards = ({ jobs, applications, candidates }: StatsCardsProps) => {
+const StatsCards = ({ jobs, applications, candidates, onCardClick }: StatsCardsProps) => {
+
   const shortlisted = applications.filter((app) => app.status === "shortlisted").length;
   const pending = applications.filter(a => a.status === "pending").length;
   const shortlistRate = applications.length > 0 ? Math.round((shortlisted / applications.length) * 100) : 0;
