@@ -34,20 +34,8 @@ const RecruiterLayout = ({ children, hasJobs = false, title, pendingVerification
               )}
             </div>
             <div className="flex items-center gap-1.5">
-              {/* Search with keyboard shortcut hint */}
-              <div className="hidden md:flex items-center relative group">
-                <Search className="absolute left-3 h-3.5 w-3.5 text-muted-foreground/60 group-focus-within:text-primary transition-colors" />
-                <Input 
-                  placeholder="Search anything..." 
-                  className="pl-9 pr-12 h-8 w-52 lg:w-72 text-sm bg-muted/40 border-border/50 rounded-lg focus-visible:ring-1 focus-visible:bg-background transition-all"
-                />
-                <div className="absolute right-2 flex items-center gap-0.5">
-                  <kbd className="hidden lg:inline-flex h-5 select-none items-center gap-0.5 rounded border border-border/60 bg-muted/60 px-1.5 font-mono text-[10px] font-medium text-muted-foreground/70">
-                    <Command className="h-2.5 w-2.5" />K
-                  </kbd>
-                </div>
-              </div>
               <NotificationCenter />
+
             </div>
           </header>
           
