@@ -254,7 +254,7 @@ const RecruiterDashboard = () => {
       <div className="p-4 sm:p-6 lg:p-8 space-y-5 max-w-[1600px] mx-auto">
         {/* Welcome + Stats */}
         <WelcomeHeader name={recruiterName} />
-        <StatsCards jobs={jobs} applications={applications} candidates={candidates} />
+        <StatsCards jobs={jobs} applications={applications} candidates={candidates} onCardClick={handleTabChange} />
 
         {/* Tabs - TabsList is hidden since navigation is handled by sidebar */}
         <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-4">

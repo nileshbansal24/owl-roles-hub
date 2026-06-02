@@ -6,9 +6,11 @@ interface StatsCardsProps {
   jobs: Job[];
   applications: Application[];
   candidates: Profile[];
+  onCardClick?: (tab: string) => void;
 }
 
-const StatsCards = ({ jobs, applications, candidates }: StatsCardsProps) => {
+const StatsCards = ({ jobs, applications, candidates, onCardClick }: StatsCardsProps) => {
+
   const shortlisted = applications.filter((app) => app.status === "shortlisted").length;
   const pending = applications.filter(a => a.status === "pending").length;
   const shortlistRate = applications.length > 0 ? Math.round((shortlisted / applications.length) * 100) : 0;
@@ -23,6 +25,7 @@ const StatsCards = ({ jobs, applications, candidates }: StatsCardsProps) => {
       trendColor: jobs.length > 0 ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground",
       accent: "bg-primary/8 dark:bg-primary/15",
       iconColor: "text-primary",
+      tab: "jobs",
     },
     {
       title: "Applications",
@@ -33,6 +36,7 @@ const StatsCards = ({ jobs, applications, candidates }: StatsCardsProps) => {
       trendColor: pending > 0 ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground",
       accent: "bg-amber-500/8 dark:bg-amber-500/15",
       iconColor: "text-amber-600 dark:text-amber-400",
+      tab: "applications",
     },
     {
       title: "Talent Pool",
@@ -43,6 +47,7 @@ const StatsCards = ({ jobs, applications, candidates }: StatsCardsProps) => {
       trendColor: candidates.length > 0 ? "text-sky-600 dark:text-sky-400" : "text-muted-foreground",
       accent: "bg-sky-500/8 dark:bg-sky-500/15",
       iconColor: "text-sky-600 dark:text-sky-400",
+      tab: "resdex",
     },
     {
       title: "Shortlisted",
@@ -53,8 +58,10 @@ const StatsCards = ({ jobs, applications, candidates }: StatsCardsProps) => {
       trendColor: shortlistRate > 20 ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground",
       accent: "bg-emerald-500/8 dark:bg-emerald-500/15",
       iconColor: "text-emerald-600 dark:text-emerald-400",
+      tab: "applications",
     },
   ];
+
 
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
@@ -66,7 +73,11 @@ const StatsCards = ({ jobs, applications, candidates }: StatsCardsProps) => {
           transition={{ delay: index * 0.05, duration: 0.35, ease: "easeOut" }}
           className="group"
         >
-          <div className="relative rounded-xl border border-border/60 bg-card p-4 sm:p-5 hover:border-border hover:shadow-[var(--shadow-soft)] transition-all duration-200">
+          <button
+            type="button"
+            onClick={() => onCardClick?.(stat.tab)}
+            className="w-full text-left relative rounded-xl border border-border/60 bg-card p-4 sm:p-5 hover:border-primary/40 hover:shadow-[var(--shadow-soft)] hover:-translate-y-0.5 transition-all duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
             <div className="flex items-center justify-between mb-3">
               <div className={`w-9 h-9 rounded-lg ${stat.accent} flex items-center justify-center`}>
                 <stat.icon className={`h-4 w-4 ${stat.iconColor}`} />
@@ -83,7 +94,8 @@ const StatsCards = ({ jobs, applications, candidates }: StatsCardsProps) => {
             </motion.p>
             <p className="text-[13px] font-medium text-foreground/80 mt-1.5">{stat.title}</p>
             <p className="text-[11px] text-muted-foreground mt-0.5">{stat.subtitle}</p>
-          </div>
+          </button>
+
         </motion.div>
       ))}
     </div>
