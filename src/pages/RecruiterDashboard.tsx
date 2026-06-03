@@ -230,8 +230,35 @@ const RecruiterDashboard = () => {
 
   // Handle view job applications
   const handleViewJobApplications = useCallback((jobId: string) => {
-    handleTabChange("applications");
+    handleTabChange("manage");
+    const sp = new URLSearchParams(window.location.search);
+    sp.set("tab", "manage");
+    sp.set("view", "applications");
+    window.history.replaceState({}, "", `${window.location.pathname}?${sp.toString()}`);
   }, [handleTabChange]);
+
+  // ---------- Manage Jobs unified view ----------
+  const [searchParams, setSearchParams] = useSearchParams();
+  // Treat legacy tab values as the unified "manage" tab and remember sub-view
+  const unifiedTab = useMemo(() => {
+    if (["jobs", "applications", "interviews", "manage"].includes(activeTab)) return "manage";
+    return activeTab;
+  }, [activeTab]);
+
+  const manageView = useMemo(() => {
+    const explicit = searchParams.get("view");
+    if (explicit && ["jobs", "applications", "interviews"].includes(explicit)) return explicit;
+    if (["jobs", "applications", "interviews"].includes(activeTab)) return activeTab;
+    return "jobs";
+  }, [searchParams, activeTab]);
+
+  const handleManageViewChange = useCallback((view: string) => {
+    const sp = new URLSearchParams(searchParams);
+    sp.set("tab", "manage");
+    sp.set("view", view);
+    setSearchParams(sp, { replace: true });
+  }, [searchParams, setSearchParams]);
+
 
   if (loading) {
     return (
