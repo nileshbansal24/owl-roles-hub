@@ -12,3 +12,4 @@ export { default as BlockchainCredentialsTab } from "./BlockchainCredentialsTab"
 export { default as StatsCards } from "./StatsCards";
 export { default as WelcomeHeader } from "./WelcomeHeader";
 export { default as TabHeader } from "./TabHeader";
+export { default as ManageJobsTab } from "./ManageJobsTab";
