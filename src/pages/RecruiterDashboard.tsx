@@ -1,4 +1,5 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
+import { useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Loader2 } from "lucide-react";
 import { format } from "date-fns";
@@ -20,12 +21,10 @@ import RecruiterChatbot from "@/components/recruiter/RecruiterChatbot";
 // Dashboard components
 import {
   FindCandidatesTab,
-  InterviewsTab,
-  MyJobsTab,
   SavedCandidatesTab,
-  ApplicationsTab,
   EventsTab,
   BlockchainCredentialsTab,
+  ManageJobsTab,
   StatsCards,
   WelcomeHeader,
 } from "@/components/recruiter/dashboard";
@@ -231,8 +230,35 @@ const RecruiterDashboard = () => {
 
   // Handle view job applications
   const handleViewJobApplications = useCallback((jobId: string) => {
-    handleTabChange("applications");
+    handleTabChange("manage");
+    const sp = new URLSearchParams(window.location.search);
+    sp.set("tab", "manage");
+    sp.set("view", "applications");
+    window.history.replaceState({}, "", `${window.location.pathname}?${sp.toString()}`);
   }, [handleTabChange]);
+
+  // ---------- Manage Jobs unified view ----------
+  const [searchParams, setSearchParams] = useSearchParams();
+  // Treat legacy tab values as the unified "manage" tab and remember sub-view
+  const unifiedTab = useMemo(() => {
+    if (["jobs", "applications", "interviews", "manage"].includes(activeTab)) return "manage";
+    return activeTab;
+  }, [activeTab]);
+
+  const manageView = useMemo(() => {
+    const explicit = searchParams.get("view");
+    if (explicit && ["jobs", "applications", "interviews"].includes(explicit)) return explicit;
+    if (["jobs", "applications", "interviews"].includes(activeTab)) return activeTab;
+    return "jobs";
+  }, [searchParams, activeTab]);
+
+  const handleManageViewChange = useCallback((view: string) => {
+    const sp = new URLSearchParams(searchParams);
+    sp.set("tab", "manage");
+    sp.set("view", view);
+    setSearchParams(sp, { replace: true });
+  }, [searchParams, setSearchParams]);
+
 
   if (loading) {
     return (
@@ -254,17 +280,26 @@ const RecruiterDashboard = () => {
       <div className="p-4 sm:p-6 lg:p-8 space-y-5 max-w-[1600px] mx-auto">
         {/* Welcome + Stats */}
         <WelcomeHeader name={recruiterName} />
-        <StatsCards jobs={jobs} applications={applications} candidates={candidates} onCardClick={handleTabChange} />
+        <StatsCards
+          jobs={jobs}
+          applications={applications}
+          candidates={candidates}
+          onCardClick={(tab) => {
+            if (["jobs", "applications", "interviews"].includes(tab)) {
+              handleManageViewChange(tab);
+            } else {
+              handleTabChange(tab);
+            }
+          }}
+        />
 
         {/* Tabs - TabsList is hidden since navigation is handled by sidebar */}
-        <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-4">
+        <Tabs value={unifiedTab} onValueChange={handleTabChange} className="space-y-4">
           <TabsList className="sr-only">
             <TabsTrigger value="resdex">Find Candidates</TabsTrigger>
             <TabsTrigger value="saved">Saved</TabsTrigger>
             <TabsTrigger value="events">Events</TabsTrigger>
-            <TabsTrigger value="interviews">Interviews</TabsTrigger>
-            <TabsTrigger value="applications">Applications</TabsTrigger>
-            <TabsTrigger value="jobs">My Jobs</TabsTrigger>
+            <TabsTrigger value="manage">Manage Jobs</TabsTrigger>
             <TabsTrigger value="messages">Messages</TabsTrigger>
             <TabsTrigger value="blockchain">Blockchain</TabsTrigger>
           </TabsList>
@@ -303,41 +338,28 @@ const RecruiterDashboard = () => {
             <EventsTab jobs={jobs} />
           </TabsContent>
 
-          {/* Interviews Tab */}
-          <TabsContent value="interviews">
-            <InterviewsTab
-              interviews={interviews}
-              sendingReminderId={sendingReminderId}
-              onViewDetails={(interview) => {
-                setSelectedInterview(interview);
-                setShowInterviewDetailsModal(true);
-              }}
-              onSendReminder={handleSendInterviewReminder}
-              isLoading={loading}
-            />
-          </TabsContent>
-
-          {/* Applications Tab */}
-          <TabsContent value="applications">
-            <ApplicationsTab
+          {/* Manage Jobs (unified: My Jobs + Applications + Interviews) */}
+          <TabsContent value="manage">
+            <ManageJobsTab
+              view={manageView}
+              onViewChange={handleManageViewChange}
               jobs={jobs}
               applications={applications}
+              interviews={interviews}
+              isLoading={loading}
+              sendingReminderId={sendingReminderId}
               onViewApplicant={handleViewApplicant}
               onUpdateStatus={updateApplicationStatus}
               onScheduleInterview={handleScheduleInterview}
               onDownloadResume={handleDownloadResume}
               onOpenComparison={handleOpenComparison}
               setApplications={setApplications}
-            />
-          </TabsContent>
-
-          {/* My Jobs Tab */}
-          <TabsContent value="jobs">
-            <MyJobsTab
-              jobs={jobs}
-              applications={applications}
               onViewJobApplications={handleViewJobApplications}
-              isLoading={loading}
+              onViewInterviewDetails={(interview) => {
+                setSelectedInterview(interview);
+                setShowInterviewDetailsModal(true);
+              }}
+              onSendInterviewReminder={handleSendInterviewReminder}
             />
           </TabsContent>
 

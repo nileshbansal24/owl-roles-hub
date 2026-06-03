@@ -43,9 +43,7 @@ interface RecruiterSidebarProps {
 
 const mainNavItems = [
   { title: "Find Candidates", icon: Search, tab: "resdex" },
-  { title: "Applications", icon: FileText, tab: "applications" },
-  { title: "My Jobs", icon: Briefcase, tab: "jobs" },
-  { title: "Interviews", icon: Calendar, tab: "interviews" },
+  { title: "Manage Jobs", icon: Briefcase, tab: "manage" },
 ];
 
 const manageNavItems = [
@@ -80,6 +78,9 @@ const RecruiterSidebar = ({ hasJobs = false, pendingVerificationCount = 0 }: Rec
 
   const isActive = (tab: string) => {
     if (location.pathname !== "/recruiter-dashboard") return false;
+    if (tab === "manage") {
+      return ["manage", "jobs", "applications", "interviews"].includes(currentTab);
+    }
     return currentTab === tab;
   };
 
