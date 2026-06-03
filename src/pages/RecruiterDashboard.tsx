@@ -338,41 +338,28 @@ const RecruiterDashboard = () => {
             <EventsTab jobs={jobs} />
           </TabsContent>
 
-          {/* Interviews Tab */}
-          <TabsContent value="interviews">
-            <InterviewsTab
-              interviews={interviews}
-              sendingReminderId={sendingReminderId}
-              onViewDetails={(interview) => {
-                setSelectedInterview(interview);
-                setShowInterviewDetailsModal(true);
-              }}
-              onSendReminder={handleSendInterviewReminder}
-              isLoading={loading}
-            />
-          </TabsContent>
-
-          {/* Applications Tab */}
-          <TabsContent value="applications">
-            <ApplicationsTab
+          {/* Manage Jobs (unified: My Jobs + Applications + Interviews) */}
+          <TabsContent value="manage">
+            <ManageJobsTab
+              view={manageView}
+              onViewChange={handleManageViewChange}
               jobs={jobs}
               applications={applications}
+              interviews={interviews}
+              isLoading={loading}
+              sendingReminderId={sendingReminderId}
               onViewApplicant={handleViewApplicant}
               onUpdateStatus={updateApplicationStatus}
               onScheduleInterview={handleScheduleInterview}
               onDownloadResume={handleDownloadResume}
               onOpenComparison={handleOpenComparison}
               setApplications={setApplications}
-            />
-          </TabsContent>
-
-          {/* My Jobs Tab */}
-          <TabsContent value="jobs">
-            <MyJobsTab
-              jobs={jobs}
-              applications={applications}
               onViewJobApplications={handleViewJobApplications}
-              isLoading={loading}
+              onViewInterviewDetails={(interview) => {
+                setSelectedInterview(interview);
+                setShowInterviewDetailsModal(true);
+              }}
+              onSendInterviewReminder={handleSendInterviewReminder}
             />
           </TabsContent>
 
