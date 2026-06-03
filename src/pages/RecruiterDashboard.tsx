@@ -21,12 +21,10 @@ import RecruiterChatbot from "@/components/recruiter/RecruiterChatbot";
 // Dashboard components
 import {
   FindCandidatesTab,
-  InterviewsTab,
-  MyJobsTab,
   SavedCandidatesTab,
-  ApplicationsTab,
   EventsTab,
   BlockchainCredentialsTab,
+  ManageJobsTab,
   StatsCards,
   WelcomeHeader,
 } from "@/components/recruiter/dashboard";
