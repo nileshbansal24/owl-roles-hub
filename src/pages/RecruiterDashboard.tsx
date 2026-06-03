@@ -280,17 +280,26 @@ const RecruiterDashboard = () => {
       <div className="p-4 sm:p-6 lg:p-8 space-y-5 max-w-[1600px] mx-auto">
         {/* Welcome + Stats */}
         <WelcomeHeader name={recruiterName} />
-        <StatsCards jobs={jobs} applications={applications} candidates={candidates} onCardClick={handleTabChange} />
+        <StatsCards
+          jobs={jobs}
+          applications={applications}
+          candidates={candidates}
+          onCardClick={(tab) => {
+            if (["jobs", "applications", "interviews"].includes(tab)) {
+              handleManageViewChange(tab);
+            } else {
+              handleTabChange(tab);
+            }
+          }}
+        />
 
         {/* Tabs - TabsList is hidden since navigation is handled by sidebar */}
-        <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-4">
+        <Tabs value={unifiedTab} onValueChange={handleTabChange} className="space-y-4">
           <TabsList className="sr-only">
             <TabsTrigger value="resdex">Find Candidates</TabsTrigger>
             <TabsTrigger value="saved">Saved</TabsTrigger>
             <TabsTrigger value="events">Events</TabsTrigger>
-            <TabsTrigger value="interviews">Interviews</TabsTrigger>
-            <TabsTrigger value="applications">Applications</TabsTrigger>
-            <TabsTrigger value="jobs">My Jobs</TabsTrigger>
+            <TabsTrigger value="manage">Manage Jobs</TabsTrigger>
             <TabsTrigger value="messages">Messages</TabsTrigger>
             <TabsTrigger value="blockchain">Blockchain</TabsTrigger>
           </TabsList>
