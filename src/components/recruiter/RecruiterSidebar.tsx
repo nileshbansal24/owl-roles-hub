@@ -78,6 +78,9 @@ const RecruiterSidebar = ({ hasJobs = false, pendingVerificationCount = 0 }: Rec
 
   const isActive = (tab: string) => {
     if (location.pathname !== "/recruiter-dashboard") return false;
+    if (tab === "manage") {
+      return ["manage", "jobs", "applications", "interviews"].includes(currentTab);
+    }
     return currentTab === tab;
   };
 
