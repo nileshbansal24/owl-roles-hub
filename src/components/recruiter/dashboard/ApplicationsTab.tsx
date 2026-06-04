@@ -37,6 +37,8 @@ import {
   GitCompare,
 } from "lucide-react";
 import CandidateCategoryBadge from "./CandidateCategoryBadge";
+import CandidateProfileCard from "./CandidateProfileCard";
+
 import TabHeader from "./TabHeader";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CardListSkeleton } from "@/components/ui/loading-skeleton";
