@@ -109,9 +109,11 @@ const ManageJobsTab = ({
             jobs={jobs}
             applications={applications}
             onViewJobApplications={onViewJobApplications}
+            onChangeView={onViewChange}
             isLoading={isLoading}
           />
         </TabsContent>
+
 
         <TabsContent value="applications" className="mt-0">
           <ApplicationsTab
