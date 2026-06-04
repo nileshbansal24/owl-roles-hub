@@ -14,10 +14,12 @@ interface MyJobsTabProps {
   jobs: Job[];
   applications: Application[];
   onViewJobApplications: (jobId: string) => void;
+  onChangeView?: (view: string) => void;
   isLoading?: boolean;
 }
 
-const MyJobsTab = ({ jobs, applications, onViewJobApplications, isLoading = false }: MyJobsTabProps) => {
+const MyJobsTab = ({ jobs, applications, onViewJobApplications, onChangeView, isLoading = false }: MyJobsTabProps) => {
+
   const navigate = useNavigate();
 
   if (isLoading) {
