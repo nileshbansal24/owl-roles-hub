@@ -82,29 +82,36 @@ const MyJobsTab = ({ jobs, applications, onViewJobApplications, onChangeView, is
           {/* Summary Stats */}
           <motion.div 
             variants={staggerItemVariants}
-            className="grid grid-cols-2 md:grid-cols-4 gap-4"
+            className="grid grid-cols-1 sm:grid-cols-3 gap-4"
           >
-            <div className="card-elevated p-4 text-center">
+            <button
+              type="button"
+              onClick={() => onChangeView?.("jobs")}
+              className="card-elevated p-4 text-center hover:border-primary/40 hover:shadow-md transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-xl"
+            >
               <p className="text-2xl font-bold text-foreground">{jobs.length}</p>
               <p className="text-sm text-muted-foreground">Active Jobs</p>
-            </div>
-            <div className="card-elevated p-4 text-center">
+            </button>
+            <button
+              type="button"
+              onClick={() => onChangeView?.("applications")}
+              className="card-elevated p-4 text-center hover:border-primary/40 hover:shadow-md transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-xl"
+            >
               <p className="text-2xl font-bold text-foreground">{applications.length}</p>
               <p className="text-sm text-muted-foreground">Total Applications</p>
-            </div>
-            <div className="card-elevated p-4 text-center">
+            </button>
+            <button
+              type="button"
+              onClick={() => onChangeView?.("applications")}
+              className="card-elevated p-4 text-center hover:border-primary/40 hover:shadow-md transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-xl"
+            >
               <p className="text-2xl font-bold text-primary">
                 {applications.filter(a => a.status === 'shortlisted').length}
               </p>
               <p className="text-sm text-muted-foreground">Shortlisted</p>
-            </div>
-            <div className="card-elevated p-4 text-center">
-              <p className="text-2xl font-bold text-foreground">
-                {jobs.length > 0 ? Math.round(applications.length / jobs.length) : 0}
-              </p>
-              <p className="text-sm text-muted-foreground">Avg per Job</p>
-            </div>
+            </button>
           </motion.div>
+
 
           {/* Jobs List */}
           {jobs.map((job, index) => {
