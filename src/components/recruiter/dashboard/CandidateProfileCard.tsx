@@ -1,0 +1,482 @@
+import { useState, type ReactNode } from "react";
+import { motion } from "framer-motion";
+import { formatDistanceToNow } from "date-fns";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Eye,
+  Bookmark,
+  BookmarkCheck,
+  Mail,
+  GraduationCap,
+  MapPin,
+  Briefcase,
+  MessageSquare,
+  Edit3,
+  Save,
+  Loader2,
+  FileText,
+  TrendingUp,
+  ExternalLink,
+  IndianRupee,
+  Star,
+  BookOpen,
+  Download,
+  Calendar,
+  CheckCircle2,
+  XCircle,
+} from "lucide-react";
+import type { Profile, Application } from "@/types/recruiter";
+import { getCandidateCategory, getStatusColor } from "@/types/recruiter";
+import { computeRatings } from "@/components/profile/CandidateRatingCard";
+import CandidateCategoryBadge from "./CandidateCategoryBadge";
+
+const MiniStars = ({ score, size = 12 }: { score: number; size?: number }) => (
+  <div className="flex items-center gap-px">
+    {[1, 2, 3, 4, 5].map((i) => {
+      const fill = score >= i ? 1 : score >= i - 0.5 ? 0.5 : 0;
+      return (
+        <div key={i} className="relative" style={{ width: size, height: size }}>
+          <Star className="absolute inset-0 text-muted-foreground/20" style={{ width: size, height: size }} />
+          {fill > 0 && (
+            <div className="absolute inset-0 overflow-hidden" style={{ width: `${fill * 100}%` }}>
+              <Star className="text-amber-500 fill-amber-500" style={{ width: size, height: size }} />
+            </div>
+          )}
+        </div>
+      );
+    })}
+  </div>
+);
+
+export interface CandidateProfileCardProps {
+  /** Canonical candidate profile. */
+  candidate: Profile;
+  index?: number;
+
+  /**
+   * Optional application context. When provided, the card renders
+   * application-pipeline UI (status badge, "Applied for…", schedule /
+   * shortlist / reject actions) in addition to the standard layout.
+   */
+  application?: Application | null;
+
+  /** Talent-pool actions */
+  isSaved?: boolean;
+  note?: string;
+  onView?: (candidate: Profile) => void;
+  onSave?: (candidateId: string) => void;
+  onMessage?: (candidate: Profile) => void;
+  onSaveNote?: (candidateId: string, note: string) => Promise<void>;
+
+  /** Application-pipeline actions */
+  onViewApplicant?: (app: Application) => void;
+  onUpdateStatus?: (appId: string, status: string) => void;
+  onScheduleInterview?: (app: Application) => void;
+  onDownloadResume?: (resumePath: string, applicantName: string) => void;
+
+  /** Bulk select (Applications surface) */
+  selected?: boolean;
+  onToggleSelect?: (appId: string) => void;
+
+  /** Extra slot rendered at the end of the action row */
+  extraActions?: ReactNode;
+}
+
+const CandidateProfileCard = ({
+  candidate,
+  index = 0,
+  application,
+  isSaved = false,
+  note,
+  onView,
+  onSave,
+  onMessage,
+  onSaveNote,
+  onViewApplicant,
+  onUpdateStatus,
+  onScheduleInterview,
+  onDownloadResume,
+  selected = false,
+  onToggleSelect,
+  extraActions,
+}: CandidateProfileCardProps) => {
+  const [editingNote, setEditingNote] = useState(false);
+  const [noteText, setNoteText] = useState(note || "");
+  const [savingNote, setSavingNote] = useState(false);
+
+  const isApplication = !!application;
+
+  const handleSaveNote = async () => {
+    if (!onSaveNote) return;
+    setSavingNote(true);
+    await onSaveNote(candidate.id, noteText);
+    setSavingNote(false);
+    setEditingNote(false);
+  };
+
+  const handleView = () => {
+    if (isApplication && onViewApplicant && application) onViewApplicant(application);
+    else if (onView) onView(candidate);
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.05, duration: 0.3 }}
+      whileHover={{ y: -2, boxShadow: "0 8px 30px rgba(0,0,0,0.08)" }}
+      className={`card-elevated p-3 sm:p-5 transition-all duration-200 ${
+        selected ? "ring-2 ring-primary bg-primary/5" : ""
+      }`}
+    >
+      <div className="flex flex-col md:flex-row gap-4">
+        <div className="flex items-start gap-3 shrink-0">
+          {isApplication && onToggleSelect && application && (
+            <Checkbox
+              checked={selected}
+              onCheckedChange={() => onToggleSelect(application.id)}
+              className="mt-2"
+            />
+          )}
+          <motion.div whileHover={{ scale: 1.05 }} transition={{ type: "spring", stiffness: 300 }}>
+            <Avatar className="h-16 w-16 ring-2 ring-background shadow-md">
+              <AvatarImage src={candidate.avatar_url || ""} />
+              <AvatarFallback className="bg-primary text-primary-foreground text-lg font-heading font-bold">
+                {candidate.full_name?.slice(0, 2).toUpperCase() || "U"}
+              </AvatarFallback>
+            </Avatar>
+          </motion.div>
+        </div>
+
+        <div className="flex-1 min-w-0">
+          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h4
+                  className="font-heading font-semibold text-base sm:text-lg text-foreground hover:text-primary transition-colors cursor-pointer truncate"
+                  onClick={handleView}
+                >
+                  {candidate.full_name || "Anonymous"}
+                </h4>
+                <CandidateCategoryBadge category={getCandidateCategory(candidate)} />
+                {isApplication && (
+                  <Badge variant="outline" className={getStatusColor(application!.status)}>
+                    {application!.status}
+                  </Badge>
+                )}
+              </div>
+              <p className="text-primary font-medium text-sm sm:text-base truncate">
+                {candidate.role || candidate.headline || "Academic Professional"}
+              </p>
+              {isApplication && (
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Applied for <span className="text-primary font-medium">{application!.jobs.title}</span> at {application!.jobs.institute}
+                  <span className="mx-1.5">·</span>
+                  {formatDistanceToNow(new Date(application!.created_at), { addSuffix: true })}
+                </p>
+              )}
+            </div>
+            <div className="flex gap-2 shrink-0 flex-wrap">
+              {onSave && !isApplication && (
+                <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="gap-1 transition-colors"
+                    onClick={() => onSave(candidate.id)}
+                  >
+                    {isSaved ? (
+                      <BookmarkCheck className="h-4 w-4 text-primary" />
+                    ) : (
+                      <Bookmark className="h-4 w-4" />
+                    )}
+                  </Button>
+                </motion.div>
+              )}
+              {(onView || onViewApplicant) && (
+                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                  <Button variant="outline" size="sm" className="gap-1" onClick={handleView}>
+                    <Eye className="h-4 w-4" />
+                    <span className="hidden sm:inline">View</span>
+                  </Button>
+                </motion.div>
+              )}
+              {onMessage && !isApplication && (
+                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                  <Button size="sm" className="gap-1" onClick={() => onMessage(candidate)}>
+                    <Mail className="h-4 w-4" />
+                    <span className="hidden sm:inline">Message</span>
+                  </Button>
+                </motion.div>
+              )}
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3 md:gap-4 mt-3 text-sm text-muted-foreground">
+            {candidate.university && (
+              <div className="flex items-center gap-1">
+                <GraduationCap className="h-4 w-4" />
+                <span className="truncate max-w-[150px]">{candidate.university}</span>
+              </div>
+            )}
+            {candidate.location && (
+              <div className="flex items-center gap-1">
+                <MapPin className="h-4 w-4" />
+                <span>{candidate.location}</span>
+              </div>
+            )}
+            {candidate.years_experience != null && candidate.years_experience > 0 && (
+              <div className="flex items-center gap-1">
+                <Briefcase className="h-4 w-4" />
+                <span className="font-medium text-foreground">{candidate.years_experience}</span>
+                <span>Yrs Experience</span>
+              </div>
+            )}
+            {candidate.current_salary != null && candidate.current_salary > 0 && (
+              <div className="flex items-center gap-1">
+                <IndianRupee className="h-4 w-4" />
+                <span>
+                  Current: <span className="font-medium text-foreground">₹{(candidate.current_salary / 100000).toFixed(1)}L</span>
+                </span>
+              </div>
+            )}
+            {candidate.expected_salary != null && candidate.expected_salary > 0 && (
+              <div className="flex items-center gap-1">
+                <IndianRupee className="h-4 w-4" />
+                <span>
+                  Expected: <span className="font-medium text-primary">₹{(candidate.expected_salary / 100000).toFixed(1)}L</span>
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* Academic & Research Ratings */}
+          {(() => {
+            const ratings = computeRatings({
+              education: candidate.education,
+              researchPapers: candidate.research_papers,
+              hIndex: candidate.scopus_metrics?.h_index || candidate.manual_h_index || null,
+              citations: candidate.scopus_metrics?.citation_count || null,
+              achievements: candidate.achievements,
+              university: candidate.university,
+            });
+            return (
+              <div className="flex items-center gap-4 mt-2 flex-wrap">
+                <div className="flex items-center gap-1">
+                  <GraduationCap className="h-3.5 w-3.5 text-primary" />
+                  <span className="text-xs text-muted-foreground">Academic</span>
+                  <MiniStars score={ratings.academicScore} />
+                  <span className="text-xs font-semibold text-foreground">{ratings.academicScore}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <BookOpen className="h-3.5 w-3.5 text-primary" />
+                  <span className="text-xs text-muted-foreground">Research</span>
+                  <MiniStars score={ratings.researchScore} />
+                  <span className="text-xs font-semibold text-foreground">{ratings.researchScore}</span>
+                </div>
+              </div>
+            );
+          })()}
+
+          {candidate.professional_summary && candidate.professional_summary.trim().length > 0 && (
+            <p className="mt-3 text-sm text-muted-foreground line-clamp-2 leading-relaxed">
+              {candidate.professional_summary}
+            </p>
+          )}
+
+          {candidate.skills && candidate.skills.length > 0 && (
+            <div className="flex flex-wrap gap-2 mt-3">
+              {candidate.skills.slice(0, 5).map((skill) => (
+                <Badge key={skill} variant="secondary" className="hover:bg-primary/10 transition-colors cursor-default">
+                  {skill}
+                </Badge>
+              ))}
+              {candidate.skills.length > 5 && (
+                <Badge variant="outline" className="text-muted-foreground">
+                  +{candidate.skills.length - 5} more
+                </Badge>
+              )}
+            </div>
+          )}
+
+          {/* Scopus / academic identity */}
+          {(candidate.scopus_metrics || candidate.manual_h_index || candidate.orcid_id || candidate.scopus_link) && (
+            <div className="flex flex-wrap items-center gap-3 mt-3 pt-3 border-t border-border/50">
+              {(candidate.scopus_metrics?.h_index != null || candidate.manual_h_index != null) && (
+                <div className="flex items-center gap-1 text-sm">
+                  <TrendingUp className="h-3.5 w-3.5 text-primary" />
+                  <span className="font-semibold text-primary">
+                    {candidate.scopus_metrics?.h_index ?? candidate.manual_h_index}
+                  </span>
+                  <span className="text-muted-foreground text-xs">h-index</span>
+                </div>
+              )}
+              {candidate.scopus_metrics?.document_count != null && (
+                <div className="flex items-center gap-1 text-sm">
+                  <FileText className="h-3.5 w-3.5 text-muted-foreground" />
+                  <span className="font-semibold">{candidate.scopus_metrics.document_count}</span>
+                  <span className="text-muted-foreground text-xs">docs</span>
+                </div>
+              )}
+              {candidate.scopus_metrics?.citation_count != null && candidate.scopus_metrics.citation_count > 0 && (
+                <div className="flex items-center gap-1 text-sm">
+                  <span className="font-semibold">{candidate.scopus_metrics.citation_count}</span>
+                  <span className="text-muted-foreground text-xs">citations</span>
+                </div>
+              )}
+              {candidate.orcid_id && (
+                <a
+                  href={`https://orcid.org/${candidate.orcid_id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-[#A6CE39]/10 text-[#A6CE39] hover:bg-[#A6CE39]/20 transition-colors"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  ORCID
+                  <ExternalLink className="h-3 w-3" />
+                </a>
+              )}
+              {candidate.scopus_link && (
+                <a
+                  href={candidate.scopus_link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-[#E9711C]/10 text-[#E9711C] hover:bg-[#E9711C]/20 transition-colors"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  Scopus
+                  <ExternalLink className="h-3 w-3" />
+                </a>
+              )}
+            </div>
+          )}
+
+          {/* Application-pipeline actions */}
+          {isApplication && (
+            <div className="flex items-center gap-2 mt-4 pt-4 border-t border-border/50 flex-wrap">
+              {candidate.resume_url && onDownloadResume && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-1"
+                  onClick={() => onDownloadResume(candidate.resume_url!, candidate.full_name || "Applicant")}
+                >
+                  <Download className="h-4 w-4" />
+                  Resume
+                </Button>
+              )}
+              {onMessage && (
+                <Button variant="outline" size="sm" className="gap-1" onClick={() => onMessage(candidate)}>
+                  <Mail className="h-4 w-4" />
+                  Message
+                </Button>
+              )}
+              {application!.status !== "rejected" && onScheduleInterview && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-1"
+                  onClick={() => onScheduleInterview(application!)}
+                >
+                  <Calendar className="h-4 w-4" />
+                  Schedule
+                </Button>
+              )}
+              <div className="flex-1" />
+              {application!.status === "pending" && onUpdateStatus && (
+                <>
+                  <Button
+                    size="sm"
+                    className="bg-green-600 hover:bg-green-700 text-white gap-1"
+                    onClick={() => onUpdateStatus(application!.id, "shortlisted")}
+                  >
+                    <CheckCircle2 className="h-4 w-4" />
+                    Shortlist
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    className="gap-1"
+                    onClick={() => onUpdateStatus(application!.id, "rejected")}
+                  >
+                    <XCircle className="h-4 w-4" />
+                    Reject
+                  </Button>
+                </>
+              )}
+              {extraActions}
+            </div>
+          )}
+
+          {/* Private notes (talent-pool only) */}
+          {isSaved && !isApplication && onSaveNote && (
+            <div className="mt-4 pt-4 border-t border-border/50">
+              {editingNote ? (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <MessageSquare className="h-4 w-4" />
+                    <span className="font-medium">Private Note</span>
+                  </div>
+                  <Textarea
+                    placeholder="Add a private note about this candidate..."
+                    value={noteText}
+                    onChange={(e) => setNoteText(e.target.value)}
+                    className="min-h-[80px] text-sm transition-shadow focus:shadow-md"
+                    autoFocus
+                  />
+                  <div className="flex gap-2 justify-end">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setEditingNote(false);
+                        setNoteText(note || "");
+                      }}
+                      disabled={savingNote}
+                    >
+                      Cancel
+                    </Button>
+                    <Button size="sm" onClick={handleSaveNote} disabled={savingNote} className="gap-1">
+                      {savingNote ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                      Save Note
+                    </Button>
+                  </div>
+                </div>
+              ) : note ? (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <MessageSquare className="h-4 w-4" />
+                      <span className="font-medium">Private Note</span>
+                    </div>
+                    <Button variant="ghost" size="sm" className="gap-1 h-7" onClick={() => setEditingNote(true)}>
+                      <Edit3 className="h-3 w-3" />
+                      Edit
+                    </Button>
+                  </div>
+                  <p className="text-sm text-foreground bg-muted/50 p-3 rounded-md">{note}</p>
+                </div>
+              ) : (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="gap-2 text-muted-foreground hover:text-foreground w-full justify-start"
+                  onClick={() => setEditingNote(true)}
+                >
+                  <MessageSquare className="h-4 w-4" />
+                  Add private note
+                </Button>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
+export default CandidateProfileCard;
