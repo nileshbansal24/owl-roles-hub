@@ -37,6 +37,8 @@ import {
   GitCompare,
 } from "lucide-react";
 import CandidateCategoryBadge from "./CandidateCategoryBadge";
+import CandidateProfileCard from "./CandidateProfileCard";
+
 import TabHeader from "./TabHeader";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CardListSkeleton } from "@/components/ui/loading-skeleton";
@@ -416,113 +418,24 @@ const ApplicationsTab = ({
         />
       ) : (
         <motion.div variants={itemVariants} className="grid gap-4">
-          {filteredApplications.map((app, index) => (
-            <motion.div
-              key={app.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.05 }}
-              className={`card-elevated p-5 transition-all ${
-                selectedAppIds.has(app.id) ? "ring-2 ring-primary bg-primary/5" : ""
-              }`}
-            >
-              <div className="flex items-start gap-4">
-                <div className="flex items-center gap-3">
-                  <Checkbox
-                    checked={selectedAppIds.has(app.id)}
-                    onCheckedChange={() => toggleSelectApp(app.id)}
-                  />
-                  <Avatar className="h-12 w-12">
-                    <AvatarImage src={app.profiles?.avatar_url || ""} />
-                    <AvatarFallback className="bg-primary text-primary-foreground font-heading font-bold">
-                      {app.profiles?.full_name?.slice(0, 2).toUpperCase() || "U"}
-                    </AvatarFallback>
-                  </Avatar>
-                </div>
-
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h4 className="font-heading font-semibold text-foreground">
-                          {app.profiles?.full_name || "Anonymous"}
-                        </h4>
-                        <CandidateCategoryBadge category={getCandidateCategory(app.profiles)} />
-                      </div>
-                      <p className="text-sm text-muted-foreground">
-                        Applied for <span className="text-primary font-medium">{app.jobs.title}</span> at {app.jobs.institute}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline" className={getStatusColor(app.status)}>
-                        {app.status}
-                      </Badge>
-                      <span className="text-xs text-muted-foreground">
-                        {formatDistanceToNow(new Date(app.created_at), { addSuffix: true })}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-3 mt-3">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="gap-1"
-                      onClick={() => onViewApplicant(app)}
-                    >
-                      <Eye className="h-4 w-4" />
-                      View Profile
-                    </Button>
-                    {app.profiles?.resume_url && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="gap-1"
-                        onClick={() => onDownloadResume(app.profiles!.resume_url!, app.profiles!.full_name || "Applicant")}
-                      >
-                        <Download className="h-4 w-4" />
-                        Resume
-                      </Button>
-                    )}
-                    {app.status !== "rejected" && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="gap-1"
-                        onClick={() => onScheduleInterview(app)}
-                      >
-                        <Calendar className="h-4 w-4" />
-                        Schedule
-                      </Button>
-                    )}
-                    <div className="flex-1" />
-                    {app.status === "pending" && (
-                      <>
-                        <Button
-                          size="sm"
-                          className="bg-green-600 hover:bg-green-700 text-white gap-1"
-                          onClick={() => onUpdateStatus(app.id, "shortlisted")}
-                        >
-                          <CheckCircle2 className="h-4 w-4" />
-                          Shortlist
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          className="gap-1"
-                          onClick={() => onUpdateStatus(app.id, "rejected")}
-                        >
-                          <XCircle className="h-4 w-4" />
-                          Reject
-                        </Button>
-                      </>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          ))}
+          {filteredApplications.map((app, index) =>
+            app.profiles ? (
+              <CandidateProfileCard
+                key={app.id}
+                candidate={app.profiles}
+                application={app}
+                index={index}
+                selected={selectedAppIds.has(app.id)}
+                onToggleSelect={toggleSelectApp}
+                onViewApplicant={onViewApplicant}
+                onUpdateStatus={onUpdateStatus}
+                onScheduleInterview={onScheduleInterview}
+                onDownloadResume={onDownloadResume}
+              />
+            ) : null,
+          )}
         </motion.div>
+
       )}
 
       {/* Bulk Reject Confirmation Dialog */}
