@@ -43,7 +43,12 @@ import {
   Eye,
   MapPin,
   IndianRupee,
+  UserPlus,
+  Search,
 } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+
 import { cn } from "@/lib/utils";
 
 // ---------- constants ----------
@@ -236,6 +241,15 @@ const PostJob = () => {
   const [skillInput, setSkillInput] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  // Collaboration
+  type Colleague = { id: string; full_name: string | null; avatar_url: string | null; designation: string | null };
+  const [collabEnabled, setCollabEnabled] = useState(false);
+  const [colleagues, setColleagues] = useState<Colleague[]>([]);
+  const [colleaguesLoading, setColleaguesLoading] = useState(false);
+  const [selectedCollabIds, setSelectedCollabIds] = useState<string[]>([]);
+  const [collabSearch, setCollabSearch] = useState("");
+
+
   useEffect(() => {
     if (!user) return;
     (async () => {
@@ -253,6 +267,53 @@ const PostJob = () => {
       }
     })();
   }, [user]);
+
+  // Fetch same-institution recruiters when collab is enabled
+  useEffect(() => {
+    if (!user || !collabEnabled || !lockedInstitute || colleagues.length) return;
+    setColleaguesLoading(true);
+    (async () => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id, full_name, avatar_url, designation, university")
+        .eq("user_type", "recruiter")
+        .ilike("university", lockedInstitute)
+        .neq("id", user.id);
+      if (!error && data) {
+        setColleagues(
+          data
+            .filter(
+              (p: any) =>
+                (p.university ?? "").trim().toLowerCase() ===
+                lockedInstitute.trim().toLowerCase(),
+            )
+            .map((p: any) => ({
+              id: p.id,
+              full_name: p.full_name,
+              avatar_url: p.avatar_url,
+              designation: p.designation,
+            })),
+        );
+      }
+      setColleaguesLoading(false);
+    })();
+  }, [user, collabEnabled, lockedInstitute, colleagues.length]);
+
+  const toggleCollab = (id: string) =>
+    setSelectedCollabIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
+
+  const filteredColleagues = useMemo(() => {
+    const q = collabSearch.trim().toLowerCase();
+    if (!q) return colleagues;
+    return colleagues.filter(
+      (c) =>
+        (c.full_name ?? "").toLowerCase().includes(q) ||
+        (c.designation ?? "").toLowerCase().includes(q),
+    );
+  }, [colleagues, collabSearch]);
+
 
   const update = <K extends keyof FormState>(key: K, value: FormState[K]) => {
     setForm((p) => ({ ...p, [key]: value }));
@@ -324,21 +385,46 @@ const PostJob = () => {
     try {
       const description = buildDescription(form);
       const salary_range = `${form.salaryRange[0]} - ${form.salaryRange[1]} LPA`;
-      const { error } = await supabase.from("jobs").insert({
-        title: form.title.trim(),
-        institute: lockedInstitute,
-        location: form.location.trim(),
-        description,
-        salary_range,
-        job_type: form.jobType,
-        tags: form.skills.slice(0, 20),
-        created_by: user.id,
-      });
-      if (error) {
-        toast.error("Couldn't post job", { description: error.message });
+      const { data: insertedJob, error } = await supabase
+        .from("jobs")
+        .insert({
+          title: form.title.trim(),
+          institute: lockedInstitute,
+          location: form.location.trim(),
+          description,
+          salary_range,
+          job_type: form.jobType,
+          tags: form.skills.slice(0, 20),
+          created_by: user.id,
+        })
+        .select("id")
+        .single();
+      if (error || !insertedJob) {
+        toast.error("Couldn't post job", { description: error?.message });
       } else {
+        // Add collaborators if any selected
+        if (collabEnabled && selectedCollabIds.length > 0) {
+          const rows = selectedCollabIds.map((rid) => ({
+            job_id: insertedJob.id,
+            recruiter_id: rid,
+            added_by: user.id,
+          }));
+          const { error: collabErr } = await supabase
+            .from("job_collaborators")
+            .insert(rows);
+          if (collabErr) {
+            toast.warning("Job posted, but some collaborators couldn't be added", {
+              description: collabErr.message,
+            });
+          } else {
+            toast.success(
+              `Job posted with ${selectedCollabIds.length} collaborator${selectedCollabIds.length > 1 ? "s" : ""}`,
+            );
+          }
+        }
         setSuccessOpen(true);
       }
+
     } finally {
       setLoading(false);
     }
@@ -796,7 +882,116 @@ const PostJob = () => {
                 </div>
               </div>
             </SectionCard>
+
+            {/* 8. Team & Collaboration */}
+            <SectionCard
+              icon={UserPlus}
+              title="Team & Collaboration"
+              subtitle="Optionally co-manage this posting with colleagues from your institution"
+            >
+              <label className="flex items-start gap-3 p-4 rounded-xl border border-border hover:bg-muted/30 cursor-pointer transition-colors">
+                <Checkbox
+                  checked={collabEnabled}
+                  onCheckedChange={(v) => {
+                    const next = !!v;
+                    setCollabEnabled(next);
+                    if (!next) setSelectedCollabIds([]);
+                  }}
+                  className="mt-0.5"
+                />
+                <div className="flex-1">
+                  <p className="font-medium text-sm text-foreground">
+                    Collaborate with teammates on this job
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Selected teammates from <span className="font-medium text-foreground">{lockedInstitute || "your institution"}</span> can view applications, schedule interviews, and update statuses for this posting.
+                  </p>
+                </div>
+              </label>
+
+              {collabEnabled && (
+                <div className="space-y-3 pt-1">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search teammates by name or designation…"
+                      value={collabSearch}
+                      onChange={(e) => setCollabSearch(e.target.value)}
+                      className="h-10 pl-9"
+                    />
+                  </div>
+
+                  {colleaguesLoading ? (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground py-6 justify-center">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Loading teammates…
+                    </div>
+                  ) : colleagues.length === 0 ? (
+                    <div className="text-center py-6 px-4 rounded-xl border border-dashed border-border bg-muted/20">
+                      <Users className="h-6 w-6 text-muted-foreground mx-auto mb-2" />
+                      <p className="text-sm font-medium text-foreground">No teammates found yet</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Other verified recruiters from {lockedInstitute} will appear here once they join.
+                      </p>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="max-h-80 overflow-y-auto rounded-xl border border-border divide-y divide-border">
+                        {filteredColleagues.map((c) => {
+                          const checked = selectedCollabIds.includes(c.id);
+                          const initials =
+                            (c.full_name ?? "?")
+                              .split(" ")
+                              .map((w) => w[0])
+                              .slice(0, 2)
+                              .join("")
+                              .toUpperCase();
+                          return (
+                            <button
+                              key={c.id}
+                              type="button"
+                              onClick={() => toggleCollab(c.id)}
+                              className={cn(
+                                "w-full flex items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/40",
+                                checked && "bg-primary/5",
+                              )}
+                            >
+                              <Checkbox checked={checked} className="pointer-events-none" />
+                              <Avatar className="h-9 w-9">
+                                <AvatarImage src={c.avatar_url ?? undefined} />
+                                <AvatarFallback className="text-xs">{initials}</AvatarFallback>
+                              </Avatar>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-foreground truncate">
+                                  {c.full_name ?? "Unnamed recruiter"}
+                                </p>
+                                {c.designation && (
+                                  <p className="text-xs text-muted-foreground truncate">
+                                    {c.designation}
+                                  </p>
+                                )}
+                              </div>
+                            </button>
+                          );
+                        })}
+                        {filteredColleagues.length === 0 && (
+                          <p className="text-sm text-muted-foreground text-center py-6">
+                            No teammates match "{collabSearch}"
+                          </p>
+                        )}
+                      </div>
+                      {selectedCollabIds.length > 0 && (
+                        <p className="text-xs text-muted-foreground">
+                          {selectedCollabIds.length} teammate{selectedCollabIds.length > 1 ? "s" : ""} selected
+                        </p>
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
+            </SectionCard>
           </form>
+
         </div>
       </main>
 

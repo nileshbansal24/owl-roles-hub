@@ -233,10 +233,10 @@ export const useRecruiterDashboard = () => {
       .from("job_applications")
       .select(`
         *,
-        jobs!inner(title, institute, created_by)
+        jobs(title, institute, created_by)
       `)
-      .eq("jobs.created_by", user.id)
       .order("created_at", { ascending: false });
+
 
     if (appsError) {
       console.error("Error refetching applications:", appsError);
@@ -340,30 +340,72 @@ export const useRecruiterDashboard = () => {
       const hasReviewed = localStorage.getItem(reviewedKey);
       setHasReviewedCandidate(!!hasReviewed);
       
-      // Fetch recruiter's jobs
-      const { data: jobsData } = await supabase
+      // Fetch recruiter's jobs (owned + collaborated)
+      const { data: collabRows } = await supabase
+        .from("job_collaborators")
+        .select("job_id")
+        .eq("recruiter_id", user.id);
+      const collabJobIds = (collabRows ?? []).map((r: any) => r.job_id as string);
+
+      let jobsQuery = supabase
         .from("jobs")
-        .select("*")
-        .eq("created_by", user.id)
+        .select("*, job_collaborators(recruiter_id, added_by)")
         .order("created_at", { ascending: false });
 
-      setJobs(jobsData || []);
-      
-      if (!completedOnboarding && (!jobsData || jobsData.length === 0)) {
+      if (collabJobIds.length > 0) {
+        jobsQuery = jobsQuery.or(
+          `created_by.eq.${user.id},id.in.(${collabJobIds.join(",")})`,
+        );
+      } else {
+        jobsQuery = jobsQuery.eq("created_by", user.id);
+      }
+
+      const { data: jobsData } = await jobsQuery;
+
+      // Enrich with owner names for shared (non-owned) jobs
+      const ownerIdsNeeded = Array.from(
+        new Set(
+          (jobsData ?? [])
+            .filter((j: any) => j.created_by !== user.id)
+            .map((j: any) => j.created_by as string),
+        ),
+      );
+      let ownerNameMap = new Map<string, string>();
+      if (ownerIdsNeeded.length) {
+        const { data: ownerProfiles } = await supabase
+          .from("profiles")
+          .select("id, full_name")
+          .in("id", ownerIdsNeeded);
+        ownerNameMap = new Map(
+          (ownerProfiles ?? []).map((p: any) => [p.id, p.full_name ?? ""]),
+        );
+      }
+
+      const enrichedJobs = (jobsData ?? []).map((j: any) => ({
+        ...j,
+        is_owner: j.created_by === user.id,
+        owner_name: j.created_by === user.id ? null : ownerNameMap.get(j.created_by) ?? null,
+        collaborators: j.job_collaborators ?? [],
+      }));
+
+      setJobs(enrichedJobs as any);
+
+      if (!completedOnboarding && enrichedJobs.length === 0) {
         setShowOnboarding(true);
       } else {
         setHasCompletedOnboarding(true);
       }
 
-      // Fetch applications
-      const { data: appsData, error: appsError } = await supabase
-        .from("job_applications")
-        .select(`
-          *,
-          jobs!inner(title, institute, created_by)
-        `)
-        .eq("jobs.created_by", user.id)
-        .order("created_at", { ascending: false });
+      // Fetch applications (RLS automatically includes collaborated jobs)
+      const accessibleJobIds = enrichedJobs.map((j: any) => j.id);
+      const { data: appsData, error: appsError } = accessibleJobIds.length
+        ? await supabase
+            .from("job_applications")
+            .select(`*, jobs(title, institute, created_by)`)
+            .in("job_id", accessibleJobIds)
+            .order("created_at", { ascending: false })
+        : { data: [], error: null };
+
 
       if (appsError) {
         console.error("Error fetching applications:", appsError);

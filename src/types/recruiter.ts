@@ -65,6 +65,13 @@ export interface Profile {
   linkedin_url?: string | null;
 }
 
+export interface JobCollaboratorMini {
+  recruiter_id: string;
+  added_by: string;
+  full_name?: string | null;
+  avatar_url?: string | null;
+}
+
 export interface Job {
   id: string;
   title: string;
@@ -73,7 +80,12 @@ export interface Job {
   salary_range: string | null;
   job_type: string | null;
   created_at: string;
+  created_by?: string;
+  is_owner?: boolean;
+  collaborators?: JobCollaboratorMini[];
+  owner_name?: string | null;
 }
+
 
 export interface Application {
   id: string;

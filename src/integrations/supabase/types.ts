@@ -535,6 +535,30 @@ export type Database = {
           },
         ]
       }
+      job_collaborators: {
+        Row: {
+          added_by: string
+          created_at: string
+          id: string
+          job_id: string
+          recruiter_id: string
+        }
+        Insert: {
+          added_by: string
+          created_at?: string
+          id?: string
+          job_id: string
+          recruiter_id: string
+        }
+        Update: {
+          added_by?: string
+          created_at?: string
+          id?: string
+          job_id?: string
+          recruiter_id?: string
+        }
+        Relationships: []
+      }
       jobs: {
         Row: {
           created_at: string
@@ -1109,11 +1133,20 @@ export type Database = {
       }
       get_own_approval_status: { Args: { _user_id: string }; Returns: string }
       get_own_user_type: { Args: { _user_id: string }; Returns: string }
+      get_user_university: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      is_job_collaborator: {
+        Args: { _job_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_job_owner: {
+        Args: { _job_id: string; _user_id: string }
         Returns: boolean
       }
       is_recruiter: { Args: { _user_id: string }; Returns: boolean }
