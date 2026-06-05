@@ -882,7 +882,116 @@ const PostJob = () => {
                 </div>
               </div>
             </SectionCard>
+
+            {/* 8. Team & Collaboration */}
+            <SectionCard
+              icon={UserPlus}
+              title="Team & Collaboration"
+              subtitle="Optionally co-manage this posting with colleagues from your institution"
+            >
+              <label className="flex items-start gap-3 p-4 rounded-xl border border-border hover:bg-muted/30 cursor-pointer transition-colors">
+                <Checkbox
+                  checked={collabEnabled}
+                  onCheckedChange={(v) => {
+                    const next = !!v;
+                    setCollabEnabled(next);
+                    if (!next) setSelectedCollabIds([]);
+                  }}
+                  className="mt-0.5"
+                />
+                <div className="flex-1">
+                  <p className="font-medium text-sm text-foreground">
+                    Collaborate with teammates on this job
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Selected teammates from <span className="font-medium text-foreground">{lockedInstitute || "your institution"}</span> can view applications, schedule interviews, and update statuses for this posting.
+                  </p>
+                </div>
+              </label>
+
+              {collabEnabled && (
+                <div className="space-y-3 pt-1">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search teammates by name or designation…"
+                      value={collabSearch}
+                      onChange={(e) => setCollabSearch(e.target.value)}
+                      className="h-10 pl-9"
+                    />
+                  </div>
+
+                  {colleaguesLoading ? (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground py-6 justify-center">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Loading teammates…
+                    </div>
+                  ) : colleagues.length === 0 ? (
+                    <div className="text-center py-6 px-4 rounded-xl border border-dashed border-border bg-muted/20">
+                      <Users className="h-6 w-6 text-muted-foreground mx-auto mb-2" />
+                      <p className="text-sm font-medium text-foreground">No teammates found yet</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Other verified recruiters from {lockedInstitute} will appear here once they join.
+                      </p>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="max-h-80 overflow-y-auto rounded-xl border border-border divide-y divide-border">
+                        {filteredColleagues.map((c) => {
+                          const checked = selectedCollabIds.includes(c.id);
+                          const initials =
+                            (c.full_name ?? "?")
+                              .split(" ")
+                              .map((w) => w[0])
+                              .slice(0, 2)
+                              .join("")
+                              .toUpperCase();
+                          return (
+                            <button
+                              key={c.id}
+                              type="button"
+                              onClick={() => toggleCollab(c.id)}
+                              className={cn(
+                                "w-full flex items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/40",
+                                checked && "bg-primary/5",
+                              )}
+                            >
+                              <Checkbox checked={checked} className="pointer-events-none" />
+                              <Avatar className="h-9 w-9">
+                                <AvatarImage src={c.avatar_url ?? undefined} />
+                                <AvatarFallback className="text-xs">{initials}</AvatarFallback>
+                              </Avatar>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-foreground truncate">
+                                  {c.full_name ?? "Unnamed recruiter"}
+                                </p>
+                                {c.designation && (
+                                  <p className="text-xs text-muted-foreground truncate">
+                                    {c.designation}
+                                  </p>
+                                )}
+                              </div>
+                            </button>
+                          );
+                        })}
+                        {filteredColleagues.length === 0 && (
+                          <p className="text-sm text-muted-foreground text-center py-6">
+                            No teammates match "{collabSearch}"
+                          </p>
+                        )}
+                      </div>
+                      {selectedCollabIds.length > 0 && (
+                        <p className="text-xs text-muted-foreground">
+                          {selectedCollabIds.length} teammate{selectedCollabIds.length > 1 ? "s" : ""} selected
+                        </p>
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
+            </SectionCard>
           </form>
+
         </div>
       </main>
 
