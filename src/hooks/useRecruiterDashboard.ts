@@ -243,35 +243,39 @@ export const useRecruiterDashboard = () => {
       return;
     }
 
-    const applicationsWithProfiles: Application[] = [];
-    if (appsData) {
-      for (const app of appsData) {
-        const { data: appProfileData } = await supabase
-          .from("profiles")
-          .select("id, full_name, avatar_url, university, role, bio, years_experience, location, headline, skills, user_type, resume_url, experience, education, research_papers, achievements, subjects, teaching_philosophy, professional_summary, orcid_id, scopus_link, scopus_metrics, manual_h_index")
-          .eq("id", app.applicant_id)
-          .maybeSingle();
+    const applicantIds = Array.from(
+      new Set((appsData ?? []).map((a: any) => a.applicant_id).filter(Boolean)),
+    );
 
-        const normalizedProfile = appProfileData
-          ? {
-              ...appProfileData,
-              experience:
-                Array.isArray((appProfileData as any).experience)
-                  ? transformExperienceToDisplay(
-                      (appProfileData as any).experience as DBExperience[]
-                    )
-                  : (appProfileData as any).experience,
-            }
-          : appProfileData;
-        
-        applicationsWithProfiles.push({
-          ...app,
-          profiles: normalizedProfile as any,
-        } as unknown as Application);
-      }
+    let profileMap = new Map<string, any>();
+    if (applicantIds.length) {
+      const { data: profs } = await supabase
+        .from("profiles")
+        .select("id, full_name, avatar_url, university, role, bio, years_experience, location, headline, skills, user_type, resume_url, experience, education, research_papers, achievements, subjects, teaching_philosophy, professional_summary, orcid_id, scopus_link, scopus_metrics, manual_h_index")
+        .in("id", applicantIds);
+      profileMap = new Map(
+        (profs ?? []).map((p: any) => [
+          p.id,
+          {
+            ...p,
+            experience: Array.isArray(p.experience)
+              ? transformExperienceToDisplay(p.experience as DBExperience[])
+              : p.experience,
+          },
+        ]),
+      );
     }
 
+    const applicationsWithProfiles: Application[] = (appsData ?? []).map(
+      (app: any) =>
+        ({
+          ...app,
+          profiles: profileMap.get(app.applicant_id) ?? null,
+        }) as unknown as Application,
+    );
+
     setApplications(applicationsWithProfiles);
+
   }, [user?.id]);
 
   // Realtime subscription for job_applications
@@ -411,35 +415,43 @@ export const useRecruiterDashboard = () => {
         console.error("Error fetching applications:", appsError);
       }
 
-      const applicationsWithProfiles: Application[] = [];
-      if (appsData) {
-        for (const app of appsData) {
-          const { data: appProfileData } = await supabase
-            .from("profiles")
-            .select("id, full_name, avatar_url, university, role, bio, years_experience, location, headline, skills, user_type, resume_url, experience, education, research_papers, achievements, subjects, teaching_philosophy, professional_summary, orcid_id, scopus_link, scopus_metrics, manual_h_index")
-            .eq("id", app.applicant_id)
-            .maybeSingle();
+      const applicantIds = Array.from(
+        new Set((appsData ?? []).map((a: any) => a.applicant_id).filter(Boolean)),
+      );
 
-          const normalizedProfile = appProfileData
-            ? {
-                ...appProfileData,
-                experience:
-                  Array.isArray((appProfileData as any).experience)
-                    ? transformExperienceToDisplay(
-                        (appProfileData as any).experience as DBExperience[]
-                      )
-                    : (appProfileData as any).experience,
-              }
-            : appProfileData;
-          
-          applicationsWithProfiles.push({
-            ...app,
-            profiles: normalizedProfile as any,
-          } as unknown as Application);
-        }
+      let profileMap = new Map<string, any>();
+      if (applicantIds.length) {
+        const { data: profs } = await supabase
+          .from("profiles")
+          .select("id, full_name, avatar_url, university, role, bio, years_experience, location, headline, skills, user_type, resume_url, experience, education, research_papers, achievements, subjects, teaching_philosophy, professional_summary, orcid_id, scopus_link, scopus_metrics, manual_h_index")
+          .in("id", applicantIds);
+        profileMap = new Map(
+          (profs ?? []).map((p: any) => [
+            p.id,
+            {
+              ...p,
+              experience: Array.isArray(p.experience)
+                ? transformExperienceToDisplay(p.experience as DBExperience[])
+                : p.experience,
+            },
+          ]),
+        );
       }
 
+      const applicationsWithProfiles: Application[] = (appsData ?? []).map(
+        (app: any) =>
+          ({
+            ...app,
+            profiles: profileMap.get(app.applicant_id) ?? null,
+          }) as unknown as Application,
+      );
+
       setApplications(applicationsWithProfiles);
+
+
+      // Dashboard is now interactive — heavy data (candidates, interviews, verifications)
+      // continues loading in the background and renders progressively.
+      setLoading(false);
 
       // Fetch all candidate profiles with full data for ratings
       const { data: candidatesData, error: candidatesError } = await supabase
@@ -447,6 +459,7 @@ export const useRecruiterDashboard = () => {
         .select("id, full_name, avatar_url, university, role, bio, years_experience, location, headline, skills, user_type, resume_url, email, experience, education, research_papers, achievements, subjects, teaching_philosophy, professional_summary, orcid_id, scopus_link, scopus_metrics, manual_h_index, current_salary, expected_salary, updated_at")
         .eq("user_type", "candidate")
         .order("updated_at", { ascending: false });
+
 
       console.log("Fetched candidates from profiles:", candidatesData?.length, candidatesError);
       setCandidates((candidatesData as unknown as Profile[]) || []);
@@ -514,8 +527,8 @@ export const useRecruiterDashboard = () => {
         setPendingVerificationCount(0);
       }
 
-      setLoading(false);
     };
+
 
     fetchData();
     // Only refetch when the user identity changes, not on every auth object reference change.
