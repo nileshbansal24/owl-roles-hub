@@ -131,7 +131,21 @@ const MyJobsTab = ({ jobs, applications, onViewJobApplications, onChangeView, is
                   <div className="flex-1">
                     <div className="flex items-start gap-3">
                       <div className="flex-1">
-                        <h4 className="font-heading font-semibold text-lg text-foreground">{job.title}</h4>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h4 className="font-heading font-semibold text-lg text-foreground">{job.title}</h4>
+                          {job.is_owner === false && (
+                            <Badge variant="outline" className="gap-1 border-primary/30 text-primary">
+                              <Users2 className="h-3 w-3" />
+                              Shared{job.owner_name ? ` by ${job.owner_name}` : ""}
+                            </Badge>
+                          )}
+                          {job.is_owner !== false && (job.collaborators?.length ?? 0) > 0 && (
+                            <Badge variant="outline" className="gap-1">
+                              <UserPlus className="h-3 w-3" />
+                              Shared with {job.collaborators!.length}
+                            </Badge>
+                          )}
+                        </div>
                         <p className="text-muted-foreground">{job.institute}</p>
                       </div>
                       {pending > 0 && (
@@ -140,6 +154,7 @@ const MyJobsTab = ({ jobs, applications, onViewJobApplications, onChangeView, is
                         </Badge>
                       )}
                     </div>
+
                     <div className="flex flex-wrap items-center gap-4 mt-3 text-sm text-muted-foreground">
                       <div className="flex items-center gap-1">
                         <MapPin className="h-4 w-4" />
