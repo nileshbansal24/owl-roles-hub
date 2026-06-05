@@ -268,6 +268,53 @@ const PostJob = () => {
     })();
   }, [user]);
 
+  // Fetch same-institution recruiters when collab is enabled
+  useEffect(() => {
+    if (!user || !collabEnabled || !lockedInstitute || colleagues.length) return;
+    setColleaguesLoading(true);
+    (async () => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id, full_name, avatar_url, designation, university")
+        .eq("user_type", "recruiter")
+        .ilike("university", lockedInstitute)
+        .neq("id", user.id);
+      if (!error && data) {
+        setColleagues(
+          data
+            .filter(
+              (p: any) =>
+                (p.university ?? "").trim().toLowerCase() ===
+                lockedInstitute.trim().toLowerCase(),
+            )
+            .map((p: any) => ({
+              id: p.id,
+              full_name: p.full_name,
+              avatar_url: p.avatar_url,
+              designation: p.designation,
+            })),
+        );
+      }
+      setColleaguesLoading(false);
+    })();
+  }, [user, collabEnabled, lockedInstitute, colleagues.length]);
+
+  const toggleCollab = (id: string) =>
+    setSelectedCollabIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
+
+  const filteredColleagues = useMemo(() => {
+    const q = collabSearch.trim().toLowerCase();
+    if (!q) return colleagues;
+    return colleagues.filter(
+      (c) =>
+        (c.full_name ?? "").toLowerCase().includes(q) ||
+        (c.designation ?? "").toLowerCase().includes(q),
+    );
+  }, [colleagues, collabSearch]);
+
+
   const update = <K extends keyof FormState>(key: K, value: FormState[K]) => {
     setForm((p) => ({ ...p, [key]: value }));
     if (errors[key as string]) {
