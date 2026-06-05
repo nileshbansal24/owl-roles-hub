@@ -233,10 +233,10 @@ export const useRecruiterDashboard = () => {
       .from("job_applications")
       .select(`
         *,
-        jobs!inner(title, institute, created_by)
+        jobs(title, institute, created_by)
       `)
-      .eq("jobs.created_by", user.id)
       .order("created_at", { ascending: false });
+
 
     if (appsError) {
       console.error("Error refetching applications:", appsError);
