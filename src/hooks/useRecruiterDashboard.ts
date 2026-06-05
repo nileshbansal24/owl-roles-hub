@@ -449,12 +449,19 @@ export const useRecruiterDashboard = () => {
       setApplications(applicationsWithProfiles);
 
 
+      setApplications(applicationsWithProfiles);
+
+      // Dashboard is now interactive — heavy data (candidates, interviews, verifications)
+      // continues loading in the background and renders progressively.
+      setLoading(false);
+
       // Fetch all candidate profiles with full data for ratings
       const { data: candidatesData, error: candidatesError } = await supabase
         .from("profiles")
         .select("id, full_name, avatar_url, university, role, bio, years_experience, location, headline, skills, user_type, resume_url, email, experience, education, research_papers, achievements, subjects, teaching_philosophy, professional_summary, orcid_id, scopus_link, scopus_metrics, manual_h_index, current_salary, expected_salary, updated_at")
         .eq("user_type", "candidate")
         .order("updated_at", { ascending: false });
+
 
       console.log("Fetched candidates from profiles:", candidatesData?.length, candidatesError);
       setCandidates((candidatesData as unknown as Profile[]) || []);
