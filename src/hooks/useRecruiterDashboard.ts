@@ -449,8 +449,6 @@ export const useRecruiterDashboard = () => {
       setApplications(applicationsWithProfiles);
 
 
-      setApplications(applicationsWithProfiles);
-
       // Dashboard is now interactive — heavy data (candidates, interviews, verifications)
       // continues loading in the background and renders progressively.
       setLoading(false);
