@@ -241,6 +241,15 @@ const PostJob = () => {
   const [skillInput, setSkillInput] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  // Collaboration
+  type Colleague = { id: string; full_name: string | null; avatar_url: string | null; designation: string | null };
+  const [collabEnabled, setCollabEnabled] = useState(false);
+  const [colleagues, setColleagues] = useState<Colleague[]>([]);
+  const [colleaguesLoading, setColleaguesLoading] = useState(false);
+  const [selectedCollabIds, setSelectedCollabIds] = useState<string[]>([]);
+  const [collabSearch, setCollabSearch] = useState("");
+
+
   useEffect(() => {
     if (!user) return;
     (async () => {
