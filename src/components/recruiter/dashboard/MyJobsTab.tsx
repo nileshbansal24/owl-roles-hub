@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { formatDistanceToNow } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Clock, MapPin, Briefcase, Plus, Users, Eye, TrendingUp } from "lucide-react";
+import { Clock, MapPin, Briefcase, Plus, Users, Eye, TrendingUp, UserPlus, Users2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { EmptyState } from "@/components/ui/empty-state";
 import { JobCardSkeleton } from "@/components/ui/loading-skeleton";
