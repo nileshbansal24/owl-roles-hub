@@ -385,21 +385,46 @@ const PostJob = () => {
     try {
       const description = buildDescription(form);
       const salary_range = `${form.salaryRange[0]} - ${form.salaryRange[1]} LPA`;
-      const { error } = await supabase.from("jobs").insert({
-        title: form.title.trim(),
-        institute: lockedInstitute,
-        location: form.location.trim(),
-        description,
-        salary_range,
-        job_type: form.jobType,
-        tags: form.skills.slice(0, 20),
-        created_by: user.id,
-      });
-      if (error) {
-        toast.error("Couldn't post job", { description: error.message });
+      const { data: insertedJob, error } = await supabase
+        .from("jobs")
+        .insert({
+          title: form.title.trim(),
+          institute: lockedInstitute,
+          location: form.location.trim(),
+          description,
+          salary_range,
+          job_type: form.jobType,
+          tags: form.skills.slice(0, 20),
+          created_by: user.id,
+        })
+        .select("id")
+        .single();
+      if (error || !insertedJob) {
+        toast.error("Couldn't post job", { description: error?.message });
       } else {
+        // Add collaborators if any selected
+        if (collabEnabled && selectedCollabIds.length > 0) {
+          const rows = selectedCollabIds.map((rid) => ({
+            job_id: insertedJob.id,
+            recruiter_id: rid,
+            added_by: user.id,
+          }));
+          const { error: collabErr } = await supabase
+            .from("job_collaborators")
+            .insert(rows);
+          if (collabErr) {
+            toast.warning("Job posted, but some collaborators couldn't be added", {
+              description: collabErr.message,
+            });
+          } else {
+            toast.success(
+              `Job posted with ${selectedCollabIds.length} collaborator${selectedCollabIds.length > 1 ? "s" : ""}`,
+            );
+          }
+        }
         setSuccessOpen(true);
       }
+
     } finally {
       setLoading(false);
     }
