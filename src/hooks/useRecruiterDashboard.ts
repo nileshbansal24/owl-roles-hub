@@ -527,8 +527,8 @@ export const useRecruiterDashboard = () => {
         setPendingVerificationCount(0);
       }
 
-      setLoading(false);
     };
+
 
     fetchData();
     // Only refetch when the user identity changes, not on every auth object reference change.
