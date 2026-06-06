@@ -569,10 +569,12 @@ const PostJob = () => {
             </div>
             <div className="flex-1 min-w-0">
               <h1 className="font-heading font-bold text-2xl sm:text-3xl text-foreground tracking-tight">
-                Post a New Job
+                {isEditMode ? "Edit Job Posting" : "Post a New Job"}
               </h1>
               <p className="text-sm text-muted-foreground mt-1">
-                Create a detailed, professional listing to attract the right candidates.
+                {isEditMode
+                  ? "Update the listing — applicants who already applied will be notified of the changes."
+                  : "Create a detailed, professional listing to attract the right candidates."}
               </p>
             </div>
           </div>
