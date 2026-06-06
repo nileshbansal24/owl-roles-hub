@@ -280,6 +280,49 @@ const PostJob = () => {
     })();
   }, [user]);
 
+  // Load existing job in edit mode
+  useEffect(() => {
+    if (!isEditMode || !editJobId || !user) return;
+    (async () => {
+      setLoadingJob(true);
+      const { data, error } = await supabase
+        .from("jobs")
+        .select("title, institute, location, description, salary_range, job_type, tags")
+        .eq("id", editJobId)
+        .maybeSingle();
+      if (error || !data) {
+        toast.error("Could not load this job for editing.");
+        navigate("/recruiter-dashboard");
+        return;
+      }
+      // Parse salary "X - Y LPA"
+      let lo = 6, hi = 15;
+      const m = (data.salary_range ?? "").match(/(\d+)\s*-\s*(\d+)/);
+      if (m) { lo = parseInt(m[1]); hi = parseInt(m[2]); }
+      setLockedInstitute((data.institute ?? "").trim());
+      setForm((p) => ({
+        ...p,
+        title: data.title ?? "",
+        location: data.location ?? "",
+        jobType: data.job_type ?? "Full Time",
+        salaryRange: [lo, hi],
+        skills: Array.isArray(data.tags) ? (data.tags as string[]) : [],
+        description: data.description ?? "",
+        responsibilities: [""],
+        qualifications: [""],
+      }));
+      setOriginalSnapshot({
+        title: data.title ?? "",
+        location: data.location ?? "",
+        salary_range: data.salary_range ?? "",
+        job_type: data.job_type ?? "",
+        description: data.description ?? "",
+        tags: Array.isArray(data.tags) ? (data.tags as string[]) : [],
+      });
+      setLoadingJob(false);
+    })();
+  }, [isEditMode, editJobId, user, navigate]);
+
   // Fetch same-institution recruiters when collab is enabled
   useEffect(() => {
     if (!user || !collabEnabled || !lockedInstitute || colleagues.length) return;
