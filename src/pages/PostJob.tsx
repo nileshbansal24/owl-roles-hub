@@ -1191,7 +1191,7 @@ const PostJob = () => {
                 handleSubmit({ preventDefault: () => {} } as React.FormEvent);
               }}
             >
-              Looks good — Post Job
+              {isEditMode ? "Looks good — Save Changes" : "Looks good — Post Job"}
             </Button>
           </DialogFooter>
         </DialogContent>
