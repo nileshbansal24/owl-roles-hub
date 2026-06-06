@@ -1131,6 +1131,7 @@ export type Database = {
         Args: { experience_json: Json }
         Returns: number
       }
+      get_admin_user_ids: { Args: never; Returns: string[] }
       get_own_approval_status: { Args: { _user_id: string }; Returns: string }
       get_own_user_type: { Args: { _user_id: string }; Returns: string }
       get_user_university: { Args: { _user_id: string }; Returns: string }
