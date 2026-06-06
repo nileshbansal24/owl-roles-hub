@@ -440,6 +440,60 @@ const PostJob = () => {
     try {
       const description = buildDescription(form);
       const salary_range = `${form.salaryRange[0]} - ${form.salaryRange[1]} LPA`;
+
+      if (isEditMode && editJobId) {
+        // ---- UPDATE existing job ----
+        const { error: updErr } = await supabase
+          .from("jobs")
+          .update({
+            title: form.title.trim(),
+            location: form.location.trim(),
+            description,
+            salary_range,
+            job_type: form.jobType,
+            tags: form.skills.slice(0, 20),
+          })
+          .eq("id", editJobId);
+
+        if (updErr) {
+          toast.error("Couldn't update job", { description: updErr.message });
+          return;
+        }
+
+        // Diff against snapshot to build change list
+        const changes: string[] = [];
+        if (originalSnapshot) {
+          if (originalSnapshot.title !== form.title.trim())
+            changes.push(`Title: "${originalSnapshot.title}" → "${form.title.trim()}"`);
+          if (originalSnapshot.location !== form.location.trim())
+            changes.push(`Location: "${originalSnapshot.location}" → "${form.location.trim()}"`);
+          if (originalSnapshot.salary_range !== salary_range)
+            changes.push(`Salary: ${originalSnapshot.salary_range} → ${salary_range}`);
+          if (originalSnapshot.job_type !== form.jobType)
+            changes.push(`Job type: ${originalSnapshot.job_type} → ${form.jobType}`);
+          if (originalSnapshot.description !== description)
+            changes.push("Job description updated");
+          const oldTags = [...originalSnapshot.tags].sort().join(",");
+          const newTags = [...form.skills.slice(0, 20)].sort().join(",");
+          if (oldTags !== newTags) changes.push("Skills / tags updated");
+        }
+
+        // Notify applicants (only those who applied) via edge function
+        try {
+          const { data: notifData } = await supabase.functions.invoke(
+            "send-job-update-notification",
+            { body: { jobId: editJobId, changes } },
+          );
+          setNotifiedCount((notifData as any)?.notified ?? 0);
+        } catch (notifErr) {
+          console.error("Notification failed:", notifErr);
+        }
+
+        setSuccessOpen(true);
+        return;
+      }
+
+      // ---- INSERT new job ----
       const { data: insertedJob, error } = await supabase
         .from("jobs")
         .insert({
