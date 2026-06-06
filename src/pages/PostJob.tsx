@@ -438,7 +438,15 @@ const PostJob = () => {
     }
     setLoading(true);
     try {
-      const description = buildDescription(form);
+      // In edit mode, preserve user's raw description verbatim so we don't
+      // double-wrap an already-rendered markdown block on every save.
+      const hasExtras =
+        form.responsibilities.some((r) => r.trim()) ||
+        form.qualifications.some((q) => q.trim());
+      const description =
+        isEditMode && !hasExtras
+          ? form.description.trim()
+          : buildDescription(form);
       const salary_range = `${form.salaryRange[0]} - ${form.salaryRange[1]} LPA`;
 
       if (isEditMode && editJobId) {
