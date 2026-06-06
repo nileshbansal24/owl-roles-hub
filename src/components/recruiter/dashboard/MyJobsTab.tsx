@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { formatDistanceToNow } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Clock, MapPin, Briefcase, Plus, Users, Eye, TrendingUp, UserPlus, Users2 } from "lucide-react";
+import { Clock, MapPin, Briefcase, Plus, Users, Eye, TrendingUp, UserPlus, Users2, Pencil } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { EmptyState } from "@/components/ui/empty-state";
 import { JobCardSkeleton } from "@/components/ui/loading-skeleton";
@@ -194,17 +194,32 @@ const MyJobsTab = ({ jobs, applications, onViewJobApplications, onChangeView, is
                       )}
                     </div>
                     
-                    <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        className="gap-2"
-                        onClick={() => onViewJobApplications(job.id)}
-                      >
-                        <Eye className="h-4 w-4" />
-                        View Applications
-                      </Button>
-                    </motion.div>
+                    <div className="flex items-center gap-2">
+                      <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="gap-2"
+                          onClick={() => navigate(`/post-job/${job.id}`)}
+                          disabled={job.is_owner === false}
+                          title={job.is_owner === false ? "Only the job owner can edit" : "Edit job"}
+                        >
+                          <Pencil className="h-4 w-4" />
+                          Edit
+                        </Button>
+                      </motion.div>
+                      <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="gap-2"
+                          onClick={() => onViewJobApplications(job.id)}
+                        >
+                          <Eye className="h-4 w-4" />
+                          View Applications
+                        </Button>
+                      </motion.div>
+                    </div>
                   </div>
                 </div>
               </motion.div>

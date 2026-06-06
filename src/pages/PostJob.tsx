@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import RecruiterNavbar from "@/components/RecruiterNavbar";
@@ -233,13 +233,25 @@ const SectionCard = ({
 const PostJob = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { jobId: editJobId } = useParams<{ jobId?: string }>();
+  const isEditMode = !!editJobId;
   const [loading, setLoading] = useState(false);
+  const [loadingJob, setLoadingJob] = useState(isEditMode);
   const [form, setForm] = useState<FormState>(initialState);
   const [lockedInstitute, setLockedInstitute] = useState("");
   const [successOpen, setSuccessOpen] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [skillInput, setSkillInput] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [originalSnapshot, setOriginalSnapshot] = useState<{
+    title: string;
+    location: string;
+    salary_range: string;
+    job_type: string;
+    description: string;
+    tags: string[];
+  } | null>(null);
+  const [notifiedCount, setNotifiedCount] = useState(0);
 
   // Collaboration
   type Colleague = { id: string; full_name: string | null; avatar_url: string | null; designation: string | null };
@@ -267,6 +279,49 @@ const PostJob = () => {
       }
     })();
   }, [user]);
+
+  // Load existing job in edit mode
+  useEffect(() => {
+    if (!isEditMode || !editJobId || !user) return;
+    (async () => {
+      setLoadingJob(true);
+      const { data, error } = await supabase
+        .from("jobs")
+        .select("title, institute, location, description, salary_range, job_type, tags")
+        .eq("id", editJobId)
+        .maybeSingle();
+      if (error || !data) {
+        toast.error("Could not load this job for editing.");
+        navigate("/recruiter-dashboard");
+        return;
+      }
+      // Parse salary "X - Y LPA"
+      let lo = 6, hi = 15;
+      const m = (data.salary_range ?? "").match(/(\d+)\s*-\s*(\d+)/);
+      if (m) { lo = parseInt(m[1]); hi = parseInt(m[2]); }
+      setLockedInstitute((data.institute ?? "").trim());
+      setForm((p) => ({
+        ...p,
+        title: data.title ?? "",
+        location: data.location ?? "",
+        jobType: data.job_type ?? "Full Time",
+        salaryRange: [lo, hi],
+        skills: Array.isArray(data.tags) ? (data.tags as string[]) : [],
+        description: data.description ?? "",
+        responsibilities: [""],
+        qualifications: [""],
+      }));
+      setOriginalSnapshot({
+        title: data.title ?? "",
+        location: data.location ?? "",
+        salary_range: data.salary_range ?? "",
+        job_type: data.job_type ?? "",
+        description: data.description ?? "",
+        tags: Array.isArray(data.tags) ? (data.tags as string[]) : [],
+      });
+      setLoadingJob(false);
+    })();
+  }, [isEditMode, editJobId, user, navigate]);
 
   // Fetch same-institution recruiters when collab is enabled
   useEffect(() => {
@@ -383,8 +438,70 @@ const PostJob = () => {
     }
     setLoading(true);
     try {
-      const description = buildDescription(form);
+      // In edit mode, preserve user's raw description verbatim so we don't
+      // double-wrap an already-rendered markdown block on every save.
+      const hasExtras =
+        form.responsibilities.some((r) => r.trim()) ||
+        form.qualifications.some((q) => q.trim());
+      const description =
+        isEditMode && !hasExtras
+          ? form.description.trim()
+          : buildDescription(form);
       const salary_range = `${form.salaryRange[0]} - ${form.salaryRange[1]} LPA`;
+
+      if (isEditMode && editJobId) {
+        // ---- UPDATE existing job ----
+        const { error: updErr } = await supabase
+          .from("jobs")
+          .update({
+            title: form.title.trim(),
+            location: form.location.trim(),
+            description,
+            salary_range,
+            job_type: form.jobType,
+            tags: form.skills.slice(0, 20),
+          })
+          .eq("id", editJobId);
+
+        if (updErr) {
+          toast.error("Couldn't update job", { description: updErr.message });
+          return;
+        }
+
+        // Diff against snapshot to build change list
+        const changes: string[] = [];
+        if (originalSnapshot) {
+          if (originalSnapshot.title !== form.title.trim())
+            changes.push(`Title: "${originalSnapshot.title}" → "${form.title.trim()}"`);
+          if (originalSnapshot.location !== form.location.trim())
+            changes.push(`Location: "${originalSnapshot.location}" → "${form.location.trim()}"`);
+          if (originalSnapshot.salary_range !== salary_range)
+            changes.push(`Salary: ${originalSnapshot.salary_range} → ${salary_range}`);
+          if (originalSnapshot.job_type !== form.jobType)
+            changes.push(`Job type: ${originalSnapshot.job_type} → ${form.jobType}`);
+          if (originalSnapshot.description !== description)
+            changes.push("Job description updated");
+          const oldTags = [...originalSnapshot.tags].sort().join(",");
+          const newTags = [...form.skills.slice(0, 20)].sort().join(",");
+          if (oldTags !== newTags) changes.push("Skills / tags updated");
+        }
+
+        // Notify applicants (only those who applied) via edge function
+        try {
+          const { data: notifData } = await supabase.functions.invoke(
+            "send-job-update-notification",
+            { body: { jobId: editJobId, changes } },
+          );
+          setNotifiedCount((notifData as any)?.notified ?? 0);
+        } catch (notifErr) {
+          console.error("Notification failed:", notifErr);
+        }
+
+        setSuccessOpen(true);
+        return;
+      }
+
+      // ---- INSERT new job ----
       const { data: insertedJob, error } = await supabase
         .from("jobs")
         .insert({
@@ -460,10 +577,12 @@ const PostJob = () => {
             </div>
             <div className="flex-1 min-w-0">
               <h1 className="font-heading font-bold text-2xl sm:text-3xl text-foreground tracking-tight">
-                Post a New Job
+                {isEditMode ? "Edit Job Posting" : "Post a New Job"}
               </h1>
               <p className="text-sm text-muted-foreground mt-1">
-                Create a detailed, professional listing to attract the right candidates.
+                {isEditMode
+                  ? "Update the listing — applicants who already applied will be notified of the changes."
+                  : "Create a detailed, professional listing to attract the right candidates."}
               </p>
             </div>
           </div>
@@ -1024,10 +1143,10 @@ const PostJob = () => {
             {loading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Posting…
+                {isEditMode ? "Saving…" : "Posting…"}
               </>
             ) : (
-              "Post Job"
+              isEditMode ? "Save Changes" : "Post Job"
             )}
           </Button>
         </div>
@@ -1080,7 +1199,7 @@ const PostJob = () => {
                 handleSubmit({ preventDefault: () => {} } as React.FormEvent);
               }}
             >
-              Looks good — Post Job
+              {isEditMode ? "Looks good — Save Changes" : "Looks good — Post Job"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1094,22 +1213,28 @@ const PostJob = () => {
               <CheckCircle2 className="h-8 w-8 text-primary" />
             </div>
             <DialogTitle className="text-center font-heading text-2xl">
-              Job posted successfully
+              {isEditMode ? "Job updated successfully" : "Job posted successfully"}
             </DialogTitle>
             <DialogDescription className="text-center">
-              Your listing is live and candidates can start applying right away.
+              {isEditMode
+                ? notifiedCount > 0
+                  ? `Your changes are live. We notified ${notifiedCount} applicant${notifiedCount === 1 ? "" : "s"} who already applied.`
+                  : "Your changes are live. No applicants needed to be notified yet."
+                : "Your listing is live and candidates can start applying right away."}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="sm:justify-center gap-2">
-            <Button
-              variant="outline"
-              onClick={() => {
-                setForm(initialState);
-                setSuccessOpen(false);
-              }}
-            >
-              Post another
-            </Button>
+            {!isEditMode && (
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setForm(initialState);
+                  setSuccessOpen(false);
+                }}
+              >
+                Post another
+              </Button>
+            )}
             <Button onClick={() => navigate("/recruiter-dashboard")}>
               Go to dashboard
             </Button>

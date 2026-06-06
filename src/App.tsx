@@ -64,6 +64,14 @@ const App = () => {
                   }
                 />
                 <Route
+                  path="/post-job/:jobId"
+                  element={
+                    <ProtectedRoute>
+                      <PostJob />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
                   path="/recruiter-profile"
                   element={
                     <ProtectedRoute>
