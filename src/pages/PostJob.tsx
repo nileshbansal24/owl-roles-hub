@@ -233,13 +233,25 @@ const SectionCard = ({
 const PostJob = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { jobId: editJobId } = useParams<{ jobId?: string }>();
+  const isEditMode = !!editJobId;
   const [loading, setLoading] = useState(false);
+  const [loadingJob, setLoadingJob] = useState(isEditMode);
   const [form, setForm] = useState<FormState>(initialState);
   const [lockedInstitute, setLockedInstitute] = useState("");
   const [successOpen, setSuccessOpen] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [skillInput, setSkillInput] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [originalSnapshot, setOriginalSnapshot] = useState<{
+    title: string;
+    location: string;
+    salary_range: string;
+    job_type: string;
+    description: string;
+    tags: string[];
+  } | null>(null);
+  const [notifiedCount, setNotifiedCount] = useState(0);
 
   // Collaboration
   type Colleague = { id: string; full_name: string | null; avatar_url: string | null; designation: string | null };
