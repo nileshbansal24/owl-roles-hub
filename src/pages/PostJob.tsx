@@ -1135,10 +1135,10 @@ const PostJob = () => {
             {loading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Posting…
+                {isEditMode ? "Saving…" : "Posting…"}
               </>
             ) : (
-              "Post Job"
+              isEditMode ? "Save Changes" : "Post Job"
             )}
           </Button>
         </div>
