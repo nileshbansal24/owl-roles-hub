@@ -1205,22 +1205,28 @@ const PostJob = () => {
               <CheckCircle2 className="h-8 w-8 text-primary" />
             </div>
             <DialogTitle className="text-center font-heading text-2xl">
-              Job posted successfully
+              {isEditMode ? "Job updated successfully" : "Job posted successfully"}
             </DialogTitle>
             <DialogDescription className="text-center">
-              Your listing is live and candidates can start applying right away.
+              {isEditMode
+                ? notifiedCount > 0
+                  ? `Your changes are live. We notified ${notifiedCount} applicant${notifiedCount === 1 ? "" : "s"} who already applied.`
+                  : "Your changes are live. No applicants needed to be notified yet."
+                : "Your listing is live and candidates can start applying right away."}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="sm:justify-center gap-2">
-            <Button
-              variant="outline"
-              onClick={() => {
-                setForm(initialState);
-                setSuccessOpen(false);
-              }}
-            >
-              Post another
-            </Button>
+            {!isEditMode && (
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setForm(initialState);
+                  setSuccessOpen(false);
+                }}
+              >
+                Post another
+              </Button>
+            )}
             <Button onClick={() => navigate("/recruiter-dashboard")}>
               Go to dashboard
             </Button>
