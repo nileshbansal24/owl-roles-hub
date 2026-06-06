@@ -453,13 +453,24 @@ export const useRecruiterDashboard = () => {
       // continues loading in the background and renders progressively.
       setLoading(false);
 
-      // Fetch all candidate profiles with full data for ratings
-      const { data: candidatesData, error: candidatesError } = await supabase
+      // Fetch admin user ids so we can exclude them from the Talent Pool
+      const { data: adminIdsData } = await supabase.rpc("get_admin_user_ids");
+      const adminIds: string[] = ((adminIdsData ?? []) as any[])
+        .map((r: any) => (typeof r === "string" ? r : r?.get_admin_user_ids ?? r?.user_id))
+        .filter(Boolean);
+
+      // Fetch all candidate profiles with full data for ratings (admins excluded)
+      let candidatesQuery = supabase
         .from("profiles")
         .select("id, full_name, avatar_url, university, role, bio, years_experience, location, headline, skills, user_type, resume_url, email, experience, education, research_papers, achievements, subjects, teaching_philosophy, professional_summary, orcid_id, scopus_link, scopus_metrics, manual_h_index, current_salary, expected_salary, updated_at")
         .eq("user_type", "candidate")
         .order("updated_at", { ascending: false });
 
+      if (adminIds.length > 0) {
+        candidatesQuery = candidatesQuery.not("id", "in", `(${adminIds.join(",")})`);
+      }
+
+      const { data: candidatesData, error: candidatesError } = await candidatesQuery;
 
       console.log("Fetched candidates from profiles:", candidatesData?.length, candidatesError);
       setCandidates((candidatesData as unknown as Profile[]) || []);
