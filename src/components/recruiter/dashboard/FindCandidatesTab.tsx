@@ -596,7 +596,6 @@ const FindCandidatesTab = ({
       <TabHeader
         icon={UserSearch}
         title="Find Educators & Researchers"
-        description="Search India's higher-education talent pool with academic-aware filters and AI matching."
         badge={
           sortedCandidates.length > 0 ? (
             <Badge variant="secondary" className="ml-1">{sortedCandidates.length}</Badge>
