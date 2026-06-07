@@ -1,17 +1,20 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { motion } from "framer-motion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Search, 
-  Sparkles, 
-  FileText, 
+import { useToast } from "@/hooks/use-toast";
+import {
+  Search,
+  Sparkles,
+  FileText,
   Hash,
   Loader2,
-  Lightbulb
+  Lightbulb,
+  Upload,
+  X,
 } from "lucide-react";
 import { staggerItemVariants } from "@/components/ui/fade-in";
 import type { Profile } from "@/types/recruiter";
