@@ -196,11 +196,90 @@ const SmartCandidateSearch = ({
   onSearchResults,
   onSearching,
 }: SmartCandidateSearchProps) => {
+  const { toast } = useToast();
   const [activeSearchTab, setActiveSearchTab] = useState("keyword");
   const [keywordInput, setKeywordInput] = useState("");
   const [smartTextInput, setSmartTextInput] = useState("");
   const [jdInput, setJdInput] = useState("");
   const [isSearching, setIsSearching] = useState(false);
+  const [jdFileName, setJdFileName] = useState<string | null>(null);
+  const [isParsingFile, setIsParsingFile] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleJDFileUpload = useCallback(async (file: File) => {
+    if (!file) return;
+    const name = file.name.toLowerCase();
+    const isPdf = name.endsWith(".pdf") || file.type === "application/pdf";
+    const isDocx = name.endsWith(".docx") || file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+    const isTxt = name.endsWith(".txt") || file.type === "text/plain";
+
+    if (!isPdf && !isDocx && !isTxt) {
+      toast({
+        title: "Unsupported file",
+        description: "Please upload a PDF, DOCX, or TXT file.",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      toast({ title: "File too large", description: "Maximum file size is 10MB.", variant: "destructive" });
+      return;
+    }
+
+    setIsParsingFile(true);
+    try {
+      let text = "";
+      if (isTxt) {
+        text = await file.text();
+      } else if (isDocx) {
+        const mammoth = await import("mammoth/mammoth.browser");
+        const arrayBuffer = await file.arrayBuffer();
+        const result = await (mammoth as any).extractRawText({ arrayBuffer });
+        text = result.value || "";
+      } else if (isPdf) {
+        const pdfjs: any = await import("pdfjs-dist");
+        const workerSrc = (await import("pdfjs-dist/build/pdf.worker.min.mjs?url")).default;
+        pdfjs.GlobalWorkerOptions.workerSrc = workerSrc;
+        const arrayBuffer = await file.arrayBuffer();
+        const pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise;
+        const pageTexts: string[] = [];
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i);
+          const content = await page.getTextContent();
+          pageTexts.push(content.items.map((it: any) => it.str).join(" "));
+        }
+        text = pageTexts.join("\n\n");
+      }
+
+      const cleaned = text.replace(/\s+/g, " ").trim();
+      if (!cleaned) {
+        toast({
+          title: "Couldn't read file",
+          description: "We couldn't extract text from this file. Try pasting the JD instead.",
+          variant: "destructive",
+        });
+        return;
+      }
+      setJdInput(cleaned);
+      setJdFileName(file.name);
+      toast({ title: "JD loaded", description: `Extracted from ${file.name}` });
+    } catch (err) {
+      console.error("JD parse error:", err);
+      toast({
+        title: "Parsing failed",
+        description: "Couldn't parse the file. Try a different format or paste the text.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsParsingFile(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }, [toast]);
+
+  const clearJdFile = useCallback(() => {
+    setJdFileName(null);
+    setJdInput("");
+  }, []);
 
   const performSearch = useCallback((
     criteria: { roles: string[]; experience: number | null; salary?: number | null; skills?: string[]; keywords: string[] }
