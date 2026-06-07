@@ -235,6 +235,33 @@ const CandidateProfileCard = ({
             </div>
           </div>
 
+          {/* Quick status: Shortlist / Maybe / Reject (talent-pool only) */}
+          {!isApplication && onSetStatus && (
+            <div className="flex items-center gap-1.5 mt-3 flex-wrap">
+              <span className="text-xs text-muted-foreground mr-1">Mark as:</span>
+              {[
+                { value: "shortlisted", label: "Shortlist", icon: CheckCircle2, activeCls: "bg-green-600 hover:bg-green-700 text-white border-green-600" },
+                { value: "maybe", label: "Maybe", icon: Bookmark, activeCls: "bg-amber-500 hover:bg-amber-600 text-white border-amber-500" },
+                { value: "rejected", label: "Reject", icon: XCircle, activeCls: "bg-red-600 hover:bg-red-700 text-white border-red-600" },
+              ].map((opt) => {
+                const Icon = opt.icon;
+                const active = savedStatus === opt.value;
+                return (
+                  <Button
+                    key={opt.value}
+                    variant={active ? "default" : "outline"}
+                    size="sm"
+                    className={`h-7 px-2.5 text-xs gap-1 ${active ? opt.activeCls : ""}`}
+                    onClick={() => onSetStatus(candidate.id, active ? "saved" : opt.value)}
+                  >
+                    <Icon className="h-3.5 w-3.5" />
+                    {opt.label}
+                  </Button>
+                );
+              })}
+            </div>
+          )}
+
           <div className="flex flex-wrap items-center gap-3 md:gap-4 mt-3 text-sm text-muted-foreground">
             {candidate.university && (
               <div className="flex items-center gap-1">
