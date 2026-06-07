@@ -511,19 +511,67 @@ const SmartCandidateSearch = ({
 
         {/* JD Search */}
         <TabsContent value="jd" className="space-y-4">
-          <div className="space-y-2">
+          <div className="space-y-3">
             <p className="text-sm text-muted-foreground">
-              Paste your job description and we'll find matching candidates
+              Paste your job description, or upload a PDF / DOCX file — we'll extract it and find matching candidates.
             </p>
+
+            {/* Upload area */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handleJDFileUpload(file);
+                }}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                className="gap-2 h-11"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isParsingFile || isSearching}
+              >
+                {isParsingFile ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Upload className="h-4 w-4" />
+                )}
+                {isParsingFile ? "Reading file..." : "Upload JD (PDF / DOCX)"}
+              </Button>
+              {jdFileName && (
+                <div className="flex items-center gap-2 text-sm bg-primary/5 border border-primary/20 rounded-lg px-3 py-2 flex-1 min-w-0">
+                  <FileText className="h-4 w-4 text-primary shrink-0" />
+                  <span className="truncate text-foreground">{jdFileName}</span>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 w-6 p-0 ml-auto shrink-0"
+                    onClick={clearJdFile}
+                    aria-label="Remove uploaded file"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              )}
+            </div>
+
             <Textarea
-              placeholder="Paste the complete job description here..."
+              placeholder="Or paste the complete job description here..."
               value={jdInput}
-              onChange={(e) => setJdInput(e.target.value)}
+              onChange={(e) => {
+                setJdInput(e.target.value);
+                if (jdFileName) setJdFileName(null);
+              }}
               className="min-h-[150px] resize-none"
             />
-            <Button 
-              onClick={handleJDSearch} 
-              disabled={!jdInput.trim() || isSearching}
+            <Button
+              onClick={handleJDSearch}
+              disabled={!jdInput.trim() || isSearching || isParsingFile}
               className="w-full h-12"
             >
               {isSearching ? (
