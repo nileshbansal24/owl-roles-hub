@@ -9,10 +9,12 @@ interface LegacyCandidateCardProps {
   index: number;
   isSaved: boolean;
   note?: string;
+  savedStatus?: string;
   onView: (candidate: Profile) => void;
   onSave: (candidateId: string) => void;
   onMessage: (candidate: Profile) => void;
   onSaveNote: (candidateId: string, note: string) => Promise<void>;
+  onSetStatus?: (candidateId: string, status: string) => void | Promise<void>;
 }
 
 const CandidateCard = (props: LegacyCandidateCardProps) => {

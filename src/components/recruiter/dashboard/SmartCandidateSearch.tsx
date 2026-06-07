@@ -1,17 +1,20 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { motion } from "framer-motion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Search, 
-  Sparkles, 
-  FileText, 
+import { useToast } from "@/hooks/use-toast";
+import {
+  Search,
+  Sparkles,
+  FileText,
   Hash,
   Loader2,
-  Lightbulb
+  Lightbulb,
+  Upload,
+  X,
 } from "lucide-react";
 import { staggerItemVariants } from "@/components/ui/fade-in";
 import type { Profile } from "@/types/recruiter";
@@ -193,11 +196,90 @@ const SmartCandidateSearch = ({
   onSearchResults,
   onSearching,
 }: SmartCandidateSearchProps) => {
+  const { toast } = useToast();
   const [activeSearchTab, setActiveSearchTab] = useState("keyword");
   const [keywordInput, setKeywordInput] = useState("");
   const [smartTextInput, setSmartTextInput] = useState("");
   const [jdInput, setJdInput] = useState("");
   const [isSearching, setIsSearching] = useState(false);
+  const [jdFileName, setJdFileName] = useState<string | null>(null);
+  const [isParsingFile, setIsParsingFile] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleJDFileUpload = useCallback(async (file: File) => {
+    if (!file) return;
+    const name = file.name.toLowerCase();
+    const isPdf = name.endsWith(".pdf") || file.type === "application/pdf";
+    const isDocx = name.endsWith(".docx") || file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+    const isTxt = name.endsWith(".txt") || file.type === "text/plain";
+
+    if (!isPdf && !isDocx && !isTxt) {
+      toast({
+        title: "Unsupported file",
+        description: "Please upload a PDF, DOCX, or TXT file.",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      toast({ title: "File too large", description: "Maximum file size is 10MB.", variant: "destructive" });
+      return;
+    }
+
+    setIsParsingFile(true);
+    try {
+      let text = "";
+      if (isTxt) {
+        text = await file.text();
+      } else if (isDocx) {
+        const mammoth = await import("mammoth/mammoth.browser");
+        const arrayBuffer = await file.arrayBuffer();
+        const result = await (mammoth as any).extractRawText({ arrayBuffer });
+        text = result.value || "";
+      } else if (isPdf) {
+        const pdfjs: any = await import("pdfjs-dist");
+        const workerSrc = (await import("pdfjs-dist/build/pdf.worker.min.mjs?url")).default;
+        pdfjs.GlobalWorkerOptions.workerSrc = workerSrc;
+        const arrayBuffer = await file.arrayBuffer();
+        const pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise;
+        const pageTexts: string[] = [];
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i);
+          const content = await page.getTextContent();
+          pageTexts.push(content.items.map((it: any) => it.str).join(" "));
+        }
+        text = pageTexts.join("\n\n");
+      }
+
+      const cleaned = text.replace(/\s+/g, " ").trim();
+      if (!cleaned) {
+        toast({
+          title: "Couldn't read file",
+          description: "We couldn't extract text from this file. Try pasting the JD instead.",
+          variant: "destructive",
+        });
+        return;
+      }
+      setJdInput(cleaned);
+      setJdFileName(file.name);
+      toast({ title: "JD loaded", description: `Extracted from ${file.name}` });
+    } catch (err) {
+      console.error("JD parse error:", err);
+      toast({
+        title: "Parsing failed",
+        description: "Couldn't parse the file. Try a different format or paste the text.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsParsingFile(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }, [toast]);
+
+  const clearJdFile = useCallback(() => {
+    setJdFileName(null);
+    setJdInput("");
+  }, []);
 
   const performSearch = useCallback((
     criteria: { roles: string[]; experience: number | null; salary?: number | null; skills?: string[]; keywords: string[] }
@@ -429,19 +511,67 @@ const SmartCandidateSearch = ({
 
         {/* JD Search */}
         <TabsContent value="jd" className="space-y-4">
-          <div className="space-y-2">
+          <div className="space-y-3">
             <p className="text-sm text-muted-foreground">
-              Paste your job description and we'll find matching candidates
+              Paste your job description, or upload a PDF / DOCX file — we'll extract it and find matching candidates.
             </p>
+
+            {/* Upload area */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handleJDFileUpload(file);
+                }}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                className="gap-2 h-11"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isParsingFile || isSearching}
+              >
+                {isParsingFile ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Upload className="h-4 w-4" />
+                )}
+                {isParsingFile ? "Reading file..." : "Upload JD (PDF / DOCX)"}
+              </Button>
+              {jdFileName && (
+                <div className="flex items-center gap-2 text-sm bg-primary/5 border border-primary/20 rounded-lg px-3 py-2 flex-1 min-w-0">
+                  <FileText className="h-4 w-4 text-primary shrink-0" />
+                  <span className="truncate text-foreground">{jdFileName}</span>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 w-6 p-0 ml-auto shrink-0"
+                    onClick={clearJdFile}
+                    aria-label="Remove uploaded file"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              )}
+            </div>
+
             <Textarea
-              placeholder="Paste the complete job description here..."
+              placeholder="Or paste the complete job description here..."
               value={jdInput}
-              onChange={(e) => setJdInput(e.target.value)}
+              onChange={(e) => {
+                setJdInput(e.target.value);
+                if (jdFileName) setJdFileName(null);
+              }}
               className="min-h-[150px] resize-none"
             />
-            <Button 
-              onClick={handleJDSearch} 
-              disabled={!jdInput.trim() || isSearching}
+            <Button
+              onClick={handleJDSearch}
+              disabled={!jdInput.trim() || isSearching || isParsingFile}
               className="w-full h-12"
             >
               {isSearching ? (

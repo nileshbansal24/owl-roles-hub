@@ -942,6 +942,7 @@ export type Database = {
           id: string
           notes: string | null
           recruiter_id: string
+          status: string
         }
         Insert: {
           candidate_id: string
@@ -949,6 +950,7 @@ export type Database = {
           id?: string
           notes?: string | null
           recruiter_id: string
+          status?: string
         }
         Update: {
           candidate_id?: string
@@ -956,6 +958,7 @@ export type Database = {
           id?: string
           notes?: string | null
           recruiter_id?: string
+          status?: string
         }
         Relationships: [
           {

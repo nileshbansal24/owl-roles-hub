@@ -20,6 +20,7 @@ export const useRecruiterDashboard = () => {
   const [interviews, setInterviews] = useState<EnrichedInterview[]>([]);
   const [savedCandidateIds, setSavedCandidateIds] = useState<Set<string>>(new Set());
   const [savedCandidateNotes, setSavedCandidateNotes] = useState<Record<string, string>>({});
+  const [savedCandidateStatuses, setSavedCandidateStatuses] = useState<Record<string, string>>({});
   const [pendingVerificationCount, setPendingVerificationCount] = useState(0);
   
   // Onboarding state
@@ -133,6 +134,11 @@ export const useRecruiterDashboard = () => {
           newSet.delete(candidateId);
           return newSet;
         });
+        setSavedCandidateStatuses(prev => {
+          const next = { ...prev };
+          delete next[candidateId];
+          return next;
+        });
         toast({
           title: "Removed",
           description: "Candidate removed from saved list",
@@ -154,12 +160,56 @@ export const useRecruiterDashboard = () => {
         });
       } else {
         setSavedCandidateIds(prev => new Set([...prev, candidateId]));
+        setSavedCandidateStatuses(prev => ({ ...prev, [candidateId]: "saved" }));
         toast({
           title: "Saved",
           description: "Candidate added to your saved list",
         });
       }
     }
+  }, [user, savedCandidateIds, toast]);
+
+  /**
+   * Set / change the recruiter's private status on a candidate.
+   * Statuses: 'saved' | 'shortlisted' | 'maybe' | 'rejected'.
+   * Upserts the saved_candidates row — also adds the candidate to the
+   * saved set if they weren't there yet.
+   */
+  const handleSetCandidateStatus = useCallback(async (candidateId: string, status: string) => {
+    if (!user) return;
+    const allowed = ["saved", "shortlisted", "maybe", "rejected"];
+    if (!allowed.includes(status)) return;
+
+    const existing = savedCandidateIds.has(candidateId);
+    if (existing) {
+      const { error } = await supabase
+        .from("saved_candidates")
+        .update({ status } as any)
+        .eq("recruiter_id", user.id)
+        .eq("candidate_id", candidateId);
+      if (error) {
+        toast({ title: "Error", description: "Failed to update status", variant: "destructive" });
+        return;
+      }
+    } else {
+      const { error } = await supabase
+        .from("saved_candidates")
+        .insert({ recruiter_id: user.id, candidate_id: candidateId, status } as any);
+      if (error) {
+        toast({ title: "Error", description: "Failed to update status", variant: "destructive" });
+        return;
+      }
+      setSavedCandidateIds(prev => new Set([...prev, candidateId]));
+    }
+
+    setSavedCandidateStatuses(prev => ({ ...prev, [candidateId]: status }));
+    const labels: Record<string, string> = {
+      saved: "Saved",
+      shortlisted: "Shortlisted",
+      maybe: "Marked as Maybe",
+      rejected: "Rejected",
+    };
+    toast({ title: labels[status], description: "Candidate status updated" });
   }, [user, savedCandidateIds, toast]);
 
   const handleDownloadResume = useCallback(async (resumePath: string, applicantName: string) => {
@@ -478,18 +528,19 @@ export const useRecruiterDashboard = () => {
       // Fetch saved candidates
       const { data: savedData } = await supabase
         .from("saved_candidates")
-        .select("candidate_id, notes")
+        .select("candidate_id, notes, status")
         .eq("recruiter_id", user.id);
 
       if (savedData) {
-        setSavedCandidateIds(new Set(savedData.map(s => s.candidate_id)));
+        setSavedCandidateIds(new Set(savedData.map((s: any) => s.candidate_id)));
         const notesMap: Record<string, string> = {};
-        savedData.forEach(s => {
-          if (s.notes) {
-            notesMap[s.candidate_id] = s.notes;
-          }
+        const statusMap: Record<string, string> = {};
+        savedData.forEach((s: any) => {
+          if (s.notes) notesMap[s.candidate_id] = s.notes;
+          statusMap[s.candidate_id] = s.status || "saved";
         });
         setSavedCandidateNotes(notesMap);
+        setSavedCandidateStatuses(statusMap);
       }
 
       // Fetch scheduled interviews
@@ -556,6 +607,7 @@ export const useRecruiterDashboard = () => {
     interviews,
     savedCandidateIds,
     savedCandidateNotes,
+    savedCandidateStatuses,
     setSavedCandidateNotes,
     activeTab,
     handleTabChange,
@@ -567,6 +619,7 @@ export const useRecruiterDashboard = () => {
     hasReviewedCandidate,
     updateApplicationStatus,
     handleSaveCandidate,
+    handleSetCandidateStatus,
     handleDownloadResume,
     refreshInterviews,
     markCandidateReviewed,

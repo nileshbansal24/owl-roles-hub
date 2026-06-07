@@ -26,10 +26,12 @@ interface FindCandidatesTabProps {
   candidates: Profile[];
   savedCandidateIds: Set<string>;
   savedCandidateNotes: Record<string, string>;
+  savedCandidateStatuses?: Record<string, string>;
   onViewCandidate: (candidate: Profile) => void;
   onSaveCandidate: (candidateId: string) => void;
   onMessageCandidate: (candidate: Profile) => void;
   onSaveNote: (candidateId: string, note: string) => Promise<void>;
+  onSetStatus?: (candidateId: string, status: string) => void | Promise<void>;
   isLoading?: boolean;
   recruiterLocation?: string | null;
 }
@@ -50,10 +52,12 @@ const FindCandidatesTab = ({
   candidates,
   savedCandidateIds,
   savedCandidateNotes,
+  savedCandidateStatuses,
   onViewCandidate,
   onSaveCandidate,
   onMessageCandidate,
   onSaveNote,
+  onSetStatus,
   isLoading = false,
   recruiterLocation,
 }: FindCandidatesTabProps) => {
@@ -596,7 +600,6 @@ const FindCandidatesTab = ({
       <TabHeader
         icon={UserSearch}
         title="Find Educators & Researchers"
-        description="Search India's higher-education talent pool with academic-aware filters and AI matching."
         badge={
           sortedCandidates.length > 0 ? (
             <Badge variant="secondary" className="ml-1">{sortedCandidates.length}</Badge>
@@ -736,10 +739,12 @@ const FindCandidatesTab = ({
               index={index}
               isSaved={savedCandidateIds.has(candidate.id)}
               note={savedCandidateNotes[candidate.id]}
+              savedStatus={savedCandidateStatuses?.[candidate.id]}
               onView={onViewCandidate}
               onSave={onSaveCandidate}
               onMessage={onMessageCandidate}
               onSaveNote={onSaveNote}
+              onSetStatus={onSetStatus}
             />
           ))
         )}

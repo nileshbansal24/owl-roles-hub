@@ -44,6 +44,7 @@ const RecruiterDashboard = () => {
     interviews,
     savedCandidateIds,
     savedCandidateNotes,
+    savedCandidateStatuses,
     setSavedCandidateNotes,
     activeTab,
     handleTabChange,
@@ -52,6 +53,7 @@ const RecruiterDashboard = () => {
     recruiterName,
     updateApplicationStatus,
     handleSaveCandidate,
+    handleSetCandidateStatus,
     handleDownloadResume,
     refreshInterviews,
     markCandidateReviewed,
@@ -310,10 +312,12 @@ const RecruiterDashboard = () => {
               candidates={candidates}
               savedCandidateIds={savedCandidateIds}
               savedCandidateNotes={savedCandidateNotes}
+              savedCandidateStatuses={savedCandidateStatuses}
               onViewCandidate={handleViewCandidate}
               onSaveCandidate={handleSaveCandidate}
               onMessageCandidate={(candidate) => handleSendMessage(candidate)}
               onSaveNote={handleSaveNote}
+              onSetStatus={handleSetCandidateStatus}
               isLoading={loading}
               recruiterLocation={recruiterLocation}
             />
@@ -325,10 +329,12 @@ const RecruiterDashboard = () => {
               candidates={candidates}
               savedCandidateIds={savedCandidateIds}
               savedCandidateNotes={savedCandidateNotes}
+              savedCandidateStatuses={savedCandidateStatuses}
               onViewCandidate={handleViewCandidate}
               onSaveCandidate={handleSaveCandidate}
               onMessageCandidate={(candidate) => handleSendMessage(candidate)}
               onSaveNote={handleSaveNote}
+              onSetStatus={handleSetCandidateStatus}
               isLoading={loading}
             />
           </TabsContent>
