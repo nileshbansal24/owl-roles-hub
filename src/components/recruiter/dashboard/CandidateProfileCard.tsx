@@ -67,10 +67,13 @@ export interface CandidateProfileCardProps {
   /** Talent-pool actions */
   isSaved?: boolean;
   note?: string;
+  /** 'saved' | 'shortlisted' | 'maybe' | 'rejected' */
+  savedStatus?: string;
   onView?: (candidate: Profile) => void;
   onSave?: (candidateId: string) => void;
   onMessage?: (candidate: Profile) => void;
   onSaveNote?: (candidateId: string, note: string) => Promise<void>;
+  onSetStatus?: (candidateId: string, status: string) => void | Promise<void>;
 
   /** Application-pipeline actions */
   onViewApplicant?: (app: Application) => void;
@@ -92,10 +95,12 @@ const CandidateProfileCard = ({
   application,
   isSaved = false,
   note,
+  savedStatus,
   onView,
   onSave,
   onMessage,
   onSaveNote,
+  onSetStatus,
   onViewApplicant,
   onUpdateStatus,
   onScheduleInterview,
