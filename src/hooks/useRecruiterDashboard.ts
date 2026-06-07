@@ -134,6 +134,11 @@ export const useRecruiterDashboard = () => {
           newSet.delete(candidateId);
           return newSet;
         });
+        setSavedCandidateStatuses(prev => {
+          const next = { ...prev };
+          delete next[candidateId];
+          return next;
+        });
         toast({
           title: "Removed",
           description: "Candidate removed from saved list",
