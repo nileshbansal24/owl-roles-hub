@@ -168,6 +168,20 @@ const CandidateProfileCard = ({
                   {candidate.full_name || "Anonymous"}
                 </h4>
                 <CandidateCategoryBadge category={getCandidateCategory(candidate)} />
+                {!isApplication && savedStatus && savedStatus !== "saved" && (
+                  <Badge
+                    variant="outline"
+                    className={
+                      savedStatus === "shortlisted"
+                        ? "border-green-500/40 bg-green-500/10 text-green-700 dark:text-green-400"
+                        : savedStatus === "maybe"
+                        ? "border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-400"
+                        : "border-red-500/40 bg-red-500/10 text-red-700 dark:text-red-400"
+                    }
+                  >
+                    {savedStatus === "shortlisted" ? "Shortlisted" : savedStatus === "maybe" ? "Maybe" : "Rejected"}
+                  </Badge>
+                )}
                 {isApplication && (
                   <Badge variant="outline" className={getStatusColor(application!.status)}>
                     {application!.status}
