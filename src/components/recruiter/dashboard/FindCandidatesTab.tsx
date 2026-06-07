@@ -26,10 +26,12 @@ interface FindCandidatesTabProps {
   candidates: Profile[];
   savedCandidateIds: Set<string>;
   savedCandidateNotes: Record<string, string>;
+  savedCandidateStatuses?: Record<string, string>;
   onViewCandidate: (candidate: Profile) => void;
   onSaveCandidate: (candidateId: string) => void;
   onMessageCandidate: (candidate: Profile) => void;
   onSaveNote: (candidateId: string, note: string) => Promise<void>;
+  onSetStatus?: (candidateId: string, status: string) => void | Promise<void>;
   isLoading?: boolean;
   recruiterLocation?: string | null;
 }
@@ -50,10 +52,12 @@ const FindCandidatesTab = ({
   candidates,
   savedCandidateIds,
   savedCandidateNotes,
+  savedCandidateStatuses,
   onViewCandidate,
   onSaveCandidate,
   onMessageCandidate,
   onSaveNote,
+  onSetStatus,
   isLoading = false,
   recruiterLocation,
 }: FindCandidatesTabProps) => {
@@ -735,10 +739,12 @@ const FindCandidatesTab = ({
               index={index}
               isSaved={savedCandidateIds.has(candidate.id)}
               note={savedCandidateNotes[candidate.id]}
+              savedStatus={savedCandidateStatuses?.[candidate.id]}
               onView={onViewCandidate}
               onSave={onSaveCandidate}
               onMessage={onMessageCandidate}
               onSaveNote={onSaveNote}
+              onSetStatus={onSetStatus}
             />
           ))
         )}
