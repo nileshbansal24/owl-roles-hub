@@ -1005,25 +1005,6 @@ const PostJob = () => {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="industry">Industry</Label>
-                  <Select
-                    value={form.companyIndustry}
-                    onValueChange={(v) => update("companyIndustry", v)}
-                  >
-                    <SelectTrigger id="industry" className="h-11 bg-popover">
-                      <SelectValue placeholder="Select industry" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-popover">
-                      {industries.map((i) => (
-                        <SelectItem key={i} value={i}>{i}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1.5">
                   <Label htmlFor="size">Organisation Size</Label>
                   <Select value={form.companySize} onValueChange={(v) => update("companySize", v)}>
                     <SelectTrigger id="size" className="h-11 bg-popover">
@@ -1036,8 +1017,11 @@ const PostJob = () => {
                     </SelectContent>
                   </Select>
                 </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <Label htmlFor="hq">Headquarters</Label>
+                  <Label htmlFor="hq">Location</Label>
                   <Input
                     id="hq"
                     placeholder="e.g., New Delhi, India"
