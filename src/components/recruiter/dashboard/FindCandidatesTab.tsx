@@ -597,15 +597,6 @@ const FindCandidatesTab = ({
       animate="visible"
       className="space-y-6"
     >
-      <TabHeader
-        icon={UserSearch}
-        title="Find Educators & Researchers"
-        badge={
-          sortedCandidates.length > 0 ? (
-            <Badge variant="secondary" className="ml-1">{sortedCandidates.length}</Badge>
-          ) : null
-        }
-      />
 
       {/* Smart Candidate Search */}
       <SmartCandidateSearch
