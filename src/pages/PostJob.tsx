@@ -238,7 +238,7 @@ const buildDescription = (f: FormState) => {
     if (f.companyIndustry) meta.push(`- Industry: ${f.companyIndustry}`);
     if (f.companySize) meta.push(`- Size: ${f.companySize}`);
     if (f.companyLocation.trim())
-      meta.push(`- Headquarters: ${f.companyLocation.trim()}`);
+      meta.push(`- Location: ${f.companyLocation.trim()}`);
     if (f.companyWebsite.trim())
       meta.push(`- Website: ${f.companyWebsite.trim()}`);
     if (meta.length) lines.push(...meta);
