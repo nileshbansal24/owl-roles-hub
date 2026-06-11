@@ -55,17 +55,64 @@ import { cn } from "@/lib/utils";
 const jobTypes = ["Full Time", "Part Time", "Contract", "Visiting"] as const;
 
 const departments = [
-  "Engineering & IT",
-  "Research & Academia",
-  "Sales & Business Development",
-  "Marketing & Communications",
-  "Human Resources",
-  "Finance & Accounting",
-  "Operations",
-  "Design & Creative",
-  "Product Management",
-  "Customer Support",
-  "Administration",
+  // Teaching — Sciences
+  "Department of Physics",
+  "Department of Chemistry",
+  "Department of Mathematics",
+  "Department of Biology / Life Sciences",
+  "Department of Biotechnology",
+  "Department of Environmental Science",
+  "Department of Statistics",
+  // Teaching — Engineering & Tech
+  "Department of Computer Science & Engineering",
+  "Department of Information Technology",
+  "Department of Electronics & Communication",
+  "Department of Electrical Engineering",
+  "Department of Mechanical Engineering",
+  "Department of Civil Engineering",
+  "Department of Chemical Engineering",
+  "Department of Artificial Intelligence & Data Science",
+  // Teaching — Commerce & Management
+  "Department of Commerce",
+  "Department of Management Studies / MBA",
+  "Department of Economics",
+  // Teaching — Humanities & Social Sciences
+  "Department of English",
+  "Department of Hindi / Regional Languages",
+  "Department of History",
+  "Department of Political Science",
+  "Department of Sociology",
+  "Department of Psychology",
+  "Department of Philosophy",
+  "Department of Education / B.Ed",
+  // Teaching — Professional
+  "Department of Law",
+  "Department of Medicine / Medical Sciences",
+  "Department of Pharmacy",
+  "Department of Nursing",
+  "Department of Architecture & Planning",
+  "Department of Design",
+  "Department of Fine Arts & Performing Arts",
+  "Department of Physical Education & Sports",
+  "Department of Journalism & Mass Communication",
+  "Department of Hotel Management",
+  "Department of Agriculture",
+  // Non-teaching / Administration
+  "Library & Information Services",
+  "Examination Cell",
+  "Admissions Office",
+  "Academic Affairs / Registrar Office",
+  "Research & Development Cell",
+  "International Relations Office",
+  "Placement & Career Services",
+  "Human Resources (HR)",
+  "Finance & Accounts",
+  "IT & Systems Support",
+  "Estate / Facilities Management",
+  "Hostel Administration",
+  "Public Relations & Communications",
+  "Student Affairs / Welfare",
+  "Quality Assurance (IQAC)",
   "Other",
 ] as const;
 
@@ -191,7 +238,7 @@ const buildDescription = (f: FormState) => {
     if (f.companyIndustry) meta.push(`- Industry: ${f.companyIndustry}`);
     if (f.companySize) meta.push(`- Size: ${f.companySize}`);
     if (f.companyLocation.trim())
-      meta.push(`- Headquarters: ${f.companyLocation.trim()}`);
+      meta.push(`- Location: ${f.companyLocation.trim()}`);
     if (f.companyWebsite.trim())
       meta.push(`- Website: ${f.companyWebsite.trim()}`);
     if (meta.length) lines.push(...meta);
@@ -958,25 +1005,6 @@ const PostJob = () => {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="industry">Industry</Label>
-                  <Select
-                    value={form.companyIndustry}
-                    onValueChange={(v) => update("companyIndustry", v)}
-                  >
-                    <SelectTrigger id="industry" className="h-11 bg-popover">
-                      <SelectValue placeholder="Select industry" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-popover">
-                      {industries.map((i) => (
-                        <SelectItem key={i} value={i}>{i}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1.5">
                   <Label htmlFor="size">Organisation Size</Label>
                   <Select value={form.companySize} onValueChange={(v) => update("companySize", v)}>
                     <SelectTrigger id="size" className="h-11 bg-popover">
@@ -989,8 +1017,11 @@ const PostJob = () => {
                     </SelectContent>
                   </Select>
                 </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <Label htmlFor="hq">Headquarters</Label>
+                  <Label htmlFor="hq">Location</Label>
                   <Input
                     id="hq"
                     placeholder="e.g., New Delhi, India"
