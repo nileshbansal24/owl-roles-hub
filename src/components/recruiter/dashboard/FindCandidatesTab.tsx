@@ -703,7 +703,7 @@ const FindCandidatesTab = ({
             <EmptyState
               icon={UserSearch}
               title="No matches yet"
-              description="Try loosening a filter or two — the right educator might be one keyword away."
+              description="Try loosening a filter or two — the right candidate might be one keyword away."
               action={{
                 label: "Clear Search",
                 onClick: clearSearch,
