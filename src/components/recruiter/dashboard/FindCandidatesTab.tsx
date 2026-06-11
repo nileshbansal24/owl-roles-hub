@@ -703,7 +703,7 @@ const FindCandidatesTab = ({
             <EmptyState
               icon={UserSearch}
               title="No matches yet"
-              description="Try loosening a filter or two — the right educator might be one keyword away."
+              description="Try loosening a filter or two — the right candidate might be one keyword away."
               action={{
                 label: "Clear Search",
                 onClick: clearSearch,
@@ -714,7 +714,7 @@ const FindCandidatesTab = ({
             <EmptyState
               icon={Users}
               title="The talent pool is warming up"
-              description="New educators join every day. Check back soon — or post a role to attract them faster."
+              description="New candidates join every day. Check back soon — or post a role to attract them faster."
             >
               <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 px-4 py-2 rounded-full">
                 <Sparkles className="h-4 w-4 text-primary" />
