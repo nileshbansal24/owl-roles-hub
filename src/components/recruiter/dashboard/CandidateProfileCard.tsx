@@ -257,6 +257,7 @@ const CandidateProfileCard = ({
                             onClick={() => {
                               setSelectedFolderChoice(currentFolder || existingFolders[0] || "__new__");
                               setNewFolderName("");
+                              setIsMovingFolder(true);
                               setFolderDialogOpen(true);
                             }}
                           >
