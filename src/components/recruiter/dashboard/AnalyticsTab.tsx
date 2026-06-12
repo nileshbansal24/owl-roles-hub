@@ -310,10 +310,10 @@ const AnalyticsTab = ({ jobs, applications, candidates, interviews, savedCount =
           delta={metrics.last7 > 0 ? { value: Math.abs(metrics.weeklyDelta), positive: metrics.weeklyDelta >= 0 } : undefined}
         />
         <KpiCard
-          icon={Users}
-          label="Talent Pool"
-          value={candidates.length}
-          sub="Discoverable candidates"
+          icon={Bookmark}
+          label="Saved Candidates"
+          value={savedCount}
+          sub={savedCount ? "Across all your folders" : "Start building your shortlist"}
           accent="bg-sky-500/10 text-sky-600"
         />
         <KpiCard
