@@ -356,12 +356,18 @@ Deno.serve(async (req) => {
           console.error(`Profile update error for ${email}:`, profileError);
         }
 
-        results.push({ 
-          filename, 
-          success: true, 
-          email, 
+        // Send password reset email so the user can set their own credentials
+        try {
+          await serviceClient.auth.admin.generateLink({ type: "recovery", email });
+        } catch (linkErr) {
+          console.error(`Failed to send recovery link for ${email}:`, linkErr);
+        }
+
+        results.push({
+          filename,
+          success: true,
+          email,
           userId: newUser.user.id,
-          password: generatedPassword
         });
 
         console.log(`Successfully created user: ${email}`);
