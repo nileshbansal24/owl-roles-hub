@@ -230,31 +230,70 @@ const CandidateProfileCard = ({
             </div>
             <div className="flex gap-2 shrink-0 flex-wrap">
               {onSave && !isApplication && (
-                <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="gap-1 transition-colors"
-                    title={isSaved ? (currentFolder ? `In folder: ${currentFolder}` : "Saved — click to remove") : "Save to a folder"}
-                    onClick={() => {
-                      if (isSaved) {
-                        onSave(candidate.id);
-                      } else if (onSaveToFolder) {
-                        setSelectedFolderChoice(existingFolders[0] ?? "__new__");
-                        setNewFolderName("");
-                        setFolderDialogOpen(true);
-                      } else {
-                        onSave(candidate.id);
-                      }
-                    }}
-                  >
-                    {isSaved ? (
-                      <BookmarkCheck className="h-4 w-4 text-primary" />
-                    ) : (
-                      <Bookmark className="h-4 w-4" />
-                    )}
-                  </Button>
-                </motion.div>
+                <>
+                  {isSaved ? (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="gap-1 transition-colors"
+                            title={currentFolder ? `In folder: ${currentFolder}` : "Saved"}
+                          >
+                            <BookmarkCheck className="h-4 w-4 text-primary" />
+                          </Button>
+                        </motion.div>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-48">
+                        {currentFolder && (
+                          <div className="px-2 py-1.5 text-xs text-muted-foreground">
+                            Folder: <span className="font-medium text-foreground">{currentFolder}</span>
+                          </div>
+                        )}
+                        {onSaveToFolder && (
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setSelectedFolderChoice(currentFolder || existingFolders[0] || "__new__");
+                              setNewFolderName("");
+                              setFolderDialogOpen(true);
+                            }}
+                          >
+                            <FolderInput className="h-4 w-4 mr-2" />
+                            Move to folder
+                          </DropdownMenuItem>
+                        )}
+                        <DropdownMenuItem
+                          className="text-destructive focus:text-destructive"
+                          onClick={() => onSave(candidate.id)}
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Remove from saved
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  ) : (
+                    <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="gap-1 transition-colors"
+                        title="Save to a folder"
+                        onClick={() => {
+                          if (onSaveToFolder) {
+                            setSelectedFolderChoice(existingFolders[0] ?? "__new__");
+                            setNewFolderName("");
+                            setFolderDialogOpen(true);
+                          } else {
+                            onSave(candidate.id);
+                          }
+                        }}
+                      >
+                        <Bookmark className="h-4 w-4" />
+                      </Button>
+                    </motion.div>
+                  )}
+                </>
               )}
               {(onView || onViewApplicant) && (
                 <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
