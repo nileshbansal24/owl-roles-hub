@@ -543,6 +543,23 @@ const CandidateProfileCard = ({
         </div>
       </div>
     </motion.div>
+    {onSaveToFolder && (
+      <SaveToFolderDialog
+        open={folderDialogOpen}
+        onOpenChange={setFolderDialogOpen}
+        candidateName={candidate.full_name || "this candidate"}
+        existingFolders={existingFolders}
+        selectedFolderChoice={selectedFolderChoice}
+        setSelectedFolderChoice={setSelectedFolderChoice}
+        newFolderName={newFolderName}
+        setNewFolderName={setNewFolderName}
+        onConfirm={async (folder) => {
+          await onSaveToFolder(candidate.id, folder);
+          setFolderDialogOpen(false);
+        }}
+      />
+    )}
+    </>
   );
 };
 
