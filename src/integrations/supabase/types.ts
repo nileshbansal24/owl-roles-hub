@@ -939,6 +939,7 @@ export type Database = {
         Row: {
           candidate_id: string
           created_at: string
+          folder: string | null
           id: string
           notes: string | null
           recruiter_id: string
@@ -947,6 +948,7 @@ export type Database = {
         Insert: {
           candidate_id: string
           created_at?: string
+          folder?: string | null
           id?: string
           notes?: string | null
           recruiter_id: string
@@ -955,6 +957,7 @@ export type Database = {
         Update: {
           candidate_id?: string
           created_at?: string
+          folder?: string | null
           id?: string
           notes?: string | null
           recruiter_id?: string
