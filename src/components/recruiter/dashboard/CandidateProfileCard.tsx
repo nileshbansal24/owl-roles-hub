@@ -285,6 +285,7 @@ const CandidateProfileCard = ({
                           if (onSaveToFolder) {
                             setSelectedFolderChoice(existingFolders[0] ?? "__new__");
                             setNewFolderName("");
+                            setIsMovingFolder(false);
                             setFolderDialogOpen(true);
                           } else {
                             onSave(candidate.id);
