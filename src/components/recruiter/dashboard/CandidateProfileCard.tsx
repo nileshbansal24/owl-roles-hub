@@ -576,4 +576,110 @@ const CandidateProfileCard = ({
   );
 };
 
+interface SaveToFolderDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  candidateName: string;
+  existingFolders: string[];
+  selectedFolderChoice: string;
+  setSelectedFolderChoice: (value: string) => void;
+  newFolderName: string;
+  setNewFolderName: (value: string) => void;
+  onConfirm: (folder: string) => void | Promise<void>;
+}
+
+const SaveToFolderDialog = ({
+  open,
+  onOpenChange,
+  candidateName,
+  existingFolders,
+  selectedFolderChoice,
+  setSelectedFolderChoice,
+  newFolderName,
+  setNewFolderName,
+  onConfirm,
+}: SaveToFolderDialogProps) => {
+  const isCreatingNew = selectedFolderChoice === "__new__" || existingFolders.length === 0;
+  const folder = isCreatingNew ? newFolderName.trim() : selectedFolderChoice;
+  const canConfirm = folder.length > 0;
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <FolderPlus className="h-4 w-4 text-primary" />
+            Save to folder
+          </DialogTitle>
+          <DialogDescription>
+            Choose a folder for <span className="font-medium text-foreground">{candidateName}</span> or create a new one.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4 py-2">
+          {existingFolders.length > 0 && (
+            <div className="space-y-2">
+              <Label className="text-xs uppercase tracking-wide text-muted-foreground">Your folders</Label>
+              <RadioGroup
+                value={selectedFolderChoice}
+                onValueChange={setSelectedFolderChoice}
+                className="space-y-1 max-h-44 overflow-y-auto rounded-md border border-border/60 p-2"
+              >
+                {existingFolders.map((f) => (
+                  <label
+                    key={f}
+                    htmlFor={`folder-${f}`}
+                    className="flex items-center gap-2 rounded px-2 py-1.5 cursor-pointer hover:bg-accent/50"
+                  >
+                    <RadioGroupItem value={f} id={`folder-${f}`} />
+                    <span className="text-sm">{f}</span>
+                  </label>
+                ))}
+                <label
+                  htmlFor="folder-new"
+                  className="flex items-center gap-2 rounded px-2 py-1.5 cursor-pointer hover:bg-accent/50 border-t border-border/40 mt-1 pt-2"
+                >
+                  <RadioGroupItem value="__new__" id="folder-new" />
+                  <span className="text-sm font-medium text-primary">+ Create new folder</span>
+                </label>
+              </RadioGroup>
+            </div>
+          )}
+
+          {isCreatingNew && (
+            <div className="space-y-1.5">
+              <Label htmlFor="new-folder-name" className="text-xs uppercase tracking-wide text-muted-foreground">
+                New folder name
+              </Label>
+              <Input
+                id="new-folder-name"
+                autoFocus
+                placeholder="e.g. AI Researchers, Round 2 Interviews"
+                value={newFolderName}
+                onChange={(e) => setNewFolderName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && canConfirm) {
+                    e.preventDefault();
+                    onConfirm(folder);
+                  }
+                }}
+              />
+            </div>
+          )}
+        </div>
+
+        <DialogFooter className="gap-2 sm:gap-2">
+          <Button variant="ghost" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button disabled={!canConfirm} onClick={() => onConfirm(folder)}>
+            <FolderPlus className="h-4 w-4 mr-1.5" />
+            Save to {isCreatingNew ? "new folder" : `"${selectedFolderChoice}"`}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
 export default CandidateProfileCard;
