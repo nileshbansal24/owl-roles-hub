@@ -635,6 +635,7 @@ interface SaveToFolderDialogProps {
   newFolderName: string;
   setNewFolderName: (value: string) => void;
   onConfirm: (folder: string) => void | Promise<void>;
+  isMoving?: boolean;
 }
 
 const SaveToFolderDialog = ({
@@ -647,6 +648,7 @@ const SaveToFolderDialog = ({
   newFolderName,
   setNewFolderName,
   onConfirm,
+  isMoving = false,
 }: SaveToFolderDialogProps) => {
   const isCreatingNew = selectedFolderChoice === "__new__" || existingFolders.length === 0;
   const folder = isCreatingNew ? newFolderName.trim() : selectedFolderChoice;
