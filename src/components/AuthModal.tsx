@@ -186,15 +186,19 @@ const AuthModal = ({
   return (
     <Dialog open={open} onOpenChange={(o) => { onOpenChange(o); if (!o) resetModal(); }}>
       <DialogContent
-        className={`p-0 overflow-hidden bg-card border-border/60 ${
+        className={`p-0 overflow-hidden bg-card border-border/60 max-h-[92vh] flex flex-col ${
           showBenefitsPanel ? "sm:max-w-[880px]" : "sm:max-w-[460px]"
         }`}
       >
-        <div className={`grid ${showBenefitsPanel ? "md:grid-cols-[1fr_400px]" : "grid-cols-1"}`}>
+        <div className={`grid flex-1 min-h-0 ${showBenefitsPanel ? "md:grid-cols-[1fr_400px]" : "grid-cols-1"} overflow-hidden`}>
           {/* Benefits panel (signup only) */}
           {showBenefitsPanel && (
-            <div className="hidden md:flex flex-col justify-between p-8 bg-gradient-to-br from-primary to-primary/80 text-primary-foreground">
-              <div>
+            <div className="hidden md:flex flex-col justify-between p-8 bg-gradient-to-br from-primary to-primary/80 text-primary-foreground relative overflow-hidden">
+              {/* decorative blobs */}
+              <div className="absolute -top-20 -left-20 w-64 h-64 rounded-full bg-primary-foreground/10 blur-3xl" />
+              <div className="absolute -bottom-24 -right-16 w-72 h-72 rounded-full bg-primary-foreground/10 blur-3xl" />
+
+              <div className="relative">
                 <div className="w-12 h-12 rounded-xl bg-primary-foreground/15 backdrop-blur flex items-center justify-center mb-6">
                   <span className="font-heading font-bold text-xl">O</span>
                 </div>
@@ -207,24 +211,41 @@ const AuthModal = ({
                     : "Trusted by leading universities and research institutions across India."}
                 </p>
               </div>
-              <ul className="space-y-4 mt-8">
+
+              {/* Animated owl mascot */}
+              <motion.div
+                className="relative flex justify-center my-6"
+                animate={{ y: [0, -10, 0] }}
+                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+              >
+                <motion.img
+                  src={owlMascot}
+                  alt="OWL ROLES mascot"
+                  width={180}
+                  height={180}
+                  loading="lazy"
+                  className="w-44 h-44 drop-shadow-2xl"
+                  animate={{ rotate: [-2, 2, -2] }}
+                  transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+                />
+              </motion.div>
+
+              <ul className="space-y-3 relative">
                 {benefits.map(({ icon: Icon, text }, i) => (
                   <li key={i} className="flex gap-3 items-start">
-                    <div className="w-8 h-8 rounded-lg bg-primary-foreground/15 backdrop-blur shrink-0 flex items-center justify-center">
-                      <Icon className="w-4 h-4" />
+                    <div className="w-7 h-7 rounded-lg bg-primary-foreground/15 backdrop-blur shrink-0 flex items-center justify-center">
+                      <Icon className="w-3.5 h-3.5" />
                     </div>
-                    <span className="text-sm leading-relaxed text-primary-foreground/95">{text}</span>
+                    <span className="text-[13px] leading-relaxed text-primary-foreground/95">{text}</span>
                   </li>
                 ))}
               </ul>
-              <p className="text-xs text-primary-foreground/70 mt-8">
-                Free forever for {role === "candidate" ? "Job Seekers" : "your first 30 days"}.
-              </p>
             </div>
           )}
 
-          {/* Right side: auth content */}
-          <div className="p-6 sm:p-8">
+          {/* Right side: auth content — scrollable */}
+          <div className="p-6 sm:p-8 overflow-y-auto">
+
             <AnimatePresence mode="wait">
               {step === "role" ? (
                 <motion.div
