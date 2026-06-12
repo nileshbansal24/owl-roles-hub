@@ -103,6 +103,15 @@ const FindCandidatesTab = ({
 
   const recruiterTokens = useMemo(() => getLocationTokens(recruiterLocation ?? null), [recruiterLocation, getLocationTokens]);
 
+  // Detect whether any advanced filter has been changed from defaults
+  const hasActiveFilters = useMemo(
+    () => JSON.stringify(advancedFilters) !== JSON.stringify(defaultFilters),
+    [advancedFilters]
+  );
+
+  // Only reveal the candidate pool once the recruiter has searched or filtered
+  const showResults = hasSearched || hasActiveFilters || showNearMe;
+
   // Show search results if available, otherwise show all candidates
   const baseCandidates = searchResults !== null ? searchResults : candidates;
 
@@ -618,6 +627,7 @@ const FindCandidatesTab = ({
       </motion.div>
 
       {/* Results Header with Sorting and Pagination Info */}
+      {showResults && (
       <motion.div variants={staggerItemVariants} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <Users className="h-5 w-5 text-primary" />
@@ -628,7 +638,7 @@ const FindCandidatesTab = ({
               </>
             ) : (
               <>
-                Candidate Pool: <span className="font-medium text-foreground">{sortedCandidates.length}</span> candidates
+                Filtered Candidates: <span className="font-medium text-foreground">{sortedCandidates.length}</span>
               </>
             )}
             {sortedCandidates.length > 0 && (
@@ -693,35 +703,40 @@ const FindCandidatesTab = ({
           )}
         </div>
       </motion.div>
+      )}
+
+      {/* Prompt when nothing searched/filtered yet */}
+      {!showResults && (
+        <motion.div variants={staggerItemVariants}>
+          <EmptyState
+            icon={UserSearch}
+            title="Start a search to see candidates"
+            description="Use the search bar above or open Advanced Filters to discover candidates from our talent pool. Nothing is shown until you search or apply a filter."
+          >
+            <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 px-4 py-2 rounded-full">
+              <Sparkles className="h-4 w-4 text-primary" />
+              <span>Tip: try a keyword like "AI" or filter by experience</span>
+            </div>
+          </EmptyState>
+        </motion.div>
+      )}
 
       {/* Candidate Results */}
+      {showResults && (
       <motion.div variants={staggerItemVariants} className="grid gap-4">
         {isSearching ? (
           <CardListSkeleton count={3} />
         ) : paginatedCandidates.length === 0 ? (
-          hasSearched ? (
-            <EmptyState
-              icon={UserSearch}
-              title="No matches yet"
-              description="Try loosening a filter or two — the right candidate might be one keyword away."
-              action={{
-                label: "Clear Search",
-                onClick: clearSearch,
-                icon: X,
-              }}
-            />
-          ) : (
-            <EmptyState
-              icon={Users}
-              title="The talent pool is warming up"
-              description="New candidates join every day. Check back soon — or post a role to attract them faster."
-            >
-              <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 px-4 py-2 rounded-full">
-                <Sparkles className="h-4 w-4 text-primary" />
-                <span>New candidates are added daily</span>
-              </div>
-            </EmptyState>
-          )
+          <EmptyState
+            icon={UserSearch}
+            title="No matches yet"
+            description="Try loosening a filter or two — the right candidate might be one keyword away."
+            action={{
+              label: "Clear Search",
+              onClick: clearSearch,
+              icon: X,
+            }}
+          />
         ) : (
           paginatedCandidates.map((candidate, index) => (
             <CandidateCard
@@ -740,6 +755,7 @@ const FindCandidatesTab = ({
           ))
         )}
       </motion.div>
+      )}
 
       {/* Pagination Controls */}
       {sortedCandidates.length > CANDIDATES_PER_PAGE && (
