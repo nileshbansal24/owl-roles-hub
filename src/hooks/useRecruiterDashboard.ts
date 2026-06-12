@@ -21,6 +21,7 @@ export const useRecruiterDashboard = () => {
   const [savedCandidateIds, setSavedCandidateIds] = useState<Set<string>>(new Set());
   const [savedCandidateNotes, setSavedCandidateNotes] = useState<Record<string, string>>({});
   const [savedCandidateStatuses, setSavedCandidateStatuses] = useState<Record<string, string>>({});
+  const [savedCandidateFolders, setSavedCandidateFolders] = useState<Record<string, string>>({});
   const [pendingVerificationCount, setPendingVerificationCount] = useState(0);
   
   // Onboarding state
@@ -139,6 +140,11 @@ export const useRecruiterDashboard = () => {
           delete next[candidateId];
           return next;
         });
+        setSavedCandidateFolders(prev => {
+          const next = { ...prev };
+          delete next[candidateId];
+          return next;
+        });
         toast({
           title: "Removed",
           description: "Candidate removed from saved list",
@@ -167,6 +173,51 @@ export const useRecruiterDashboard = () => {
         });
       }
     }
+  }, [user, savedCandidateIds, toast]);
+
+  /**
+   * Save a candidate into a specific folder (creating an implicit folder by name).
+   * If the candidate is already saved, this just updates the folder label.
+   */
+  const handleSaveCandidateToFolder = useCallback(async (candidateId: string, folder: string) => {
+    if (!user) return;
+    const trimmed = (folder || "").trim();
+    const folderValue = trimmed.length ? trimmed : null;
+
+    const existing = savedCandidateIds.has(candidateId);
+    if (existing) {
+      const { error } = await supabase
+        .from("saved_candidates")
+        .update({ folder: folderValue } as any)
+        .eq("recruiter_id", user.id)
+        .eq("candidate_id", candidateId);
+      if (error) {
+        toast({ title: "Error", description: "Failed to move to folder", variant: "destructive" });
+        return;
+      }
+    } else {
+      const { error } = await supabase
+        .from("saved_candidates")
+        .insert({ recruiter_id: user.id, candidate_id: candidateId, folder: folderValue } as any);
+      if (error) {
+        toast({ title: "Error", description: "Failed to save candidate", variant: "destructive" });
+        return;
+      }
+      setSavedCandidateIds(prev => new Set([...prev, candidateId]));
+      setSavedCandidateStatuses(prev => ({ ...prev, [candidateId]: "saved" }));
+    }
+
+    setSavedCandidateFolders(prev => {
+      const next = { ...prev };
+      if (folderValue) next[candidateId] = folderValue;
+      else delete next[candidateId];
+      return next;
+    });
+
+    toast({
+      title: folderValue ? `Saved to "${folderValue}"` : "Saved",
+      description: folderValue ? "Candidate added to that folder." : "Candidate added to your saved list.",
+    });
   }, [user, savedCandidateIds, toast]);
 
   /**
@@ -528,19 +579,22 @@ export const useRecruiterDashboard = () => {
       // Fetch saved candidates
       const { data: savedData } = await supabase
         .from("saved_candidates")
-        .select("candidate_id, notes, status")
+        .select("candidate_id, notes, status, folder")
         .eq("recruiter_id", user.id);
 
       if (savedData) {
         setSavedCandidateIds(new Set(savedData.map((s: any) => s.candidate_id)));
         const notesMap: Record<string, string> = {};
         const statusMap: Record<string, string> = {};
+        const folderMap: Record<string, string> = {};
         savedData.forEach((s: any) => {
           if (s.notes) notesMap[s.candidate_id] = s.notes;
           statusMap[s.candidate_id] = s.status || "saved";
+          if (s.folder) folderMap[s.candidate_id] = s.folder;
         });
         setSavedCandidateNotes(notesMap);
         setSavedCandidateStatuses(statusMap);
+        setSavedCandidateFolders(folderMap);
       }
 
       // Fetch scheduled interviews
@@ -619,6 +673,8 @@ export const useRecruiterDashboard = () => {
     hasReviewedCandidate,
     updateApplicationStatus,
     handleSaveCandidate,
+    handleSaveCandidateToFolder,
+    savedCandidateFolders,
     handleSetCandidateStatus,
     handleDownloadResume,
     refreshInterviews,

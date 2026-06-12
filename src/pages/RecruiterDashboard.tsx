@@ -53,6 +53,8 @@ const RecruiterDashboard = () => {
     recruiterName,
     updateApplicationStatus,
     handleSaveCandidate,
+    handleSaveCandidateToFolder,
+    savedCandidateFolders,
     handleSetCandidateStatus,
     handleDownloadResume,
     refreshInterviews,
@@ -302,6 +304,7 @@ const RecruiterDashboard = () => {
               applications={applications}
               candidates={candidates}
               interviews={interviews}
+              savedCount={savedCandidateIds.size}
             />
           </TabsContent>
 
@@ -312,8 +315,10 @@ const RecruiterDashboard = () => {
               savedCandidateIds={savedCandidateIds}
               savedCandidateNotes={savedCandidateNotes}
               savedCandidateStatuses={savedCandidateStatuses}
+              savedCandidateFolders={savedCandidateFolders}
               onViewCandidate={handleViewCandidate}
               onSaveCandidate={handleSaveCandidate}
+              onSaveCandidateToFolder={handleSaveCandidateToFolder}
               onMessageCandidate={(candidate) => handleSendMessage(candidate)}
               onSaveNote={handleSaveNote}
               onSetStatus={handleSetCandidateStatus}
@@ -329,8 +334,10 @@ const RecruiterDashboard = () => {
               savedCandidateIds={savedCandidateIds}
               savedCandidateNotes={savedCandidateNotes}
               savedCandidateStatuses={savedCandidateStatuses}
+              savedCandidateFolders={savedCandidateFolders}
               onViewCandidate={handleViewCandidate}
               onSaveCandidate={handleSaveCandidate}
+              onSaveCandidateToFolder={handleSaveCandidateToFolder}
               onMessageCandidate={(candidate) => handleSendMessage(candidate)}
               onSaveNote={handleSaveNote}
               onSetStatus={handleSetCandidateStatus}

@@ -27,8 +27,10 @@ interface FindCandidatesTabProps {
   savedCandidateIds: Set<string>;
   savedCandidateNotes: Record<string, string>;
   savedCandidateStatuses?: Record<string, string>;
+  savedCandidateFolders?: Record<string, string>;
   onViewCandidate: (candidate: Profile) => void;
   onSaveCandidate: (candidateId: string) => void;
+  onSaveCandidateToFolder?: (candidateId: string, folder: string) => void | Promise<void>;
   onMessageCandidate: (candidate: Profile) => void;
   onSaveNote: (candidateId: string, note: string) => Promise<void>;
   onSetStatus?: (candidateId: string, status: string) => void | Promise<void>;
@@ -53,8 +55,10 @@ const FindCandidatesTab = ({
   savedCandidateIds,
   savedCandidateNotes,
   savedCandidateStatuses,
+  savedCandidateFolders = {},
   onViewCandidate,
   onSaveCandidate,
+  onSaveCandidateToFolder,
   onMessageCandidate,
   onSaveNote,
   onSetStatus,
@@ -69,6 +73,11 @@ const FindCandidatesTab = ({
   const [sortBy, setSortBy] = useState<SortOption>("recent");
   const [showNearMe, setShowNearMe] = useState(false);
   const [advancedFilters, setAdvancedFilters] = useState<CandidateFilters>(defaultFilters);
+
+  const existingFolders = useMemo(
+    () => Array.from(new Set(Object.values(savedCandidateFolders).filter(Boolean))).sort(),
+    [savedCandidateFolders],
+  );
 
   const handleSearchResults = useCallback((results: Profile[]) => {
     setSearchResults(results);
@@ -748,8 +757,11 @@ const FindCandidatesTab = ({
               isSaved={savedCandidateIds.has(candidate.id)}
               note={savedCandidateNotes[candidate.id]}
               savedStatus={savedCandidateStatuses?.[candidate.id]}
+              currentFolder={savedCandidateFolders[candidate.id]}
+              existingFolders={existingFolders}
               onView={onViewCandidate}
               onSave={onSaveCandidate}
+              onSaveToFolder={onSaveCandidateToFolder}
               onMessage={onMessageCandidate}
               onSaveNote={onSaveNote}
               onSetStatus={onSetStatus}

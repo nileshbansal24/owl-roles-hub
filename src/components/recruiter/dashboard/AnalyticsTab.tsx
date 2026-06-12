@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import {
   Briefcase,
   Users,
+  Bookmark,
   FileText,
   CheckCircle2,
   Trophy,
@@ -41,6 +42,7 @@ interface AnalyticsTabProps {
   applications: Application[];
   candidates: Profile[];
   interviews: EnrichedInterview[];
+  savedCount?: number;
 }
 
 const STATUS_COLORS: Record<string, string> = {
@@ -94,7 +96,7 @@ const KpiCard = ({
   </motion.div>
 );
 
-const AnalyticsTab = ({ jobs, applications, candidates, interviews }: AnalyticsTabProps) => {
+const AnalyticsTab = ({ jobs, applications, candidates, interviews, savedCount = 0 }: AnalyticsTabProps) => {
   const metrics = useMemo(() => {
     const total = applications.length;
     const pending = applications.filter((a) => a.status === "pending").length;
@@ -239,13 +241,6 @@ const AnalyticsTab = ({ jobs, applications, candidates, interviews }: AnalyticsT
         text: `${metrics.shortlisted} candidates are shortlisted but no interviews are scheduled. Reach out before they accept other offers.`,
       });
     }
-    if (candidates.length > 100 && metrics.shortlisted < 3) {
-      tips.push({
-        tone: "info",
-        title: "Explore the talent pool",
-        text: `${candidates.length} candidates are available. Use Find Candidates with filters to source proactively instead of waiting for applications.`,
-      });
-    }
     if (tips.length === 0) {
       tips.push({
         tone: "good",
@@ -309,10 +304,10 @@ const AnalyticsTab = ({ jobs, applications, candidates, interviews }: AnalyticsT
           delta={metrics.last7 > 0 ? { value: Math.abs(metrics.weeklyDelta), positive: metrics.weeklyDelta >= 0 } : undefined}
         />
         <KpiCard
-          icon={Users}
-          label="Talent Pool"
-          value={candidates.length}
-          sub="Discoverable candidates"
+          icon={Bookmark}
+          label="Saved Candidates"
+          value={savedCount}
+          sub={savedCount ? "Across all your folders" : "Start building your shortlist"}
           accent="bg-sky-500/10 text-sky-600"
         />
         <KpiCard

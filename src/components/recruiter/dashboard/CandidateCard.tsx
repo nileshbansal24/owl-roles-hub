@@ -15,6 +15,10 @@ interface LegacyCandidateCardProps {
   onMessage: (candidate: Profile) => void;
   onSaveNote: (candidateId: string, note: string) => Promise<void>;
   onSetStatus?: (candidateId: string, status: string) => void | Promise<void>;
+  /** Folder support for saved candidates */
+  currentFolder?: string;
+  existingFolders?: string[];
+  onSaveToFolder?: (candidateId: string, folder: string) => void | Promise<void>;
 }
 
 const CandidateCard = (props: LegacyCandidateCardProps) => {

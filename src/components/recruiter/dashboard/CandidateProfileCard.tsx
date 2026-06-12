@@ -6,6 +6,18 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { FolderPlus } from "lucide-react";
 import {
   Eye,
   Bookmark,
@@ -74,6 +86,10 @@ export interface CandidateProfileCardProps {
   onMessage?: (candidate: Profile) => void;
   onSaveNote?: (candidateId: string, note: string) => Promise<void>;
   onSetStatus?: (candidateId: string, status: string) => void | Promise<void>;
+  /** Folder support for saved candidates */
+  currentFolder?: string;
+  existingFolders?: string[];
+  onSaveToFolder?: (candidateId: string, folder: string) => void | Promise<void>;
 
   /** Application-pipeline actions */
   onViewApplicant?: (app: Application) => void;
@@ -108,10 +124,16 @@ const CandidateProfileCard = ({
   selected = false,
   onToggleSelect,
   extraActions,
+  currentFolder,
+  existingFolders = [],
+  onSaveToFolder,
 }: CandidateProfileCardProps) => {
   const [editingNote, setEditingNote] = useState(false);
   const [noteText, setNoteText] = useState(note || "");
   const [savingNote, setSavingNote] = useState(false);
+  const [folderDialogOpen, setFolderDialogOpen] = useState(false);
+  const [newFolderName, setNewFolderName] = useState("");
+  const [selectedFolderChoice, setSelectedFolderChoice] = useState<string>("");
 
   const isApplication = !!application;
 
@@ -129,6 +151,7 @@ const CandidateProfileCard = ({
   };
 
   return (
+    <>
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -206,7 +229,18 @@ const CandidateProfileCard = ({
                     variant="ghost"
                     size="sm"
                     className="gap-1 transition-colors"
-                    onClick={() => onSave(candidate.id)}
+                    title={isSaved ? (currentFolder ? `In folder: ${currentFolder}` : "Saved — click to remove") : "Save to a folder"}
+                    onClick={() => {
+                      if (isSaved) {
+                        onSave(candidate.id);
+                      } else if (onSaveToFolder) {
+                        setSelectedFolderChoice(existingFolders[0] ?? "__new__");
+                        setNewFolderName("");
+                        setFolderDialogOpen(true);
+                      } else {
+                        onSave(candidate.id);
+                      }
+                    }}
                   >
                     {isSaved ? (
                       <BookmarkCheck className="h-4 w-4 text-primary" />
@@ -522,6 +556,129 @@ const CandidateProfileCard = ({
         </div>
       </div>
     </motion.div>
+    {onSaveToFolder && (
+      <SaveToFolderDialog
+        open={folderDialogOpen}
+        onOpenChange={setFolderDialogOpen}
+        candidateName={candidate.full_name || "this candidate"}
+        existingFolders={existingFolders}
+        selectedFolderChoice={selectedFolderChoice}
+        setSelectedFolderChoice={setSelectedFolderChoice}
+        newFolderName={newFolderName}
+        setNewFolderName={setNewFolderName}
+        onConfirm={async (folder) => {
+          await onSaveToFolder(candidate.id, folder);
+          setFolderDialogOpen(false);
+        }}
+      />
+    )}
+    </>
+  );
+};
+
+interface SaveToFolderDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  candidateName: string;
+  existingFolders: string[];
+  selectedFolderChoice: string;
+  setSelectedFolderChoice: (value: string) => void;
+  newFolderName: string;
+  setNewFolderName: (value: string) => void;
+  onConfirm: (folder: string) => void | Promise<void>;
+}
+
+const SaveToFolderDialog = ({
+  open,
+  onOpenChange,
+  candidateName,
+  existingFolders,
+  selectedFolderChoice,
+  setSelectedFolderChoice,
+  newFolderName,
+  setNewFolderName,
+  onConfirm,
+}: SaveToFolderDialogProps) => {
+  const isCreatingNew = selectedFolderChoice === "__new__" || existingFolders.length === 0;
+  const folder = isCreatingNew ? newFolderName.trim() : selectedFolderChoice;
+  const canConfirm = folder.length > 0;
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <FolderPlus className="h-4 w-4 text-primary" />
+            Save to folder
+          </DialogTitle>
+          <DialogDescription>
+            Choose a folder for <span className="font-medium text-foreground">{candidateName}</span> or create a new one.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4 py-2">
+          {existingFolders.length > 0 && (
+            <div className="space-y-2">
+              <Label className="text-xs uppercase tracking-wide text-muted-foreground">Your folders</Label>
+              <RadioGroup
+                value={selectedFolderChoice}
+                onValueChange={setSelectedFolderChoice}
+                className="space-y-1 max-h-44 overflow-y-auto rounded-md border border-border/60 p-2"
+              >
+                {existingFolders.map((f) => (
+                  <label
+                    key={f}
+                    htmlFor={`folder-${f}`}
+                    className="flex items-center gap-2 rounded px-2 py-1.5 cursor-pointer hover:bg-accent/50"
+                  >
+                    <RadioGroupItem value={f} id={`folder-${f}`} />
+                    <span className="text-sm">{f}</span>
+                  </label>
+                ))}
+                <label
+                  htmlFor="folder-new"
+                  className="flex items-center gap-2 rounded px-2 py-1.5 cursor-pointer hover:bg-accent/50 border-t border-border/40 mt-1 pt-2"
+                >
+                  <RadioGroupItem value="__new__" id="folder-new" />
+                  <span className="text-sm font-medium text-primary">+ Create new folder</span>
+                </label>
+              </RadioGroup>
+            </div>
+          )}
+
+          {isCreatingNew && (
+            <div className="space-y-1.5">
+              <Label htmlFor="new-folder-name" className="text-xs uppercase tracking-wide text-muted-foreground">
+                New folder name
+              </Label>
+              <Input
+                id="new-folder-name"
+                autoFocus
+                placeholder="e.g. AI Researchers, Round 2 Interviews"
+                value={newFolderName}
+                onChange={(e) => setNewFolderName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && canConfirm) {
+                    e.preventDefault();
+                    onConfirm(folder);
+                  }
+                }}
+              />
+            </div>
+          )}
+        </div>
+
+        <DialogFooter className="gap-2 sm:gap-2">
+          <Button variant="ghost" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button disabled={!canConfirm} onClick={() => onConfirm(folder)}>
+            <FolderPlus className="h-4 w-4 mr-1.5" />
+            Save to {isCreatingNew ? "new folder" : `"${selectedFolderChoice}"`}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 };
 
