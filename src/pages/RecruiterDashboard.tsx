@@ -53,6 +53,8 @@ const RecruiterDashboard = () => {
     recruiterName,
     updateApplicationStatus,
     handleSaveCandidate,
+    handleSaveCandidateToFolder,
+    savedCandidateFolders,
     handleSetCandidateStatus,
     handleDownloadResume,
     refreshInterviews,
