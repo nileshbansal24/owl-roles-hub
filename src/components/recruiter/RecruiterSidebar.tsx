@@ -141,16 +141,18 @@ const RecruiterSidebar = ({ hasJobs = false, pendingVerificationCount = 0 }: Rec
   return (
     <Sidebar collapsible="icon" className="border-r border-sidebar-border/60">
       {/* Header */}
-      <SidebarHeader className="border-b border-sidebar-border/60 px-4 py-3.5">
-        <button onClick={() => navigate("/recruiter-dashboard")} className="flex items-center">
-          <img
-            src={theme === "dark" ? logoDark : logoLight}
-            alt="OWL Roles"
-            width={321}
-            height={193}
-            className={cn("w-auto transition-all", isCollapsed ? "h-10" : "h-12")}
-          />
-        </button>
+      <SidebarHeader className={cn("border-b border-sidebar-border/60 py-3.5", isCollapsed ? "px-2 flex items-center justify-center" : "px-4")}>
+        {!isCollapsed && (
+          <button onClick={() => navigate("/recruiter-dashboard")} className="flex items-center">
+            <img
+              src={theme === "dark" ? logoDark : logoLight}
+              alt="OWL Roles"
+              width={321}
+              height={193}
+              className="w-auto h-12 transition-all"
+            />
+          </button>
+        )}
       </SidebarHeader>
 
       <SidebarContent className="px-2 py-3">
