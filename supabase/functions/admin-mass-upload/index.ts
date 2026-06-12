@@ -48,11 +48,11 @@ interface UploadResult {
   userId?: string;
 }
 
-function generatePasswordFromName(fullName: string): string {
-  const firstName = (fullName || "user").trim().split(/\s+/)[0] || "user";
-  const letters = firstName.replace(/[^A-Za-z]/g, "").toUpperCase();
-  const base = (letters + "XXXX").slice(0, 4);
-  return `${base}1234`;
+function generateSecurePassword(): string {
+  // Cryptographically random 24-char password
+  const bytes = new Uint8Array(18);
+  crypto.getRandomValues(bytes);
+  return btoa(String.fromCharCode(...bytes)).replace(/[+/=]/g, "").slice(0, 24);
 }
 
 Deno.serve(async (req) => {
