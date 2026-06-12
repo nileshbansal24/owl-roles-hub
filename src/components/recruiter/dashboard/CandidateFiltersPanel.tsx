@@ -715,15 +715,10 @@ const CandidateFiltersPanel = ({
                     </div>
                   </AccordionTrigger>
                   <AccordionContent className="pb-3">
-                    {topUniversities.length > 0 ? (
-                      <CheckboxList
-                        items={topUniversities}
-                        selected={filters.selectedUniversities}
-                        filterKey="selectedUniversities"
-                      />
-                    ) : (
-                      <p className="text-xs text-muted-foreground">No university data available</p>
-                    )}
+                    <UniversityManualInput
+                      selected={filters.selectedUniversities}
+                      onChange={(next) => onFiltersChange({ ...filters, selectedUniversities: next })}
+                    />
                   </AccordionContent>
                 </AccordionItem>
 
