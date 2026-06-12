@@ -104,13 +104,20 @@ serve(async (req) => {
     const callerId = claimsData.claims.sub as string;
     const { data: profile } = await anonClient
       .from("profiles")
-      .select("user_type")
+      .select("user_type, approval_status")
       .eq("id", callerId)
       .single();
 
     if (!profile || profile.user_type !== "recruiter") {
       return new Response(
         JSON.stringify({ error: "Forbidden: recruiter access only" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (profile.approval_status !== "approved") {
+      return new Response(
+        JSON.stringify({ error: "Forbidden: account pending admin approval" }),
         { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
