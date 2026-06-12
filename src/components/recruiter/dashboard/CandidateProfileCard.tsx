@@ -112,10 +112,16 @@ const CandidateProfileCard = ({
   selected = false,
   onToggleSelect,
   extraActions,
+  currentFolder,
+  existingFolders = [],
+  onSaveToFolder,
 }: CandidateProfileCardProps) => {
   const [editingNote, setEditingNote] = useState(false);
   const [noteText, setNoteText] = useState(note || "");
   const [savingNote, setSavingNote] = useState(false);
+  const [folderDialogOpen, setFolderDialogOpen] = useState(false);
+  const [newFolderName, setNewFolderName] = useState("");
+  const [selectedFolderChoice, setSelectedFolderChoice] = useState<string>("");
 
   const isApplication = !!application;
 
