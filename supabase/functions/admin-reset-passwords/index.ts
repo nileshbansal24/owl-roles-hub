@@ -5,12 +5,10 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-function generatePasswordFromName(fullName: string, email: string): string {
-  const fallback = (email || "user").split("@")[0];
-  const firstName = ((fullName || fallback) || "user").trim().split(/\s+/)[0] || "user";
-  const letters = firstName.replace(/[^A-Za-z]/g, "").toUpperCase();
-  const base = (letters + "XXXX").slice(0, 4);
-  return `${base}1234`;
+function generateSecurePassword(): string {
+  const bytes = new Uint8Array(18);
+  crypto.getRandomValues(bytes);
+  return btoa(String.fromCharCode(...bytes)).replace(/[+/=]/g, "").slice(0, 24);
 }
 
 Deno.serve(async (req) => {
@@ -54,7 +52,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Get all candidate profiles (non-admin)
     const { data: candidates, error: profErr } = await serviceClient
       .from("profiles")
       .select("id, full_name, email")
@@ -67,31 +64,45 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Exclude admins
     const { data: adminRows } = await serviceClient.from("user_roles").select("user_id").eq("role", "admin");
     const adminIds = new Set((adminRows || []).map((r: { user_id: string }) => r.user_id));
 
-    const results: Array<{ id: string; email: string | null; success: boolean; password?: string; error?: string }> = [];
+    const results: Array<{ id: string; email: string | null; success: boolean; error?: string }> = [];
 
     for (const c of candidates || []) {
       if (adminIds.has(c.id)) continue;
-      const password = generatePasswordFromName(c.full_name || "", c.email || "");
+
+      // Rotate to a random temp password (not returned) and send recovery email
+      const tempPassword = generateSecurePassword();
       const { error: updErr } = await serviceClient.auth.admin.updateUserById(c.id, {
-        password,
-        user_metadata: { admin_uploaded: true },
+        password: tempPassword,
+        user_metadata: { admin_reset: true },
       });
       if (updErr) {
         results.push({ id: c.id, email: c.email, success: false, error: updErr.message });
-      } else {
-        results.push({ id: c.id, email: c.email, success: true, password });
+        continue;
       }
+
+      if (c.email) {
+        try {
+          await serviceClient.auth.admin.generateLink({ type: "recovery", email: c.email });
+        } catch (linkErr) {
+          console.error(`Recovery link failed for ${c.email}:`, linkErr);
+        }
+      }
+
+      results.push({ id: c.id, email: c.email, success: true });
     }
 
     const successCount = results.filter((r) => r.success).length;
     const failCount = results.length - successCount;
 
     return new Response(
-      JSON.stringify({ success: true, message: `Reset ${successCount} passwords, ${failCount} failed`, results }),
+      JSON.stringify({
+        success: true,
+        message: `Sent password recovery emails to ${successCount} candidates, ${failCount} failed`,
+        results,
+      }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (e) {

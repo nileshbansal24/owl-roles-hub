@@ -48,11 +48,11 @@ interface UploadResult {
   userId?: string;
 }
 
-function generatePasswordFromName(fullName: string): string {
-  const firstName = (fullName || "user").trim().split(/\s+/)[0] || "user";
-  const letters = firstName.replace(/[^A-Za-z]/g, "").toUpperCase();
-  const base = (letters + "XXXX").slice(0, 4);
-  return `${base}1234`;
+function generateSecurePassword(): string {
+  // Cryptographically random 24-char password
+  const bytes = new Uint8Array(18);
+  crypto.getRandomValues(bytes);
+  return btoa(String.fromCharCode(...bytes)).replace(/[+/=]/g, "").slice(0, 24);
 }
 
 Deno.serve(async (req) => {
@@ -288,8 +288,8 @@ Deno.serve(async (req) => {
           continue;
         }
 
-        // Password = first 4 letters of first name (uppercase) + "1234"
-        const generatedPassword = generatePasswordFromName(parsedResume.full_name || email.split("@")[0]);
+        // Generate a cryptographically random temporary password
+        const generatedPassword = generateSecurePassword();
 
         // Create user with generated password
         const { data: newUser, error: createError } = await serviceClient.auth.admin.createUser({
@@ -356,12 +356,18 @@ Deno.serve(async (req) => {
           console.error(`Profile update error for ${email}:`, profileError);
         }
 
-        results.push({ 
-          filename, 
-          success: true, 
-          email, 
+        // Send password reset email so the user can set their own credentials
+        try {
+          await serviceClient.auth.admin.generateLink({ type: "recovery", email });
+        } catch (linkErr) {
+          console.error(`Failed to send recovery link for ${email}:`, linkErr);
+        }
+
+        results.push({
+          filename,
+          success: true,
+          email,
           userId: newUser.user.id,
-          password: generatedPassword
         });
 
         console.log(`Successfully created user: ${email}`);

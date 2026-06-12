@@ -7,6 +7,36 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+async function signTrackingId(id: string): Promise<string> {
+  const secret = Deno.env.get("EMAIL_TRACKING_SECRET") || Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+  const enc = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    "raw", enc.encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]
+  );
+  const sig = await crypto.subtle.sign("HMAC", key, enc.encode(id));
+  const bytes = new Uint8Array(sig);
+  let hex = "";
+  for (const b of bytes) hex += b.toString(16).padStart(2, "0");
+  return hex.slice(0, 32);
+}
+
+const TRANSPARENT_PIXEL = new Uint8Array([
+  0x47, 0x49, 0x46, 0x38, 0x39, 0x61, 0x01, 0x00, 0x01, 0x00, 0x80, 0x00,
+  0x00, 0xff, 0xff, 0xff, 0x00, 0x00, 0x00, 0x21, 0xf9, 0x04, 0x01, 0x00,
+  0x00, 0x00, 0x00, 0x2c, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x01, 0x00,
+  0x00, 0x02, 0x02, 0x44, 0x01, 0x00, 0x3b,
+]);
+
+const pixelResponse = () =>
+  new Response(TRANSPARENT_PIXEL, {
+    status: 200,
+    headers: {
+      "Content-Type": "image/gif",
+      "Cache-Control": "no-store, no-cache, must-revalidate, private",
+      ...corsHeaders,
+    },
+  });
+
 const handler = async (req: Request): Promise<Response> => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
@@ -18,10 +48,26 @@ const handler = async (req: Request): Promise<Response> => {
     const messageId = url.searchParams.get("id");
     const eventType = url.searchParams.get("event"); // 'open' or 'click'
     const redirectUrl = url.searchParams.get("url");
+    const sig = url.searchParams.get("sig");
 
     if (!messageId || !eventType) {
       console.error("Missing required parameters:", { messageId, eventType });
       return new Response("Missing parameters", { status: 400 });
+    }
+
+    // Verify HMAC signature so anonymous callers cannot falsify metrics by
+    // hitting the endpoint with guessed message IDs.
+    if (!sig) {
+      // Open events should silently return a pixel; click events return 403.
+      return eventType === "open"
+        ? pixelResponse()
+        : new Response("Forbidden", { status: 403, headers: corsHeaders });
+    }
+    const expectedSig = await signTrackingId(messageId);
+    if (sig !== expectedSig) {
+      return eventType === "open"
+        ? pixelResponse()
+        : new Response("Forbidden", { status: 403, headers: corsHeaders });
     }
 
     console.log(`Tracking ${eventType} event for message: ${messageId}`);

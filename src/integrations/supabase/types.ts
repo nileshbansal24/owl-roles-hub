@@ -1138,9 +1138,27 @@ export type Database = {
         Returns: number
       }
       get_admin_user_ids: { Args: never; Returns: string[] }
+      get_event_questions_with_answers: {
+        Args: { _event_id: string }
+        Returns: {
+          correct_answer: string
+          created_at: string
+          event_id: string
+          id: string
+          options: Json
+          order_index: number
+          points: number
+          question_text: string
+          question_type: string
+        }[]
+      }
       get_own_approval_status: { Args: { _user_id: string }; Returns: string }
       get_own_user_type: { Args: { _user_id: string }; Returns: string }
       get_user_university: { Args: { _user_id: string }; Returns: string }
+      grade_quiz_submission: {
+        Args: { _submission_id: string }
+        Returns: undefined
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
