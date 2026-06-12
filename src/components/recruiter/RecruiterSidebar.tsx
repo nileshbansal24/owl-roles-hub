@@ -30,6 +30,7 @@ import {
   FileText,
   Blocks,
   Settings,
+  BarChart3,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -44,6 +45,7 @@ interface RecruiterSidebarProps {
 const mainNavItems = [
   { title: "Find Candidates", icon: Search, tab: "resdex" },
   { title: "Manage Jobs", icon: Briefcase, tab: "manage" },
+  { title: "Analytics", icon: BarChart3, tab: "analytics" },
 ];
 
 const manageNavItems = [

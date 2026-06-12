@@ -25,7 +25,7 @@ import {
   EventsTab,
   BlockchainCredentialsTab,
   ManageJobsTab,
-  StatsCards,
+  AnalyticsTab,
   WelcomeHeader,
 } from "@/components/recruiter/dashboard";
 
@@ -280,20 +280,8 @@ const RecruiterDashboard = () => {
   return (
     <RecruiterLayout hasJobs={jobs.length > 0} title="Dashboard" pendingVerificationCount={pendingVerificationCount}>
       <div className="p-4 sm:p-6 lg:p-8 space-y-5 max-w-[1600px] mx-auto">
-        {/* Welcome + Stats */}
+        {/* Welcome */}
         <WelcomeHeader name={recruiterName} />
-        <StatsCards
-          jobs={jobs}
-          applications={applications}
-          candidates={candidates}
-          onCardClick={(tab) => {
-            if (["jobs", "applications", "interviews"].includes(tab)) {
-              handleManageViewChange(tab);
-            } else {
-              handleTabChange(tab);
-            }
-          }}
-        />
 
         {/* Tabs - TabsList is hidden since navigation is handled by sidebar */}
         <Tabs value={unifiedTab} onValueChange={handleTabChange} className="space-y-4">
@@ -302,9 +290,20 @@ const RecruiterDashboard = () => {
             <TabsTrigger value="saved">Saved</TabsTrigger>
             <TabsTrigger value="events">Events</TabsTrigger>
             <TabsTrigger value="manage">Manage Jobs</TabsTrigger>
+            <TabsTrigger value="analytics">Analytics</TabsTrigger>
             <TabsTrigger value="messages">Messages</TabsTrigger>
             <TabsTrigger value="blockchain">Blockchain</TabsTrigger>
           </TabsList>
+
+          {/* Analytics Tab */}
+          <TabsContent value="analytics">
+            <AnalyticsTab
+              jobs={jobs}
+              applications={applications}
+              candidates={candidates}
+              interviews={interviews}
+            />
+          </TabsContent>
 
           {/* Find Candidates Tab */}
           <TabsContent value="resdex">
