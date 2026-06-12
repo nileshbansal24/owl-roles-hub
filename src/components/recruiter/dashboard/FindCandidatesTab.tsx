@@ -207,9 +207,11 @@ const FindCandidatesTab = ({
 
     // University filter
     if (advancedFilters.selectedUniversities.length > 0) {
+      const needles = advancedFilters.selectedUniversities.map(u => u.trim().toLowerCase()).filter(Boolean);
       result = result.filter(c => {
-        const uni = c.university?.trim() || "";
-        return advancedFilters.selectedUniversities.includes(uni);
+        const uni = (c.university || "").trim().toLowerCase();
+        if (!uni) return false;
+        return needles.some(n => uni.includes(n) || n.includes(uni));
       });
     }
 
