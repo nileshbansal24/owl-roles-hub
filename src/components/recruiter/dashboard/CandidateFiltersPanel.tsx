@@ -7,6 +7,7 @@ import {
   CalendarDays, Building, MapPinned, Inbox, Star, Microscope
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
 import { Checkbox } from "@/components/ui/checkbox";
