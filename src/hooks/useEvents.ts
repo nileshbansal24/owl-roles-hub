@@ -672,34 +672,16 @@ export const useCandidateQuiz = (eventId: string | null) => {
 
   const submitQuiz = async (): Promise<boolean> => {
     if (!submission) return false;
-    
-    try {
-      const timeTaken = Math.floor((Date.now() - new Date(submission.started_at).getTime()) / 1000);
-      const maxScore = questions.reduce((sum, q) => sum + q.points, 0);
-      
-      // Calculate score for MCQ questions
-      let score = 0;
-      for (const question of questions) {
-        if (question.question_type === 'mcq' && question.correct_answer) {
-          const answer = submission.answers[question.id];
-          if (answer === question.correct_answer) {
-            score += question.points;
-          }
-        }
-      }
 
-      const { error } = await supabase
-        .from('quiz_submissions')
-        .update({
-          submitted_at: new Date().toISOString(),
-          time_taken_seconds: timeTaken,
-          score,
-          max_score: maxScore,
-        })
-        .eq('id', submission.id);
+    try {
+      // Server-side grading: candidates can't read correct_answer or set their
+      // own score. The RPC validates ownership and writes submitted_at/score.
+      const { error } = await supabase.rpc('grade_quiz_submission', {
+        _submission_id: submission.id,
+      });
 
       if (error) throw error;
-      
+
       await fetchQuizData();
       toast({ title: 'Quiz submitted!', description: 'Your answers have been recorded.' });
       return true;
