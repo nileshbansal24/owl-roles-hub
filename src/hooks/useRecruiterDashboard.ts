@@ -579,19 +579,22 @@ export const useRecruiterDashboard = () => {
       // Fetch saved candidates
       const { data: savedData } = await supabase
         .from("saved_candidates")
-        .select("candidate_id, notes, status")
+        .select("candidate_id, notes, status, folder")
         .eq("recruiter_id", user.id);
 
       if (savedData) {
         setSavedCandidateIds(new Set(savedData.map((s: any) => s.candidate_id)));
         const notesMap: Record<string, string> = {};
         const statusMap: Record<string, string> = {};
+        const folderMap: Record<string, string> = {};
         savedData.forEach((s: any) => {
           if (s.notes) notesMap[s.candidate_id] = s.notes;
           statusMap[s.candidate_id] = s.status || "saved";
+          if (s.folder) folderMap[s.candidate_id] = s.folder;
         });
         setSavedCandidateNotes(notesMap);
         setSavedCandidateStatuses(statusMap);
+        setSavedCandidateFolders(folderMap);
       }
 
       // Fetch scheduled interviews
