@@ -13,6 +13,19 @@ const corsHeaders = {
 const escapeHtml = (str: string): string =>
   str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
+async function signTrackingId(id: string): Promise<string> {
+  const secret = Deno.env.get("EMAIL_TRACKING_SECRET") || Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+  const enc = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    "raw", enc.encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]
+  );
+  const sig = await crypto.subtle.sign("HMAC", key, enc.encode(id));
+  const bytes = new Uint8Array(sig);
+  let hex = "";
+  for (const b of bytes) hex += b.toString(16).padStart(2, "0");
+  return hex.slice(0, 32);
+}
+
 interface MessageRequest {
   to: string;
   subject: string;
