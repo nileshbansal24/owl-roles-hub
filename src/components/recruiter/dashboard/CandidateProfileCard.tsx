@@ -216,7 +216,18 @@ const CandidateProfileCard = ({
                     variant="ghost"
                     size="sm"
                     className="gap-1 transition-colors"
-                    onClick={() => onSave(candidate.id)}
+                    title={isSaved ? (currentFolder ? `In folder: ${currentFolder}` : "Saved — click to remove") : "Save to a folder"}
+                    onClick={() => {
+                      if (isSaved) {
+                        onSave(candidate.id);
+                      } else if (onSaveToFolder) {
+                        setSelectedFolderChoice(existingFolders[0] ?? "__new__");
+                        setNewFolderName("");
+                        setFolderDialogOpen(true);
+                      } else {
+                        onSave(candidate.id);
+                      }
+                    }}
                   >
                     {isSaved ? (
                       <BookmarkCheck className="h-4 w-4 text-primary" />
