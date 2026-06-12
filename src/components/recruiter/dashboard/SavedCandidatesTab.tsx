@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { Bookmark, Search, Heart, Folder, Inbox, MoreHorizontal } from "lucide-react";
+import { Bookmark, Search, Heart, Folder, Inbox } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import CandidateCard from "./CandidateCard";
 import { EmptyState } from "@/components/ui/empty-state";
