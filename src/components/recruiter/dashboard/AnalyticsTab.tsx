@@ -95,7 +95,7 @@ const KpiCard = ({
   </motion.div>
 );
 
-const AnalyticsTab = ({ jobs, applications, candidates, interviews }: AnalyticsTabProps) => {
+const AnalyticsTab = ({ jobs, applications, candidates, interviews, savedCount = 0 }: AnalyticsTabProps) => {
   const metrics = useMemo(() => {
     const total = applications.length;
     const pending = applications.filter((a) => a.status === "pending").length;
