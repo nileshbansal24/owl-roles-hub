@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import {
   Briefcase,
   Users,
+  Bookmark,
   FileText,
   CheckCircle2,
   Trophy,
