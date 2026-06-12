@@ -660,10 +660,12 @@ const SaveToFolderDialog = ({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FolderPlus className="h-4 w-4 text-primary" />
-            Save to folder
+            {isMoving ? "Move to folder" : "Save to folder"}
           </DialogTitle>
           <DialogDescription>
-            Choose a folder for <span className="font-medium text-foreground">{candidateName}</span> or create a new one.
+            {isMoving
+              ? <>Move <span className="font-medium text-foreground">{candidateName}</span> to a different folder.</>
+              : <>Choose a folder for <span className="font-medium text-foreground">{candidateName}</span> or create a new one.</>}
           </DialogDescription>
         </DialogHeader>
 
