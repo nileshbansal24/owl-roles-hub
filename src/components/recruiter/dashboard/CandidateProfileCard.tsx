@@ -140,6 +140,7 @@ const CandidateProfileCard = ({
   const [folderDialogOpen, setFolderDialogOpen] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
   const [selectedFolderChoice, setSelectedFolderChoice] = useState<string>("");
+  const [isMovingFolder, setIsMovingFolder] = useState(false);
 
   const isApplication = !!application;
 
