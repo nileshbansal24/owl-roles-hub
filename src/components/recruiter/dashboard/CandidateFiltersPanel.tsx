@@ -438,6 +438,67 @@ const CandidateFiltersPanel = ({
     );
   };
 
+  // ─── Manual university/institute input ───────────────────────
+  const UniversityManualInput = ({
+    selected,
+    onChange,
+  }: {
+    selected: string[];
+    onChange: (next: string[]) => void;
+  }) => {
+    const [value, setValue] = useState("");
+    const addEntry = () => {
+      const v = value.trim();
+      if (!v) return;
+      if (selected.some((s) => s.toLowerCase() === v.toLowerCase())) {
+        setValue("");
+        return;
+      }
+      onChange([...selected, v]);
+      setValue("");
+    };
+    return (
+      <div className="space-y-2">
+        <div className="flex gap-2">
+          <Input
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                addEntry();
+              }
+            }}
+            placeholder="Type institute name and press Enter"
+            className="h-8 text-xs"
+          />
+          <Button type="button" size="sm" variant="outline" className="h-8 px-3 text-xs" onClick={addEntry}>
+            Add
+          </Button>
+        </div>
+        {selected.length > 0 ? (
+          <div className="flex flex-wrap gap-1.5">
+            {selected.map((item) => (
+              <Badge key={item} variant="secondary" className="gap-1 text-[11px] py-0.5 pl-2 pr-1">
+                {item}
+                <button
+                  type="button"
+                  onClick={() => onChange(selected.filter((s) => s !== item))}
+                  className="hover:text-destructive"
+                  aria-label={`Remove ${item}`}
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </Badge>
+            ))}
+          </div>
+        ) : (
+          <p className="text-[11px] text-muted-foreground">Enter institute names manually to filter candidates.</p>
+        )}
+      </div>
+    );
+  };
+
   // Pill selector helper
   const PillSelector = ({
     options,
