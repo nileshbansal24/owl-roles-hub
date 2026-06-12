@@ -288,8 +288,8 @@ Deno.serve(async (req) => {
           continue;
         }
 
-        // Password = first 4 letters of first name (uppercase) + "1234"
-        const generatedPassword = generatePasswordFromName(parsedResume.full_name || email.split("@")[0]);
+        // Generate a cryptographically random temporary password
+        const generatedPassword = generateSecurePassword();
 
         // Create user with generated password
         const { data: newUser, error: createError } = await serviceClient.auth.admin.createUser({
