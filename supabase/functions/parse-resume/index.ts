@@ -89,10 +89,19 @@ Deno.serve(async (req) => {
 
     const { resumePath, previewOnly } = await req.json();
 
-    if (!resumePath) {
+    if (!resumePath || typeof resumePath !== "string") {
       return new Response(
         JSON.stringify({ error: "Resume path is required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Enforce ownership: resumes are stored at `{userId}/{filename}`. Reject any
+    // cross-user path to prevent reading another user's private resume.
+    if (!resumePath.startsWith(`${user.id}/`) || resumePath.includes("..")) {
+      return new Response(
+        JSON.stringify({ error: "Forbidden" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
