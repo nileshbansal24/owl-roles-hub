@@ -144,8 +144,9 @@ const handler = async (req: Request): Promise<Response> => {
 
     const messageId = messageRecord?.id;
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
-    const trackingPixelUrl = messageId 
-      ? `${supabaseUrl}/functions/v1/track-email-event?id=${messageId}&event=open`
+    const trackingSig = messageId ? await signTrackingId(messageId) : null;
+    const trackingPixelUrl = messageId && trackingSig
+      ? `${supabaseUrl}/functions/v1/track-email-event?id=${messageId}&event=open&sig=${trackingSig}`
       : null;
 
     console.log(`Sending message to ${candidateName} at ${to}`);
