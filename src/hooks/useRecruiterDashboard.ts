@@ -21,6 +21,7 @@ export const useRecruiterDashboard = () => {
   const [savedCandidateIds, setSavedCandidateIds] = useState<Set<string>>(new Set());
   const [savedCandidateNotes, setSavedCandidateNotes] = useState<Record<string, string>>({});
   const [savedCandidateStatuses, setSavedCandidateStatuses] = useState<Record<string, string>>({});
+  const [savedCandidateFolders, setSavedCandidateFolders] = useState<Record<string, string>>({});
   const [pendingVerificationCount, setPendingVerificationCount] = useState(0);
   
   // Onboarding state
