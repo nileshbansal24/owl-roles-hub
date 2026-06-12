@@ -17,7 +17,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { FolderPlus } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { FolderPlus, FolderInput, Trash2 } from "lucide-react";
 import {
   Eye,
   Bookmark,
@@ -134,6 +140,7 @@ const CandidateProfileCard = ({
   const [folderDialogOpen, setFolderDialogOpen] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
   const [selectedFolderChoice, setSelectedFolderChoice] = useState<string>("");
+  const [isMovingFolder, setIsMovingFolder] = useState(false);
 
   const isApplication = !!application;
 
@@ -224,31 +231,72 @@ const CandidateProfileCard = ({
             </div>
             <div className="flex gap-2 shrink-0 flex-wrap">
               {onSave && !isApplication && (
-                <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="gap-1 transition-colors"
-                    title={isSaved ? (currentFolder ? `In folder: ${currentFolder}` : "Saved — click to remove") : "Save to a folder"}
-                    onClick={() => {
-                      if (isSaved) {
-                        onSave(candidate.id);
-                      } else if (onSaveToFolder) {
-                        setSelectedFolderChoice(existingFolders[0] ?? "__new__");
-                        setNewFolderName("");
-                        setFolderDialogOpen(true);
-                      } else {
-                        onSave(candidate.id);
-                      }
-                    }}
-                  >
-                    {isSaved ? (
-                      <BookmarkCheck className="h-4 w-4 text-primary" />
-                    ) : (
-                      <Bookmark className="h-4 w-4" />
-                    )}
-                  </Button>
-                </motion.div>
+                <>
+                  {isSaved ? (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="gap-1 transition-colors"
+                            title={currentFolder ? `In folder: ${currentFolder}` : "Saved"}
+                          >
+                            <BookmarkCheck className="h-4 w-4 text-primary" />
+                          </Button>
+                        </motion.div>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-48">
+                        {currentFolder && (
+                          <div className="px-2 py-1.5 text-xs text-muted-foreground">
+                            Folder: <span className="font-medium text-foreground">{currentFolder}</span>
+                          </div>
+                        )}
+                        {onSaveToFolder && (
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setSelectedFolderChoice(currentFolder || existingFolders[0] || "__new__");
+                              setNewFolderName("");
+                              setIsMovingFolder(true);
+                              setFolderDialogOpen(true);
+                            }}
+                          >
+                            <FolderInput className="h-4 w-4 mr-2" />
+                            Move to folder
+                          </DropdownMenuItem>
+                        )}
+                        <DropdownMenuItem
+                          className="text-destructive focus:text-destructive"
+                          onClick={() => onSave(candidate.id)}
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Remove from saved
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  ) : (
+                    <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="gap-1 transition-colors"
+                        title="Save to a folder"
+                        onClick={() => {
+                          if (onSaveToFolder) {
+                            setSelectedFolderChoice(existingFolders[0] ?? "__new__");
+                            setNewFolderName("");
+                            setIsMovingFolder(false);
+                            setFolderDialogOpen(true);
+                          } else {
+                            onSave(candidate.id);
+                          }
+                        }}
+                      >
+                        <Bookmark className="h-4 w-4" />
+                      </Button>
+                    </motion.div>
+                  )}
+                </>
               )}
               {(onView || onViewApplicant) && (
                 <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
@@ -560,6 +608,7 @@ const CandidateProfileCard = ({
       <SaveToFolderDialog
         open={folderDialogOpen}
         onOpenChange={setFolderDialogOpen}
+        isMoving={isMovingFolder}
         candidateName={candidate.full_name || "this candidate"}
         existingFolders={existingFolders}
         selectedFolderChoice={selectedFolderChoice}
@@ -586,6 +635,7 @@ interface SaveToFolderDialogProps {
   newFolderName: string;
   setNewFolderName: (value: string) => void;
   onConfirm: (folder: string) => void | Promise<void>;
+  isMoving?: boolean;
 }
 
 const SaveToFolderDialog = ({
@@ -598,6 +648,7 @@ const SaveToFolderDialog = ({
   newFolderName,
   setNewFolderName,
   onConfirm,
+  isMoving = false,
 }: SaveToFolderDialogProps) => {
   const isCreatingNew = selectedFolderChoice === "__new__" || existingFolders.length === 0;
   const folder = isCreatingNew ? newFolderName.trim() : selectedFolderChoice;
@@ -609,10 +660,12 @@ const SaveToFolderDialog = ({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FolderPlus className="h-4 w-4 text-primary" />
-            Save to folder
+            {isMoving ? "Move to folder" : "Save to folder"}
           </DialogTitle>
           <DialogDescription>
-            Choose a folder for <span className="font-medium text-foreground">{candidateName}</span> or create a new one.
+            {isMoving
+              ? <>Move <span className="font-medium text-foreground">{candidateName}</span> to a different folder.</>
+              : <>Choose a folder for <span className="font-medium text-foreground">{candidateName}</span> or create a new one.</>}
           </DialogDescription>
         </DialogHeader>
 
@@ -674,7 +727,7 @@ const SaveToFolderDialog = ({
           </Button>
           <Button disabled={!canConfirm} onClick={() => onConfirm(folder)}>
             <FolderPlus className="h-4 w-4 mr-1.5" />
-            Save to {isCreatingNew ? "new folder" : `"${selectedFolderChoice}"`}
+            {isMoving ? "Move" : "Save"} to {isCreatingNew ? "new folder" : `"${selectedFolderChoice}"`}
           </Button>
         </DialogFooter>
       </DialogContent>
