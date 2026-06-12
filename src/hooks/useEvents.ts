@@ -207,14 +207,15 @@ export const useEventQuestions = (eventId: string | null) => {
     
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('event_questions')
-        .select('*')
-        .eq('event_id', eventId)
-        .order('order_index', { ascending: true });
+      // Use the SECURITY DEFINER RPC so the event owner / admin can read
+      // correct_answer; candidates cannot call this RPC against events they
+      // don't own.
+      const { data, error } = await supabase.rpc('get_event_questions_with_answers', {
+        _event_id: eventId,
+      });
 
       if (error) throw error;
-      setQuestions((data || []) as EventQuestion[]);
+      setQuestions((data || []) as unknown as EventQuestion[]);
     } catch (error: any) {
       console.error('Error fetching questions:', error);
     } finally {
