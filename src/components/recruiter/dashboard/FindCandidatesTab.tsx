@@ -103,6 +103,15 @@ const FindCandidatesTab = ({
 
   const recruiterTokens = useMemo(() => getLocationTokens(recruiterLocation ?? null), [recruiterLocation, getLocationTokens]);
 
+  // Detect whether any advanced filter has been changed from defaults
+  const hasActiveFilters = useMemo(
+    () => JSON.stringify(advancedFilters) !== JSON.stringify(defaultFilters),
+    [advancedFilters]
+  );
+
+  // Only reveal the candidate pool once the recruiter has searched or filtered
+  const showResults = hasSearched || hasActiveFilters || showNearMe;
+
   // Show search results if available, otherwise show all candidates
   const baseCandidates = searchResults !== null ? searchResults : candidates;
 
