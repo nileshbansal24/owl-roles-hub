@@ -140,6 +140,11 @@ export const useRecruiterDashboard = () => {
           delete next[candidateId];
           return next;
         });
+        setSavedCandidateFolders(prev => {
+          const next = { ...prev };
+          delete next[candidateId];
+          return next;
+        });
         toast({
           title: "Removed",
           description: "Candidate removed from saved list",
@@ -168,6 +173,51 @@ export const useRecruiterDashboard = () => {
         });
       }
     }
+  }, [user, savedCandidateIds, toast]);
+
+  /**
+   * Save a candidate into a specific folder (creating an implicit folder by name).
+   * If the candidate is already saved, this just updates the folder label.
+   */
+  const handleSaveCandidateToFolder = useCallback(async (candidateId: string, folder: string) => {
+    if (!user) return;
+    const trimmed = (folder || "").trim();
+    const folderValue = trimmed.length ? trimmed : null;
+
+    const existing = savedCandidateIds.has(candidateId);
+    if (existing) {
+      const { error } = await supabase
+        .from("saved_candidates")
+        .update({ folder: folderValue } as any)
+        .eq("recruiter_id", user.id)
+        .eq("candidate_id", candidateId);
+      if (error) {
+        toast({ title: "Error", description: "Failed to move to folder", variant: "destructive" });
+        return;
+      }
+    } else {
+      const { error } = await supabase
+        .from("saved_candidates")
+        .insert({ recruiter_id: user.id, candidate_id: candidateId, folder: folderValue } as any);
+      if (error) {
+        toast({ title: "Error", description: "Failed to save candidate", variant: "destructive" });
+        return;
+      }
+      setSavedCandidateIds(prev => new Set([...prev, candidateId]));
+      setSavedCandidateStatuses(prev => ({ ...prev, [candidateId]: "saved" }));
+    }
+
+    setSavedCandidateFolders(prev => {
+      const next = { ...prev };
+      if (folderValue) next[candidateId] = folderValue;
+      else delete next[candidateId];
+      return next;
+    });
+
+    toast({
+      title: folderValue ? `Saved to "${folderValue}"` : "Saved",
+      description: folderValue ? "Candidate added to that folder." : "Candidate added to your saved list.",
+    });
   }, [user, savedCandidateIds, toast]);
 
   /**
