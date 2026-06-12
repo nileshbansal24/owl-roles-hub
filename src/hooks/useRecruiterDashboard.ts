@@ -673,6 +673,8 @@ export const useRecruiterDashboard = () => {
     hasReviewedCandidate,
     updateApplicationStatus,
     handleSaveCandidate,
+    handleSaveCandidateToFolder,
+    savedCandidateFolders,
     handleSetCandidateStatus,
     handleDownloadResume,
     refreshInterviews,
