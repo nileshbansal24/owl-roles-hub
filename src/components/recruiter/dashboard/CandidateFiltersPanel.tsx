@@ -283,7 +283,7 @@ const CandidateFiltersPanel = ({
   filters,
   onFiltersChange,
 }: CandidateFiltersPanelProps) => {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(true);
 
   // Derive dynamic options from candidate pool
   const topSkills = useMemo(() => {
