@@ -57,7 +57,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     const userId = claimsData.claims.sub as string;
 
-    const { to, subject, message, candidateName, candidateId, recruiterId, jobId, jobTitle }: MessageRequest = await req.json();
+    const { subject, message, candidateName, candidateId, recruiterId, jobId, jobTitle }: MessageRequest = await req.json();
 
     // Ensure the authenticated user matches the recruiterId
     if (userId !== recruiterId) {
@@ -68,27 +68,11 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Validate required fields
-    if (!to || !subject || !message || !candidateId || !recruiterId) {
-      console.error("Missing required fields:", { to: !!to, subject: !!subject, message: !!message, candidateId: !!candidateId, recruiterId: !!recruiterId });
+    if (!subject || !message || !candidateId || !recruiterId) {
+      console.error("Missing required fields");
       return new Response(
         JSON.stringify({ error: "Missing required fields" }),
-        {
-          status: 400,
-          headers: { "Content-Type": "application/json", ...corsHeaders },
-        }
-      );
-    }
-
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(to)) {
-      console.error("Invalid email format:", to);
-      return new Response(
-        JSON.stringify({ error: "Invalid email format" }),
-        {
-          status: 400,
-          headers: { "Content-Type": "application/json", ...corsHeaders },
-        }
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
@@ -97,6 +81,31 @@ const handler = async (req: Request): Promise<Response> => {
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
+
+    // SECURITY: Resolve the recipient email from the candidate record server-side.
+    // Never trust a client-supplied `to` address — prevents recruiters from
+    // sending OWL ROLES branded emails to arbitrary addresses.
+    const { data: candidate, error: candErr } = await supabase
+      .from("profiles")
+      .select("email, user_type")
+      .eq("id", candidateId)
+      .maybeSingle();
+
+    if (candErr || !candidate?.email || candidate.user_type !== "candidate") {
+      return new Response(
+        JSON.stringify({ error: "Candidate not found" }),
+        { status: 404, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    const to = candidate.email;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(to)) {
+      return new Response(
+        JSON.stringify({ error: "Candidate has invalid email" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
 
     // Create message record first to get the ID for tracking
     const { data: messageRecord, error: insertError } = await supabase
