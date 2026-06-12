@@ -74,6 +74,11 @@ const FindCandidatesTab = ({
   const [showNearMe, setShowNearMe] = useState(false);
   const [advancedFilters, setAdvancedFilters] = useState<CandidateFilters>(defaultFilters);
 
+  const existingFolders = useMemo(
+    () => Array.from(new Set(Object.values(savedCandidateFolders).filter(Boolean))).sort(),
+    [savedCandidateFolders],
+  );
+
   const handleSearchResults = useCallback((results: Profile[]) => {
     setSearchResults(results);
     setHasSearched(true);
