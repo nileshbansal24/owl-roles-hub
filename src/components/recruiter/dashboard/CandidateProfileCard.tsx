@@ -608,6 +608,7 @@ const CandidateProfileCard = ({
       <SaveToFolderDialog
         open={folderDialogOpen}
         onOpenChange={setFolderDialogOpen}
+        isMoving={isMovingFolder}
         candidateName={candidate.full_name || "this candidate"}
         existingFolders={existingFolders}
         selectedFolderChoice={selectedFolderChoice}
