@@ -241,13 +241,6 @@ const AnalyticsTab = ({ jobs, applications, candidates, interviews, savedCount =
         text: `${metrics.shortlisted} candidates are shortlisted but no interviews are scheduled. Reach out before they accept other offers.`,
       });
     }
-    if (candidates.length > 100 && metrics.shortlisted < 3) {
-      tips.push({
-        tone: "info",
-        title: "Explore the talent pool",
-        text: `${candidates.length} candidates are available. Use Find Candidates with filters to source proactively instead of waiting for applications.`,
-      });
-    }
     if (tips.length === 0) {
       tips.push({
         tone: "good",
