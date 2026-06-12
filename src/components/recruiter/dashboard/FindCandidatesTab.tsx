@@ -27,8 +27,10 @@ interface FindCandidatesTabProps {
   savedCandidateIds: Set<string>;
   savedCandidateNotes: Record<string, string>;
   savedCandidateStatuses?: Record<string, string>;
+  savedCandidateFolders?: Record<string, string>;
   onViewCandidate: (candidate: Profile) => void;
   onSaveCandidate: (candidateId: string) => void;
+  onSaveCandidateToFolder?: (candidateId: string, folder: string) => void | Promise<void>;
   onMessageCandidate: (candidate: Profile) => void;
   onSaveNote: (candidateId: string, note: string) => Promise<void>;
   onSetStatus?: (candidateId: string, status: string) => void | Promise<void>;
@@ -53,8 +55,10 @@ const FindCandidatesTab = ({
   savedCandidateIds,
   savedCandidateNotes,
   savedCandidateStatuses,
+  savedCandidateFolders = {},
   onViewCandidate,
   onSaveCandidate,
+  onSaveCandidateToFolder,
   onMessageCandidate,
   onSaveNote,
   onSetStatus,
