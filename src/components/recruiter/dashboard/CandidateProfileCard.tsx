@@ -727,7 +727,7 @@ const SaveToFolderDialog = ({
           </Button>
           <Button disabled={!canConfirm} onClick={() => onConfirm(folder)}>
             <FolderPlus className="h-4 w-4 mr-1.5" />
-            Save to {isCreatingNew ? "new folder" : `"${selectedFolderChoice}"`}
+            {isMoving ? "Move" : "Save"} to {isCreatingNew ? "new folder" : `"${selectedFolderChoice}"`}
           </Button>
         </DialogFooter>
       </DialogContent>
