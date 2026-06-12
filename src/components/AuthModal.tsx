@@ -24,6 +24,8 @@ import {
   Users,
   CheckCircle2,
 } from "lucide-react";
+import owlMascot from "@/assets/owl-mascot.png";
+
 
 interface AuthModalProps {
   open: boolean;
