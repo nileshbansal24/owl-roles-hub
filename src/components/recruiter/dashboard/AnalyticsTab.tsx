@@ -41,6 +41,7 @@ interface AnalyticsTabProps {
   applications: Application[];
   candidates: Profile[];
   interviews: EnrichedInterview[];
+  savedCount?: number;
 }
 
 const STATUS_COLORS: Record<string, string> = {
