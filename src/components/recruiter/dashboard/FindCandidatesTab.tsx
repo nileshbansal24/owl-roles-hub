@@ -627,6 +627,7 @@ const FindCandidatesTab = ({
       </motion.div>
 
       {/* Results Header with Sorting and Pagination Info */}
+      {showResults && (
       <motion.div variants={staggerItemVariants} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <Users className="h-5 w-5 text-primary" />
@@ -637,7 +638,7 @@ const FindCandidatesTab = ({
               </>
             ) : (
               <>
-                Candidate Pool: <span className="font-medium text-foreground">{sortedCandidates.length}</span> candidates
+                Filtered Candidates: <span className="font-medium text-foreground">{sortedCandidates.length}</span>
               </>
             )}
             {sortedCandidates.length > 0 && (
