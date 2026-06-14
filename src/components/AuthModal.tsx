@@ -90,37 +90,16 @@ const AuthModal = ({
   };
 
   const redirectBasedOnRole = async (userId: string, selectedRole?: string, isNewSignup?: boolean) => {
-    if (isNewSignup && selectedRole === "recruiter") {
-      navigate("/recruiter-pending");
-      return;
-    }
     if (selectedRole) {
-      if (selectedRole === "recruiter") {
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("approval_status")
-          .eq("id", userId)
-          .maybeSingle();
-        if (profile?.approval_status !== "approved") {
-          navigate("/recruiter-pending");
-          return;
-        }
-        navigate("/recruiter-dashboard");
-      } else {
-        navigate("/candidate-dashboard");
-      }
+      navigate(selectedRole === "recruiter" ? "/recruiter-dashboard" : "/candidate-dashboard");
       return;
     }
     const { data: profile } = await supabase
       .from("profiles")
-      .select("user_type, approval_status")
+      .select("user_type")
       .eq("id", userId)
       .maybeSingle();
-    if (profile?.user_type === "recruiter") {
-      navigate(profile?.approval_status !== "approved" ? "/recruiter-pending" : "/recruiter-dashboard");
-    } else {
-      navigate("/candidate-dashboard");
-    }
+    navigate(profile?.user_type === "recruiter" ? "/recruiter-dashboard" : "/candidate-dashboard");
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
