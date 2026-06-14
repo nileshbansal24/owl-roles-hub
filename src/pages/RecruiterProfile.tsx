@@ -132,6 +132,7 @@ const RecruiterProfile = () => {
         };
         setProfile(next);
         setSavedProfile(next);
+        setApprovalStatus((profileRes.data as any).approval_status || "approved");
       }
 
       if (verificationRes.error) {
