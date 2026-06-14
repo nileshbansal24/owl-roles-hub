@@ -34,16 +34,11 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
     } else {
       supabase
         .from("profiles")
-        .select("user_type, approval_status")
+        .select("user_type")
         .eq("id", user.id)
         .maybeSingle()
         .then(({ data }) => {
           const userType = data?.user_type || "candidate";
-          if (requiredRole === "recruiter" && data?.approval_status !== "approved") {
-            setHasAccess(false);
-            setRoleChecked(true);
-            return;
-          }
           setHasAccess(userType === requiredRole);
           setRoleChecked(true);
         });
@@ -63,9 +58,6 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
   }
 
   if (!hasAccess) {
-    if (requiredRole === "recruiter") {
-      return <Navigate to="/recruiter-pending" replace />;
-    }
     const redirect = requiredRole === "admin" ? "/adpanel" : "/candidate-dashboard";
     return <Navigate to={redirect} replace />;
   }

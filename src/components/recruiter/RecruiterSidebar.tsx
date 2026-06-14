@@ -1,6 +1,8 @@
+import { useEffect, useState } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
 import {
   Sidebar,
   SidebarContent,
@@ -31,7 +33,9 @@ import {
   Blocks,
   Settings,
   BarChart3,
+  Sparkles,
 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import logoLight from "@/assets/logo-light.png";
@@ -63,6 +67,17 @@ const RecruiterSidebar = ({ hasJobs = false, pendingVerificationCount = 0 }: Rec
   const [searchParams] = useSearchParams();
   const { state, setOpenMobile } = useSidebar();
   const isCollapsed = state === "collapsed";
+  const [plan, setPlan] = useState<string>("free");
+
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("profiles")
+      .select("subscription_plan")
+      .eq("id", user.id)
+      .maybeSingle()
+      .then(({ data }) => setPlan((data?.subscription_plan as string) || "free"));
+  }, [user]);
 
   const currentTab = searchParams.get("tab") || "resdex";
 
@@ -197,6 +212,29 @@ const RecruiterSidebar = ({ hasJobs = false, pendingVerificationCount = 0 }: Rec
                 >
                   <Building2 className="h-4 w-4" />
                   {!isCollapsed && <span className="text-[13px]">My Profile</span>}
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  onClick={() => { setOpenMobile(false); navigate("/recruiter-upgrade"); }}
+                  tooltip="Upgrade Plan"
+                  isActive={location.pathname === "/recruiter-upgrade"}
+                  className={cn(
+                    "h-9 rounded-lg transition-all duration-150",
+                    location.pathname === "/recruiter-upgrade"
+                      ? "bg-primary/10 text-primary font-medium"
+                      : "text-amber-600 dark:text-amber-400 hover:bg-amber-500/10"
+                  )}
+                >
+                  <Sparkles className="h-4 w-4" />
+                  {!isCollapsed && (
+                    <>
+                      <span className="text-[13px] flex-1">Upgrade Plan</span>
+                      <Badge variant="outline" className="text-[9px] h-4 px-1.5 capitalize">
+                        {plan}
+                      </Badge>
+                    </>
+                  )}
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>

@@ -549,6 +549,27 @@ const PostJob = () => {
       }
 
       // ---- INSERT new job ----
+      // Enforce free-plan limit: max 2 jobs
+      const { data: planRow } = await supabase
+        .from("profiles")
+        .select("subscription_plan")
+        .eq("id", user.id)
+        .maybeSingle();
+      const userPlan = (planRow?.subscription_plan as string) || "free";
+      if (userPlan === "free") {
+        const { count } = await supabase
+          .from("jobs")
+          .select("id", { count: "exact", head: true })
+          .eq("created_by", user.id);
+        if ((count ?? 0) >= 2) {
+          toast.error("Free plan limit reached", {
+            description: "You've posted 2 jobs on the Free plan. Upgrade to post more.",
+            action: { label: "Upgrade", onClick: () => navigate("/recruiter-upgrade") },
+          });
+          return;
+        }
+      }
+
       const { data: insertedJob, error } = await supabase
         .from("jobs")
         .insert({
