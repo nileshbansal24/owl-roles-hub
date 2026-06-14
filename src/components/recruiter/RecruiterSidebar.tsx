@@ -216,6 +216,28 @@ const RecruiterSidebar = ({ hasJobs = false, pendingVerificationCount = 0 }: Rec
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton
+                  onClick={() => { setOpenMobile(false); navigate("/recruiter-upgrade"); }}
+                  tooltip="Upgrade Plan"
+                  isActive={location.pathname === "/recruiter-upgrade"}
+                  className={cn(
+                    "h-9 rounded-lg transition-all duration-150",
+                    location.pathname === "/recruiter-upgrade"
+                      ? "bg-primary/10 text-primary font-medium"
+                      : "text-amber-600 dark:text-amber-400 hover:bg-amber-500/10"
+                  )}
+                >
+                  <Sparkles className="h-4 w-4" />
+                  {!isCollapsed && (
+                    <>
+                      <span className="text-[13px] flex-1">Upgrade Plan</span>
+                      <Badge variant="outline" className="text-[9px] h-4 px-1.5 capitalize">
+                        {plan}
+                      </Badge>
+                    </>
+                  )}
+                </SidebarMenuButton>
+              <SidebarMenuItem>
+                <SidebarMenuButton
                   onClick={toggleTheme}
                   tooltip={theme === "light" ? "Dark Mode" : "Light Mode"}
                   className="h-9 rounded-lg text-sidebar-foreground/70 hover:text-sidebar-foreground transition-all duration-150"
