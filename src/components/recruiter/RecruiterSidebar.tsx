@@ -67,6 +67,17 @@ const RecruiterSidebar = ({ hasJobs = false, pendingVerificationCount = 0 }: Rec
   const [searchParams] = useSearchParams();
   const { state, setOpenMobile } = useSidebar();
   const isCollapsed = state === "collapsed";
+  const [plan, setPlan] = useState<string>("free");
+
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("profiles")
+      .select("subscription_plan")
+      .eq("id", user.id)
+      .maybeSingle()
+      .then(({ data }) => setPlan((data?.subscription_plan as string) || "free"));
+  }, [user]);
 
   const currentTab = searchParams.get("tab") || "resdex";
 
