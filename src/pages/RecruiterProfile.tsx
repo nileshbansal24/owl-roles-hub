@@ -88,6 +88,7 @@ const RecruiterProfile = () => {
   const [resettingTour, setResettingTour] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [verificationStatus, setVerificationStatus] = useState<VerificationStatus>("none");
+  const [approvalStatus, setApprovalStatus] = useState<string>("approved");
   const [profile, setProfile] = useState<RecruiterProfileData>(EMPTY_PROFILE);
   const [savedProfile, setSavedProfile] = useState<RecruiterProfileData>(EMPTY_PROFILE);
 
