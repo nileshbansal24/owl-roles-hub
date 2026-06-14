@@ -34,16 +34,11 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
     } else {
       supabase
         .from("profiles")
-        .select("user_type, approval_status")
+        .select("user_type")
         .eq("id", user.id)
         .maybeSingle()
         .then(({ data }) => {
           const userType = data?.user_type || "candidate";
-          if (requiredRole === "recruiter" && data?.approval_status !== "approved") {
-            setHasAccess(false);
-            setRoleChecked(true);
-            return;
-          }
           setHasAccess(userType === requiredRole);
           setRoleChecked(true);
         });
