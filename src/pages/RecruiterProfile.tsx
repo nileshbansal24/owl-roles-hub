@@ -349,7 +349,24 @@ const RecruiterProfile = () => {
                   Unsaved changes
                 </Badge>
               )}
-            </div>
+          </div>
+
+          {approvalStatus === "pending" && (
+            <Card className="border-amber-500/40 bg-amber-500/5">
+              <CardContent className="pt-5 pb-5 flex items-start gap-3">
+                <AlertCircle className="h-5 w-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-semibold text-foreground">
+                    Account pending admin approval
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    You can continue using the platform. An admin will verify your details shortly; once approved this badge will disappear.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           </div>
 
           {/* Completeness banner */}
