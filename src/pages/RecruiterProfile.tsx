@@ -104,7 +104,7 @@ const RecruiterProfile = () => {
         supabase
           .from("profiles")
           .select(
-            "full_name, university, role, email, phone, location, bio, linkedin_url, avatar_url, headline",
+            "full_name, university, role, email, phone, location, bio, linkedin_url, avatar_url, headline, approval_status",
           )
           .eq("id", user.id)
           .maybeSingle(),
