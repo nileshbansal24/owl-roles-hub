@@ -72,6 +72,19 @@ const FindCandidatesTab = ({
   const [searchResults, setSearchResults] = useState<Profile[] | null>(null);
   const [isSearching, setIsSearching] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [plan, setPlan] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("profiles")
+      .select("subscription_plan")
+      .eq("id", user.id)
+      .maybeSingle()
+      .then(({ data }) => setPlan(((data?.subscription_plan as string) || "free")));
+  }, [user]);
   const [currentPage, setCurrentPage] = useState(1);
   const [sortBy, setSortBy] = useState<SortOption>("recent");
   const [showNearMe, setShowNearMe] = useState(false);
