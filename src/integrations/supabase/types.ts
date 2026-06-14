@@ -648,6 +648,7 @@ export type Database = {
           scopus_metrics: Json | null
           skills: string[] | null
           subjects: string[] | null
+          subscription_plan: string
           teaching_philosophy: string | null
           university: string | null
           updated_at: string
@@ -688,6 +689,7 @@ export type Database = {
           scopus_metrics?: Json | null
           skills?: string[] | null
           subjects?: string[] | null
+          subscription_plan?: string
           teaching_philosophy?: string | null
           university?: string | null
           updated_at?: string
@@ -728,6 +730,7 @@ export type Database = {
           scopus_metrics?: Json | null
           skills?: string[] | null
           subjects?: string[] | null
+          subscription_plan?: string
           teaching_philosophy?: string | null
           university?: string | null
           updated_at?: string
