@@ -626,6 +626,31 @@ const FindCandidatesTab = ({
     );
   }
 
+  if (plan === "free") {
+    return (
+      <div className="max-w-2xl mx-auto py-12">
+        <div className="text-center space-y-6 p-10 rounded-2xl border border-dashed border-primary/30 bg-gradient-to-br from-primary/5 via-background to-amber-500/5">
+          <div className="w-16 h-16 rounded-2xl bg-primary/10 text-primary mx-auto flex items-center justify-center">
+            <Lock className="h-8 w-8" />
+          </div>
+          <div>
+            <h2 className="font-heading text-2xl font-bold text-foreground">
+              Talent Pool is a paid feature
+            </h2>
+            <p className="text-muted-foreground mt-2 max-w-md mx-auto">
+              The Free plan lets you post up to 2 jobs and receive applications. Upgrade to search and source candidates directly from the talent pool.
+            </p>
+          </div>
+          <Button size="lg" onClick={() => navigate("/recruiter-upgrade")} className="gap-2">
+            <Sparkles className="h-4 w-4" />
+            Upgrade Plan
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+
   return (
     <motion.div
       variants={staggerContainerVariants}
