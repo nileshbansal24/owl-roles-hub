@@ -1,7 +1,10 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Users, X, UserSearch, Sparkles, ChevronLeft, ChevronRight, ArrowUpDown, Clock, User, Briefcase, MapPin } from "lucide-react";
+import { Users, X, UserSearch, Sparkles, ChevronLeft, ChevronRight, ArrowUpDown, Clock, User, Briefcase, MapPin, Lock } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { getCandidateCategory, calculateCompleteness } from "@/types/recruiter";
 import { useToast } from "@/hooks/use-toast";
 import {
