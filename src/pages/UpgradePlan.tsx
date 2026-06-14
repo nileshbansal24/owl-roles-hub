@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Check, Sparkles, Zap, Crown, Loader2 } from "lucide-react";
+import { Check, Sparkles, Zap, Crown, Loader2, Clock, CheckCircle2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -10,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
-type PlanId = "free" | "starter" | "pro" | "enterprise";
+type PlanId = "free" | "starter" | "pro";
 
 const plans: Array<{
   id: PlanId;
@@ -70,41 +69,77 @@ const plans: Array<{
   },
 ];
 
+interface PendingRequest {
+  id: string;
+  requested_plan: string;
+  status: string;
+  created_at: string;
+  admin_notes: string | null;
+}
+
 const UpgradePlan = () => {
   const { user } = useAuth();
-  const navigate = useNavigate();
   const { toast } = useToast();
   const [currentPlan, setCurrentPlan] = useState<PlanId>("free");
   const [loading, setLoading] = useState(true);
-  const [upgrading, setUpgrading] = useState<PlanId | null>(null);
+  const [submitting, setSubmitting] = useState<PlanId | null>(null);
+  const [pending, setPending] = useState<PendingRequest | null>(null);
+  const [recent, setRecent] = useState<PendingRequest[]>([]);
+
+  const load = async () => {
+    if (!user) return;
+    setLoading(true);
+    const [{ data: profile }, { data: requests }] = await Promise.all([
+      supabase.from("profiles").select("subscription_plan").eq("id", user.id).maybeSingle(),
+      (supabase as any)
+        .from("plan_upgrade_requests")
+        .select("id, requested_plan, status, created_at, admin_notes")
+        .eq("recruiter_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(10),
+    ]);
+    setCurrentPlan(((profile?.subscription_plan as PlanId) || "free"));
+    const list = (requests || []) as PendingRequest[];
+    setRecent(list);
+    setPending(list.find((r) => r.status === "pending") || null);
+    setLoading(false);
+  };
 
   useEffect(() => {
-    if (!user) return;
-    supabase
-      .from("profiles")
-      .select("subscription_plan")
-      .eq("id", user.id)
-      .maybeSingle()
-      .then(({ data }) => {
-        setCurrentPlan(((data?.subscription_plan as PlanId) || "free"));
-        setLoading(false);
-      });
+    load();
   }, [user]);
 
-  const handleSelect = async (planId: PlanId) => {
+  const handleRequest = async (planId: PlanId) => {
     if (!user || planId === currentPlan) return;
-    setUpgrading(planId);
-    const { error } = await supabase
-      .from("profiles")
-      .update({ subscription_plan: planId })
-      .eq("id", user.id);
-    setUpgrading(null);
-    if (error) {
-      toast({ title: "Couldn't update plan", description: error.message, variant: "destructive" });
+    if (pending) {
+      toast({ title: "Request already pending", description: "Wait for admin review before requesting another change." });
       return;
     }
-    setCurrentPlan(planId);
-    toast({ title: "Plan updated", description: `You are now on the ${planId} plan.` });
+    setSubmitting(planId);
+    const { error } = await (supabase as any)
+      .from("plan_upgrade_requests")
+      .insert({
+        recruiter_id: user.id,
+        current_plan: currentPlan,
+        requested_plan: planId,
+        status: "pending",
+      });
+    setSubmitting(null);
+    if (error) {
+      toast({ title: "Couldn't submit request", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({
+      title: "Request submitted",
+      description: "An admin will review your plan change shortly. You'll be notified once approved.",
+    });
+    load();
+  };
+
+  const statusBadge = (status: string) => {
+    if (status === "approved") return <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/30" variant="outline"><CheckCircle2 className="h-3 w-3 mr-1" />Approved</Badge>;
+    if (status === "rejected") return <Badge className="bg-destructive/10 text-destructive border-destructive/30" variant="outline"><XCircle className="h-3 w-3 mr-1" />Rejected</Badge>;
+    return <Badge className="bg-amber-500/10 text-amber-600 border-amber-500/30" variant="outline"><Clock className="h-3 w-3 mr-1" />Pending review</Badge>;
   };
 
   return (
@@ -115,9 +150,26 @@ const UpgradePlan = () => {
             Pick the plan that fits your hiring
           </h1>
           <p className="text-muted-foreground mt-3 max-w-xl mx-auto">
-            Unlock the full talent pool, unlimited job posts and AI tooling. Switch or cancel anytime.
+            Plan changes are reviewed and approved by our team. Once approved, your account will be upgraded automatically.
           </p>
         </div>
+
+        {pending && (
+          <Card className="mb-6 border-amber-500/30 bg-amber-500/5">
+            <CardContent className="p-4 flex items-center gap-3">
+              <Clock className="h-5 w-5 text-amber-600 shrink-0" />
+              <div className="flex-1 text-sm">
+                <p className="font-medium text-foreground">
+                  Pending request: <span className="capitalize">{pending.requested_plan}</span> plan
+                </p>
+                <p className="text-muted-foreground text-xs">
+                  Submitted {new Date(pending.created_at).toLocaleString()}. An admin will review it shortly.
+                </p>
+              </div>
+              {statusBadge(pending.status)}
+            </CardContent>
+          </Card>
+        )}
 
         {loading ? (
           <div className="flex items-center justify-center py-20">
@@ -128,6 +180,7 @@ const UpgradePlan = () => {
             {plans.map((plan) => {
               const Icon = plan.icon;
               const isCurrent = plan.id === currentPlan;
+              const isPendingThis = pending?.requested_plan === plan.id;
               return (
                 <Card
                   key={plan.id}
@@ -167,12 +220,15 @@ const UpgradePlan = () => {
                     <Button
                       className="w-full mt-6"
                       variant={plan.highlight ? "default" : "outline"}
-                      disabled={isCurrent || upgrading !== null}
-                      onClick={() => handleSelect(plan.id)}
+                      disabled={isCurrent || !!pending || submitting !== null}
+                      onClick={() => handleRequest(plan.id)}
                     >
-                      {upgrading === plan.id ? (
-                        <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Updating...</>
-                      ) : isCurrent ? "Current plan" : plan.id === "free" ? "Downgrade" : "Upgrade"}
+                      {submitting === plan.id ? (
+                        <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Submitting...</>
+                      ) : isCurrent ? "Current plan"
+                        : isPendingThis ? "Awaiting approval"
+                        : pending ? "Request pending"
+                        : plan.id === "free" ? "Request downgrade" : "Request upgrade"}
                     </Button>
                   </CardContent>
                 </Card>
@@ -181,8 +237,30 @@ const UpgradePlan = () => {
           </div>
         )}
 
+        {recent.length > 0 && (
+          <div className="mt-10">
+            <h2 className="font-heading text-lg font-semibold mb-3">Request history</h2>
+            <div className="space-y-2">
+              {recent.map((r) => (
+                <Card key={r.id}>
+                  <CardContent className="p-3 flex items-center justify-between gap-3 text-sm">
+                    <div>
+                      <p className="font-medium capitalize">{r.requested_plan} plan</p>
+                      <p className="text-xs text-muted-foreground">{new Date(r.created_at).toLocaleString()}</p>
+                      {r.admin_notes && (
+                        <p className="text-xs text-muted-foreground mt-1 italic">Note: {r.admin_notes}</p>
+                      )}
+                    </div>
+                    {statusBadge(r.status)}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
+
         <p className="text-center text-xs text-muted-foreground mt-8">
-          Prices shown are illustrative. Payments will be enabled soon — your plan changes instantly for now.
+          Prices shown are illustrative. Payments will be enabled soon.
         </p>
       </div>
     </RecruiterLayout>
