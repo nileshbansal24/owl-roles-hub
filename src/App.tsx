@@ -88,7 +88,7 @@ const App = () => {
                   }
                 />
                 {/* Hidden Admin Panel - not linked from anywhere */}
-                <Route path="/recruiter-pending" element={<RecruiterPendingApproval />} />
+                <Route path="/recruiter-upgrade" element={<ProtectedRoute requiredRole="recruiter"><UpgradePlan /></ProtectedRoute>} />
                 <Route path="/adpanel" element={<AdminLogin />} />
                 <Route path="/adpanel/dashboard" element={<ProtectedRoute requiredRole="admin"><AdminDashboard /></ProtectedRoute>} />
                 <Route path="/privacy-policy" element={<PrivacyPolicy />} />
