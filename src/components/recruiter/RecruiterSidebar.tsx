@@ -33,7 +33,9 @@ import {
   Blocks,
   Settings,
   BarChart3,
+  Sparkles,
 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import logoLight from "@/assets/logo-light.png";
