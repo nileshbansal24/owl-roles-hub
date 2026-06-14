@@ -613,6 +613,45 @@ export type Database = {
           },
         ]
       }
+      plan_upgrade_requests: {
+        Row: {
+          admin_notes: string | null
+          created_at: string
+          current_plan: string
+          id: string
+          recruiter_id: string
+          requested_plan: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          created_at?: string
+          current_plan?: string
+          id?: string
+          recruiter_id: string
+          requested_plan: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          created_at?: string
+          current_plan?: string
+          id?: string
+          recruiter_id?: string
+          requested_plan?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           achievements: string[] | null
