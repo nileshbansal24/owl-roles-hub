@@ -23,19 +23,11 @@ const Auth = () => {
   const redirectBasedOnRole = async (userId: string) => {
     const { data: profile } = await supabase
       .from("profiles")
-      .select("user_type, approval_status")
+      .select("user_type")
       .eq("id", userId)
       .maybeSingle();
 
-    if (profile?.user_type === "recruiter") {
-      if (profile?.approval_status !== "approved") {
-        navigate("/recruiter-pending");
-      } else {
-        navigate("/recruiter-dashboard");
-      }
-    } else {
-      navigate("/candidate-dashboard");
-    }
+    navigate(profile?.user_type === "recruiter" ? "/recruiter-dashboard" : "/candidate-dashboard");
   };
 
   useEffect(() => {
