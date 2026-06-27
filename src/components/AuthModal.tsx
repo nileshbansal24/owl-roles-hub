@@ -68,7 +68,7 @@ const AuthModal = ({
   const navigate = useNavigate();
   const [mode, setMode] = useState<"login" | "signup">(defaultMode);
   const [role, setRole] = useState<"candidate" | "recruiter">(defaultRole);
-  const [step, setStep] = useState<"role" | "form">(defaultMode === "login" ? "form" : "role");
+  const [step, setStep] = useState<"role" | "form">("role");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -77,7 +77,7 @@ const AuthModal = ({
     if (!open) return;
     setMode(defaultMode);
     setRole(defaultRole);
-    setStep(defaultMode === "login" ? "form" : "role");
+    setStep("role");
   }, [open, defaultMode, defaultRole]);
 
   const [formData, setFormData] = useState({
@@ -99,7 +99,7 @@ const AuthModal = ({
 
   const switchMode = (next: "login" | "signup") => {
     setMode(next);
-    setStep(next === "login" ? "form" : "role");
+    setStep("role");
   };
 
   const redirectBasedOnRole = async (userId: string, selectedRole?: string, isNewSignup?: boolean) => {
@@ -169,7 +169,7 @@ const AuthModal = ({
   };
 
   const resetModal = () => {
-    setStep(mode === "login" ? "form" : "role");
+    setStep("role");
     setFormData({ email: "", password: "", fullName: "", phone: "", institutionName: "", designation: "" });
   };
 
@@ -252,10 +252,10 @@ const AuthModal = ({
                       <span className="text-primary-foreground font-heading font-bold text-xl">O</span>
                     </div>
                     <h2 className="font-heading text-2xl font-bold text-foreground tracking-tight">
-                      {mode === "login" ? "Welcome back" : "Join OWL ROLES"}
+                      {mode === "login" ? "Sign in to OWL ROLES" : "Join OWL ROLES"}
                     </h2>
                     <p className="text-muted-foreground mt-1.5 text-sm">
-                      {mode === "login" ? "Select your account type" : "How will you use OWL ROLES?"}
+                      {mode === "login" ? "Choose how you want to log in" : "How will you use OWL ROLES?"}
                     </p>
                   </div>
 
@@ -270,7 +270,9 @@ const AuthModal = ({
                         <User className="w-5 h-5 text-primary" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-heading font-semibold text-foreground text-[15px] leading-tight">I'm a Job Seeker</h3>
+                        <h3 className="font-heading font-semibold text-foreground text-[15px] leading-tight">
+                          {mode === "login" ? "Job Seeker Login" : "I'm a Job Seeker"}
+                        </h3>
                         <p className="text-xs text-muted-foreground mt-0.5">Faculty, research & teaching roles</p>
                       </div>
                       <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
@@ -286,7 +288,9 @@ const AuthModal = ({
                         <Briefcase className="w-5 h-5 text-primary" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-heading font-semibold text-foreground text-[15px] leading-tight">I'm a Recruiter</h3>
+                        <h3 className="font-heading font-semibold text-foreground text-[15px] leading-tight">
+                          {mode === "login" ? "Recruiter Login" : "I'm a Recruiter"}
+                        </h3>
                         <p className="text-xs text-muted-foreground mt-0.5">Post jobs & find top academic talent</p>
                       </div>
                       <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
@@ -313,22 +317,18 @@ const AuthModal = ({
                   exit={{ opacity: 0, y: -8 }}
                   transition={{ duration: 0.2 }}
                 >
-                  {mode === "signup" && (
-                    <button
-                      onClick={() => setStep("role")}
-                      className="text-xs text-muted-foreground hover:text-foreground mb-4 flex items-center gap-1"
-                    >
-                      ← Change role
-                    </button>
-                  )}
+                  <button
+                    onClick={() => setStep("role")}
+                    className="text-xs text-muted-foreground hover:text-foreground mb-4 flex items-center gap-1"
+                  >
+                    ← Change role
+                  </button>
 
                   <div className="mb-6">
-                    {mode === "signup" && (
-                      <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium mb-3">
-                        {role === "candidate" ? <User className="w-3 h-3" /> : <Briefcase className="w-3 h-3" />}
-                        {role === "candidate" ? "Job Seeker" : "Recruiter"}
-                      </div>
-                    )}
+                    <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium mb-3">
+                      {role === "candidate" ? <User className="w-3 h-3" /> : <Briefcase className="w-3 h-3" />}
+                      {role === "candidate" ? "Job Seeker" : "Recruiter"}
+                    </div>
                     <h2 className="font-heading text-2xl font-bold text-foreground tracking-tight leading-tight">
                       {mode === "login" ? "Welcome back" : "Create your account"}
                     </h2>
