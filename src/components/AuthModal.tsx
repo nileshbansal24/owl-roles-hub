@@ -252,10 +252,10 @@ const AuthModal = ({
                       <span className="text-primary-foreground font-heading font-bold text-xl">O</span>
                     </div>
                     <h2 className="font-heading text-2xl font-bold text-foreground tracking-tight">
-                      {mode === "login" ? "Welcome back" : "Join OWL ROLES"}
+                      {mode === "login" ? "Sign in to OWL ROLES" : "Join OWL ROLES"}
                     </h2>
                     <p className="text-muted-foreground mt-1.5 text-sm">
-                      {mode === "login" ? "Select your account type" : "How will you use OWL ROLES?"}
+                      {mode === "login" ? "Choose how you want to log in" : "How will you use OWL ROLES?"}
                     </p>
                   </div>
 
@@ -270,7 +270,9 @@ const AuthModal = ({
                         <User className="w-5 h-5 text-primary" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-heading font-semibold text-foreground text-[15px] leading-tight">I'm a Job Seeker</h3>
+                        <h3 className="font-heading font-semibold text-foreground text-[15px] leading-tight">
+                          {mode === "login" ? "Job Seeker Login" : "I'm a Job Seeker"}
+                        </h3>
                         <p className="text-xs text-muted-foreground mt-0.5">Faculty, research & teaching roles</p>
                       </div>
                       <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
@@ -286,7 +288,9 @@ const AuthModal = ({
                         <Briefcase className="w-5 h-5 text-primary" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-heading font-semibold text-foreground text-[15px] leading-tight">I'm a Recruiter</h3>
+                        <h3 className="font-heading font-semibold text-foreground text-[15px] leading-tight">
+                          {mode === "login" ? "Recruiter Login" : "I'm a Recruiter"}
+                        </h3>
                         <p className="text-xs text-muted-foreground mt-0.5">Post jobs & find top academic talent</p>
                       </div>
                       <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
