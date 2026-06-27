@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -72,6 +72,14 @@ const AuthModal = ({
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
+  // Sync internal state whenever the modal is (re)opened with new defaults
+  useEffect(() => {
+    if (!open) return;
+    setMode(defaultMode);
+    setRole(defaultRole);
+    setStep(defaultMode === "login" ? "form" : "role");
+  }, [open, defaultMode, defaultRole]);
+
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -87,6 +95,11 @@ const AuthModal = ({
   const handleRoleSelect = (selectedRole: "candidate" | "recruiter") => {
     setRole(selectedRole);
     setStep("form");
+  };
+
+  const switchMode = (next: "login" | "signup") => {
+    setMode(next);
+    setStep(next === "login" ? "form" : "role");
   };
 
   const redirectBasedOnRole = async (userId: string, selectedRole?: string, isNewSignup?: boolean) => {
