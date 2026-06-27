@@ -317,22 +317,18 @@ const AuthModal = ({
                   exit={{ opacity: 0, y: -8 }}
                   transition={{ duration: 0.2 }}
                 >
-                  {mode === "signup" && (
-                    <button
-                      onClick={() => setStep("role")}
-                      className="text-xs text-muted-foreground hover:text-foreground mb-4 flex items-center gap-1"
-                    >
-                      ← Change role
-                    </button>
-                  )}
+                  <button
+                    onClick={() => setStep("role")}
+                    className="text-xs text-muted-foreground hover:text-foreground mb-4 flex items-center gap-1"
+                  >
+                    ← Change role
+                  </button>
 
                   <div className="mb-6">
-                    {mode === "signup" && (
-                      <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium mb-3">
-                        {role === "candidate" ? <User className="w-3 h-3" /> : <Briefcase className="w-3 h-3" />}
-                        {role === "candidate" ? "Job Seeker" : "Recruiter"}
-                      </div>
-                    )}
+                    <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium mb-3">
+                      {role === "candidate" ? <User className="w-3 h-3" /> : <Briefcase className="w-3 h-3" />}
+                      {role === "candidate" ? "Job Seeker" : "Recruiter"}
+                    </div>
                     <h2 className="font-heading text-2xl font-bold text-foreground tracking-tight leading-tight">
                       {mode === "login" ? "Welcome back" : "Create your account"}
                     </h2>
