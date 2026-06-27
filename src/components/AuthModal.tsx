@@ -99,7 +99,7 @@ const AuthModal = ({
 
   const switchMode = (next: "login" | "signup") => {
     setMode(next);
-    setStep(next === "login" ? "form" : "role");
+    setStep("role");
   };
 
   const redirectBasedOnRole = async (userId: string, selectedRole?: string, isNewSignup?: boolean) => {
