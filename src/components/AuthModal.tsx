@@ -68,7 +68,7 @@ const AuthModal = ({
   const navigate = useNavigate();
   const [mode, setMode] = useState<"login" | "signup">(defaultMode);
   const [role, setRole] = useState<"candidate" | "recruiter">(defaultRole);
-  const [step, setStep] = useState<"role" | "form">(defaultMode === "login" ? "form" : "role");
+  const [step, setStep] = useState<"role" | "form">("role");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -77,7 +77,7 @@ const AuthModal = ({
     if (!open) return;
     setMode(defaultMode);
     setRole(defaultRole);
-    setStep(defaultMode === "login" ? "form" : "role");
+    setStep("role");
   }, [open, defaultMode, defaultRole]);
 
   const [formData, setFormData] = useState({
