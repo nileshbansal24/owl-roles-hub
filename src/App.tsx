@@ -20,6 +20,7 @@ import TermsOfService from "./pages/TermsOfService";
 import CookiePolicy from "./pages/CookiePolicy";
 import NotFound from "./pages/NotFound";
 import UpgradePlan from "./pages/UpgradePlan";
+import CandidateHome from "./pages/CandidateHome";
 import CookieConsent from "@/components/CookieConsent";
 import ProtectedRoute from "@/components/ProtectedRoute";
 
@@ -38,6 +39,14 @@ const App = () => {
             <CookieConsent />
               <Routes>
                 <Route path="/" element={<Index />} />
+                <Route
+                  path="/jobs"
+                  element={
+                    <ProtectedRoute requiredRole="candidate">
+                      <CandidateHome />
+                    </ProtectedRoute>
+                  }
+                />
                 <Route path="/auth" element={<Auth />} />
                 <Route
                   path="/candidate-dashboard"
