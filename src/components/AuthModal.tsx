@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -72,6 +72,14 @@ const AuthModal = ({
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
+  // Sync internal state whenever the modal is (re)opened with new defaults
+  useEffect(() => {
+    if (!open) return;
+    setMode(defaultMode);
+    setRole(defaultRole);
+    setStep(defaultMode === "login" ? "form" : "role");
+  }, [open, defaultMode, defaultRole]);
+
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -87,6 +95,11 @@ const AuthModal = ({
   const handleRoleSelect = (selectedRole: "candidate" | "recruiter") => {
     setRole(selectedRole);
     setStep("form");
+  };
+
+  const switchMode = (next: "login" | "signup") => {
+    setMode(next);
+    setStep(next === "login" ? "form" : "role");
   };
 
   const redirectBasedOnRole = async (userId: string, selectedRole?: string, isNewSignup?: boolean) => {
@@ -285,10 +298,10 @@ const AuthModal = ({
                       {mode === "login" ? "Don't have an account? " : "Already have an account? "}
                     </span>
                     <button
-                      onClick={() => { setMode(mode === "login" ? "signup" : "login"); setStep(mode === "login" ? "role" : "form"); }}
+                      onClick={() => switchMode(mode === "login" ? "signup" : "login")}
                       className="font-semibold text-primary hover:underline"
                     >
-                      {mode === "login" ? "Sign up" : "Log in"}
+                      {mode === "login" ? "Sign up" : "Sign in"}
                     </button>
                   </div>
                 </motion.div>
@@ -310,16 +323,18 @@ const AuthModal = ({
                   )}
 
                   <div className="mb-6">
-                    <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium mb-3">
-                      {role === "candidate" ? <User className="w-3 h-3" /> : <Briefcase className="w-3 h-3" />}
-                      {role === "candidate" ? "Job Seeker" : "Recruiter"}
-                    </div>
+                    {mode === "signup" && (
+                      <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium mb-3">
+                        {role === "candidate" ? <User className="w-3 h-3" /> : <Briefcase className="w-3 h-3" />}
+                        {role === "candidate" ? "Job Seeker" : "Recruiter"}
+                      </div>
+                    )}
                     <h2 className="font-heading text-2xl font-bold text-foreground tracking-tight leading-tight">
                       {mode === "login" ? "Welcome back" : "Create your account"}
                     </h2>
                     <p className="text-sm text-muted-foreground mt-1">
                       {mode === "login"
-                        ? "Log in to continue where you left off"
+                        ? "Enter your email and password to continue"
                         : role === "recruiter"
                           ? "We'll verify your institution before activation"
                           : "It takes less than a minute"}
@@ -461,17 +476,13 @@ const AuthModal = ({
 
                   <div className="mt-5 pt-5 border-t border-border/60 text-center text-sm">
                     <span className="text-muted-foreground">
-                      {mode === "login" ? "New to OWL ROLES? " : "Already have an account? "}
+                      {mode === "login" ? "Don't have an account? " : "Already have an account? "}
                     </span>
                     <button
-                      onClick={() => {
-                        const next = mode === "login" ? "signup" : "login";
-                        setMode(next);
-                        setStep(next === "login" ? "form" : "role");
-                      }}
+                      onClick={() => switchMode(mode === "login" ? "signup" : "login")}
                       className="font-semibold text-primary hover:underline"
                     >
-                      {mode === "login" ? "Create an account" : "Log in"}
+                      {mode === "login" ? "Sign up" : "Sign in"}
                     </button>
                   </div>
                 </motion.div>
