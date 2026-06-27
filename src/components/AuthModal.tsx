@@ -169,7 +169,7 @@ const AuthModal = ({
   };
 
   const resetModal = () => {
-    setStep(mode === "login" ? "form" : "role");
+    setStep("role");
     setFormData({ email: "", password: "", fullName: "", phone: "", institutionName: "", designation: "" });
   };
 
