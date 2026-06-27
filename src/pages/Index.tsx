@@ -56,6 +56,9 @@ const Index = () => {
         if (data?.user_type === "recruiter") {
           setRedirecting(true);
           navigate("/recruiter-dashboard", { replace: true });
+        } else if (data?.user_type === "candidate") {
+          setRedirecting(true);
+          navigate("/jobs", { replace: true });
         }
       });
   }, [user, authLoading, navigate]);
