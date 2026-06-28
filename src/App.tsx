@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -11,9 +11,6 @@ import Auth from "./pages/Auth";
 import CandidateDashboard from "./pages/CandidateDashboard";
 import RecruiterDashboard from "./pages/RecruiterDashboard";
 import RecruiterProfile from "./pages/RecruiterProfile";
-import AdminVerification from "./pages/AdminVerification";
-import AdminLogin from "./pages/AdminLogin";
-import AdminDashboard from "./pages/AdminDashboard";
 import PostJob from "./pages/PostJob";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
@@ -23,6 +20,19 @@ import UpgradePlan from "./pages/UpgradePlan";
 import CandidateHome from "./pages/CandidateHome";
 import CookieConsent from "@/components/CookieConsent";
 import ProtectedRoute from "@/components/ProtectedRoute";
+
+// Admin routes are lazy-loaded so the admin bundle (and its route names)
+// never ship to regular users. Reduces attack surface + initial bundle size.
+const AdminLogin = lazy(() => import("./pages/AdminLogin"));
+const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
+const AdminVerification = lazy(() => import("./pages/AdminVerification"));
+
+const AdminFallback = () => (
+  <div className="min-h-screen flex items-center justify-center text-sm text-muted-foreground">
+    Loading…
+  </div>
+);
+
 
 const App = () => {
   // Create queryClient inside the component to prevent HMR issues
