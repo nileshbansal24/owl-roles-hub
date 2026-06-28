@@ -48,6 +48,23 @@
     <meta name="twitter:title" content="OWL ROLES — Higher Education Careers in India" />
     <meta name="twitter:description" content="Faculty, lecturer, professor and research jobs at India's top universities. Built for academics, not algorithms." />
     <meta name="twitter:image" content="https://owlroles.com/favicon.png" />
+    <style id="anti-clickjack">body{display:none !important;}</style>
+    <script>
+      // Frame-busting: prevent the site from being embedded in an iframe (clickjacking defense).
+      // Real protection requires the X-Frame-Options / CSP frame-ancestors header at Cloudflare.
+      (function () {
+        try {
+          if (window.self === window.top) {
+            var s = document.getElementById("anti-clickjack");
+            if (s && s.parentNode) s.parentNode.removeChild(s);
+          } else {
+            window.top.location = window.self.location;
+          }
+        } catch (e) {
+          // Cross-origin frame access denied → we're definitely framed. Keep body hidden.
+        }
+      })();
+    </script>
   </head>
 
   <body>
