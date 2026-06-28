@@ -181,7 +181,7 @@ serve(async (req) => {
       else console.error("auth delete", id, error.message);
     }
 
-    return json({ success: true, deleted: inIds.length, authDeleted, scope });
+    return json({ success: true, deleted: ids.length, authDeleted, scope, counts });
   } catch (e: any) {
     console.error("admin-wipe-all error", e);
     return json({ error: e?.message ?? "Unknown error" }, 500);
