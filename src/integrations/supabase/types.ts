@@ -689,6 +689,7 @@ export type Database = {
           subjects: string[] | null
           subscription_plan: string
           teaching_philosophy: string | null
+          tier: string | null
           university: string | null
           updated_at: string
           user_type: string | null
@@ -730,6 +731,7 @@ export type Database = {
           subjects?: string[] | null
           subscription_plan?: string
           teaching_philosophy?: string | null
+          tier?: string | null
           university?: string | null
           updated_at?: string
           user_type?: string | null
@@ -771,6 +773,7 @@ export type Database = {
           subjects?: string[] | null
           subscription_plan?: string
           teaching_philosophy?: string | null
+          tier?: string | null
           university?: string | null
           updated_at?: string
           user_type?: string | null
@@ -1179,6 +1182,7 @@ export type Database = {
         Args: { experience_json: Json }
         Returns: number
       }
+      compute_candidate_tier: { Args: { _years: number }; Returns: string }
       get_admin_user_ids: { Args: never; Returns: string[] }
       get_event_questions_with_answers: {
         Args: { _event_id: string }

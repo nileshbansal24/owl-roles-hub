@@ -15,7 +15,12 @@ interface UploadResult {
   error?: string;
   userId?: string;
   password?: string;
+  years_experience?: number;
+  tier?: string;
 }
+
+const CHUNK_SIZE = 40; // files per edge function request
+
 
 interface AdminMassUploadProps {
   loading?: boolean;
@@ -67,6 +72,53 @@ const AdminMassUpload = ({ loading }: AdminMassUploadProps) => {
     setFiles(prev => prev.filter((_, i) => i !== index));
   };
 
+  const processChunk = async (
+    chunk: File[],
+    accessToken: string,
+    onResult: (r: UploadResult) => void,
+  ) => {
+    const formData = new FormData();
+    chunk.forEach(f => formData.append("resumes", f));
+
+    const response = await fetch(
+      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-mass-upload`,
+      {
+        method: "POST",
+        headers: { Authorization: `Bearer ${accessToken}` },
+        body: formData,
+      }
+    );
+
+    if (!response.ok || !response.body) {
+      const txt = await response.text().catch(() => "");
+      throw new Error(txt || `HTTP ${response.status}`);
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n");
+      buffer = lines.pop() || "";
+      for (const line of lines) {
+        if (!line.trim()) continue;
+        try {
+          const evt = JSON.parse(line);
+          if (evt.type === "result" && evt.result) onResult(evt.result as UploadResult);
+        } catch { /* ignore partial */ }
+      }
+    }
+    if (buffer.trim()) {
+      try {
+        const evt = JSON.parse(buffer);
+        if (evt.type === "result" && evt.result) onResult(evt.result as UploadResult);
+      } catch { /* ignore */ }
+    }
+  };
+
   const handleUpload = async () => {
     if (files.length === 0) {
       toast.error("Please select files to upload");
@@ -84,50 +136,38 @@ const AdminMassUpload = ({ loading }: AdminMassUploadProps) => {
         return;
       }
 
-      const formData = new FormData();
-      files.forEach(file => {
-        formData.append("resumes", file);
-      });
+      const total = files.length;
+      const chunks: File[][] = [];
+      for (let i = 0; i < files.length; i += CHUNK_SIZE) {
+        chunks.push(files.slice(i, i + CHUNK_SIZE));
+      }
 
-      // Simulate progress
-      const progressInterval = setInterval(() => {
-        setProgress(prev => Math.min(prev + 5, 90));
-      }, 500);
+      const collected: UploadResult[] = [];
+      const onResult = (r: UploadResult) => {
+        collected.push(r);
+        setResults([...collected]);
+        setProgress(Math.round((collected.length / total) * 100));
+      };
 
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-mass-upload`,
-        {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${session.access_token}`,
-          },
-          body: formData,
+      for (let i = 0; i < chunks.length; i++) {
+        try {
+          await processChunk(chunks[i], session.access_token, onResult);
+        } catch (chunkErr) {
+          console.error(`Chunk ${i} failed:`, chunkErr);
+          chunks[i].forEach(f => onResult({
+            filename: f.name,
+            success: false,
+            error: chunkErr instanceof Error ? chunkErr.message : "Chunk failed",
+          }));
         }
-      );
-
-      clearInterval(progressInterval);
-      setProgress(100);
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Upload failed");
       }
 
-      setResults(data.results || []);
-      
-      const successCount = data.results?.filter((r: UploadResult) => r.success).length || 0;
-      const failCount = data.results?.filter((r: UploadResult) => !r.success).length || 0;
-      
-      if (successCount > 0) {
-        toast.success(`Created ${successCount} user accounts successfully`);
-      }
-      if (failCount > 0) {
-        toast.warning(`${failCount} resumes failed to process`);
-      }
+      const successCount = collected.filter(r => r.success).length;
+      const failCount = collected.length - successCount;
+      if (successCount > 0) toast.success(`Created ${successCount} candidate accounts`);
+      if (failCount > 0) toast.warning(`${failCount} resumes failed to process`);
 
       setFiles([]);
-
     } catch (error) {
       console.error("Upload error:", error);
       toast.error(error instanceof Error ? error.message : "Failed to upload resumes");
@@ -136,26 +176,30 @@ const AdminMassUpload = ({ loading }: AdminMassUploadProps) => {
     }
   };
 
+
   const successCount = results.filter(r => r.success).length;
   const failCount = results.filter(r => !r.success).length;
 
   const downloadCSV = () => {
     if (results.length === 0) return;
 
-    const headers = ["Filename", "Status", "Email", "Password", "User ID", "Error"];
+    const headers = ["Filename", "Status", "Email", "Password", "Years Experience", "Tier", "User ID", "Error"];
     const rows = results.map(r => [
       r.filename,
       r.success ? "Success" : "Failed",
       r.email || "",
       r.password || "",
+      r.years_experience != null ? String(r.years_experience) : "",
+      r.tier || "",
       r.userId || "",
       r.error || ""
     ]);
 
     const csvContent = [
       headers.join(","),
-      ...rows.map(row => row.map(cell => `"${cell.replace(/"/g, '""')}"`).join(","))
+      ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(","))
     ].join("\n");
+
 
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
@@ -219,13 +263,13 @@ const AdminMassUpload = ({ loading }: AdminMassUploadProps) => {
             <div className="text-sm">
               <p className="font-medium">How it works:</p>
               <ul className="list-disc list-inside text-muted-foreground mt-1 space-y-1">
-                <li>Upload PDF or Word resumes</li>
-                <li>AI extracts profile data including email</li>
-                <li>User account is created with password <strong>NAME1234</strong> (first 4 letters of first name in uppercase + 1234, e.g. Mayank → MAYA1234)</li>
-                <li>Share these credentials with the candidate; they can change it later</li>
-                <li>If email already exists, signup with that email is blocked</li>
-                <li>Profile is populated with extracted data</li>
+                <li>Upload up to several thousand PDF / DOC / DOCX resumes at once — processed in batches of {CHUNK_SIZE} with live progress.</li>
+                <li>AI parses even messy or incomplete resumes and infers missing fields where possible.</li>
+                <li>Years of experience are computed from job dates (e.g. since 2010 = 16 years) and the candidate is auto-tiered: <strong>Gold</strong> (10+), <strong>Silver</strong> (5–9), <strong>Bronze</strong> (1–4), <strong>Black</strong> (fresher).</li>
+                <li>Account password is <strong>NAME1234</strong> (first 4 letters of first name uppercase + 1234, e.g. Mayank → MAYA1234).</li>
+                <li>Duplicate emails are skipped automatically.</li>
               </ul>
+
             </div>
           </div>
         </CardContent>
@@ -390,14 +434,36 @@ const AdminMassUpload = ({ loading }: AdminMassUploadProps) => {
                     </div>
                   </div>
                   {result.success ? (
-                    <Badge variant="outline" className="text-green-500 border-green-500">
-                      Created
-                    </Badge>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      {result.years_experience != null && (
+                        <Badge variant="outline" className="text-xs">
+                          {result.years_experience}y exp
+                        </Badge>
+                      )}
+                      {result.tier && (
+                        <Badge
+                          variant="outline"
+                          className={cn(
+                            "text-xs",
+                            result.tier === "Gold" && "text-amber-600 border-amber-500",
+                            result.tier === "Silver" && "text-slate-500 border-slate-400",
+                            result.tier === "Bronze" && "text-orange-700 border-orange-600",
+                            result.tier === "Black" && "text-foreground border-foreground/40"
+                          )}
+                        >
+                          {result.tier}
+                        </Badge>
+                      )}
+                      <Badge variant="outline" className="text-green-500 border-green-500">
+                        Created
+                      </Badge>
+                    </div>
                   ) : (
                     <Badge variant="outline" className="text-destructive border-destructive text-xs">
                       {result.error}
                     </Badge>
                   )}
+
                 </div>
               ))}
             </div>
