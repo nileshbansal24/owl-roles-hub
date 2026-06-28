@@ -102,14 +102,33 @@ const App = () => {
                   path="/admin/verification"
                   element={
                     <ProtectedRoute>
-                      <AdminVerification />
+                      <Suspense fallback={<AdminFallback />}>
+                        <AdminVerification />
+                      </Suspense>
                     </ProtectedRoute>
                   }
                 />
                 {/* Hidden Admin Panel - not linked from anywhere */}
                 <Route path="/recruiter-upgrade" element={<ProtectedRoute requiredRole="recruiter"><UpgradePlan /></ProtectedRoute>} />
-                <Route path="/adpanel" element={<AdminLogin />} />
-                <Route path="/adpanel/dashboard" element={<ProtectedRoute requiredRole="admin"><AdminDashboard /></ProtectedRoute>} />
+                <Route
+                  path="/adpanel"
+                  element={
+                    <Suspense fallback={<AdminFallback />}>
+                      <AdminLogin />
+                    </Suspense>
+                  }
+                />
+                <Route
+                  path="/adpanel/dashboard"
+                  element={
+                    <ProtectedRoute requiredRole="admin">
+                      <Suspense fallback={<AdminFallback />}>
+                        <AdminDashboard />
+                      </Suspense>
+                    </ProtectedRoute>
+                  }
+                />
+
                 <Route path="/privacy-policy" element={<PrivacyPolicy />} />
                 <Route path="/terms-of-service" element={<TermsOfService />} />
                 <Route path="/cookie-policy" element={<CookiePolicy />} />
