@@ -143,8 +143,8 @@ const CandidateHome = () => {
           {/* Quick analytics */}
           <div className="mt-6 grid grid-cols-2 md:grid-cols-3 gap-3">
             <Card className="p-4 flex items-center gap-3">
-              <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                <Briefcase className="h-5 w-5 text-primary" />
+              <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                <img src={owlJobsFeed} alt="" aria-hidden="true" loading="lazy" width={36} height={36} className="h-9 w-9 object-contain" />
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Open Roles</p>
@@ -152,8 +152,8 @@ const CandidateHome = () => {
               </div>
             </Card>
             <Card className="p-4 flex items-center gap-3">
-              <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                <MapPin className="h-5 w-5 text-primary" />
+              <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                <img src={owlInstitutions} alt="" aria-hidden="true" loading="lazy" width={36} height={36} className="h-9 w-9 object-contain" />
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Cities Hiring</p>
@@ -161,8 +161,8 @@ const CandidateHome = () => {
               </div>
             </Card>
             <Card className="p-4 flex items-center gap-3 col-span-2 md:col-span-1">
-              <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                <TrendingUp className="h-5 w-5 text-primary" />
+              <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                <img src={owlAnalytics} alt="" aria-hidden="true" loading="lazy" width={36} height={36} className="h-9 w-9 object-contain" />
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Role Types</p>
