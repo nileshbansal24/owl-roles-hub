@@ -2,25 +2,25 @@ import { ReactNode, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { 
-  LayoutDashboard, 
-  Building2, 
-  Users, 
-  Briefcase, 
+import {
   LogOut,
   Shield,
   Menu,
   X,
   RefreshCw,
-  Upload,
-  Mail,
-  UserCheck,
-  Crown,
-  AlertTriangle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
+import owlOverview from "@/assets/owl-icons/nav-overview.png";
+import owlApprovals from "@/assets/owl-icons/nav-approvals.png";
+import owlPlanRequests from "@/assets/owl-icons/nav-plan-requests.png";
+import owlEmails from "@/assets/owl-icons/nav-emails.png";
+import owlInstitutions from "@/assets/owl-icons/nav-institutions.png";
+import owlCandidates from "@/assets/owl-icons/nav-candidates.png";
+import owlAdminJobs from "@/assets/owl-icons/nav-admin-jobs.png";
+import owlUpload from "@/assets/owl-icons/nav-upload.png";
+import owlDanger from "@/assets/owl-icons/nav-danger.png";
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -31,15 +31,15 @@ interface AdminLayoutProps {
 }
 
 const navItems = [
-  { id: "overview", label: "Overview", icon: LayoutDashboard },
-  { id: "approvals", label: "Recruiter Approvals", icon: UserCheck },
-  { id: "plan-upgrades", label: "Plan Upgrades", icon: Crown },
-  { id: "emails", label: "All Emails", icon: Mail },
-  { id: "institutions", label: "Institutions", icon: Building2 },
-  { id: "candidates", label: "Candidates", icon: Users },
-  { id: "jobs", label: "Jobs", icon: Briefcase },
-  { id: "mass-upload", label: "Mass Upload", icon: Upload },
-  { id: "danger-zone", label: "Danger Zone", icon: AlertTriangle },
+  { id: "overview", label: "Overview", icon: owlOverview },
+  { id: "approvals", label: "Recruiter Approvals", icon: owlApprovals },
+  { id: "plan-upgrades", label: "Plan Upgrades", icon: owlPlanRequests },
+  { id: "emails", label: "All Emails", icon: owlEmails },
+  { id: "institutions", label: "Institutions", icon: owlInstitutions },
+  { id: "candidates", label: "Candidates", icon: owlCandidates },
+  { id: "jobs", label: "Jobs", icon: owlAdminJobs },
+  { id: "mass-upload", label: "Mass Upload", icon: owlUpload },
+  { id: "danger-zone", label: "Danger Zone", icon: owlDanger },
 ];
 
 const AdminLayout = ({ children, activeTab, onTabChange, onRefresh, isRefreshing }: AdminLayoutProps) => {
