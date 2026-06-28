@@ -215,7 +215,7 @@ const RecruiterSidebar = ({ hasJobs = false, pendingVerificationCount = 0 }: Rec
                       : "text-sidebar-foreground/70 hover:text-sidebar-foreground"
                   )}
                 >
-                  <Building2 className="h-4 w-4" />
+                  <OwlIcon src={owlCompany} />
                   {!isCollapsed && <span className="text-[13px]">My Profile</span>}
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -231,7 +231,7 @@ const RecruiterSidebar = ({ hasJobs = false, pendingVerificationCount = 0 }: Rec
                       : "text-amber-600 dark:text-amber-400 hover:bg-amber-500/10"
                   )}
                 >
-                  <Sparkles className="h-4 w-4" />
+                  <OwlIcon src={owlUpgrade} />
                   {!isCollapsed && (
                     <>
                       <span className="text-[13px] flex-1">Upgrade Plan</span>
