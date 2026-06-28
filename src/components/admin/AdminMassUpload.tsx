@@ -434,14 +434,36 @@ const AdminMassUpload = ({ loading }: AdminMassUploadProps) => {
                     </div>
                   </div>
                   {result.success ? (
-                    <Badge variant="outline" className="text-green-500 border-green-500">
-                      Created
-                    </Badge>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      {result.years_experience != null && (
+                        <Badge variant="outline" className="text-xs">
+                          {result.years_experience}y exp
+                        </Badge>
+                      )}
+                      {result.tier && (
+                        <Badge
+                          variant="outline"
+                          className={cn(
+                            "text-xs",
+                            result.tier === "Gold" && "text-amber-600 border-amber-500",
+                            result.tier === "Silver" && "text-slate-500 border-slate-400",
+                            result.tier === "Bronze" && "text-orange-700 border-orange-600",
+                            result.tier === "Black" && "text-foreground border-foreground/40"
+                          )}
+                        >
+                          {result.tier}
+                        </Badge>
+                      )}
+                      <Badge variant="outline" className="text-green-500 border-green-500">
+                        Created
+                      </Badge>
+                    </div>
                   ) : (
                     <Badge variant="outline" className="text-destructive border-destructive text-xs">
                       {result.error}
                     </Badge>
                   )}
+
                 </div>
               ))}
             </div>
