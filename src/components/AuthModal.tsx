@@ -124,7 +124,7 @@ const AuthModal = ({
           email: formData.email,
           password: formData.password,
           options: {
-            emailRedirectTo: window.location.origin,
+            emailRedirectTo: "https://owlroles.com/",
             data: {
               full_name: formData.fullName,
               user_type: role,
