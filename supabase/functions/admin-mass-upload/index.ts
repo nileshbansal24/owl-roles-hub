@@ -1,4 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import mammoth from "npm:mammoth@1.8.0";
+import { extractText, getDocumentProxy } from "npm:unpdf@0.12.1";
+
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
