@@ -138,7 +138,7 @@ const AdminLayout = ({ children, activeTab, onTabChange, onRefresh, isRefreshing
                       : "text-muted-foreground hover:text-foreground hover:bg-muted"
                   )}
                 >
-                  <item.icon className="h-5 w-5" />
+                  <img src={item.icon} alt="" aria-hidden="true" loading="lazy" width={28} height={28} className="h-7 w-7 shrink-0 object-contain" />
                   {item.label}
                 </button>
               ))}
