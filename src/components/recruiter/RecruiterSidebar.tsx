@@ -18,45 +18,50 @@ import {
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  Search,
-  Briefcase,
-  Calendar,
-  Bookmark,
-  MessageSquare,
-  Plus,
-  Building2,
-  LogOut,
-  Moon,
-  Sun,
-  FileText,
-  Blocks,
-  Settings,
-  BarChart3,
-  Sparkles,
-} from "lucide-react";
+import { Plus, LogOut, Moon, Sun } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import logoLight from "@/assets/logo-light.png";
 import logoDark from "@/assets/logo-dark.png";
+import owlFind from "@/assets/owl-icons/nav-find-candidates.png";
+import owlJobs from "@/assets/owl-icons/nav-manage-jobs.png";
+import owlAnalytics from "@/assets/owl-icons/nav-analytics.png";
+import owlEvents from "@/assets/owl-icons/nav-events.png";
+import owlSaved from "@/assets/owl-icons/nav-saved.png";
+import owlMessages from "@/assets/owl-icons/nav-messages.png";
+import owlVerify from "@/assets/owl-icons/nav-verification.png";
+import owlUpgrade from "@/assets/owl-icons/nav-upgrade.png";
+import owlCompany from "@/assets/owl-icons/nav-company.png";
 
 interface RecruiterSidebarProps {
   hasJobs?: boolean;
   pendingVerificationCount?: number;
 }
 
+const OwlIcon = ({ src, active }: { src: string; active?: boolean }) => (
+  <img
+    src={src}
+    alt=""
+    aria-hidden="true"
+    loading="lazy"
+    width={28}
+    height={28}
+    className={cn("h-6 w-6 shrink-0 object-contain transition-transform", active && "scale-110")}
+  />
+);
+
 const mainNavItems = [
-  { title: "Find Candidates", icon: Search, tab: "resdex" },
-  { title: "Manage Jobs", icon: Briefcase, tab: "manage" },
-  { title: "Analytics", icon: BarChart3, tab: "analytics" },
+  { title: "Find Candidates", icon: owlFind, tab: "resdex" },
+  { title: "Manage Jobs", icon: owlJobs, tab: "manage" },
+  { title: "Analytics", icon: owlAnalytics, tab: "analytics" },
 ];
 
 const manageNavItems = [
-  { title: "Events", icon: Calendar, tab: "events" },
-  { title: "Saved", icon: Bookmark, tab: "saved" },
-  { title: "Messages", icon: MessageSquare, tab: "messages" },
-  { title: "OR Verification", icon: Blocks, tab: "blockchain" },
+  { title: "Events", icon: owlEvents, tab: "events" },
+  { title: "Saved", icon: owlSaved, tab: "saved" },
+  { title: "Messages", icon: owlMessages, tab: "messages" },
+  { title: "OR Verification", icon: owlVerify, tab: "blockchain" },
 ];
 
 const RecruiterSidebar = ({ hasJobs = false, pendingVerificationCount = 0 }: RecruiterSidebarProps) => {
