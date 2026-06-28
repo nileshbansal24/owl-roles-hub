@@ -15,7 +15,8 @@ import {
   Upload,
   Mail,
   UserCheck,
-  Crown
+  Crown,
+  AlertTriangle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
