@@ -109,134 +109,219 @@ function computeTier(years: number): string {
   return "Gold";
 }
 
-async function parseResumeWithAI(file: File, lovableApiKey: string): Promise<ParsedResume | null> {
-  const arrayBuffer = await file.arrayBuffer();
-  // Chunked base64 conversion for large files
-  const bytes = new Uint8Array(arrayBuffer);
+function bytesToBase64(bytes: Uint8Array): string {
   let binary = "";
   const chunk = 0x8000;
   for (let i = 0; i < bytes.length; i += chunk) {
     binary += String.fromCharCode(...bytes.subarray(i, i + chunk));
   }
-  const base64Content = btoa(binary);
-  const fileExt = file.name.split(".").pop()?.toLowerCase() || "pdf";
-  const mimeType = fileExt === "pdf"
-    ? "application/pdf"
-    : fileExt === "docx"
-      ? "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-      : "application/msword";
+  return btoa(binary);
+}
 
-  const attempt = async (retries: number): Promise<ParsedResume | null> => {
-    try {
-      const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${lovableApiKey}`,
-        },
-        body: JSON.stringify({
-          model: "google/gemini-2.5-flash",
-          messages: [
-            {
-              role: "system",
-              content: `You are an expert resume parser specialised in academic and professional resumes. Extract ALL available data even from poorly formatted resumes. Infer reasonable values where context allows (e.g. headline from latest role). The email is CRITICAL. Output dates as 'Month YYYY' or 'YYYY' format. If a role is current, set current=true.`
+function mimeFor(ext: string): string {
+  if (ext === "pdf") return "application/pdf";
+  if (ext === "docx") return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+  if (ext === "doc") return "application/msword";
+  if (ext === "txt") return "text/plain";
+  if (ext === "rtf") return "application/rtf";
+  return "application/octet-stream";
+}
+
+// Format-specific text extraction fallbacks.
+async function extractDocxText(bytes: Uint8Array): Promise<string> {
+  try {
+    const result = await mammoth.extractRawText({ buffer: bytes });
+    return (result?.value || "").trim();
+  } catch (e) {
+    console.error("mammoth docx extract failed", e);
+    return "";
+  }
+}
+
+async function extractPdfText(bytes: Uint8Array): Promise<string> {
+  try {
+    const pdf = await getDocumentProxy(bytes);
+    const { text } = await extractText(pdf, { mergePages: true });
+    return (Array.isArray(text) ? text.join("\n") : text || "").trim();
+  } catch (e) {
+    console.error("unpdf extract failed", e);
+    return "";
+  }
+}
+
+// Legacy .doc has no clean text layer in Deno; pull printable ASCII runs as a last-ditch fallback.
+function extractLegacyDocText(bytes: Uint8Array): string {
+  const out: string[] = [];
+  let current = "";
+  for (let i = 0; i < bytes.length; i++) {
+    const b = bytes[i];
+    const printable = (b >= 0x20 && b <= 0x7e) || b === 0x09 || b === 0x0a || b === 0x0d;
+    if (printable) {
+      current += String.fromCharCode(b);
+    } else {
+      if (current.length >= 4) out.push(current);
+      current = "";
+    }
+  }
+  if (current.length >= 4) out.push(current);
+  return out.join("\n").trim();
+}
+
+async function extractTextByFormat(file: File, ext: string): Promise<string> {
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  if (ext === "docx") return await extractDocxText(bytes);
+  if (ext === "pdf") return await extractPdfText(bytes);
+  if (ext === "doc") return extractLegacyDocText(bytes);
+  if (ext === "txt" || ext === "rtf") return new TextDecoder().decode(bytes);
+  return "";
+}
+
+const TOOL_SPEC = [{
+  type: "function" as const,
+  function: {
+    name: "extract_resume_data",
+    description: "Extract structured profile data from a resume",
+    parameters: {
+      type: "object",
+      properties: {
+        full_name: { type: "string" },
+        role: { type: "string" },
+        headline: { type: "string" },
+        professional_summary: { type: "string" },
+        location: { type: "string" },
+        phone: { type: "string" },
+        email: { type: "string" },
+        skills: { type: "array", items: { type: "string" } },
+        experience: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              title: { type: "string" }, company: { type: "string" }, location: { type: "string" },
+              start_date: { type: "string" }, end_date: { type: "string" },
+              description: { type: "string" }, current: { type: "boolean" }
             },
-            {
-              role: "user",
-              content: [
-                { type: "text", text: "Parse this resume thoroughly and return structured data via the tool. Include every job, every education entry, every paper. Calculate dates carefully." },
-                { type: "file", file: { filename: `resume.${fileExt}`, file_data: `data:${mimeType};base64,${base64Content}` } }
-              ]
-            }
-          ],
-          tools: [{
-            type: "function",
-            function: {
-              name: "extract_resume_data",
-              description: "Extract structured profile data from a resume",
-              parameters: {
-                type: "object",
-                properties: {
-                  full_name: { type: "string" },
-                  role: { type: "string" },
-                  headline: { type: "string" },
-                  professional_summary: { type: "string" },
-                  location: { type: "string" },
-                  phone: { type: "string" },
-                  email: { type: "string" },
-                  skills: { type: "array", items: { type: "string" } },
-                  experience: {
-                    type: "array",
-                    items: {
-                      type: "object",
-                      properties: {
-                        title: { type: "string" }, company: { type: "string" }, location: { type: "string" },
-                        start_date: { type: "string" }, end_date: { type: "string" },
-                        description: { type: "string" }, current: { type: "boolean" }
-                      },
-                      required: ["title", "company"]
-                    }
-                  },
-                  education: {
-                    type: "array",
-                    items: {
-                      type: "object",
-                      properties: {
-                        degree: { type: "string" }, institution: { type: "string" }, field: { type: "string" },
-                        start_year: { type: "string" }, end_year: { type: "string" }
-                      },
-                      required: ["degree", "institution"]
-                    }
-                  },
-                  achievements: { type: "array", items: { type: "string" } },
-                  research_papers: {
-                    type: "array",
-                    items: {
-                      type: "object",
-                      properties: {
-                        title: { type: "string" }, journal: { type: "string" }, year: { type: "string" },
-                        doi: { type: "string" }, authors: { type: "string" }
-                      },
-                      required: ["title"]
-                    }
-                  }
-                },
-                required: ["full_name", "email"]
-              }
-            }
-          }],
-          tool_choice: { type: "function", function: { name: "extract_resume_data" } },
-          temperature: 0.1,
-          max_tokens: 8000,
-        }),
-      });
-
-      if (aiResponse.status === 429 || aiResponse.status === 503) {
-        if (retries > 0) {
-          await new Promise(r => setTimeout(r, 2000 * (4 - retries)));
-          return attempt(retries - 1);
+            required: ["title", "company"]
+          }
+        },
+        education: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              degree: { type: "string" }, institution: { type: "string" }, field: { type: "string" },
+              start_year: { type: "string" }, end_year: { type: "string" }
+            },
+            required: ["degree", "institution"]
+          }
+        },
+        achievements: { type: "array", items: { type: "string" } },
+        research_papers: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              title: { type: "string" }, journal: { type: "string" }, year: { type: "string" },
+              doi: { type: "string" }, authors: { type: "string" }
+            },
+            required: ["title"]
+          }
         }
-      }
-      if (!aiResponse.ok) {
-        console.error("AI error", aiResponse.status, await aiResponse.text());
-        return null;
-      }
-      const aiResult = await aiResponse.json();
-      const toolCall = aiResult.choices?.[0]?.message?.tool_calls?.[0];
-      if (!toolCall?.function?.arguments) return null;
-      return JSON.parse(toolCall.function.arguments) as ParsedResume;
-    } catch (e) {
-      console.error("AI exception", e);
-      if (retries > 0) {
-        await new Promise(r => setTimeout(r, 1500));
-        return attempt(retries - 1);
-      }
+      },
+      required: ["full_name", "email"]
+    }
+  }
+}];
+
+const SYSTEM_PROMPT = `You are an expert resume parser specialised in academic and professional resumes. Extract ALL available data even from poorly formatted resumes. Infer reasonable values where context allows (e.g. headline from latest role). The email is CRITICAL. Output dates as 'Month YYYY' or 'YYYY' format. If a role is current, set current=true.`;
+
+async function callGemini(
+  userContent: unknown,
+  lovableApiKey: string,
+  retries = 3,
+): Promise<ParsedResume | null> {
+  try {
+    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${lovableApiKey}`,
+      },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash",
+        messages: [
+          { role: "system", content: SYSTEM_PROMPT },
+          { role: "user", content: userContent },
+        ],
+        tools: TOOL_SPEC,
+        tool_choice: { type: "function", function: { name: "extract_resume_data" } },
+        temperature: 0.1,
+        max_tokens: 8000,
+      }),
+    });
+
+    if ((aiResponse.status === 429 || aiResponse.status === 503) && retries > 0) {
+      await new Promise(r => setTimeout(r, 2000 * (4 - retries)));
+      return callGemini(userContent, lovableApiKey, retries - 1);
+    }
+    if (!aiResponse.ok) {
+      console.error("AI error", aiResponse.status, await aiResponse.text());
       return null;
     }
-  };
-
-  return attempt(3);
+    const aiResult = await aiResponse.json();
+    const toolCall = aiResult.choices?.[0]?.message?.tool_calls?.[0];
+    if (!toolCall?.function?.arguments) return null;
+    return JSON.parse(toolCall.function.arguments) as ParsedResume;
+  } catch (e) {
+    console.error("AI exception", e);
+    if (retries > 0) {
+      await new Promise(r => setTimeout(r, 1500));
+      return callGemini(userContent, lovableApiKey, retries - 1);
+    }
+    return null;
+  }
 }
+
+function isUsableParse(p: ParsedResume | null): boolean {
+  return !!(p && p.email && p.full_name);
+}
+
+async function parseResumeWithAI(file: File, lovableApiKey: string): Promise<ParsedResume | null> {
+  const fileExt = (file.name.split(".").pop() || "pdf").toLowerCase();
+  const mimeType = mimeFor(fileExt);
+
+  // Strategy 1 (PDF / DOCX): send the binary directly — Gemini's PDF & DOCX understanding is strongest here.
+  // For legacy DOC we skip straight to text extraction since Gemini cannot read .doc reliably.
+  let parsed: ParsedResume | null = null;
+
+  if (fileExt === "pdf" || fileExt === "docx") {
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    const base64Content = bytesToBase64(bytes);
+    parsed = await callGemini([
+      { type: "text", text: "Parse this resume thoroughly and return structured data via the tool. Include every job, every education entry, every paper. Calculate dates carefully." },
+      { type: "file", file: { filename: `resume.${fileExt}`, file_data: `data:${mimeType};base64,${base64Content}` } },
+    ], lovableApiKey);
+    if (isUsableParse(parsed)) return parsed;
+  }
+
+  // Strategy 2: format-specific text extraction (auto-convert effect) then re-feed as plain text.
+  // - DOCX → mammoth raw text
+  // - PDF  → unpdf text layer (handles when Gemini's file parse silently misses fields)
+  // - DOC  → printable-strings fallback
+  const extracted = await extractTextByFormat(file, fileExt);
+  if (extracted && extracted.length > 50) {
+    const truncated = extracted.length > 60000 ? extracted.slice(0, 60000) : extracted;
+    const textParsed = await callGemini([
+      { type: "text", text: `The following text was extracted from a ${fileExt.toUpperCase()} resume (formatting may be degraded). Parse it thoroughly and return structured data via the tool. Infer fields from context where possible.\n\n---RESUME TEXT START---\n${truncated}\n---RESUME TEXT END---` },
+    ], lovableApiKey);
+    if (isUsableParse(textParsed)) return textParsed;
+    // Keep whichever has more info.
+    if (textParsed && !parsed) parsed = textParsed;
+  }
+
+  return parsed;
+}
+
 
 async function processFile(
   file: File,
