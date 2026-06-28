@@ -40,6 +40,8 @@ const AdminDashboard = () => {
         return <AdminJobs jobs={jobs} loading={loading} />;
       case "mass-upload":
         return <AdminMassUpload loading={loading} />;
+      case "danger-zone":
+        return <AdminDangerZone />;
       default:
         return <AdminOverview stats={stats} loading={loading} />;
     }
