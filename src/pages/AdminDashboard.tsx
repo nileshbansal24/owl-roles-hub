@@ -8,6 +8,7 @@ import AdminMassUpload from "@/components/admin/AdminMassUpload";
 import AdminEmails from "@/components/admin/AdminEmails";
 import AdminRecruiterApprovals from "@/components/admin/AdminRecruiterApprovals";
 import AdminPlanUpgrades from "@/components/admin/AdminPlanUpgrades";
+import AdminDangerZone from "@/components/admin/AdminDangerZone";
 import { useAdminStats } from "@/hooks/useAdminStats";
 
 const AdminDashboard = () => {
