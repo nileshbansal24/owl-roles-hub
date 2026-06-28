@@ -472,11 +472,22 @@ const AdminDangerZone = () => {
             </div>
           )}
 
-          <DialogFooter>
-            <Button onClick={closeProgress} disabled={isStreaming} variant={summary ? "default" : "outline"}>
-              {isStreaming ? "Working…" : "Close"}
+          <DialogFooter className="gap-2">
+            {streamError && !isStreaming && !summary && retryCountdown === null && (
+              <Button onClick={manualRetry} variant="default">
+                <RefreshCw className="h-4 w-4 mr-2" /> Retry now
+              </Button>
+            )}
+            {retryCountdown !== null && (
+              <Button onClick={() => { cancelRetryRef.current = true; }} variant="outline">
+                Cancel retry
+              </Button>
+            )}
+            <Button onClick={closeProgress} disabled={isStreaming || retryCountdown !== null} variant={summary ? "default" : "outline"}>
+              {isStreaming || retryCountdown !== null ? "Working…" : "Close"}
             </Button>
           </DialogFooter>
+
         </DialogContent>
       </Dialog>
     </div>
