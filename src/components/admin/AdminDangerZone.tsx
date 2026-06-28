@@ -60,6 +60,8 @@ const scopeMeta: Record<Scope, { title: string; blurb: string }> = {
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
 
+const MAX_AUTO_RETRIES = 3;
+
 const AdminDangerZone = () => {
   const [pendingScope, setPendingScope] = useState<Scope | null>(null);
   const [confirmText, setConfirmText] = useState("");
@@ -79,6 +81,14 @@ const AdminDangerZone = () => {
   >(null);
   const [streamError, setStreamError] = useState<string | null>(null);
   const [isStreaming, setIsStreaming] = useState(false);
+  const [retryAttempt, setRetryAttempt] = useState(0);
+  const [retryCountdown, setRetryCountdown] = useState<number | null>(null);
+
+  // Refs for resumability — refs (not state) so mid-stream values are current.
+  const completedKeysRef = useRef<Set<string>>(new Set());
+  const authProcessedRef = useRef<number>(0);
+  const sawDoneRef = useRef<boolean>(false);
+  const cancelRetryRef = useRef<boolean>(false);
 
   const openPreview = async (s: Scope) => {
     setPendingScope(s);
@@ -100,27 +110,9 @@ const AdminDangerZone = () => {
     }
   };
 
-  const startWipe = async () => {
-    if (!pendingScope) return;
-    if (confirmText !== "DELETE") {
-      toast.error("Type DELETE to confirm.");
-      return;
-    }
-    const scope = pendingScope;
-    // Close confirm dialog, open progress dialog
-    setPendingScope(null);
-    setConfirmText("");
-    setPreview(null);
-    setActiveScope(scope);
-    setSteps([]);
-    setCurrentStepIdx(0);
-    setTotalSteps(0);
-    setAuthProgress(null);
-    setSummary(null);
+  const runStream = async (scope: Scope) => {
     setStreamError(null);
-    setProgressOpen(true);
     setIsStreaming(true);
-
     try {
       const { data: sessionData } = await supabase.auth.getSession();
       const token = sessionData.session?.access_token;
@@ -133,7 +125,13 @@ const AdminDangerZone = () => {
           Authorization: `Bearer ${token}`,
           apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string,
         },
-        body: JSON.stringify({ scope, confirm: "WIPE", stream: true }),
+        body: JSON.stringify({
+          scope,
+          confirm: "WIPE",
+          stream: true,
+          skipSteps: Array.from(completedKeysRef.current),
+          resumeAuthFrom: authProcessedRef.current,
+        }),
       });
 
       if (!resp.ok || !resp.body) {
@@ -154,23 +152,80 @@ const AdminDangerZone = () => {
         for (const line of lines) {
           const trimmed = line.trim();
           if (!trimmed) continue;
-          try {
-            const evt = JSON.parse(trimmed);
-            handleEvent(evt);
-          } catch {
-            // ignore malformed line
-          }
+          try { handleEvent(JSON.parse(trimmed)); } catch { /* ignore */ }
         }
       }
       if (buffer.trim()) {
         try { handleEvent(JSON.parse(buffer.trim())); } catch { /* ignore */ }
       }
-    } catch (e: any) {
-      setStreamError(e?.message ?? "Wipe failed");
-      toast.error(e?.message ?? "Wipe failed");
+
+      if (!sawDoneRef.current) {
+        throw new Error("Stream ended before completion");
+      }
     } finally {
       setIsStreaming(false);
     }
+  };
+
+  const attemptWithRetry = async (scope: Scope) => {
+    cancelRetryRef.current = false;
+    for (let attempt = 0; attempt <= MAX_AUTO_RETRIES; attempt++) {
+      setRetryAttempt(attempt);
+      try {
+        await runStream(scope);
+        return; // success
+      } catch (e: any) {
+        if (sawDoneRef.current) return;
+        const msg = e?.message ?? "Wipe failed";
+        if (attempt >= MAX_AUTO_RETRIES) {
+          setStreamError(`${msg} — auto-retry exhausted. You can retry manually.`);
+          toast.error("Wipe interrupted. Retry available.");
+          return;
+        }
+        const delay = Math.min(8000, 1000 * 2 ** attempt);
+        setStreamError(`${msg} — retrying in ${Math.round(delay / 1000)}s (attempt ${attempt + 2}/${MAX_AUTO_RETRIES + 1})…`);
+        const start = Date.now();
+        while (Date.now() - start < delay) {
+          if (cancelRetryRef.current) { setStreamError("Retry cancelled."); return; }
+          setRetryCountdown(Math.max(0, Math.ceil((delay - (Date.now() - start)) / 1000)));
+          await new Promise((r) => setTimeout(r, 200));
+        }
+        setRetryCountdown(null);
+      }
+    }
+  };
+
+  const startWipe = async () => {
+    if (!pendingScope) return;
+    if (confirmText !== "DELETE") {
+      toast.error("Type DELETE to confirm.");
+      return;
+    }
+    const scope = pendingScope;
+    setPendingScope(null);
+    setConfirmText("");
+    setPreview(null);
+    setActiveScope(scope);
+    setSteps([]);
+    setCurrentStepIdx(0);
+    setTotalSteps(0);
+    setAuthProgress(null);
+    setSummary(null);
+    setStreamError(null);
+    setRetryAttempt(0);
+    setRetryCountdown(null);
+    completedKeysRef.current = new Set();
+    authProcessedRef.current = 0;
+    sawDoneRef.current = false;
+    setProgressOpen(true);
+
+    await attemptWithRetry(scope);
+  };
+
+  const manualRetry = async () => {
+    if (!activeScope || isStreaming) return;
+    setStreamError(null);
+    await attemptWithRetry(activeScope);
   };
 
   const handleEvent = (evt: any) => {
@@ -178,6 +233,7 @@ const AdminDangerZone = () => {
       setTotalSteps(evt.totalSteps ?? 0);
     } else if (evt.type === "step") {
       setCurrentStepIdx(evt.index);
+      if (evt.status === "done") completedKeysRef.current.add(evt.key);
       setSteps((prev) => {
         const idx = prev.findIndex((s) => s.key === evt.key);
         const next: StepState = { key: evt.key, label: evt.label, status: evt.status, message: evt.message };
@@ -188,7 +244,12 @@ const AdminDangerZone = () => {
       });
     } else if (evt.type === "auth_progress") {
       setAuthProgress({ processed: evt.processed, total: evt.total });
+      authProcessedRef.current = evt.processed;
+      if (evt.processed >= evt.total && evt.total > 0) {
+        completedKeysRef.current.add("auth_users");
+      }
     } else if (evt.type === "done") {
+      sawDoneRef.current = true;
       setSummary({
         deleted: evt.deleted,
         authDeleted: evt.authDeleted,
@@ -197,6 +258,8 @@ const AdminDangerZone = () => {
       });
     }
   };
+
+
 
   const closeConfirm = () => {
     setPendingScope(null);
