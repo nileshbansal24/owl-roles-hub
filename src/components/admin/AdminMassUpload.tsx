@@ -72,6 +72,53 @@ const AdminMassUpload = ({ loading }: AdminMassUploadProps) => {
     setFiles(prev => prev.filter((_, i) => i !== index));
   };
 
+  const processChunk = async (
+    chunk: File[],
+    accessToken: string,
+    onResult: (r: UploadResult) => void,
+  ) => {
+    const formData = new FormData();
+    chunk.forEach(f => formData.append("resumes", f));
+
+    const response = await fetch(
+      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-mass-upload`,
+      {
+        method: "POST",
+        headers: { Authorization: `Bearer ${accessToken}` },
+        body: formData,
+      }
+    );
+
+    if (!response.ok || !response.body) {
+      const txt = await response.text().catch(() => "");
+      throw new Error(txt || `HTTP ${response.status}`);
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n");
+      buffer = lines.pop() || "";
+      for (const line of lines) {
+        if (!line.trim()) continue;
+        try {
+          const evt = JSON.parse(line);
+          if (evt.type === "result" && evt.result) onResult(evt.result as UploadResult);
+        } catch { /* ignore partial */ }
+      }
+    }
+    if (buffer.trim()) {
+      try {
+        const evt = JSON.parse(buffer);
+        if (evt.type === "result" && evt.result) onResult(evt.result as UploadResult);
+      } catch { /* ignore */ }
+    }
+  };
+
   const handleUpload = async () => {
     if (files.length === 0) {
       toast.error("Please select files to upload");
@@ -89,50 +136,38 @@ const AdminMassUpload = ({ loading }: AdminMassUploadProps) => {
         return;
       }
 
-      const formData = new FormData();
-      files.forEach(file => {
-        formData.append("resumes", file);
-      });
+      const total = files.length;
+      const chunks: File[][] = [];
+      for (let i = 0; i < files.length; i += CHUNK_SIZE) {
+        chunks.push(files.slice(i, i + CHUNK_SIZE));
+      }
 
-      // Simulate progress
-      const progressInterval = setInterval(() => {
-        setProgress(prev => Math.min(prev + 5, 90));
-      }, 500);
+      const collected: UploadResult[] = [];
+      const onResult = (r: UploadResult) => {
+        collected.push(r);
+        setResults([...collected]);
+        setProgress(Math.round((collected.length / total) * 100));
+      };
 
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-mass-upload`,
-        {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${session.access_token}`,
-          },
-          body: formData,
+      for (let i = 0; i < chunks.length; i++) {
+        try {
+          await processChunk(chunks[i], session.access_token, onResult);
+        } catch (chunkErr) {
+          console.error(`Chunk ${i} failed:`, chunkErr);
+          chunks[i].forEach(f => onResult({
+            filename: f.name,
+            success: false,
+            error: chunkErr instanceof Error ? chunkErr.message : "Chunk failed",
+          }));
         }
-      );
-
-      clearInterval(progressInterval);
-      setProgress(100);
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Upload failed");
       }
 
-      setResults(data.results || []);
-      
-      const successCount = data.results?.filter((r: UploadResult) => r.success).length || 0;
-      const failCount = data.results?.filter((r: UploadResult) => !r.success).length || 0;
-      
-      if (successCount > 0) {
-        toast.success(`Created ${successCount} user accounts successfully`);
-      }
-      if (failCount > 0) {
-        toast.warning(`${failCount} resumes failed to process`);
-      }
+      const successCount = collected.filter(r => r.success).length;
+      const failCount = collected.length - successCount;
+      if (successCount > 0) toast.success(`Created ${successCount} candidate accounts`);
+      if (failCount > 0) toast.warning(`${failCount} resumes failed to process`);
 
       setFiles([]);
-
     } catch (error) {
       console.error("Upload error:", error);
       toast.error(error instanceof Error ? error.message : "Failed to upload resumes");
@@ -140,6 +175,7 @@ const AdminMassUpload = ({ loading }: AdminMassUploadProps) => {
       setIsUploading(false);
     }
   };
+
 
   const successCount = results.filter(r => r.success).length;
   const failCount = results.filter(r => !r.success).length;
