@@ -38,8 +38,8 @@ serve(async (req) => {
     if (!roleData) return json({ error: "Forbidden: Admin role required" }, 403);
 
     // Parse request body for scope: "recruiters" | "candidates" | "all"
-    const { scope = "all", confirm } = await req.json().catch(() => ({}));
-    if (confirm !== "WIPE") {
+    const { scope = "all", confirm, preview = false } = await req.json().catch(() => ({}));
+    if (!preview && confirm !== "WIPE") {
       return json({ error: "Confirmation token missing. Send { confirm: 'WIPE' }." }, 400);
     }
     if (!["all", "recruiters", "candidates"].includes(scope)) {
@@ -62,13 +62,59 @@ serve(async (req) => {
     const { data: targets, error: targetsErr } = await q;
     if (targetsErr) return json({ error: targetsErr.message }, 500);
 
-    const ids = (targets ?? [])
-      .filter((p: any) => !adminIds.has(p.id) && p.email !== "admin@owlroles.com")
-      .map((p: any) => p.id);
+    const filtered = (targets ?? []).filter(
+      (p: any) => !adminIds.has(p.id) && p.email !== "admin@owlroles.com"
+    );
+    const ids = filtered.map((p: any) => p.id);
+    const recruiterCount = filtered.filter((p: any) => p.user_type === "recruiter").length;
+    const candidateCount = filtered.filter((p: any) => p.user_type === "candidate").length;
+
+    // Count related rows for preview/reporting
+    const countIn = async (table: string, column: string, vals: string[]) => {
+      if (!vals.length) return 0;
+      let total = 0;
+      const chunkSize = 200;
+      for (let i = 0; i < vals.length; i += chunkSize) {
+        const chunk = vals.slice(i, i + chunkSize);
+        const { count } = await admin
+          .from(table)
+          .select("*", { count: "exact", head: true })
+          .in(column, chunk);
+        total += count ?? 0;
+      }
+      return total;
+    };
+
+    const [jobsCount, applicationsCount, eventsCount, interviewsCount, messagesCount, savedCount] =
+      await Promise.all([
+        countIn("jobs", "created_by", ids),
+        countIn("job_applications", "applicant_id", ids),
+        countIn("events", "recruiter_id", ids),
+        countIn("interviews", "candidate_id", ids),
+        countIn("recruiter_messages", "recruiter_id", ids),
+        countIn("saved_candidates", "recruiter_id", ids),
+      ]);
+
+    const counts = {
+      totalAccounts: ids.length,
+      recruiters: recruiterCount,
+      candidates: candidateCount,
+      jobs: jobsCount,
+      applications: applicationsCount,
+      events: eventsCount,
+      interviews: interviewsCount,
+      messages: messagesCount,
+      savedCandidates: savedCount,
+    };
+
+    if (preview) {
+      return json({ success: true, preview: true, scope, counts });
+    }
 
     if (ids.length === 0) {
-      return json({ success: true, deleted: 0, message: "Nothing to delete." });
+      return json({ success: true, deleted: 0, counts, message: "Nothing to delete." });
     }
+
 
     // Bulk delete related rows (service role bypasses RLS).
     // Order respects FK constraints.
@@ -135,7 +181,7 @@ serve(async (req) => {
       else console.error("auth delete", id, error.message);
     }
 
-    return json({ success: true, deleted: inIds.length, authDeleted, scope });
+    return json({ success: true, deleted: ids.length, authDeleted, scope, counts });
   } catch (e: any) {
     console.error("admin-wipe-all error", e);
     return json({ error: e?.message ?? "Unknown error" }, 500);
