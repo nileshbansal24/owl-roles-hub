@@ -13,13 +13,14 @@ import { Badge } from "@/components/ui/badge";
 import {
   Search,
   MapPin,
-  Briefcase,
   Sparkles,
-  User as UserIcon,
-  TrendingUp,
-  BookmarkCheck,
-  FileText,
 } from "lucide-react";
+import owlProfile from "@/assets/owl-icons/nav-profile.png";
+import owlApplications from "@/assets/owl-icons/nav-applications.png";
+import owlSaved from "@/assets/owl-icons/nav-saved.png";
+import owlJobsFeed from "@/assets/owl-icons/nav-jobs-feed.png";
+import owlAnalytics from "@/assets/owl-icons/nav-analytics.png";
+import owlInstitutions from "@/assets/owl-icons/nav-institutions.png";
 
 const CandidateHome = () => {
   const { user } = useAuth();
@@ -89,22 +90,22 @@ const CandidateHome = () => {
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
-              <Button variant="outline" onClick={() => navigate("/candidate-dashboard")} className="gap-2">
-                <UserIcon className="h-4 w-4" /> My Profile
+              <Button variant="outline" onClick={() => navigate("/candidate-dashboard")} className="gap-2 h-10">
+                <img src={owlProfile} alt="" aria-hidden="true" loading="lazy" width={24} height={24} className="h-6 w-6 object-contain" /> My Profile
               </Button>
               <Button
                 variant="outline"
                 onClick={() => navigate("/candidate-dashboard?tab=applications")}
-                className="gap-2"
+                className="gap-2 h-10"
               >
-                <FileText className="h-4 w-4" /> Applications
+                <img src={owlApplications} alt="" aria-hidden="true" loading="lazy" width={24} height={24} className="h-6 w-6 object-contain" /> Applications
               </Button>
               <Button
                 variant="outline"
                 onClick={() => navigate("/candidate-dashboard?tab=saved-jobs")}
-                className="gap-2"
+                className="gap-2 h-10"
               >
-                <BookmarkCheck className="h-4 w-4" /> Saved
+                <img src={owlSaved} alt="" aria-hidden="true" loading="lazy" width={24} height={24} className="h-6 w-6 object-contain" /> Saved
               </Button>
             </div>
           </div>
@@ -142,8 +143,8 @@ const CandidateHome = () => {
           {/* Quick analytics */}
           <div className="mt-6 grid grid-cols-2 md:grid-cols-3 gap-3">
             <Card className="p-4 flex items-center gap-3">
-              <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                <Briefcase className="h-5 w-5 text-primary" />
+              <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                <img src={owlJobsFeed} alt="" aria-hidden="true" loading="lazy" width={36} height={36} className="h-9 w-9 object-contain" />
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Open Roles</p>
@@ -151,8 +152,8 @@ const CandidateHome = () => {
               </div>
             </Card>
             <Card className="p-4 flex items-center gap-3">
-              <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                <MapPin className="h-5 w-5 text-primary" />
+              <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                <img src={owlInstitutions} alt="" aria-hidden="true" loading="lazy" width={36} height={36} className="h-9 w-9 object-contain" />
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Cities Hiring</p>
@@ -160,8 +161,8 @@ const CandidateHome = () => {
               </div>
             </Card>
             <Card className="p-4 flex items-center gap-3 col-span-2 md:col-span-1">
-              <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                <TrendingUp className="h-5 w-5 text-primary" />
+              <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                <img src={owlAnalytics} alt="" aria-hidden="true" loading="lazy" width={36} height={36} className="h-9 w-9 object-contain" />
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Role Types</p>
