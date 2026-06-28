@@ -15,7 +15,12 @@ interface UploadResult {
   error?: string;
   userId?: string;
   password?: string;
+  years_experience?: number;
+  tier?: string;
 }
+
+const CHUNK_SIZE = 40; // files per edge function request
+
 
 interface AdminMassUploadProps {
   loading?: boolean;
