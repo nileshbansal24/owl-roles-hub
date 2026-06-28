@@ -1,20 +1,22 @@
-import { Search, FileText, CheckCircle } from "lucide-react";
+import owlSearch from "@/assets/owl-icons/owl-search.png";
+import owlApply from "@/assets/owl-icons/owl-apply.png";
+import owlHired from "@/assets/owl-icons/owl-hired.png";
 
 const steps = [
   {
-    icon: Search,
+    image: owlSearch,
     title: "Search That Speaks Academic",
     description:
       "Filter by department, NET/SET, publications and more — built for how higher education actually hires.",
   },
   {
-    icon: FileText,
+    image: owlApply,
     title: "Apply in One Click",
     description:
       "Your profile travels with you. Send applications to multiple universities without retyping a thing.",
   },
   {
-    icon: CheckCircle,
+    image: owlHired,
     title: "Get Hired, Stress Less",
     description:
       "Hear back faster, schedule interviews in-app, and start the next chapter of your academic career.",
@@ -40,7 +42,7 @@ const HowItWorks = () => {
         <div className="relative max-w-5xl mx-auto">
           {/* Subtle dotted connector on desktop */}
           <div
-            className="hidden md:block absolute top-9 left-[16%] right-[16%] h-px"
+            className="hidden md:block absolute top-14 left-[16%] right-[16%] h-px"
             style={{
               backgroundImage:
                 "linear-gradient(to right, hsl(var(--border)) 50%, transparent 50%)",
@@ -52,11 +54,16 @@ const HowItWorks = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-8 relative">
             {steps.map((step, index) => (
               <div key={step.title} className="text-center relative">
-                <div className="relative mx-auto mb-6 w-[72px] h-[72px]">
-                  <div className="w-[72px] h-[72px] rounded-2xl bg-gradient-to-br from-primary/15 to-primary/5 border border-primary/10 flex items-center justify-center relative z-10 backdrop-blur-sm">
-                    <step.icon className="w-7 h-7 text-primary" strokeWidth={2} />
-                  </div>
-                  <span className="absolute -top-1.5 -right-1.5 w-7 h-7 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center z-20 shadow-md ring-4 ring-background">
+                <div className="relative mx-auto mb-6 w-28 h-28">
+                  <img
+                    src={step.image}
+                    alt={`${step.title} owl mascot`}
+                    width={512}
+                    height={512}
+                    loading="lazy"
+                    className="w-full h-full object-contain relative z-10"
+                  />
+                  <span className="absolute -top-1 -right-1 w-7 h-7 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center z-20 shadow-md ring-4 ring-background">
                     {index + 1}
                   </span>
                 </div>
