@@ -263,13 +263,13 @@ const AdminMassUpload = ({ loading }: AdminMassUploadProps) => {
             <div className="text-sm">
               <p className="font-medium">How it works:</p>
               <ul className="list-disc list-inside text-muted-foreground mt-1 space-y-1">
-                <li>Upload PDF or Word resumes</li>
-                <li>AI extracts profile data including email</li>
-                <li>User account is created with password <strong>NAME1234</strong> (first 4 letters of first name in uppercase + 1234, e.g. Mayank → MAYA1234)</li>
-                <li>Share these credentials with the candidate; they can change it later</li>
-                <li>If email already exists, signup with that email is blocked</li>
-                <li>Profile is populated with extracted data</li>
+                <li>Upload up to several thousand PDF / DOC / DOCX resumes at once — processed in batches of {CHUNK_SIZE} with live progress.</li>
+                <li>AI parses even messy or incomplete resumes and infers missing fields where possible.</li>
+                <li>Years of experience are computed from job dates (e.g. since 2010 = 16 years) and the candidate is auto-tiered: <strong>Gold</strong> (10+), <strong>Silver</strong> (5–9), <strong>Bronze</strong> (1–4), <strong>Black</strong> (fresher).</li>
+                <li>Account password is <strong>NAME1234</strong> (first 4 letters of first name uppercase + 1234, e.g. Mayank → MAYA1234).</li>
+                <li>Duplicate emails are skipped automatically.</li>
               </ul>
+
             </div>
           </div>
         </CardContent>
