@@ -37,13 +37,21 @@ serve(async (req) => {
       .maybeSingle();
     if (!roleData) return json({ error: "Forbidden: Admin role required" }, 403);
 
-    const { scope = "all", confirm, preview = false, stream = false } = await req.json().catch(() => ({}));
+    const {
+      scope = "all",
+      confirm,
+      preview = false,
+      stream = false,
+      skipSteps = [],
+      resumeAuthFrom = 0,
+    } = await req.json().catch(() => ({}));
     if (!preview && confirm !== "WIPE") {
       return json({ error: "Confirmation token missing. Send { confirm: 'WIPE' }." }, 400);
     }
     if (!["all", "recruiters", "candidates"].includes(scope)) {
       return json({ error: "Invalid scope" }, 400);
     }
+    const skipSet = new Set<string>(Array.isArray(skipSteps) ? skipSteps : []);
 
     const { data: adminRoles } = await admin
       .from("user_roles")
@@ -186,11 +194,15 @@ serve(async (req) => {
           ];
 
           const totalSteps = steps.length + 1; // +1 for auth users
-          send({ type: "start", scope, counts, totalSteps });
+          send({ type: "start", scope, counts, totalSteps, resumed: skipSet.size > 0 || resumeAuthFrom > 0 });
 
           let idx = 0;
           for (const step of steps) {
             idx++;
+            if (skipSet.has(step.key)) {
+              send({ type: "step", index: idx, total: totalSteps, key: step.key, label: step.label, status: "done", skipped: true });
+              continue;
+            }
             send({ type: "step", index: idx, total: totalSteps, key: step.key, label: step.label, status: "running" });
             try {
               await step.run();
@@ -200,20 +212,33 @@ serve(async (req) => {
             }
           }
 
-          // Auth users
+          // Auth users (resumable)
           idx++;
-          send({ type: "step", index: idx, total: totalSteps, key: "auth_users", label: "Auth accounts", status: "running" });
-          let authDeleted = 0;
-          let processed = 0;
-          for (const id of ids) {
-            const { error } = await admin.auth.admin.deleteUser(id);
-            if (!error || (error as any).status === 404) authDeleted++;
+          const authKey = "auth_users";
+          if (skipSet.has(authKey) && resumeAuthFrom >= ids.length) {
+            send({ type: "step", index: idx, total: totalSteps, key: authKey, label: "Auth accounts", status: "done", skipped: true });
+            send({ type: "done", deleted: ids.length, authDeleted: ids.length, scope, counts });
+            controller.close();
+            return;
+          }
+          send({ type: "step", index: idx, total: totalSteps, key: authKey, label: "Auth accounts", status: "running" });
+          let authDeleted = Math.min(resumeAuthFrom, ids.length);
+          let processed = Math.min(resumeAuthFrom, ids.length);
+          send({ type: "auth_progress", processed, total: ids.length });
+          for (let i = processed; i < ids.length; i++) {
+            const id = ids[i];
+            try {
+              const { error } = await admin.auth.admin.deleteUser(id);
+              if (!error || (error as any).status === 404) authDeleted++;
+            } catch (e) {
+              // continue; client can retry with resumeAuthFrom = processed
+            }
             processed++;
             if (processed % 5 === 0 || processed === ids.length) {
               send({ type: "auth_progress", processed, total: ids.length });
             }
           }
-          send({ type: "step", index: idx, total: totalSteps, key: "auth_users", label: "Auth accounts", status: "done" });
+          send({ type: "step", index: idx, total: totalSteps, key: authKey, label: "Auth accounts", status: "done" });
 
           send({ type: "done", deleted: ids.length, authDeleted, scope, counts });
           controller.close();
