@@ -392,20 +392,25 @@ const AdminDangerZone = () => {
             <DialogTitle className="flex items-center gap-2">
               {summary ? (
                 <><CheckCircle2 className="h-5 w-5 text-emerald-600" /> Wipe complete</>
-              ) : streamError ? (
-                <><XCircle className="h-5 w-5 text-destructive" /> Wipe failed</>
+              ) : retryCountdown !== null ? (
+                <><RefreshCw className="h-5 w-5 animate-spin text-amber-600" /> Retrying in {retryCountdown}s…</>
+              ) : streamError && !isStreaming ? (
+                <><XCircle className="h-5 w-5 text-destructive" /> Wipe interrupted</>
               ) : (
-                <><Loader2 className="h-5 w-5 animate-spin text-destructive" /> Wiping data…</>
+                <><Loader2 className="h-5 w-5 animate-spin text-destructive" /> Wiping data{retryAttempt > 0 ? ` (attempt ${retryAttempt + 1})` : ""}…</>
               )}
             </DialogTitle>
             <DialogDescription>
               {summary
                 ? `Scope: ${activeScope}. All targeted records have been removed.`
-                : streamError
-                ? "The wipe was interrupted. Some records may have been deleted."
+                : streamError && !isStreaming && retryCountdown === null
+                ? "Auto-retry exhausted. Already-completed steps will be skipped if you retry."
+                : retryCountdown !== null
+                ? "The stream dropped. Resuming from the last completed step."
                 : "Do not close this window. Each step runs against the database in order."}
             </DialogDescription>
           </DialogHeader>
+
 
           {!summary && !streamError && (
             <div className="space-y-2">
