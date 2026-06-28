@@ -37,13 +37,21 @@ serve(async (req) => {
       .maybeSingle();
     if (!roleData) return json({ error: "Forbidden: Admin role required" }, 403);
 
-    const { scope = "all", confirm, preview = false, stream = false } = await req.json().catch(() => ({}));
+    const {
+      scope = "all",
+      confirm,
+      preview = false,
+      stream = false,
+      skipSteps = [],
+      resumeAuthFrom = 0,
+    } = await req.json().catch(() => ({}));
     if (!preview && confirm !== "WIPE") {
       return json({ error: "Confirmation token missing. Send { confirm: 'WIPE' }." }, 400);
     }
     if (!["all", "recruiters", "candidates"].includes(scope)) {
       return json({ error: "Invalid scope" }, 400);
     }
+    const skipSet = new Set<string>(Array.isArray(skipSteps) ? skipSteps : []);
 
     const { data: adminRoles } = await admin
       .from("user_roles")
