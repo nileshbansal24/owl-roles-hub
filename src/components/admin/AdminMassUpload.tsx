@@ -183,20 +183,23 @@ const AdminMassUpload = ({ loading }: AdminMassUploadProps) => {
   const downloadCSV = () => {
     if (results.length === 0) return;
 
-    const headers = ["Filename", "Status", "Email", "Password", "User ID", "Error"];
+    const headers = ["Filename", "Status", "Email", "Password", "Years Experience", "Tier", "User ID", "Error"];
     const rows = results.map(r => [
       r.filename,
       r.success ? "Success" : "Failed",
       r.email || "",
       r.password || "",
+      r.years_experience != null ? String(r.years_experience) : "",
+      r.tier || "",
       r.userId || "",
       r.error || ""
     ]);
 
     const csvContent = [
       headers.join(","),
-      ...rows.map(row => row.map(cell => `"${cell.replace(/"/g, '""')}"`).join(","))
+      ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(","))
     ].join("\n");
+
 
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
