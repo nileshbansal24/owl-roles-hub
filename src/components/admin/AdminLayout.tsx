@@ -39,6 +39,7 @@ const navItems = [
   { id: "candidates", label: "Candidates", icon: Users },
   { id: "jobs", label: "Jobs", icon: Briefcase },
   { id: "mass-upload", label: "Mass Upload", icon: Upload },
+  { id: "danger-zone", label: "Danger Zone", icon: AlertTriangle },
 ];
 
 const AdminLayout = ({ children, activeTab, onTabChange, onRefresh, isRefreshing }: AdminLayoutProps) => {
