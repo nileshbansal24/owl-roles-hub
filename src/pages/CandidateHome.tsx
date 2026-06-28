@@ -13,13 +13,14 @@ import { Badge } from "@/components/ui/badge";
 import {
   Search,
   MapPin,
-  Briefcase,
   Sparkles,
-  User as UserIcon,
-  TrendingUp,
-  BookmarkCheck,
-  FileText,
 } from "lucide-react";
+import owlProfile from "@/assets/owl-icons/nav-profile.png";
+import owlApplications from "@/assets/owl-icons/nav-applications.png";
+import owlSaved from "@/assets/owl-icons/nav-saved.png";
+import owlJobsFeed from "@/assets/owl-icons/nav-jobs-feed.png";
+import owlAnalytics from "@/assets/owl-icons/nav-analytics.png";
+import owlInstitutions from "@/assets/owl-icons/nav-institutions.png";
 
 const CandidateHome = () => {
   const { user } = useAuth();
