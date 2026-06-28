@@ -8,6 +8,7 @@ import AdminMassUpload from "@/components/admin/AdminMassUpload";
 import AdminEmails from "@/components/admin/AdminEmails";
 import AdminRecruiterApprovals from "@/components/admin/AdminRecruiterApprovals";
 import AdminPlanUpgrades from "@/components/admin/AdminPlanUpgrades";
+import AdminDangerZone from "@/components/admin/AdminDangerZone";
 import { useAdminStats } from "@/hooks/useAdminStats";
 
 const AdminDashboard = () => {
@@ -39,6 +40,8 @@ const AdminDashboard = () => {
         return <AdminJobs jobs={jobs} loading={loading} />;
       case "mass-upload":
         return <AdminMassUpload loading={loading} />;
+      case "danger-zone":
+        return <AdminDangerZone />;
       default:
         return <AdminOverview stats={stats} loading={loading} />;
     }

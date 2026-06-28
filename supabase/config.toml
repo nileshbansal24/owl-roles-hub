@@ -38,3 +38,6 @@ verify_jwt = false
 
 [functions.candidate-job-chat]
 verify_jwt = false
+
+[functions.admin-wipe-all]
+verify_jwt = false
