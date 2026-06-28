@@ -90,22 +90,22 @@ const CandidateHome = () => {
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
-              <Button variant="outline" onClick={() => navigate("/candidate-dashboard")} className="gap-2">
-                <UserIcon className="h-4 w-4" /> My Profile
+              <Button variant="outline" onClick={() => navigate("/candidate-dashboard")} className="gap-2 h-10">
+                <img src={owlProfile} alt="" aria-hidden="true" loading="lazy" width={24} height={24} className="h-6 w-6 object-contain" /> My Profile
               </Button>
               <Button
                 variant="outline"
                 onClick={() => navigate("/candidate-dashboard?tab=applications")}
-                className="gap-2"
+                className="gap-2 h-10"
               >
-                <FileText className="h-4 w-4" /> Applications
+                <img src={owlApplications} alt="" aria-hidden="true" loading="lazy" width={24} height={24} className="h-6 w-6 object-contain" /> Applications
               </Button>
               <Button
                 variant="outline"
                 onClick={() => navigate("/candidate-dashboard?tab=saved-jobs")}
-                className="gap-2"
+                className="gap-2 h-10"
               >
-                <BookmarkCheck className="h-4 w-4" /> Saved
+                <img src={owlSaved} alt="" aria-hidden="true" loading="lazy" width={24} height={24} className="h-6 w-6 object-contain" /> Saved
               </Button>
             </div>
           </div>
