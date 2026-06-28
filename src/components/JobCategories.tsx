@@ -1,26 +1,31 @@
-import { 
-  GraduationCap, Microscope, Code, BookOpen, Users, Building2,
-  Stethoscope, Calculator, Palette, Globe
-} from "lucide-react";
+import owlTeaching from "@/assets/owl-icons/owl-teaching.png";
+import owlResearch from "@/assets/owl-icons/owl-research.png";
+import owlCS from "@/assets/owl-icons/owl-cs.png";
+import owlLiterature from "@/assets/owl-icons/owl-literature.png";
+import owlAdmin from "@/assets/owl-icons/owl-admin.png";
+import owlEngineering from "@/assets/owl-icons/owl-engineering.png";
+import owlMedical from "@/assets/owl-icons/owl-medical.png";
+import owlMath from "@/assets/owl-icons/owl-math.png";
+import owlArts from "@/assets/owl-icons/owl-arts.png";
+import owlLanguages from "@/assets/owl-icons/owl-languages.png";
 
 interface Category {
-  icon: React.ElementType;
+  image: string;
   name: string;
   count: number;
-  color: string;
 }
 
 const categories: Category[] = [
-  { icon: GraduationCap, name: "Teaching Faculty", count: 856, color: "text-primary" },
-  { icon: Microscope, name: "Research", count: 432, color: "text-violet-600 dark:text-violet-400" },
-  { icon: Code, name: "Computer Science", count: 324, color: "text-emerald-600 dark:text-emerald-400" },
-  { icon: BookOpen, name: "Literature", count: 198, color: "text-amber-600 dark:text-amber-400" },
-  { icon: Users, name: "Administration", count: 167, color: "text-pink-600 dark:text-pink-400" },
-  { icon: Building2, name: "Engineering", count: 543, color: "text-orange-600 dark:text-orange-400" },
-  { icon: Stethoscope, name: "Medical", count: 287, color: "text-red-600 dark:text-red-400" },
-  { icon: Calculator, name: "Mathematics", count: 156, color: "text-indigo-600 dark:text-indigo-400" },
-  { icon: Palette, name: "Arts & Design", count: 98, color: "text-teal-600 dark:text-teal-400" },
-  { icon: Globe, name: "Languages", count: 134, color: "text-cyan-600 dark:text-cyan-400" },
+  { image: owlTeaching, name: "Teaching Faculty", count: 856 },
+  { image: owlResearch, name: "Research", count: 432 },
+  { image: owlCS, name: "Computer Science", count: 324 },
+  { image: owlLiterature, name: "Literature", count: 198 },
+  { image: owlAdmin, name: "Administration", count: 167 },
+  { image: owlEngineering, name: "Engineering", count: 543 },
+  { image: owlMedical, name: "Medical", count: 287 },
+  { image: owlMath, name: "Mathematics", count: 156 },
+  { image: owlArts, name: "Arts & Design", count: 98 },
+  { image: owlLanguages, name: "Languages", count: 134 },
 ];
 
 interface JobCategoriesProps {
@@ -45,10 +50,17 @@ const JobCategories = ({ onCategoryClick }: JobCategoriesProps) => {
             <button
               key={category.name}
               onClick={() => onCategoryClick(category.name)}
-              className="card-elevated p-5 text-center group cursor-pointer transition-shadow"
+              className="card-elevated p-5 text-center group cursor-pointer transition-all hover:-translate-y-1"
             >
-              <div className="w-12 h-12 mx-auto mb-3 rounded-xl bg-secondary flex items-center justify-center group-hover:bg-primary/10 transition-colors">
-                <category.icon className={`w-6 h-6 ${category.color}`} />
+              <div className="w-20 h-20 mx-auto mb-3 flex items-center justify-center">
+                <img
+                  src={category.image}
+                  alt={`${category.name} owl mascot`}
+                  width={512}
+                  height={512}
+                  loading="lazy"
+                  className="w-full h-full object-contain transition-transform group-hover:scale-110"
+                />
               </div>
               <h3 className="font-heading font-semibold text-sm text-foreground group-hover:text-primary transition-colors mb-1">
                 {category.name}
