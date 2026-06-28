@@ -37,8 +37,7 @@ serve(async (req) => {
       .maybeSingle();
     if (!roleData) return json({ error: "Forbidden: Admin role required" }, 403);
 
-    // Parse request body for scope: "recruiters" | "candidates" | "all"
-    const { scope = "all", confirm, preview = false } = await req.json().catch(() => ({}));
+    const { scope = "all", confirm, preview = false, stream = false } = await req.json().catch(() => ({}));
     if (!preview && confirm !== "WIPE") {
       return json({ error: "Confirmation token missing. Send { confirm: 'WIPE' }." }, 400);
     }
@@ -46,7 +45,6 @@ serve(async (req) => {
       return json({ error: "Invalid scope" }, 400);
     }
 
-    // Build list of admin user_ids to preserve
     const { data: adminRoles } = await admin
       .from("user_roles")
       .select("user_id")
@@ -54,7 +52,6 @@ serve(async (req) => {
     const adminIds = new Set<string>((adminRoles ?? []).map((r: any) => r.user_id));
     adminIds.add(caller.id);
 
-    // Pull target profiles based on scope, excluding admins
     let q = admin.from("profiles").select("id, user_type, email");
     if (scope === "recruiters") q = q.eq("user_type", "recruiter");
     else if (scope === "candidates") q = q.eq("user_type", "candidate");
@@ -69,7 +66,6 @@ serve(async (req) => {
     const recruiterCount = filtered.filter((p: any) => p.user_type === "recruiter").length;
     const candidateCount = filtered.filter((p: any) => p.user_type === "candidate").length;
 
-    // Count related rows for preview/reporting
     const countIn = async (table: string, column: string, vals: string[]) => {
       if (!vals.length) return 0;
       let total = 0;
@@ -111,17 +107,132 @@ serve(async (req) => {
       return json({ success: true, preview: true, scope, counts });
     }
 
-    if (ids.length === 0) {
+    if (ids.length === 0 && !stream) {
       return json({ success: true, deleted: 0, counts, message: "Nothing to delete." });
     }
 
+    // Streaming mode: emit NDJSON progress events.
+    if (stream) {
+      const encoder = new TextEncoder();
+      const body = new ReadableStream({
+        async start(controller) {
+          const send = (obj: unknown) =>
+            controller.enqueue(encoder.encode(JSON.stringify(obj) + "\n"));
 
-    // Bulk delete related rows (service role bypasses RLS).
-    // Order respects FK constraints.
+          const { data: ownedJobs } = await admin.from("jobs").select("id").in("created_by", ids);
+          const jobIds = (ownedJobs ?? []).map((j: any) => j.id);
+          const { data: ownedEvents } = await admin.from("events").select("id").in("recruiter_id", ids);
+          const eventIds = (ownedEvents ?? []).map((e: any) => e.id);
+
+          type Step = { key: string; label: string; run: () => Promise<void> };
+          const safeDel = async (table: string, column: string, vals: string[]) => {
+            const chunkSize = 200;
+            for (let i = 0; i < vals.length; i += chunkSize) {
+              const chunk = vals.slice(i, i + chunkSize);
+              const { error } = await admin.from(table).delete().in(column, chunk);
+              if (error) console.error(`delete ${table}.${column}`, error.message);
+            }
+          };
+
+          const steps: Step[] = [
+            { key: "event_children", label: "Event quizzes, assignments & registrations", run: async () => {
+              if (!eventIds.length) return;
+              await safeDel("event_questions", "event_id", eventIds);
+              await safeDel("event_registrations", "event_id", eventIds);
+              await safeDel("quiz_submissions", "event_id", eventIds);
+              await safeDel("assignment_submissions", "event_id", eventIds);
+            }},
+            { key: "job_children", label: "Applications, collaborators & interviews on jobs", run: async () => {
+              if (!jobIds.length) return;
+              await safeDel("job_applications", "job_id", jobIds);
+              await safeDel("job_collaborators", "job_id", jobIds);
+              await safeDel("interviews", "job_id", jobIds);
+            }},
+            { key: "candidate_submissions", label: "Candidate quiz & assignment submissions", run: async () => {
+              await safeDel("quiz_submissions", "candidate_id", ids);
+              await safeDel("assignment_submissions", "candidate_id", ids);
+              await safeDel("event_registrations", "candidate_id", ids);
+            }},
+            { key: "events", label: "Events", run: async () => { await safeDel("events", "recruiter_id", ids); }},
+            { key: "notes", label: "Recruiter notes", run: async () => {
+              await safeDel("recruiter_notes", "recruiter_id", ids);
+              await safeDel("recruiter_notes", "applicant_id", ids);
+            }},
+            { key: "messages", label: "Recruiter messages", run: async () => {
+              await safeDel("recruiter_messages", "recruiter_id", ids);
+              await safeDel("recruiter_messages", "candidate_id", ids);
+            }},
+            { key: "notifications", label: "Notifications", run: async () => { await safeDel("recruiter_notifications", "user_id", ids); }},
+            { key: "rankings_saved", label: "Rankings & saved candidates", run: async () => {
+              await safeDel("candidate_rankings", "recruiter_id", ids);
+              await safeDel("saved_candidates", "recruiter_id", ids);
+              await safeDel("saved_candidates", "candidate_id", ids);
+            }},
+            { key: "interviews", label: "Interviews", run: async () => {
+              await safeDel("interviews", "recruiter_id", ids);
+              await safeDel("interviews", "candidate_id", ids);
+            }},
+            { key: "applications", label: "Job applications", run: async () => { await safeDel("job_applications", "applicant_id", ids); }},
+            { key: "collaborators", label: "Job collaborators", run: async () => { await safeDel("job_collaborators", "recruiter_id", ids); }},
+            { key: "jobs", label: "Jobs", run: async () => { await safeDel("jobs", "created_by", ids); }},
+            { key: "plan_upgrades", label: "Plan upgrade requests", run: async () => { await safeDel("plan_upgrade_requests", "recruiter_id", ids); }},
+            { key: "verifications", label: "Institution & credential verifications", run: async () => {
+              await safeDel("institution_verifications", "recruiter_id", ids);
+              await safeDel("credential_verifications", "candidate_id", ids);
+            }},
+            { key: "directory", label: "Candidate directory", run: async () => { await safeDel("candidate_directory", "id", ids); }},
+            { key: "roles", label: "User roles", run: async () => { await safeDel("user_roles", "user_id", ids); }},
+            { key: "profiles", label: "Profiles", run: async () => { await safeDel("profiles", "id", ids); }},
+          ];
+
+          const totalSteps = steps.length + 1; // +1 for auth users
+          send({ type: "start", scope, counts, totalSteps });
+
+          let idx = 0;
+          for (const step of steps) {
+            idx++;
+            send({ type: "step", index: idx, total: totalSteps, key: step.key, label: step.label, status: "running" });
+            try {
+              await step.run();
+              send({ type: "step", index: idx, total: totalSteps, key: step.key, label: step.label, status: "done" });
+            } catch (e: any) {
+              send({ type: "step", index: idx, total: totalSteps, key: step.key, label: step.label, status: "error", message: e?.message });
+            }
+          }
+
+          // Auth users
+          idx++;
+          send({ type: "step", index: idx, total: totalSteps, key: "auth_users", label: "Auth accounts", status: "running" });
+          let authDeleted = 0;
+          let processed = 0;
+          for (const id of ids) {
+            const { error } = await admin.auth.admin.deleteUser(id);
+            if (!error || (error as any).status === 404) authDeleted++;
+            processed++;
+            if (processed % 5 === 0 || processed === ids.length) {
+              send({ type: "auth_progress", processed, total: ids.length });
+            }
+          }
+          send({ type: "step", index: idx, total: totalSteps, key: "auth_users", label: "Auth accounts", status: "done" });
+
+          send({ type: "done", deleted: ids.length, authDeleted, scope, counts });
+          controller.close();
+        },
+      });
+
+      return new Response(body, {
+        headers: {
+          ...corsHeaders,
+          "Content-Type": "application/x-ndjson; charset=utf-8",
+          "Cache-Control": "no-cache, no-transform",
+          "X-Accel-Buffering": "no",
+        },
+      });
+    }
+
+    // Non-stream fallback (kept for compatibility): perform full wipe synchronously.
     const inIds = ids;
-
     const safeDel = async (table: string, column: string, vals: string[]) => {
-      // Chunk to avoid URL/payload limits
       const chunkSize = 200;
       for (let i = 0; i < vals.length; i += chunkSize) {
         const chunk = vals.slice(i, i + chunkSize);
@@ -130,7 +241,6 @@ serve(async (req) => {
       }
     };
 
-    // Find jobs and events owned by targets so we can cascade their children
     const { data: ownedJobs } = await admin.from("jobs").select("id").in("created_by", inIds);
     const jobIds = (ownedJobs ?? []).map((j: any) => j.id);
     const { data: ownedEvents } = await admin.from("events").select("id").in("recruiter_id", inIds);
@@ -147,8 +257,6 @@ serve(async (req) => {
       await safeDel("job_collaborators", "job_id", jobIds);
       await safeDel("interviews", "job_id", jobIds);
     }
-
-    // Per-user cascades
     await safeDel("quiz_submissions", "candidate_id", inIds);
     await safeDel("assignment_submissions", "candidate_id", inIds);
     await safeDel("event_registrations", "candidate_id", inIds);
@@ -173,14 +281,11 @@ serve(async (req) => {
     await safeDel("user_roles", "user_id", inIds);
     await safeDel("profiles", "id", inIds);
 
-    // Finally delete auth users
     let authDeleted = 0;
     for (const id of inIds) {
       const { error } = await admin.auth.admin.deleteUser(id);
       if (!error || (error as any).status === 404) authDeleted++;
-      else console.error("auth delete", id, error.message);
     }
-
     return json({ success: true, deleted: ids.length, authDeleted, scope, counts });
   } catch (e: any) {
     console.error("admin-wipe-all error", e);
