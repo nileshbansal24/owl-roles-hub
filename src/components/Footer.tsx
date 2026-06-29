@@ -6,6 +6,7 @@ import {
   Instagram,
   Mail,
 } from "lucide-react";
+import owlMascot from "@/assets/owl-mascot.png";
 
 const Footer = () => {
   const scrollToSection = (id: string) => {
@@ -22,8 +23,8 @@ const Footer = () => {
           {/* Brand */}
           <div>
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
-                <span className="text-primary-foreground font-heading font-bold text-xl">O</span>
+              <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center shadow-lg shadow-primary/20 overflow-hidden">
+                <img src={owlMascot} alt="OWL ROLES" className="w-8 h-8 object-contain" />
               </div>
               <span className="font-heading font-bold text-xl tracking-tight">OWL ROLES</span>
             </div>

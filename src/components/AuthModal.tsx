@@ -191,8 +191,8 @@ const AuthModal = ({
               <div className="absolute -bottom-24 -right-16 w-72 h-72 rounded-full bg-primary-foreground/10 blur-3xl" />
 
               <div className="relative">
-                <div className="w-12 h-12 rounded-xl bg-primary-foreground/15 backdrop-blur flex items-center justify-center mb-6">
-                  <span className="font-heading font-bold text-xl">O</span>
+                <div className="w-14 h-14 rounded-xl bg-primary-foreground/15 backdrop-blur flex items-center justify-center mb-6 overflow-hidden">
+                  <img src={owlMascot} alt="OWL ROLES" className="w-11 h-11 object-contain" />
                 </div>
                 <h3 className="font-heading font-bold text-2xl tracking-tight leading-tight mb-2">
                   {role === "candidate" ? "Your next academic chapter starts here." : "Hire educators & researchers, faster."}
@@ -248,8 +248,8 @@ const AuthModal = ({
                   transition={{ duration: 0.2 }}
                 >
                   <div className="text-center mb-7">
-                    <div className="w-14 h-14 rounded-2xl bg-primary mx-auto flex items-center justify-center mb-4 shadow-lg shadow-primary/25">
-                      <span className="text-primary-foreground font-heading font-bold text-xl">O</span>
+                    <div className="w-16 h-16 rounded-2xl bg-primary mx-auto flex items-center justify-center mb-4 shadow-lg shadow-primary/25 overflow-hidden">
+                      <img src={owlMascot} alt="OWL ROLES" className="w-12 h-12 object-contain" />
                     </div>
                     <h2 className="font-heading text-2xl font-bold text-foreground tracking-tight">
                       {mode === "login" ? "Sign in to OWL ROLES" : "Join OWL ROLES"}
