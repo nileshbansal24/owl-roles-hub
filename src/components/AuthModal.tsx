@@ -248,8 +248,8 @@ const AuthModal = ({
                   transition={{ duration: 0.2 }}
                 >
                   <div className="text-center mb-7">
-                    <div className="w-14 h-14 rounded-2xl bg-primary mx-auto flex items-center justify-center mb-4 shadow-lg shadow-primary/25">
-                      <span className="text-primary-foreground font-heading font-bold text-xl">O</span>
+                    <div className="w-16 h-16 rounded-2xl bg-primary mx-auto flex items-center justify-center mb-4 shadow-lg shadow-primary/25 overflow-hidden">
+                      <img src={owlMascot} alt="OWL ROLES" className="w-12 h-12 object-contain" />
                     </div>
                     <h2 className="font-heading text-2xl font-bold text-foreground tracking-tight">
                       {mode === "login" ? "Sign in to OWL ROLES" : "Join OWL ROLES"}
