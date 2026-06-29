@@ -6,6 +6,7 @@ import {
   Instagram,
   Mail,
 } from "lucide-react";
+import owlMascot from "@/assets/owl-mascot.png";
 
 const Footer = () => {
   const scrollToSection = (id: string) => {
