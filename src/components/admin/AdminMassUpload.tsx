@@ -119,15 +119,20 @@ const AdminMassUpload = ({ loading }: AdminMassUploadProps) => {
     }
   };
 
-  const handleUpload = async () => {
-    if (files.length === 0) {
-      toast.error("Please select files to upload");
+  // Track original File objects by filename so we can retry failed ones
+  const [fileMap, setFileMap] = useState<Map<string, File>>(new Map());
+
+  const runUpload = async (filesToProcess: File[], appendResults = false) => {
+    if (filesToProcess.length === 0) {
+      toast.error("No files to process");
       return;
     }
 
     setIsUploading(true);
     setProgress(0);
-    setResults([]);
+
+    const keptResults = appendResults ? results.filter(r => r.success) : [];
+    setResults(keptResults);
 
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -136,16 +141,22 @@ const AdminMassUpload = ({ loading }: AdminMassUploadProps) => {
         return;
       }
 
-      const total = files.length;
+      setFileMap(prev => {
+        const next = appendResults ? new Map(prev) : new Map();
+        filesToProcess.forEach(f => next.set(f.name, f));
+        return next;
+      });
+
+      const total = filesToProcess.length;
       const chunks: File[][] = [];
-      for (let i = 0; i < files.length; i += CHUNK_SIZE) {
-        chunks.push(files.slice(i, i + CHUNK_SIZE));
+      for (let i = 0; i < filesToProcess.length; i += CHUNK_SIZE) {
+        chunks.push(filesToProcess.slice(i, i + CHUNK_SIZE));
       }
 
       const collected: UploadResult[] = [];
       const onResult = (r: UploadResult) => {
         collected.push(r);
-        setResults([...collected]);
+        setResults([...keptResults, ...collected]);
         setProgress(Math.round((collected.length / total) * 100));
       };
 
@@ -167,13 +178,31 @@ const AdminMassUpload = ({ loading }: AdminMassUploadProps) => {
       if (successCount > 0) toast.success(`Created ${successCount} candidate accounts`);
       if (failCount > 0) toast.warning(`${failCount} resumes failed to process`);
 
-      setFiles([]);
+      if (!appendResults) setFiles([]);
     } catch (error) {
       console.error("Upload error:", error);
       toast.error(error instanceof Error ? error.message : "Failed to upload resumes");
     } finally {
       setIsUploading(false);
     }
+  };
+
+  const handleUpload = () => runUpload(files, false);
+
+  const handleRetryFailed = () => {
+    const failed = results.filter(r => !r.success);
+    const retryFiles = failed
+      .map(r => fileMap.get(r.filename))
+      .filter((f): f is File => !!f);
+
+    if (retryFiles.length === 0) {
+      toast.error("Original files no longer available. Please re-select them above.");
+      return;
+    }
+    if (retryFiles.length < failed.length) {
+      toast.warning(`Retrying ${retryFiles.length} of ${failed.length} failed resumes`);
+    }
+    runUpload(retryFiles, true);
   };
 
 
