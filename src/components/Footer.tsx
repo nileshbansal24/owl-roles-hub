@@ -33,14 +33,16 @@ const Footer = () => {
             </p>
             <div className="flex gap-2.5">
               {[
-                { Icon: Facebook, label: "Facebook" },
-                { Icon: Twitter, label: "Twitter" },
-                { Icon: Linkedin, label: "LinkedIn" },
-                { Icon: Instagram, label: "Instagram" },
-              ].map(({ Icon, label }) => (
+                { Icon: Facebook, label: "Facebook", href: "https://facebook.com/owlroles" },
+                { Icon: Twitter, label: "Twitter", href: "https://twitter.com/owlroles" },
+                { Icon: Linkedin, label: "LinkedIn", href: "https://linkedin.com/company/owlroles" },
+                { Icon: Instagram, label: "Instagram", href: "https://instagram.com/owlroles" },
+              ].map(({ Icon, label, href }) => (
                 <a
                   key={label}
-                  href="#"
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   aria-label={label}
                   className="w-9 h-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-primary hover:border-primary transition-all"
                 >
