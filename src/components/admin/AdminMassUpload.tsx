@@ -429,6 +429,17 @@ const AdminMassUpload = ({ loading }: AdminMassUploadProps) => {
                     </Badge>
                   )}
                 </div>
+                {failCount > 0 && !isUploading && (
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={handleRetryFailed}
+                    disabled={isUploading}
+                  >
+                    <Loader2 className={cn("h-4 w-4 mr-2", isUploading && "animate-spin")} />
+                    Retry {failCount} Failed
+                  </Button>
+                )}
                 <Button variant="outline" size="sm" onClick={downloadCSV}>
                   <Download className="h-4 w-4 mr-2" />
                   Download CSV
