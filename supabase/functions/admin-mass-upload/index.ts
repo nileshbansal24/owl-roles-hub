@@ -44,7 +44,7 @@ interface UploadResult {
   tier?: string;
 }
 
-const CONCURRENCY = 5; // parallel resumes per request
+const CONCURRENCY = 3; // parallel resumes per request — lower to dodge AI gateway rate limits on big runs
 
 function makeNamePassword(fullName: string | undefined, email: string): string {
   const source = (fullName?.trim() || email.split("@")[0] || "user").replace(/[^a-zA-Z]/g, "");
@@ -238,7 +238,8 @@ const SYSTEM_PROMPT = `You are an expert resume parser specialised in academic a
 async function callGemini(
   userContent: unknown,
   lovableApiKey: string,
-  retries = 3,
+  model: string = "google/gemini-2.5-flash",
+  retries = 5,
 ): Promise<ParsedResume | null> {
   try {
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -248,7 +249,7 @@ async function callGemini(
         "Authorization": `Bearer ${lovableApiKey}`,
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model,
         messages: [
           { role: "system", content: SYSTEM_PROMPT },
           { role: "user", content: userContent },
@@ -260,67 +261,131 @@ async function callGemini(
       }),
     });
 
-    if ((aiResponse.status === 429 || aiResponse.status === 503) && retries > 0) {
-      await new Promise(r => setTimeout(r, 2000 * (4 - retries)));
-      return callGemini(userContent, lovableApiKey, retries - 1);
+    if ((aiResponse.status === 429 || aiResponse.status === 503 || aiResponse.status === 502 || aiResponse.status === 504) && retries > 0) {
+      const retryAfter = parseInt(aiResponse.headers.get("retry-after") || "0", 10);
+      const backoff = retryAfter > 0
+        ? retryAfter * 1000
+        : Math.min(30000, 1500 * Math.pow(2, 5 - retries)) + Math.floor(Math.random() * 750);
+      await new Promise(r => setTimeout(r, backoff));
+      return callGemini(userContent, lovableApiKey, model, retries - 1);
     }
     if (!aiResponse.ok) {
-      console.error("AI error", aiResponse.status, await aiResponse.text());
+      console.error("AI error", model, aiResponse.status, (await aiResponse.text()).slice(0, 300));
       return null;
     }
     const aiResult = await aiResponse.json();
     const toolCall = aiResult.choices?.[0]?.message?.tool_calls?.[0];
-    if (!toolCall?.function?.arguments) return null;
-    return JSON.parse(toolCall.function.arguments) as ParsedResume;
+    if (!toolCall?.function?.arguments) {
+      // Some models return content rather than a tool call — try to recover JSON.
+      const raw = aiResult.choices?.[0]?.message?.content;
+      if (typeof raw === "string") {
+        const m = raw.match(/\{[\s\S]*\}/);
+        if (m) { try { return JSON.parse(m[0]) as ParsedResume; } catch { /* ignore */ } }
+      }
+      return null;
+    }
+    try {
+      return JSON.parse(toolCall.function.arguments) as ParsedResume;
+    } catch (e) {
+      console.error("AI JSON parse failed", e);
+      return null;
+    }
   } catch (e) {
     console.error("AI exception", e);
     if (retries > 0) {
-      await new Promise(r => setTimeout(r, 1500));
-      return callGemini(userContent, lovableApiKey, retries - 1);
+      await new Promise(r => setTimeout(r, 1500 + Math.floor(Math.random() * 750)));
+      return callGemini(userContent, lovableApiKey, model, retries - 1);
     }
     return null;
   }
 }
 
+// Accept anything with a name — email can be synthesized from filename later.
 function isUsableParse(p: ParsedResume | null): boolean {
-  return !!(p && p.email && p.full_name);
+  return !!(p && (p.full_name || p.email));
+}
+
+function synthEmailFromFilename(filename: string, fullName?: string): string {
+  const base = (fullName || filename.replace(/\.[^.]+$/, ""))
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ".")
+    .replace(/^\.+|\.+$/g, "")
+    .slice(0, 40) || "candidate";
+  // Add short random suffix to avoid collisions across nameless files.
+  const suffix = Math.random().toString(36).slice(2, 8);
+  return `${base}.${suffix}@auto.owlroles.com`;
 }
 
 async function parseResumeWithAI(file: File, lovableApiKey: string): Promise<ParsedResume | null> {
   const fileExt = (file.name.split(".").pop() || "pdf").toLowerCase();
   const mimeType = mimeFor(fileExt);
 
-  // Strategy 1 (PDF / DOCX): send the binary directly — Gemini's PDF & DOCX understanding is strongest here.
-  // For legacy DOC we skip straight to text extraction since Gemini cannot read .doc reliably.
-  let parsed: ParsedResume | null = null;
+  let best: ParsedResume | null = null;
+  const keep = (p: ParsedResume | null) => {
+    if (!p) return;
+    if (!best) { best = p; return; }
+    // Prefer one with email; otherwise the richer one.
+    const score = (x: ParsedResume) =>
+      (x.email ? 100 : 0) + (x.full_name ? 20 : 0) +
+      (x.experience?.length || 0) + (x.education?.length || 0) +
+      (x.skills?.length || 0) / 5;
+    if (score(p) > score(best)) best = p;
+  };
 
+  // Strategy 1: native binary parse (PDF / DOCX) with flash.
   if (fileExt === "pdf" || fileExt === "docx") {
-    const bytes = new Uint8Array(await file.arrayBuffer());
-    const base64Content = bytesToBase64(bytes);
-    parsed = await callGemini([
-      { type: "text", text: "Parse this resume thoroughly and return structured data via the tool. Include every job, every education entry, every paper. Calculate dates carefully." },
-      { type: "file", file: { filename: `resume.${fileExt}`, file_data: `data:${mimeType};base64,${base64Content}` } },
-    ], lovableApiKey);
-    if (isUsableParse(parsed)) return parsed;
+    try {
+      const bytes = new Uint8Array(await file.arrayBuffer());
+      const base64Content = bytesToBase64(bytes);
+      const p1 = await callGemini([
+        { type: "text", text: "Parse this resume thoroughly and return structured data via the tool. Include every job, every education entry, every paper. Calculate dates carefully. The email is critical — search the entire document for it." },
+        { type: "file", file: { filename: `resume.${fileExt}`, file_data: `data:${mimeType};base64,${base64Content}` } },
+      ], lovableApiKey, "google/gemini-2.5-flash");
+      keep(p1);
+      if (best?.email && best?.full_name) return best;
+    } catch (e) {
+      console.error("binary strategy failed", file.name, e);
+    }
   }
 
-  // Strategy 2: format-specific text extraction (auto-convert effect) then re-feed as plain text.
-  // - DOCX → mammoth raw text
-  // - PDF  → unpdf text layer (handles when Gemini's file parse silently misses fields)
-  // - DOC  → printable-strings fallback
+  // Strategy 2: format-specific text extraction → flash.
   const extracted = await extractTextByFormat(file, fileExt);
-  if (extracted && extracted.length > 50) {
+  if (extracted && extracted.length > 30) {
     const truncated = extracted.length > 60000 ? extracted.slice(0, 60000) : extracted;
-    const textParsed = await callGemini([
-      { type: "text", text: `The following text was extracted from a ${fileExt.toUpperCase()} resume (formatting may be degraded). Parse it thoroughly and return structured data via the tool. Infer fields from context where possible.\n\n---RESUME TEXT START---\n${truncated}\n---RESUME TEXT END---` },
-    ], lovableApiKey);
-    if (isUsableParse(textParsed)) return textParsed;
-    // Keep whichever has more info.
-    if (textParsed && !parsed) parsed = textParsed;
+    const p2 = await callGemini([
+      { type: "text", text: `Text extracted from a ${fileExt.toUpperCase()} resume (formatting may be degraded). Parse it thoroughly and return structured data via the tool. Infer fields from context where possible. The email is critical — scan the full text.\n\n---RESUME TEXT START---\n${truncated}\n---RESUME TEXT END---` },
+    ], lovableApiKey, "google/gemini-2.5-flash");
+    keep(p2);
+    if (best?.email && best?.full_name) return best;
   }
 
-  return parsed;
+  // Strategy 3: escalate to Gemini 2.5 Pro for stubborn resumes (scanned PDFs, weird layouts).
+  if (!best?.email || !best?.full_name) {
+    try {
+      if (fileExt === "pdf" || fileExt === "docx") {
+        const bytes = new Uint8Array(await file.arrayBuffer());
+        const base64Content = bytesToBase64(bytes);
+        const p3 = await callGemini([
+          { type: "text", text: "Parse this resume thoroughly. Use OCR-like reasoning if the document looks scanned. Find the email even if it's an image or oddly formatted." },
+          { type: "file", file: { filename: `resume.${fileExt}`, file_data: `data:${mimeType};base64,${base64Content}` } },
+        ], lovableApiKey, "google/gemini-2.5-pro", 3);
+        keep(p3);
+      } else if (extracted && extracted.length > 30) {
+        const truncated = extracted.length > 60000 ? extracted.slice(0, 60000) : extracted;
+        const p3 = await callGemini([
+          { type: "text", text: `Parse this ${fileExt.toUpperCase()} resume text carefully and extract structured data via the tool.\n\n${truncated}` },
+        ], lovableApiKey, "google/gemini-2.5-pro", 3);
+        keep(p3);
+      }
+    } catch (e) {
+      console.error("pro fallback failed", file.name, e);
+    }
+  }
+
+  return best;
 }
+
+
 
 
 async function processFile(
@@ -333,11 +398,17 @@ async function processFile(
   try {
     const parsed = await parseResumeWithAI(file, lovableApiKey);
     if (!parsed) return { filename, success: false, error: "Failed to parse resume" };
-    if (!parsed.email) return { filename, success: false, error: "No email found in resume" };
 
-    const email = parsed.email.toLowerCase().trim();
+    let email = parsed.email?.toLowerCase().trim();
+    let synthesizedEmail = false;
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      // No usable email — synthesize one from filename/name so the candidate isn't lost.
+      email = synthEmailFromFilename(filename, parsed.full_name);
+      synthesizedEmail = true;
+    }
     if (existingEmails.has(email)) {
-      return { filename, success: false, email, error: "User already exists" };
+      if (synthesizedEmail) email = synthEmailFromFilename(filename + Date.now(), parsed.full_name);
+      else return { filename, success: false, email, error: "User already exists" };
     }
 
     const password = makeNamePassword(parsed.full_name, email);
