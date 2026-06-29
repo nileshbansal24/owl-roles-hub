@@ -44,7 +44,7 @@ interface UploadResult {
   tier?: string;
 }
 
-const CONCURRENCY = 5; // parallel resumes per request
+const CONCURRENCY = 3; // parallel resumes per request — lower to dodge AI gateway rate limits on big runs
 
 function makeNamePassword(fullName: string | undefined, email: string): string {
   const source = (fullName?.trim() || email.split("@")[0] || "user").replace(/[^a-zA-Z]/g, "");
