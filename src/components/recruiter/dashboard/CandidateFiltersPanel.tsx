@@ -51,7 +51,7 @@ export interface CandidateFilters {
   hasLinkedin: string;
   hasOrcid: string;
   gender: string;
-  // Additional Naukri-style filters
+  // Additional advanced filters
   ageGroup: string;
   industryType: string;
   preferredJobType: string;
