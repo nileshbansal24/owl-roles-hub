@@ -41,7 +41,7 @@ const candidateBenefits = [
 ];
 
 const recruiterBenefits = [
-  { icon: Search, text: "Search 50+ academic criteria — Naukri Resdex style" },
+  { icon: Search, text: "Search 50+ academic criteria with advanced filters" },
   { icon: Users, text: "Access verified Job Seekers with research metrics" },
   { icon: ShieldCheck, text: "Institution-verified profile builds candidate trust" },
 ];

@@ -925,7 +925,7 @@ export const CareerPathVisualization = ({
                   "UGC (University Grants Commission) Pay Scales",
                   "AICTE (All India Council for Technical Education) Guidelines",
                   "7th Central Pay Commission Recommendations",
-                  "Industry salary surveys from Naukri, LinkedIn, Glassdoor",
+                  "Industry salary surveys from LinkedIn, Glassdoor",
                   "Academic institution annual reports",
                   "HR best practices from leading Indian universities"
                 ].map((source, index) => (
