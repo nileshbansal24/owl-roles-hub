@@ -300,21 +300,11 @@ async function callGemini(
   }
 }
 
-// Accept anything with a name — email can be synthesized from filename later.
+// Require both name AND email — no profile is created from a failed parse.
 function isUsableParse(p: ParsedResume | null): boolean {
-  return !!(p && (p.full_name || p.email));
+  return !!(p && p.full_name && p.email);
 }
 
-function synthEmailFromFilename(filename: string, fullName?: string): string {
-  const base = (fullName || filename.replace(/\.[^.]+$/, ""))
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, ".")
-    .replace(/^\.+|\.+$/g, "")
-    .slice(0, 40) || "candidate";
-  // Add short random suffix to avoid collisions across nameless files.
-  const suffix = Math.random().toString(36).slice(2, 8);
-  return `${base}.${suffix}@auto.owlroles.com`;
-}
 
 async function parseResumeWithAI(file: File, lovableApiKey: string): Promise<ParsedResume | null> {
   const fileExt = (file.name.split(".").pop() || "pdf").toLowerCase();
@@ -399,17 +389,19 @@ async function processFile(
     const parsed = await parseResumeWithAI(file, lovableApiKey);
     if (!parsed) return { filename, success: false, error: "Failed to parse resume" };
 
-    let email = parsed.email?.toLowerCase().trim();
-    let synthesizedEmail = false;
+    const fullName = parsed.full_name?.trim();
+    const email = parsed.email?.toLowerCase().trim();
+
+    if (!fullName) {
+      return { filename, success: false, error: "Resume parsing failed: no name found — skipped to avoid empty profile" };
+    }
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      // No usable email — synthesize one from filename/name so the candidate isn't lost.
-      email = synthEmailFromFilename(filename, parsed.full_name);
-      synthesizedEmail = true;
+      return { filename, success: false, error: "Resume parsing failed: no valid email found — skipped to avoid empty profile" };
     }
     if (existingEmails.has(email)) {
-      if (synthesizedEmail) email = synthEmailFromFilename(filename + Date.now(), parsed.full_name);
-      else return { filename, success: false, email, error: "User already exists" };
+      return { filename, success: false, email, error: "User already exists" };
     }
+
 
     const password = makeNamePassword(parsed.full_name, email);
 
