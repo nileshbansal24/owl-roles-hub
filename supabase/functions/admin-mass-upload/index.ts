@@ -398,11 +398,17 @@ async function processFile(
   try {
     const parsed = await parseResumeWithAI(file, lovableApiKey);
     if (!parsed) return { filename, success: false, error: "Failed to parse resume" };
-    if (!parsed.email) return { filename, success: false, error: "No email found in resume" };
 
-    const email = parsed.email.toLowerCase().trim();
+    let email = parsed.email?.toLowerCase().trim();
+    let synthesizedEmail = false;
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      // No usable email — synthesize one from filename/name so the candidate isn't lost.
+      email = synthEmailFromFilename(filename, parsed.full_name);
+      synthesizedEmail = true;
+    }
     if (existingEmails.has(email)) {
-      return { filename, success: false, email, error: "User already exists" };
+      if (synthesizedEmail) email = synthEmailFromFilename(filename + Date.now(), parsed.full_name);
+      else return { filename, success: false, email, error: "User already exists" };
     }
 
     const password = makeNamePassword(parsed.full_name, email);
