@@ -300,21 +300,11 @@ async function callGemini(
   }
 }
 
-// Accept anything with a name — email can be synthesized from filename later.
+// Require both name AND email — no profile is created from a failed parse.
 function isUsableParse(p: ParsedResume | null): boolean {
-  return !!(p && (p.full_name || p.email));
+  return !!(p && p.full_name && p.email);
 }
 
-function synthEmailFromFilename(filename: string, fullName?: string): string {
-  const base = (fullName || filename.replace(/\.[^.]+$/, ""))
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, ".")
-    .replace(/^\.+|\.+$/g, "")
-    .slice(0, 40) || "candidate";
-  // Add short random suffix to avoid collisions across nameless files.
-  const suffix = Math.random().toString(36).slice(2, 8);
-  return `${base}.${suffix}@auto.owlroles.com`;
-}
 
 async function parseResumeWithAI(file: File, lovableApiKey: string): Promise<ParsedResume | null> {
   const fileExt = (file.name.split(".").pop() || "pdf").toLowerCase();
