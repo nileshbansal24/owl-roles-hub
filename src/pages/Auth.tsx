@@ -155,8 +155,8 @@ const Auth = () => {
         <div className="card-elevated p-8 sm:p-10 shadow-xl">
           <div className="text-center mb-8">
             <Link to="/" className="inline-flex items-center justify-center mb-5">
-              <div className="w-14 h-14 rounded-2xl bg-primary flex items-center justify-center shadow-lg shadow-primary/25">
-                <span className="text-primary-foreground font-heading font-bold text-2xl">O</span>
+              <div className="w-16 h-16 rounded-2xl bg-primary flex items-center justify-center shadow-lg shadow-primary/25 overflow-hidden">
+                <img src={owlMascot} alt="OWL ROLES" className="w-12 h-12 object-contain" />
               </div>
             </Link>
             <h1 className="font-heading font-bold text-2xl sm:text-3xl text-foreground tracking-tight">
