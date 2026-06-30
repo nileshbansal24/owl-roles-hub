@@ -23,7 +23,9 @@ import {
   Sparkles,
   Users,
   CheckCircle2,
+  KeyRound,
 } from "lucide-react";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import owlMascot from "@/assets/owl-mascot.png";
 
 
