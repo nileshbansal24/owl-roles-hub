@@ -70,7 +70,9 @@ const AuthModal = ({
   const navigate = useNavigate();
   const [mode, setMode] = useState<"login" | "signup">(defaultMode);
   const [role, setRole] = useState<"candidate" | "recruiter">(defaultRole);
-  const [step, setStep] = useState<"role" | "form">("role");
+  const [step, setStep] = useState<"role" | "form" | "otp">("role");
+  const [otp, setOtp] = useState("");
+  const [resendCooldown, setResendCooldown] = useState(0);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
