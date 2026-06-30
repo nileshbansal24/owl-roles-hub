@@ -23,7 +23,9 @@ import {
   Sparkles,
   Users,
   CheckCircle2,
+  KeyRound,
 } from "lucide-react";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import owlMascot from "@/assets/owl-mascot.png";
 
 
@@ -68,7 +70,9 @@ const AuthModal = ({
   const navigate = useNavigate();
   const [mode, setMode] = useState<"login" | "signup">(defaultMode);
   const [role, setRole] = useState<"candidate" | "recruiter">(defaultRole);
-  const [step, setStep] = useState<"role" | "form">("role");
+  const [step, setStep] = useState<"role" | "form" | "otp">("role");
+  const [otp, setOtp] = useState("");
+  const [resendCooldown, setResendCooldown] = useState(0);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -115,16 +119,23 @@ const AuthModal = ({
     navigate(profile?.user_type === "recruiter" ? "/recruiter-dashboard" : "/candidate-dashboard");
   };
 
+  // Resend OTP cooldown timer
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const t = setTimeout(() => setResendCooldown((s) => s - 1), 1000);
+    return () => clearTimeout(t);
+  }, [resendCooldown]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
       if (mode === "signup") {
-        const { data, error } = await supabase.auth.signUp({
+        const { error } = await supabase.auth.signUp({
           email: formData.email,
           password: formData.password,
           options: {
-            emailRedirectTo: "https://owlroles.com/",
+            emailRedirectTo: `${window.location.origin}/`,
             data: {
               full_name: formData.fullName,
               user_type: role,
@@ -134,20 +145,13 @@ const AuthModal = ({
           },
         });
         if (error) throw error;
-        if (role === "recruiter" && data.user) {
-          const updates: Record<string, string> = {};
-          if (formData.institutionName) updates.university = formData.institutionName;
-          if (formData.designation) updates.designation = formData.designation;
-          if (Object.keys(updates).length > 0) {
-            await supabase.from("profiles").update(updates).eq("id", data.user.id);
-          }
-        }
         toast({
-          title: "Account created!",
-          description: role === "recruiter" ? "Your account is pending admin approval." : "Welcome to OWL ROLES!",
+          title: "Check your email",
+          description: "We sent a 6-digit verification code to " + formData.email,
         });
-        onOpenChange(false);
-        if (data.user) redirectBasedOnRole(data.user.id, role, true);
+        setOtp("");
+        setResendCooldown(45);
+        setStep("otp");
       } else {
         const { data, error } = await supabase.auth.signInWithPassword({
           email: formData.email,
@@ -168,12 +172,66 @@ const AuthModal = ({
     }
   };
 
+  const handleVerifyOtp = async () => {
+    if (otp.length !== 6) return;
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.auth.verifyOtp({
+        email: formData.email,
+        token: otp,
+        type: "signup",
+      });
+      if (error) throw error;
+
+      // Sync extra recruiter fields once verified
+      if (role === "recruiter" && data.user) {
+        const updates: Record<string, string> = {};
+        if (formData.institutionName) updates.university = formData.institutionName;
+        if (formData.designation) updates.designation = formData.designation;
+        if (Object.keys(updates).length > 0) {
+          await supabase.from("profiles").update(updates).eq("id", data.user.id);
+        }
+      }
+
+      toast({
+        title: "Email verified!",
+        description: role === "recruiter" ? "Your account is pending admin approval." : "Welcome to OWL ROLES!",
+      });
+      onOpenChange(false);
+      if (data.user) redirectBasedOnRole(data.user.id, role, true);
+    } catch (error: any) {
+      toast({ title: "Invalid code", description: error.message, variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    if (resendCooldown > 0) return;
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.resend({
+        type: "signup",
+        email: formData.email,
+        options: { emailRedirectTo: `${window.location.origin}/` },
+      });
+      if (error) throw error;
+      toast({ title: "Code resent", description: "Check your inbox for a new 6-digit code." });
+      setResendCooldown(45);
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const resetModal = () => {
     setStep("role");
+    setOtp("");
     setFormData({ email: "", password: "", fullName: "", phone: "", institutionName: "", designation: "" });
   };
 
-  const showBenefitsPanel = mode === "signup" && step === "form";
+  const showBenefitsPanel = mode === "signup" && (step === "form" || step === "otp");
 
   return (
     <Dialog open={open} onOpenChange={(o) => { onOpenChange(o); if (!o) resetModal(); }}>
@@ -309,7 +367,7 @@ const AuthModal = ({
                     </button>
                   </div>
                 </motion.div>
-              ) : (
+              ) : step === "form" ? (
                 <motion.div
                   key="auth-form"
                   initial={{ opacity: 0, y: 8 }}
@@ -485,6 +543,69 @@ const AuthModal = ({
                       {mode === "login" ? "Sign up" : "Sign in"}
                     </button>
                   </div>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="otp-step"
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.2 }}
+                  className="text-center"
+                >
+                  <div className="w-16 h-16 rounded-2xl bg-primary/10 mx-auto flex items-center justify-center mb-4">
+                    <KeyRound className="w-7 h-7 text-primary" />
+                  </div>
+                  <h2 className="font-heading text-2xl font-bold text-foreground tracking-tight">
+                    Verify your email
+                  </h2>
+                  <p className="text-sm text-muted-foreground mt-1.5 mb-6">
+                    Enter the 6-digit code we sent to<br />
+                    <span className="font-medium text-foreground">{formData.email}</span>
+                  </p>
+
+                  <div className="flex justify-center mb-6">
+                    <InputOTP maxLength={6} value={otp} onChange={setOtp}>
+                      <InputOTPGroup>
+                        <InputOTPSlot index={0} />
+                        <InputOTPSlot index={1} />
+                        <InputOTPSlot index={2} />
+                        <InputOTPSlot index={3} />
+                        <InputOTPSlot index={4} />
+                        <InputOTPSlot index={5} />
+                      </InputOTPGroup>
+                    </InputOTP>
+                  </div>
+
+                  <Button
+                    onClick={handleVerifyOtp}
+                    className="w-full h-11 font-semibold"
+                    disabled={loading || otp.length !== 6}
+                  >
+                    {loading ? (
+                      <><Loader2 className="w-4 h-4 animate-spin mr-2" />Verifying…</>
+                    ) : (
+                      <>Verify & Continue<CheckCircle2 className="w-4 h-4 ml-2" /></>
+                    )}
+                  </Button>
+
+                  <div className="mt-4 text-sm text-muted-foreground">
+                    Didn't receive it?{" "}
+                    <button
+                      onClick={handleResendOtp}
+                      disabled={resendCooldown > 0 || loading}
+                      className="font-semibold text-primary hover:underline disabled:opacity-50 disabled:no-underline"
+                    >
+                      {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : "Resend code"}
+                    </button>
+                  </div>
+
+                  <button
+                    onClick={() => setStep("form")}
+                    className="text-xs text-muted-foreground hover:text-foreground mt-4"
+                  >
+                    ← Use a different email
+                  </button>
                 </motion.div>
               )}
             </AnimatePresence>
