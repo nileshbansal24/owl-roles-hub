@@ -544,6 +544,69 @@ const AuthModal = ({
                     </button>
                   </div>
                 </motion.div>
+              ) : (
+                <motion.div
+                  key="otp-step"
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.2 }}
+                  className="text-center"
+                >
+                  <div className="w-16 h-16 rounded-2xl bg-primary/10 mx-auto flex items-center justify-center mb-4">
+                    <KeyRound className="w-7 h-7 text-primary" />
+                  </div>
+                  <h2 className="font-heading text-2xl font-bold text-foreground tracking-tight">
+                    Verify your email
+                  </h2>
+                  <p className="text-sm text-muted-foreground mt-1.5 mb-6">
+                    Enter the 6-digit code we sent to<br />
+                    <span className="font-medium text-foreground">{formData.email}</span>
+                  </p>
+
+                  <div className="flex justify-center mb-6">
+                    <InputOTP maxLength={6} value={otp} onChange={setOtp}>
+                      <InputOTPGroup>
+                        <InputOTPSlot index={0} />
+                        <InputOTPSlot index={1} />
+                        <InputOTPSlot index={2} />
+                        <InputOTPSlot index={3} />
+                        <InputOTPSlot index={4} />
+                        <InputOTPSlot index={5} />
+                      </InputOTPGroup>
+                    </InputOTP>
+                  </div>
+
+                  <Button
+                    onClick={handleVerifyOtp}
+                    className="w-full h-11 font-semibold"
+                    disabled={loading || otp.length !== 6}
+                  >
+                    {loading ? (
+                      <><Loader2 className="w-4 h-4 animate-spin mr-2" />Verifying…</>
+                    ) : (
+                      <>Verify & Continue<CheckCircle2 className="w-4 h-4 ml-2" /></>
+                    )}
+                  </Button>
+
+                  <div className="mt-4 text-sm text-muted-foreground">
+                    Didn't receive it?{" "}
+                    <button
+                      onClick={handleResendOtp}
+                      disabled={resendCooldown > 0 || loading}
+                      className="font-semibold text-primary hover:underline disabled:opacity-50 disabled:no-underline"
+                    >
+                      {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : "Resend code"}
+                    </button>
+                  </div>
+
+                  <button
+                    onClick={() => setStep("form")}
+                    className="text-xs text-muted-foreground hover:text-foreground mt-4"
+                  >
+                    ← Use a different email
+                  </button>
+                </motion.div>
               )}
             </AnimatePresence>
           </div>
