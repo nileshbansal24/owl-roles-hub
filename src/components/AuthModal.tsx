@@ -231,7 +231,7 @@ const AuthModal = ({
     setFormData({ email: "", password: "", fullName: "", phone: "", institutionName: "", designation: "" });
   };
 
-  const showBenefitsPanel = mode === "signup" && step === "form";
+  const showBenefitsPanel = mode === "signup" && (step === "form" || step === "otp");
 
   return (
     <Dialog open={open} onOpenChange={(o) => { onOpenChange(o); if (!o) resetModal(); }}>
