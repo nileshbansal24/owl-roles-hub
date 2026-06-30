@@ -367,7 +367,7 @@ const AuthModal = ({
                     </button>
                   </div>
                 </motion.div>
-              ) : (
+              ) : step === "form" ? (
                 <motion.div
                   key="auth-form"
                   initial={{ opacity: 0, y: 8 }}
