@@ -119,16 +119,23 @@ const AuthModal = ({
     navigate(profile?.user_type === "recruiter" ? "/recruiter-dashboard" : "/candidate-dashboard");
   };
 
+  // Resend OTP cooldown timer
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const t = setTimeout(() => setResendCooldown((s) => s - 1), 1000);
+    return () => clearTimeout(t);
+  }, [resendCooldown]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
       if (mode === "signup") {
-        const { data, error } = await supabase.auth.signUp({
+        const { error } = await supabase.auth.signUp({
           email: formData.email,
           password: formData.password,
           options: {
-            emailRedirectTo: "https://owlroles.com/",
+            emailRedirectTo: `${window.location.origin}/`,
             data: {
               full_name: formData.fullName,
               user_type: role,
@@ -138,20 +145,13 @@ const AuthModal = ({
           },
         });
         if (error) throw error;
-        if (role === "recruiter" && data.user) {
-          const updates: Record<string, string> = {};
-          if (formData.institutionName) updates.university = formData.institutionName;
-          if (formData.designation) updates.designation = formData.designation;
-          if (Object.keys(updates).length > 0) {
-            await supabase.from("profiles").update(updates).eq("id", data.user.id);
-          }
-        }
         toast({
-          title: "Account created!",
-          description: role === "recruiter" ? "Your account is pending admin approval." : "Welcome to OWL ROLES!",
+          title: "Check your email",
+          description: "We sent a 6-digit verification code to " + formData.email,
         });
-        onOpenChange(false);
-        if (data.user) redirectBasedOnRole(data.user.id, role, true);
+        setOtp("");
+        setResendCooldown(45);
+        setStep("otp");
       } else {
         const { data, error } = await supabase.auth.signInWithPassword({
           email: formData.email,
@@ -172,8 +172,62 @@ const AuthModal = ({
     }
   };
 
+  const handleVerifyOtp = async () => {
+    if (otp.length !== 6) return;
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.auth.verifyOtp({
+        email: formData.email,
+        token: otp,
+        type: "signup",
+      });
+      if (error) throw error;
+
+      // Sync extra recruiter fields once verified
+      if (role === "recruiter" && data.user) {
+        const updates: Record<string, string> = {};
+        if (formData.institutionName) updates.university = formData.institutionName;
+        if (formData.designation) updates.designation = formData.designation;
+        if (Object.keys(updates).length > 0) {
+          await supabase.from("profiles").update(updates).eq("id", data.user.id);
+        }
+      }
+
+      toast({
+        title: "Email verified!",
+        description: role === "recruiter" ? "Your account is pending admin approval." : "Welcome to OWL ROLES!",
+      });
+      onOpenChange(false);
+      if (data.user) redirectBasedOnRole(data.user.id, role, true);
+    } catch (error: any) {
+      toast({ title: "Invalid code", description: error.message, variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    if (resendCooldown > 0) return;
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.resend({
+        type: "signup",
+        email: formData.email,
+        options: { emailRedirectTo: `${window.location.origin}/` },
+      });
+      if (error) throw error;
+      toast({ title: "Code resent", description: "Check your inbox for a new 6-digit code." });
+      setResendCooldown(45);
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const resetModal = () => {
     setStep("role");
+    setOtp("");
     setFormData({ email: "", password: "", fullName: "", phone: "", institutionName: "", designation: "" });
   };
 
