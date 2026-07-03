@@ -688,6 +688,139 @@ const AuthModal = ({
                     ← Use a different email
                   </button>
                 </motion.div>
+              ) : step === "forgot-email" ? (
+                <motion.div
+                  key="forgot-email-step"
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <button
+                    onClick={() => setStep("form")}
+                    className="text-xs text-muted-foreground hover:text-foreground mb-4 flex items-center gap-1"
+                  >
+                    ← Back to login
+                  </button>
+                  <div className="w-16 h-16 rounded-2xl bg-primary/10 mx-auto flex items-center justify-center mb-4">
+                    <KeyRound className="w-7 h-7 text-primary" />
+                  </div>
+                  <h2 className="font-heading text-2xl font-bold text-foreground tracking-tight text-center">
+                    Forgot your password?
+                  </h2>
+                  <p className="text-sm text-muted-foreground mt-1.5 mb-6 text-center">
+                    Enter your email and we'll send you a 6-digit code to reset it.
+                  </p>
+                  <div className="space-y-1.5 mb-4">
+                    <Label htmlFor="forgotEmail" className="text-xs font-medium">Email</Label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        id="forgotEmail"
+                        type="email"
+                        placeholder="you@example.com"
+                        className="pl-10 h-11"
+                        value={forgotEmail}
+                        onChange={(e) => setForgotEmail(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  <Button
+                    onClick={() => handleSendResetOtp(false)}
+                    className="w-full h-11 font-semibold"
+                    disabled={loading || !forgotEmail}
+                  >
+                    {loading ? (
+                      <><Loader2 className="w-4 h-4 animate-spin mr-2" />Sending…</>
+                    ) : (
+                      <>Send reset code<ArrowRight className="w-4 h-4 ml-2" /></>
+                    )}
+                  </Button>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="forgot-reset-step"
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <button
+                    onClick={() => setStep("forgot-email")}
+                    className="text-xs text-muted-foreground hover:text-foreground mb-4 flex items-center gap-1"
+                  >
+                    ← Change email
+                  </button>
+                  <div className="w-16 h-16 rounded-2xl bg-primary/10 mx-auto flex items-center justify-center mb-4">
+                    <KeyRound className="w-7 h-7 text-primary" />
+                  </div>
+                  <h2 className="font-heading text-2xl font-bold text-foreground tracking-tight text-center">
+                    Reset your password
+                  </h2>
+                  <p className="text-sm text-muted-foreground mt-1.5 mb-6 text-center">
+                    Enter the 6-digit code sent to<br />
+                    <span className="font-medium text-foreground">{forgotEmail}</span>
+                  </p>
+
+                  <div className="flex justify-center mb-5">
+                    <InputOTP maxLength={6} value={forgotOtp} onChange={setForgotOtp}>
+                      <InputOTPGroup>
+                        <InputOTPSlot index={0} />
+                        <InputOTPSlot index={1} />
+                        <InputOTPSlot index={2} />
+                        <InputOTPSlot index={3} />
+                        <InputOTPSlot index={4} />
+                        <InputOTPSlot index={5} />
+                      </InputOTPGroup>
+                    </InputOTP>
+                  </div>
+
+                  <div className="space-y-1.5 mb-4">
+                    <Label htmlFor="newPassword" className="text-xs font-medium">New Password</Label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        id="newPassword"
+                        type={showPassword ? "text" : "password"}
+                        placeholder="Min. 6 characters"
+                        className="pl-10 pr-10 h-11"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        minLength={6}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      >
+                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <Button
+                    onClick={handleResetPassword}
+                    className="w-full h-11 font-semibold"
+                    disabled={loading || forgotOtp.length !== 6 || newPassword.length < 6}
+                  >
+                    {loading ? (
+                      <><Loader2 className="w-4 h-4 animate-spin mr-2" />Resetting…</>
+                    ) : (
+                      <>Reset password<CheckCircle2 className="w-4 h-4 ml-2" /></>
+                    )}
+                  </Button>
+
+                  <div className="mt-4 text-sm text-muted-foreground text-center">
+                    Didn't receive it?{" "}
+                    <button
+                      onClick={() => handleSendResetOtp(true)}
+                      disabled={resendCooldown > 0 || loading}
+                      className="font-semibold text-primary hover:underline disabled:opacity-50 disabled:no-underline"
+                    >
+                      {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : "Resend code"}
+                    </button>
+                  </div>
+                </motion.div>
               )}
             </AnimatePresence>
           </div>
