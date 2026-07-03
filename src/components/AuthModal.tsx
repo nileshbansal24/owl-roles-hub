@@ -229,9 +229,69 @@ const AuthModal = ({
   };
 
 
+  const handleSendResetOtp = async (isResend = false) => {
+    if (!forgotEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(forgotEmail)) {
+      toast({ title: "Enter a valid email", variant: "destructive" });
+      return;
+    }
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("send-reset-otp", {
+        body: { email: forgotEmail },
+      });
+      if (error) throw new Error((data as any)?.error || error.message);
+      if (data && (data as any).error) throw new Error((data as any).error);
+      toast({
+        title: isResend ? "Code resent" : "Check your email",
+        description: `If an account exists for ${forgotEmail}, a 6-digit code was sent.`,
+      });
+      setResendCooldown(45);
+      if (!isResend) setStep("forgot-reset");
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResetPassword = async () => {
+    if (forgotOtp.length !== 6) {
+      toast({ title: "Enter the 6-digit code", variant: "destructive" });
+      return;
+    }
+    if (newPassword.length < 6) {
+      toast({ title: "Password too short", description: "Must be at least 6 characters", variant: "destructive" });
+      return;
+    }
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("verify-reset-otp", {
+        body: { email: forgotEmail, code: forgotOtp, newPassword },
+      });
+      if (error) throw new Error((data as any)?.error || error.message);
+      if (data && (data as any).error) throw new Error((data as any).error);
+
+      toast({ title: "Password reset!", description: "Signing you in…" });
+      const { data: signInData, error: signInErr } = await supabase.auth.signInWithPassword({
+        email: forgotEmail,
+        password: newPassword,
+      });
+      if (signInErr) throw signInErr;
+      onOpenChange(false);
+      if (signInData.user) redirectBasedOnRole(signInData.user.id);
+    } catch (error: any) {
+      toast({ title: "Reset failed", description: error.message, variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const resetModal = () => {
     setStep("role");
     setOtp("");
+    setForgotEmail("");
+    setForgotOtp("");
+    setNewPassword("");
     setFormData({ email: "", password: "", fullName: "", phone: "", institutionName: "", designation: "" });
   };
 
