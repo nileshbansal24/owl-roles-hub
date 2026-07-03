@@ -625,7 +625,7 @@ const AuthModal = ({
                     </button>
                   </div>
                 </motion.div>
-              ) : (
+              ) : step === "otp" ? (
                 <motion.div
                   key="otp-step"
                   initial={{ opacity: 0, y: 8 }}
