@@ -579,6 +579,23 @@ const AuthModal = ({
                       </div>
                     )}
 
+                    {mode === "login" && (
+                      <div className="flex justify-end -mt-1">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setForgotEmail(formData.email);
+                            setForgotOtp("");
+                            setNewPassword("");
+                            setStep("forgot-email");
+                          }}
+                          className="text-xs font-medium text-primary hover:underline"
+                        >
+                          Forgot password?
+                        </button>
+                      </div>
+                    )}
+
                     <Button type="submit" className="w-full h-11 mt-2 shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/30 transition-shadow font-semibold" disabled={loading}>
                       {loading ? (
                         <><Loader2 className="w-4 h-4 animate-spin mr-2" />{mode === "login" ? "Logging in…" : "Creating account…"}</>
