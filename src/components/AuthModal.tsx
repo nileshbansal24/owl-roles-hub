@@ -70,10 +70,13 @@ const AuthModal = ({
   const navigate = useNavigate();
   const [mode, setMode] = useState<"login" | "signup">(defaultMode);
   const [role, setRole] = useState<"candidate" | "recruiter">(defaultRole);
-  const [step, setStep] = useState<"role" | "form" | "otp">("role");
+  const [step, setStep] = useState<"role" | "form" | "otp" | "forgot-email" | "forgot-reset">("role");
   const [otp, setOtp] = useState("");
   const [resendCooldown, setResendCooldown] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotOtp, setForgotOtp] = useState("");
+  const [newPassword, setNewPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
   // Sync internal state whenever the modal is (re)opened with new defaults
