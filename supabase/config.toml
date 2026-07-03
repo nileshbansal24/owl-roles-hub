@@ -41,3 +41,10 @@ verify_jwt = false
 
 [functions.admin-wipe-all]
 verify_jwt = false
+
+[functions.send-signup-otp]
+verify_jwt = false
+
+[functions.verify-signup-otp]
+verify_jwt = false
+
