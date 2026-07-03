@@ -1025,6 +1025,33 @@ export type Database = {
           },
         ]
       }
+      signup_otps: {
+        Row: {
+          attempts: number
+          code_hash: string
+          created_at: string
+          email: string
+          expires_at: string
+          pending_data: Json
+        }
+        Insert: {
+          attempts?: number
+          code_hash: string
+          created_at?: string
+          email: string
+          expires_at: string
+          pending_data: Json
+        }
+        Update: {
+          attempts?: number
+          code_hash?: string
+          created_at?: string
+          email?: string
+          expires_at?: string
+          pending_data?: Json
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string

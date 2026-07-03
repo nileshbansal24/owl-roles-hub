@@ -131,20 +131,18 @@ const AuthModal = ({
     setLoading(true);
     try {
       if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
-          email: formData.email,
-          password: formData.password,
-          options: {
-            emailRedirectTo: `${window.location.origin}/`,
-            data: {
-              full_name: formData.fullName,
-              user_type: role,
-              ...(role === "recruiter" && formData.institutionName ? { institution_name: formData.institutionName } : {}),
-              ...(role === "recruiter" && formData.designation ? { designation: formData.designation } : {}),
-            },
+        const { data, error } = await supabase.functions.invoke("send-signup-otp", {
+          body: {
+            email: formData.email,
+            password: formData.password,
+            fullName: formData.fullName,
+            userType: role,
+            institutionName: role === "recruiter" ? formData.institutionName : undefined,
+            designation: role === "recruiter" ? formData.designation : undefined,
           },
         });
-        if (error) throw error;
+        if (error) throw new Error((data as any)?.error || error.message);
+        if (data && (data as any).error) throw new Error((data as any).error);
         toast({
           title: "Check your email",
           description: "We sent a 6-digit verification code to " + formData.email,
@@ -176,31 +174,27 @@ const AuthModal = ({
     if (otp.length !== 6) return;
     setLoading(true);
     try {
-      const { data, error } = await supabase.auth.verifyOtp({
-        email: formData.email,
-        token: otp,
-        type: "signup",
+      const { data, error } = await supabase.functions.invoke("verify-signup-otp", {
+        body: { email: formData.email, code: otp },
       });
-      if (error) throw error;
+      if (error) throw new Error((data as any)?.error || error.message);
+      if (data && (data as any).error) throw new Error((data as any).error);
 
-      // Sync extra recruiter fields once verified
-      if (role === "recruiter" && data.user) {
-        const updates: Record<string, string> = {};
-        if (formData.institutionName) updates.university = formData.institutionName;
-        if (formData.designation) updates.designation = formData.designation;
-        if (Object.keys(updates).length > 0) {
-          await supabase.from("profiles").update(updates).eq("id", data.user.id);
-        }
-      }
+      // OTP verified & account created — now sign the user in
+      const { data: signInData, error: signInErr } = await supabase.auth.signInWithPassword({
+        email: formData.email,
+        password: formData.password,
+      });
+      if (signInErr) throw signInErr;
 
       toast({
         title: "Email verified!",
         description: role === "recruiter" ? "Your account is pending admin approval." : "Welcome to OWL ROLES!",
       });
       onOpenChange(false);
-      if (data.user) redirectBasedOnRole(data.user.id, role, true);
+      if (signInData.user) redirectBasedOnRole(signInData.user.id, role, true);
     } catch (error: any) {
-      toast({ title: "Invalid code", description: error.message, variant: "destructive" });
+      toast({ title: "Verification failed", description: error.message, variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -210,12 +204,18 @@ const AuthModal = ({
     if (resendCooldown > 0) return;
     setLoading(true);
     try {
-      const { error } = await supabase.auth.resend({
-        type: "signup",
-        email: formData.email,
-        options: { emailRedirectTo: `${window.location.origin}/` },
+      const { data, error } = await supabase.functions.invoke("send-signup-otp", {
+        body: {
+          email: formData.email,
+          password: formData.password,
+          fullName: formData.fullName,
+          userType: role,
+          institutionName: role === "recruiter" ? formData.institutionName : undefined,
+          designation: role === "recruiter" ? formData.designation : undefined,
+        },
       });
-      if (error) throw error;
+      if (error) throw new Error((data as any)?.error || error.message);
+      if (data && (data as any).error) throw new Error((data as any).error);
       toast({ title: "Code resent", description: "Check your inbox for a new 6-digit code." });
       setResendCooldown(45);
     } catch (error: any) {
@@ -224,6 +224,7 @@ const AuthModal = ({
       setLoading(false);
     }
   };
+
 
   const resetModal = () => {
     setStep("role");
