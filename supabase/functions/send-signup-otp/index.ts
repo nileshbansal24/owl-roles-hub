@@ -106,7 +106,7 @@ serve(async (req) => {
         </div>
       </div>`;
 
-    const emailRes = await fetch(`${GATEWAY_URL}/v3/smtp/email`, {
+    const emailRes = await fetch(`${GATEWAY_URL}/smtp/email`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
