@@ -613,6 +613,30 @@ export type Database = {
           },
         ]
       }
+      password_reset_otps: {
+        Row: {
+          attempts: number
+          code_hash: string
+          created_at: string
+          email: string
+          expires_at: string
+        }
+        Insert: {
+          attempts?: number
+          code_hash: string
+          created_at?: string
+          email: string
+          expires_at: string
+        }
+        Update: {
+          attempts?: number
+          code_hash?: string
+          created_at?: string
+          email?: string
+          expires_at?: string
+        }
+        Relationships: []
+      }
       plan_upgrade_requests: {
         Row: {
           admin_notes: string | null
