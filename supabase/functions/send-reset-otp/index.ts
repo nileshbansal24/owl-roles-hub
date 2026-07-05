@@ -48,7 +48,7 @@ serve(async (req) => {
     const { data: profile } = await admin
       .from("profiles")
       .select("id, full_name")
-      .eq("email", lowerEmail)
+      .ilike("email", lowerEmail)
       .maybeSingle();
 
     // Always respond success-ish to prevent email enumeration, but only send if exists
