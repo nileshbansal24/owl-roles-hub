@@ -90,22 +90,31 @@ const CandidateHome = () => {
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
-              <Button variant="outline" onClick={() => navigate("/candidate-dashboard")} className="gap-2 h-10">
-                <img src={owlProfile} alt="" aria-hidden="true" loading="lazy" width={24} height={24} className="h-6 w-6 object-contain" /> My Profile
+              <Button variant="outline" onClick={() => navigate("/candidate-dashboard")} className="gap-2 h-11 pl-2">
+                <span className="inline-flex h-8 w-8 items-center justify-center rounded-md bg-primary/10 ring-1 ring-primary/15">
+                  <img src={owlProfile} alt="" aria-hidden="true" width={32} height={32} className="h-7 w-7 object-contain" />
+                </span>
+                My Profile
               </Button>
               <Button
                 variant="outline"
                 onClick={() => navigate("/candidate-dashboard?tab=applications")}
-                className="gap-2 h-10"
+                className="gap-2 h-11 pl-2"
               >
-                <img src={owlApplications} alt="" aria-hidden="true" loading="lazy" width={24} height={24} className="h-6 w-6 object-contain" /> Applications
+                <span className="inline-flex h-8 w-8 items-center justify-center rounded-md bg-primary/10 ring-1 ring-primary/15">
+                  <img src={owlApplications} alt="" aria-hidden="true" width={32} height={32} className="h-7 w-7 object-contain" />
+                </span>
+                Applications
               </Button>
               <Button
                 variant="outline"
                 onClick={() => navigate("/candidate-dashboard?tab=saved-jobs")}
-                className="gap-2 h-10"
+                className="gap-2 h-11 pl-2"
               >
-                <img src={owlSaved} alt="" aria-hidden="true" loading="lazy" width={24} height={24} className="h-6 w-6 object-contain" /> Saved
+                <span className="inline-flex h-8 w-8 items-center justify-center rounded-md bg-primary/10 ring-1 ring-primary/15">
+                  <img src={owlSaved} alt="" aria-hidden="true" width={32} height={32} className="h-7 w-7 object-contain" />
+                </span>
+                Saved
               </Button>
             </div>
           </div>
