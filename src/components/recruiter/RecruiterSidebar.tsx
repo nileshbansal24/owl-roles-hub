@@ -40,15 +40,26 @@ interface RecruiterSidebarProps {
 }
 
 const OwlIcon = ({ src, active }: { src: string; active?: boolean }) => (
-  <img
-    src={src}
-    alt=""
-    aria-hidden="true"
-    loading="lazy"
-    width={28}
-    height={28}
-    className={cn("h-6 w-6 shrink-0 object-contain transition-transform", active && "scale-110")}
-  />
+  <span
+    className={cn(
+      "inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ring-1 transition-all",
+      active
+        ? "bg-primary/15 ring-primary/30 shadow-sm"
+        : "bg-white ring-border/60 shadow-[0_1px_2px_rgba(15,23,42,0.06)] group-hover:bg-primary/5"
+    )}
+  >
+    <img
+      src={src}
+      alt=""
+      aria-hidden="true"
+      width={32}
+      height={32}
+      className={cn(
+        "h-7 w-7 object-contain [image-rendering:auto] transition-transform",
+        active && "scale-110"
+      )}
+    />
+  </span>
 );
 
 const mainNavItems = [
