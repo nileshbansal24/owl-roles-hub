@@ -69,7 +69,7 @@ serve(async (req) => {
     const { data: profile } = await admin
       .from("profiles")
       .select("id")
-      .eq("email", lowerEmail)
+      .ilike("email", lowerEmail)
       .maybeSingle();
 
     if (!profile) {
