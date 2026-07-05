@@ -44,8 +44,8 @@ const OwlIcon = ({ src, active }: { src: string; active?: boolean }) => (
     className={cn(
       "inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ring-1 transition-all",
       active
-        ? "bg-primary/15 ring-primary/30 shadow-sm"
-        : "bg-white ring-border/60 shadow-[0_1px_2px_rgba(15,23,42,0.06)] group-hover:bg-primary/5"
+        ? "bg-primary/20 ring-primary/50 shadow-sm dark:bg-primary/25 dark:ring-primary/60"
+        : "bg-sidebar-accent ring-sidebar-border shadow-sm group-hover:bg-primary/10 dark:bg-sidebar-accent/70 dark:ring-sidebar-border"
     )}
   >
     <img
@@ -55,7 +55,7 @@ const OwlIcon = ({ src, active }: { src: string; active?: boolean }) => (
       width={32}
       height={32}
       className={cn(
-        "h-7 w-7 object-contain [image-rendering:auto] transition-transform",
+        "h-7 w-7 object-contain [image-rendering:auto] transition-transform drop-shadow-sm",
         active && "scale-110"
       )}
     />
