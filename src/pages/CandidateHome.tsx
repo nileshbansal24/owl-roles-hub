@@ -91,7 +91,7 @@ const CandidateHome = () => {
             </div>
             <div className="flex flex-wrap gap-2">
               <Button variant="outline" onClick={() => navigate("/candidate-dashboard")} className="gap-2 h-11 pl-2">
-                <span className="inline-flex h-8 w-8 items-center justify-center rounded-md bg-primary/10 ring-1 ring-primary/15">
+                <span className="inline-flex h-8 w-8 items-center justify-center rounded-md bg-primary/15 ring-1 ring-primary/30 dark:bg-primary/25 dark:ring-primary/50">
                   <img src={owlProfile} alt="" aria-hidden="true" width={32} height={32} className="h-7 w-7 object-contain" />
                 </span>
                 My Profile
@@ -101,7 +101,7 @@ const CandidateHome = () => {
                 onClick={() => navigate("/candidate-dashboard?tab=applications")}
                 className="gap-2 h-11 pl-2"
               >
-                <span className="inline-flex h-8 w-8 items-center justify-center rounded-md bg-primary/10 ring-1 ring-primary/15">
+                <span className="inline-flex h-8 w-8 items-center justify-center rounded-md bg-primary/15 ring-1 ring-primary/30 dark:bg-primary/25 dark:ring-primary/50">
                   <img src={owlApplications} alt="" aria-hidden="true" width={32} height={32} className="h-7 w-7 object-contain" />
                 </span>
                 Applications
@@ -111,7 +111,7 @@ const CandidateHome = () => {
                 onClick={() => navigate("/candidate-dashboard?tab=saved-jobs")}
                 className="gap-2 h-11 pl-2"
               >
-                <span className="inline-flex h-8 w-8 items-center justify-center rounded-md bg-primary/10 ring-1 ring-primary/15">
+                <span className="inline-flex h-8 w-8 items-center justify-center rounded-md bg-primary/15 ring-1 ring-primary/30 dark:bg-primary/25 dark:ring-primary/50">
                   <img src={owlSaved} alt="" aria-hidden="true" width={32} height={32} className="h-7 w-7 object-contain" />
                 </span>
                 Saved
@@ -152,7 +152,7 @@ const CandidateHome = () => {
           {/* Quick analytics */}
           <div className="mt-6 grid grid-cols-2 md:grid-cols-3 gap-3">
             <Card className="p-4 flex items-center gap-3">
-              <div className="h-14 w-14 rounded-xl bg-gradient-to-br from-primary/15 to-primary/5 ring-1 ring-primary/20 flex items-center justify-center shadow-sm">
+              <div className="h-14 w-14 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 ring-1 ring-primary/30 dark:from-primary/30 dark:to-primary/15 dark:ring-primary/50 flex items-center justify-center shadow-sm">
                 <img src={owlJobsFeed} alt="" aria-hidden="true" width={48} height={48} className="h-12 w-12 object-contain" />
               </div>
               <div>
@@ -161,7 +161,7 @@ const CandidateHome = () => {
               </div>
             </Card>
             <Card className="p-4 flex items-center gap-3">
-              <div className="h-14 w-14 rounded-xl bg-gradient-to-br from-primary/15 to-primary/5 ring-1 ring-primary/20 flex items-center justify-center shadow-sm">
+              <div className="h-14 w-14 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 ring-1 ring-primary/30 dark:from-primary/30 dark:to-primary/15 dark:ring-primary/50 flex items-center justify-center shadow-sm">
                 <img src={owlInstitutions} alt="" aria-hidden="true" width={48} height={48} className="h-12 w-12 object-contain" />
               </div>
               <div>
@@ -170,7 +170,7 @@ const CandidateHome = () => {
               </div>
             </Card>
             <Card className="p-4 flex items-center gap-3 col-span-2 md:col-span-1">
-              <div className="h-14 w-14 rounded-xl bg-gradient-to-br from-primary/15 to-primary/5 ring-1 ring-primary/20 flex items-center justify-center shadow-sm">
+              <div className="h-14 w-14 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 ring-1 ring-primary/30 dark:from-primary/30 dark:to-primary/15 dark:ring-primary/50 flex items-center justify-center shadow-sm">
                 <img src={owlAnalytics} alt="" aria-hidden="true" width={48} height={48} className="h-12 w-12 object-contain" />
               </div>
               <div>
