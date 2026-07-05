@@ -90,22 +90,31 @@ const CandidateHome = () => {
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
-              <Button variant="outline" onClick={() => navigate("/candidate-dashboard")} className="gap-2 h-10">
-                <img src={owlProfile} alt="" aria-hidden="true" loading="lazy" width={24} height={24} className="h-6 w-6 object-contain" /> My Profile
+              <Button variant="outline" onClick={() => navigate("/candidate-dashboard")} className="gap-2 h-11 pl-2">
+                <span className="inline-flex h-8 w-8 items-center justify-center rounded-md bg-primary/10 ring-1 ring-primary/15">
+                  <img src={owlProfile} alt="" aria-hidden="true" width={32} height={32} className="h-7 w-7 object-contain" />
+                </span>
+                My Profile
               </Button>
               <Button
                 variant="outline"
                 onClick={() => navigate("/candidate-dashboard?tab=applications")}
-                className="gap-2 h-10"
+                className="gap-2 h-11 pl-2"
               >
-                <img src={owlApplications} alt="" aria-hidden="true" loading="lazy" width={24} height={24} className="h-6 w-6 object-contain" /> Applications
+                <span className="inline-flex h-8 w-8 items-center justify-center rounded-md bg-primary/10 ring-1 ring-primary/15">
+                  <img src={owlApplications} alt="" aria-hidden="true" width={32} height={32} className="h-7 w-7 object-contain" />
+                </span>
+                Applications
               </Button>
               <Button
                 variant="outline"
                 onClick={() => navigate("/candidate-dashboard?tab=saved-jobs")}
-                className="gap-2 h-10"
+                className="gap-2 h-11 pl-2"
               >
-                <img src={owlSaved} alt="" aria-hidden="true" loading="lazy" width={24} height={24} className="h-6 w-6 object-contain" /> Saved
+                <span className="inline-flex h-8 w-8 items-center justify-center rounded-md bg-primary/10 ring-1 ring-primary/15">
+                  <img src={owlSaved} alt="" aria-hidden="true" width={32} height={32} className="h-7 w-7 object-contain" />
+                </span>
+                Saved
               </Button>
             </div>
           </div>
@@ -143,8 +152,8 @@ const CandidateHome = () => {
           {/* Quick analytics */}
           <div className="mt-6 grid grid-cols-2 md:grid-cols-3 gap-3">
             <Card className="p-4 flex items-center gap-3">
-              <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                <img src={owlJobsFeed} alt="" aria-hidden="true" loading="lazy" width={36} height={36} className="h-9 w-9 object-contain" />
+              <div className="h-14 w-14 rounded-xl bg-gradient-to-br from-primary/15 to-primary/5 ring-1 ring-primary/20 flex items-center justify-center shadow-sm">
+                <img src={owlJobsFeed} alt="" aria-hidden="true" width={48} height={48} className="h-12 w-12 object-contain" />
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Open Roles</p>
@@ -152,8 +161,8 @@ const CandidateHome = () => {
               </div>
             </Card>
             <Card className="p-4 flex items-center gap-3">
-              <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                <img src={owlInstitutions} alt="" aria-hidden="true" loading="lazy" width={36} height={36} className="h-9 w-9 object-contain" />
+              <div className="h-14 w-14 rounded-xl bg-gradient-to-br from-primary/15 to-primary/5 ring-1 ring-primary/20 flex items-center justify-center shadow-sm">
+                <img src={owlInstitutions} alt="" aria-hidden="true" width={48} height={48} className="h-12 w-12 object-contain" />
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Cities Hiring</p>
@@ -161,8 +170,8 @@ const CandidateHome = () => {
               </div>
             </Card>
             <Card className="p-4 flex items-center gap-3 col-span-2 md:col-span-1">
-              <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                <img src={owlAnalytics} alt="" aria-hidden="true" loading="lazy" width={36} height={36} className="h-9 w-9 object-contain" />
+              <div className="h-14 w-14 rounded-xl bg-gradient-to-br from-primary/15 to-primary/5 ring-1 ring-primary/20 flex items-center justify-center shadow-sm">
+                <img src={owlAnalytics} alt="" aria-hidden="true" width={48} height={48} className="h-12 w-12 object-contain" />
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Role Types</p>
