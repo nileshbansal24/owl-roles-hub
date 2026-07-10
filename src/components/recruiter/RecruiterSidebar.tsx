@@ -144,7 +144,7 @@ const RecruiterSidebar = ({ hasJobs = false, pendingVerificationCount = 0 }: Rec
                       transition={{ type: "spring", stiffness: 400, damping: 30 }}
                     />
                   )}
-                  <OwlIcon src={item.icon} active={active} />
+                  <NavIcon Icon={item.icon} active={active} />
                   {!isCollapsed && <span className="text-[13px] flex-1">{item.title}</span>}
                   {!isCollapsed && item.tab === "blockchain" && pendingVerificationCount > 0 && (
                     <span className="ml-auto inline-flex items-center justify-center h-5 min-w-5 px-1.5 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold">
