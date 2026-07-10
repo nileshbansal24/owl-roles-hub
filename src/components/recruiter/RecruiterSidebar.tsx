@@ -18,61 +18,57 @@ import {
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Plus, LogOut, Moon, Sun } from "lucide-react";
+import {
+  Plus,
+  LogOut,
+  Moon,
+  Sun,
+  Users,
+  Briefcase,
+  BarChart3,
+  CalendarDays,
+  Bookmark,
+  MessageSquare,
+  ShieldCheck,
+  Building2,
+  Crown,
+  type LucideIcon,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import logoLight from "@/assets/logo-light.png";
 import logoDark from "@/assets/logo-dark.png";
-import owlFind from "@/assets/owl-icons/nav-find-candidates.png";
-import owlJobs from "@/assets/owl-icons/nav-manage-jobs.png";
-import owlAnalytics from "@/assets/owl-icons/nav-analytics.png";
-import owlEvents from "@/assets/owl-icons/nav-events.png";
-import owlSaved from "@/assets/owl-icons/nav-saved.png";
-import owlMessages from "@/assets/owl-icons/nav-messages.png";
-import owlVerify from "@/assets/owl-icons/nav-verification.png";
-import owlUpgrade from "@/assets/owl-icons/nav-upgrade.png";
-import owlCompany from "@/assets/owl-icons/nav-company.png";
 
 interface RecruiterSidebarProps {
   hasJobs?: boolean;
   pendingVerificationCount?: number;
 }
 
-const OwlIcon = ({ src, active }: { src: string; active?: boolean }) => (
+const NavIcon = ({ Icon, active }: { Icon: LucideIcon; active?: boolean }) => (
   <span
     className={cn(
-      "inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ring-1 transition-all",
+      "inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-all",
       active
-        ? "bg-primary/20 ring-primary/50 shadow-sm dark:bg-primary/25 dark:ring-primary/60"
-        : "bg-sidebar-accent ring-sidebar-border shadow-sm group-hover:bg-primary/10 dark:bg-sidebar-accent/70 dark:ring-sidebar-border"
+        ? "bg-primary/15 text-primary ring-1 ring-primary/25 dark:bg-primary/20 dark:ring-primary/40"
+        : "bg-transparent text-sidebar-foreground/60 group-hover:text-sidebar-foreground"
     )}
   >
-    <img
-      src={src}
-      alt=""
-      aria-hidden="true"
-      width={32}
-      height={32}
-      className={cn(
-        "h-7 w-7 object-contain [image-rendering:auto] transition-transform drop-shadow-sm",
-        active && "scale-110"
-      )}
-    />
+    <Icon className="h-[18px] w-[18px]" strokeWidth={active ? 2.25 : 2} />
   </span>
 );
 
 const mainNavItems = [
-  { title: "Find Candidates", icon: owlFind, tab: "resdex" },
-  { title: "Manage Jobs", icon: owlJobs, tab: "manage" },
-  { title: "Analytics", icon: owlAnalytics, tab: "analytics" },
+  { title: "Find Candidates", icon: Users, tab: "resdex" },
+  { title: "Manage Jobs", icon: Briefcase, tab: "manage" },
+  { title: "Analytics", icon: BarChart3, tab: "analytics" },
 ];
 
 const manageNavItems = [
-  { title: "Events", icon: owlEvents, tab: "events" },
-  { title: "Saved", icon: owlSaved, tab: "saved" },
-  { title: "Messages", icon: owlMessages, tab: "messages" },
-  { title: "OR Verification", icon: owlVerify, tab: "blockchain" },
+  { title: "Events", icon: CalendarDays, tab: "events" },
+  { title: "Saved", icon: Bookmark, tab: "saved" },
+  { title: "Messages", icon: MessageSquare, tab: "messages" },
+  { title: "OR Verification", icon: ShieldCheck, tab: "blockchain" },
 ];
 
 const RecruiterSidebar = ({ hasJobs = false, pendingVerificationCount = 0 }: RecruiterSidebarProps) => {
@@ -148,7 +144,7 @@ const RecruiterSidebar = ({ hasJobs = false, pendingVerificationCount = 0 }: Rec
                       transition={{ type: "spring", stiffness: 400, damping: 30 }}
                     />
                   )}
-                  <OwlIcon src={item.icon} active={active} />
+                  <NavIcon Icon={item.icon} active={active} />
                   {!isCollapsed && <span className="text-[13px] flex-1">{item.title}</span>}
                   {!isCollapsed && item.tab === "blockchain" && pendingVerificationCount > 0 && (
                     <span className="ml-auto inline-flex items-center justify-center h-5 min-w-5 px-1.5 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold">
@@ -226,7 +222,7 @@ const RecruiterSidebar = ({ hasJobs = false, pendingVerificationCount = 0 }: Rec
                       : "text-sidebar-foreground/70 hover:text-sidebar-foreground"
                   )}
                 >
-                  <OwlIcon src={owlCompany} />
+                  <NavIcon Icon={Building2} active={location.pathname === "/recruiter-profile"} />
                   {!isCollapsed && <span className="text-[13px]">My Profile</span>}
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -242,7 +238,7 @@ const RecruiterSidebar = ({ hasJobs = false, pendingVerificationCount = 0 }: Rec
                       : "text-amber-600 dark:text-amber-400 hover:bg-amber-500/10"
                   )}
                 >
-                  <OwlIcon src={owlUpgrade} />
+                  <NavIcon Icon={Crown} active={location.pathname === "/recruiter-upgrade"} />
                   {!isCollapsed && (
                     <>
                       <span className="text-[13px] flex-1">Upgrade Plan</span>

@@ -14,13 +14,13 @@ import {
   Search,
   MapPin,
   Sparkles,
+  User,
+  FileText,
+  Bookmark,
+  Briefcase,
+  Building2,
+  BarChart3,
 } from "lucide-react";
-import owlProfile from "@/assets/owl-icons/nav-profile.png";
-import owlApplications from "@/assets/owl-icons/nav-applications.png";
-import owlSaved from "@/assets/owl-icons/nav-saved.png";
-import owlJobsFeed from "@/assets/owl-icons/nav-jobs-feed.png";
-import owlAnalytics from "@/assets/owl-icons/nav-analytics.png";
-import owlInstitutions from "@/assets/owl-icons/nav-institutions.png";
 
 const CandidateHome = () => {
   const { user } = useAuth();
@@ -82,38 +82,32 @@ const CandidateHome = () => {
                 <Sparkles className="h-3 w-3" /> Personalised feed
               </Badge>
               <h1 className="font-heading text-3xl md:text-4xl font-extrabold tracking-tight">
-                {greeting}, {displayName} 👋
+                {greeting}, {displayName}
               </h1>
               <p className="text-muted-foreground mt-2 max-w-xl">
-                Here are the latest openings curated for you. Use the assistant in the bottom-right to chat (or speak)
+                Here are the latest openings curated for you. Use the assistant in the bottom-right to chat or speak
                 about the role you want.
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
-              <Button variant="outline" onClick={() => navigate("/candidate-dashboard")} className="gap-2 h-11 pl-2">
-                <span className="inline-flex h-8 w-8 items-center justify-center rounded-md bg-primary/15 ring-1 ring-primary/30 dark:bg-primary/25 dark:ring-primary/50">
-                  <img src={owlProfile} alt="" aria-hidden="true" width={32} height={32} className="h-7 w-7 object-contain" />
-                </span>
+              <Button variant="outline" onClick={() => navigate("/candidate-dashboard")} className="gap-2 h-10">
+                <User className="h-4 w-4" />
                 My Profile
               </Button>
               <Button
                 variant="outline"
                 onClick={() => navigate("/candidate-dashboard?tab=applications")}
-                className="gap-2 h-11 pl-2"
+                className="gap-2 h-10"
               >
-                <span className="inline-flex h-8 w-8 items-center justify-center rounded-md bg-primary/15 ring-1 ring-primary/30 dark:bg-primary/25 dark:ring-primary/50">
-                  <img src={owlApplications} alt="" aria-hidden="true" width={32} height={32} className="h-7 w-7 object-contain" />
-                </span>
+                <FileText className="h-4 w-4" />
                 Applications
               </Button>
               <Button
                 variant="outline"
                 onClick={() => navigate("/candidate-dashboard?tab=saved-jobs")}
-                className="gap-2 h-11 pl-2"
+                className="gap-2 h-10"
               >
-                <span className="inline-flex h-8 w-8 items-center justify-center rounded-md bg-primary/15 ring-1 ring-primary/30 dark:bg-primary/25 dark:ring-primary/50">
-                  <img src={owlSaved} alt="" aria-hidden="true" width={32} height={32} className="h-7 w-7 object-contain" />
-                </span>
+                <Bookmark className="h-4 w-4" />
                 Saved
               </Button>
             </div>
@@ -152,8 +146,8 @@ const CandidateHome = () => {
           {/* Quick analytics */}
           <div className="mt-6 grid grid-cols-2 md:grid-cols-3 gap-3">
             <Card className="p-4 flex items-center gap-3">
-              <div className="h-14 w-14 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 ring-1 ring-primary/30 dark:from-primary/30 dark:to-primary/15 dark:ring-primary/50 flex items-center justify-center shadow-sm">
-                <img src={owlJobsFeed} alt="" aria-hidden="true" width={48} height={48} className="h-12 w-12 object-contain" />
+              <div className="h-12 w-12 rounded-xl bg-primary/10 ring-1 ring-primary/20 flex items-center justify-center">
+                <Briefcase className="h-5 w-5 text-primary" />
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Open Roles</p>
@@ -161,8 +155,8 @@ const CandidateHome = () => {
               </div>
             </Card>
             <Card className="p-4 flex items-center gap-3">
-              <div className="h-14 w-14 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 ring-1 ring-primary/30 dark:from-primary/30 dark:to-primary/15 dark:ring-primary/50 flex items-center justify-center shadow-sm">
-                <img src={owlInstitutions} alt="" aria-hidden="true" width={48} height={48} className="h-12 w-12 object-contain" />
+              <div className="h-12 w-12 rounded-xl bg-primary/10 ring-1 ring-primary/20 flex items-center justify-center">
+                <Building2 className="h-5 w-5 text-primary" />
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Cities Hiring</p>
@@ -170,8 +164,8 @@ const CandidateHome = () => {
               </div>
             </Card>
             <Card className="p-4 flex items-center gap-3 col-span-2 md:col-span-1">
-              <div className="h-14 w-14 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 ring-1 ring-primary/30 dark:from-primary/30 dark:to-primary/15 dark:ring-primary/50 flex items-center justify-center shadow-sm">
-                <img src={owlAnalytics} alt="" aria-hidden="true" width={48} height={48} className="h-12 w-12 object-contain" />
+              <div className="h-12 w-12 rounded-xl bg-primary/10 ring-1 ring-primary/20 flex items-center justify-center">
+                <BarChart3 className="h-5 w-5 text-primary" />
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Role Types</p>
@@ -181,6 +175,8 @@ const CandidateHome = () => {
           </div>
         </div>
       </section>
+
+
 
       {/* Jobs feed */}
       <div id="jobs-feed">
