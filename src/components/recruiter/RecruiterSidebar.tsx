@@ -222,7 +222,7 @@ const RecruiterSidebar = ({ hasJobs = false, pendingVerificationCount = 0 }: Rec
                       : "text-sidebar-foreground/70 hover:text-sidebar-foreground"
                   )}
                 >
-                  <OwlIcon src={owlCompany} />
+                  <NavIcon Icon={Building2} active={location.pathname === "/recruiter-profile"} />
                   {!isCollapsed && <span className="text-[13px]">My Profile</span>}
                 </SidebarMenuButton>
               </SidebarMenuItem>
