@@ -20,7 +20,25 @@ import {
   Briefcase,
   Building2,
   BarChart3,
+  type LucideIcon,
 } from "lucide-react";
+import owlBrand from "@/assets/owl-brand.png.asset.json";
+import { cn } from "@/lib/utils";
+
+const OwlBadge = ({ Icon, size = "md" }: { Icon: LucideIcon; size?: "sm" | "md" | "lg" }) => {
+  const box = size === "lg" ? "h-12 w-12 rounded-xl" : size === "sm" ? "h-8 w-8 rounded-md" : "h-10 w-10 rounded-lg";
+  const owl = size === "lg" ? "h-7 w-7" : size === "sm" ? "h-5 w-5" : "h-6 w-6";
+  const dot = size === "lg" ? "h-5 w-5" : "h-4 w-4";
+  const dotIcon = size === "lg" ? "h-3 w-3" : "h-2.5 w-2.5";
+  return (
+    <span className={cn("relative inline-flex shrink-0 items-center justify-center bg-primary/10 ring-1 ring-primary/20 dark:bg-primary/20 dark:ring-primary/40", box)}>
+      <img src={owlBrand.url} alt="" aria-hidden="true" width={48} height={48} className={cn("object-contain dark:invert", owl)} />
+      <span className={cn("absolute -bottom-1 -right-1 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground ring-2 ring-background", dot)}>
+        <Icon className={dotIcon} strokeWidth={2.5} />
+      </span>
+    </span>
+  );
+};
 
 const CandidateHome = () => {
   const { user } = useAuth();
@@ -90,24 +108,24 @@ const CandidateHome = () => {
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
-              <Button variant="outline" onClick={() => navigate("/candidate-dashboard")} className="gap-2 h-10">
-                <User className="h-4 w-4" />
+              <Button variant="outline" onClick={() => navigate("/candidate-dashboard")} className="gap-2 h-11 pl-2 pr-4">
+                <OwlBadge Icon={User} size="sm" />
                 My Profile
               </Button>
               <Button
                 variant="outline"
                 onClick={() => navigate("/candidate-dashboard?tab=applications")}
-                className="gap-2 h-10"
+                className="gap-2 h-11 pl-2 pr-4"
               >
-                <FileText className="h-4 w-4" />
+                <OwlBadge Icon={FileText} size="sm" />
                 Applications
               </Button>
               <Button
                 variant="outline"
                 onClick={() => navigate("/candidate-dashboard?tab=saved-jobs")}
-                className="gap-2 h-10"
+                className="gap-2 h-11 pl-2 pr-4"
               >
-                <Bookmark className="h-4 w-4" />
+                <OwlBadge Icon={Bookmark} size="sm" />
                 Saved
               </Button>
             </div>
@@ -146,27 +164,21 @@ const CandidateHome = () => {
           {/* Quick analytics */}
           <div className="mt-6 grid grid-cols-2 md:grid-cols-3 gap-3">
             <Card className="p-4 flex items-center gap-3">
-              <div className="h-12 w-12 rounded-xl bg-primary/10 ring-1 ring-primary/20 flex items-center justify-center">
-                <Briefcase className="h-5 w-5 text-primary" />
-              </div>
+              <OwlBadge Icon={Briefcase} size="lg" />
               <div>
                 <p className="text-xs text-muted-foreground">Open Roles</p>
                 <p className="text-xl font-bold">{stats.total}</p>
               </div>
             </Card>
             <Card className="p-4 flex items-center gap-3">
-              <div className="h-12 w-12 rounded-xl bg-primary/10 ring-1 ring-primary/20 flex items-center justify-center">
-                <Building2 className="h-5 w-5 text-primary" />
-              </div>
+              <OwlBadge Icon={Building2} size="lg" />
               <div>
                 <p className="text-xs text-muted-foreground">Cities Hiring</p>
                 <p className="text-xl font-bold">{stats.locations}</p>
               </div>
             </Card>
             <Card className="p-4 flex items-center gap-3 col-span-2 md:col-span-1">
-              <div className="h-12 w-12 rounded-xl bg-primary/10 ring-1 ring-primary/20 flex items-center justify-center">
-                <BarChart3 className="h-5 w-5 text-primary" />
-              </div>
+              <OwlBadge Icon={BarChart3} size="lg" />
               <div>
                 <p className="text-xs text-muted-foreground">Role Types</p>
                 <p className="text-xl font-bold">{stats.types}</p>
