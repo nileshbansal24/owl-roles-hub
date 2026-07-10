@@ -164,27 +164,21 @@ const CandidateHome = () => {
           {/* Quick analytics */}
           <div className="mt-6 grid grid-cols-2 md:grid-cols-3 gap-3">
             <Card className="p-4 flex items-center gap-3">
-              <div className="h-12 w-12 rounded-xl bg-primary/10 ring-1 ring-primary/20 flex items-center justify-center">
-                <Briefcase className="h-5 w-5 text-primary" />
-              </div>
+              <OwlBadge Icon={Briefcase} size="lg" />
               <div>
                 <p className="text-xs text-muted-foreground">Open Roles</p>
                 <p className="text-xl font-bold">{stats.total}</p>
               </div>
             </Card>
             <Card className="p-4 flex items-center gap-3">
-              <div className="h-12 w-12 rounded-xl bg-primary/10 ring-1 ring-primary/20 flex items-center justify-center">
-                <Building2 className="h-5 w-5 text-primary" />
-              </div>
+              <OwlBadge Icon={Building2} size="lg" />
               <div>
                 <p className="text-xs text-muted-foreground">Cities Hiring</p>
                 <p className="text-xl font-bold">{stats.locations}</p>
               </div>
             </Card>
             <Card className="p-4 flex items-center gap-3 col-span-2 md:col-span-1">
-              <div className="h-12 w-12 rounded-xl bg-primary/10 ring-1 ring-primary/20 flex items-center justify-center">
-                <BarChart3 className="h-5 w-5 text-primary" />
-              </div>
+              <OwlBadge Icon={BarChart3} size="lg" />
               <div>
                 <p className="text-xs text-muted-foreground">Role Types</p>
                 <p className="text-xl font-bold">{stats.types}</p>
