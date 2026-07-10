@@ -238,7 +238,7 @@ const RecruiterSidebar = ({ hasJobs = false, pendingVerificationCount = 0 }: Rec
                       : "text-amber-600 dark:text-amber-400 hover:bg-amber-500/10"
                   )}
                 >
-                  <OwlIcon src={owlUpgrade} />
+                  <NavIcon Icon={Crown} active={location.pathname === "/recruiter-upgrade"} />
                   {!isCollapsed && (
                     <>
                       <span className="text-[13px] flex-1">Upgrade Plan</span>
