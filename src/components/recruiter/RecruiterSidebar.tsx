@@ -39,7 +39,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import logoLight from "@/assets/logo-light.png";
 import logoDark from "@/assets/logo-dark.png";
-import owlBrand from "@/assets/owl-brand.png.asset.json";
+
 
 interface RecruiterSidebarProps {
   hasJobs?: boolean;
@@ -51,29 +51,11 @@ const NavIcon = ({ Icon, active }: { Icon: LucideIcon; active?: boolean }) => (
     className={cn(
       "relative inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-all",
       active
-        ? "bg-primary/10 ring-1 ring-primary/25 dark:bg-primary/20 dark:ring-primary/40"
-        : "bg-muted/40 ring-1 ring-border/50 group-hover:bg-primary/5 dark:bg-sidebar-accent/50"
+        ? "bg-primary text-primary-foreground shadow-sm"
+        : "bg-muted/60 text-muted-foreground ring-1 ring-border/50 group-hover:bg-primary/10 group-hover:text-primary dark:bg-sidebar-accent/60"
     )}
   >
-    <img
-      src={owlBrand.url}
-      alt=""
-      aria-hidden="true"
-      width={32}
-      height={32}
-      className={cn(
-        "h-5 w-5 object-contain transition-opacity",
-        active ? "opacity-100" : "opacity-70 dark:invert"
-      )}
-    />
-    <span
-      className={cn(
-        "absolute -bottom-0.5 -right-0.5 inline-flex h-3.5 w-3.5 items-center justify-center rounded-full ring-2 ring-sidebar transition-colors",
-        active ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground"
-      )}
-    >
-      <Icon className="h-2.5 w-2.5" strokeWidth={2.5} />
-    </span>
+    <Icon className="h-4 w-4" strokeWidth={2.25} />
   </span>
 );
 
