@@ -22,7 +22,7 @@ import {
   BarChart3,
   type LucideIcon,
 } from "lucide-react";
-import owlBrand from "@/assets/owl-brand.png.asset.json";
+
 import { cn } from "@/lib/utils";
 
 const OwlBadge = ({ Icon, size = "md" }: { Icon: LucideIcon; size?: "sm" | "md" | "lg" }) => {
