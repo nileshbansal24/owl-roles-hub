@@ -376,9 +376,11 @@ const RecruiterDashboard = () => {
           </TabsContent>
 
           {/* Messages Tab */}
-          <TabsContent value="messages">
+          <TabsContent value="messages" className="space-y-4">
+            <WhatsAppAssistantCard />
             <MessageHistoryTab />
           </TabsContent>
+
 
           {/* Blockchain Credentials Tab */}
           <TabsContent value="blockchain">
