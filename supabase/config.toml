@@ -54,3 +54,10 @@ verify_jwt = false
 [functions.verify-reset-otp]
 verify_jwt = false
 
+[functions.whatsapp-webhook]
+verify_jwt = false
+
+[functions.whatsapp-pair]
+verify_jwt = false
+
+

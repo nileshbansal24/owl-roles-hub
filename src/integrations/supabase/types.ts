@@ -1004,6 +1004,39 @@ export type Database = {
         }
         Relationships: []
       }
+      recruiter_whatsapp_links: {
+        Row: {
+          created_at: string
+          id: string
+          linked: boolean
+          linked_at: string | null
+          pairing_code: string
+          phone_number: string | null
+          recruiter_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          linked?: boolean
+          linked_at?: string | null
+          pairing_code: string
+          phone_number?: string | null
+          recruiter_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          linked?: boolean
+          linked_at?: string | null
+          pairing_code?: string
+          phone_number?: string | null
+          recruiter_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       saved_candidates: {
         Row: {
           candidate_id: string
