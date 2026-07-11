@@ -26,16 +26,11 @@ import owlBrand from "@/assets/owl-brand.png.asset.json";
 import { cn } from "@/lib/utils";
 
 const OwlBadge = ({ Icon, size = "md" }: { Icon: LucideIcon; size?: "sm" | "md" | "lg" }) => {
-  const box = size === "lg" ? "h-12 w-12 rounded-xl" : size === "sm" ? "h-8 w-8 rounded-md" : "h-10 w-10 rounded-lg";
-  const owl = size === "lg" ? "h-7 w-7" : size === "sm" ? "h-5 w-5" : "h-6 w-6";
-  const dot = size === "lg" ? "h-5 w-5" : "h-4 w-4";
-  const dotIcon = size === "lg" ? "h-3 w-3" : "h-2.5 w-2.5";
+  const box = size === "lg" ? "h-11 w-11 rounded-xl" : size === "sm" ? "h-8 w-8 rounded-md" : "h-9 w-9 rounded-lg";
+  const iconSize = size === "lg" ? "h-5 w-5" : size === "sm" ? "h-4 w-4" : "h-4 w-4";
   return (
-    <span className={cn("relative inline-flex shrink-0 items-center justify-center bg-primary/10 ring-1 ring-primary/20 dark:bg-primary/20 dark:ring-primary/40", box)}>
-      <img src={owlBrand.url} alt="" aria-hidden="true" width={48} height={48} className={cn("object-contain dark:invert", owl)} />
-      <span className={cn("absolute -bottom-1 -right-1 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground ring-2 ring-background", dot)}>
-        <Icon className={dotIcon} strokeWidth={2.5} />
-      </span>
+    <span className={cn("inline-flex shrink-0 items-center justify-center bg-primary/10 text-primary ring-1 ring-primary/20 dark:bg-primary/20 dark:ring-primary/40", box)}>
+      <Icon className={iconSize} strokeWidth={2.25} />
     </span>
   );
 };
