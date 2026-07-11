@@ -39,7 +39,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import logoLight from "@/assets/logo-light.png";
 import logoDark from "@/assets/logo-dark.png";
-import owlBrand from "@/assets/owl-brand.png.asset.json";
+
 
 interface RecruiterSidebarProps {
   hasJobs?: boolean;
