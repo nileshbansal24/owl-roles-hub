@@ -45,15 +45,20 @@ serve(async (req) => {
     );
 
     const { data: profile } = await admin
-      .from("profiles").select("user_type, approval_status").eq("id", userId).maybeSingle();
-    if (!profile || profile.user_type !== "recruiter" || profile.approval_status !== "approved") {
+      .from("profiles").select("user_type").eq("id", userId).maybeSingle();
+    if (!profile || profile.user_type !== "recruiter") {
       return new Response(JSON.stringify({ error: "Recruiter access only" }), {
         status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
+    let action = "get";
+    try {
+      const body = await req.json();
+      if (body && typeof body.action === "string") action = body.action;
+    } catch { /* no body */ }
     const url = new URL(req.url);
-    const regenerate = url.searchParams.get("regenerate") === "1" || req.method === "POST";
+    const regenerate = action === "regenerate" || url.searchParams.get("regenerate") === "1";
 
     const { data: existing } = await admin
       .from("recruiter_whatsapp_links")
