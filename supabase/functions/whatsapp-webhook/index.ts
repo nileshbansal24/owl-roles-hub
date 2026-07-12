@@ -24,6 +24,85 @@ function formatSalary(n: number | null): string {
   return `₹${(n / 100000).toFixed(1)} LPA`;
 }
 
+function isPaidPlan(plan?: string | null): boolean {
+  const normalized = (plan || "free").toLowerCase().trim();
+  return normalized !== "" && normalized !== "free";
+}
+
+function upgradeMessage(): string {
+  return [
+    "🔒 Candidate search is available on paid plans.",
+    "",
+    "Plans:",
+    "Starter — ₹2,999/mo",
+    "• 50 candidate searches/month",
+    "• Basic filters and email access",
+    "",
+    "Pro — ₹7,999/mo",
+    "• Unlimited candidate searches",
+    "• Advanced AI matching",
+    "• WhatsApp assistant search included",
+    "",
+    "Enterprise — Custom",
+    "• Team seats, SLA and priority support",
+    "",
+    "Open Owl Dashboard → Upgrade Plan to unlock candidate search.",
+  ].join("\n");
+}
+
+async function askAi(messages: Array<{ role: string; content: string }>, temperature = 0.3): Promise<string> {
+  const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+  if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+
+  const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: "google/gemini-2.5-flash",
+      messages,
+      temperature,
+    }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error("WhatsApp AI error:", response.status, errorText);
+    throw new Error("AI request failed");
+  }
+
+  const data = await response.json();
+  return data.choices?.[0]?.message?.content?.trim() || "";
+}
+
+async function classifyMessage(body: string): Promise<any> {
+  const text = await askAi([
+    {
+      role: "system",
+      content: `Classify a recruiter WhatsApp message. Return JSON only.
+Types:
+1. search: recruiter wants to find candidates by role, skills, department, experience, or location.
+2. candidate_info: recruiter asks about a named candidate's salary, profile, experience, location, skills, education, role, or contact.
+3. advisory: recruiter asks advice about hiring, offering salary to, or evaluating a named candidate.
+4. general: greetings, hiring advice, HR questions, definitions, interview tips, policy questions, small talk, or anything not requiring Owl candidate database access.
+
+Shape:
+{"query_type":"search|candidate_info|advisory|general","role":"","department":"","skills":[],"min_experience":null,"location":"","candidate_name":"","info_requested":[],"question":""}
+
+Understand Hindi, English, and Hinglish.`,
+    },
+    { role: "user", content: body },
+  ], 0.2);
+
+  const match = text.match(/```(?:json)?\s*([\s\S]*?)```/) || text.match(/\{[\s\S]*\}/);
+  const jsonText = match ? (match[1] || match[0]) : text;
+  try {
+    return JSON.parse(jsonText.trim());
+  } catch (error) {
+    console.error("WhatsApp classification parse failed:", text, error);
+    return { query_type: "general", question: body };
+  }
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -85,63 +164,96 @@ serve(async (req) => {
       );
     }
 
-    // Verify recruiter is still approved
+    // Verify recruiter is still a recruiter. Approval status should not block the WhatsApp link itself.
     const { data: profile } = await supabase
       .from("profiles")
-      .select("user_type, approval_status")
+      .select("user_type, subscription_plan")
       .eq("id", link.recruiter_id)
       .maybeSingle();
 
-    if (!profile || profile.user_type !== "recruiter" || profile.approval_status !== "approved") {
+    if (!profile || profile.user_type !== "recruiter") {
       return twiml("Your recruiter account isn't active. Please check your Owl dashboard.");
     }
 
-    // 3) AI extraction — what candidate type does the recruiter want?
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) return twiml("AI service isn't configured. Please try later.");
+    const parsed = await classifyMessage(body);
+    const queryType = parsed.query_type || "general";
 
-    const ai = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          {
-            role: "system",
-            content: `Extract candidate search criteria from a recruiter WhatsApp message.
-Return JSON only: {"role":"...","skills":[...],"min_experience":null|number,"location":"..."}.
-Leave fields empty ("" or []) if not mentioned. Understand Hindi & English.`,
-          },
-          { role: "user", content: body },
-        ],
-        temperature: 0.2,
-      }),
-    });
+    if (queryType === "general") {
+      const answer = await askAi([
+        {
+          role: "system",
+          content: "You are Owl, a concise WhatsApp recruiting assistant. Answer general hiring, HR, interview, salary-market, policy, and small-talk questions in the same language as the user. Do not claim to search candidates unless database access is needed; keep replies under 900 characters.",
+        },
+        { role: "user", content: body },
+      ], 0.6);
 
-    let criteria: any = {};
-    if (ai.ok) {
-      const j = await ai.json();
-      const txt = j.choices?.[0]?.message?.content || "";
-      const m = txt.match(/\{[\s\S]*\}/);
-      if (m) { try { criteria = JSON.parse(m[0]); } catch { /* ignore */ } }
+      return twiml(answer || "Hi, I'm Owl. Ask me hiring questions, or search candidates after upgrading your recruiter plan.");
     }
 
-    // 4) Search candidate_directory
+    if (!isPaidPlan(profile.subscription_plan)) {
+      return twiml(upgradeMessage());
+    }
+
+
+    if ((queryType === "candidate_info" || queryType === "advisory") && parsed.candidate_name) {
+      const searchName = String(parsed.candidate_name).toLowerCase().trim();
+      const { data: candidates } = await supabase
+        .from("candidate_directory")
+        .select("full_name, role, headline, university, location, years_experience, current_salary, expected_salary, skills, email, professional_summary")
+        .limit(100);
+
+      const matched = (candidates || []).filter((c: any) =>
+        c.full_name && String(c.full_name).toLowerCase().includes(searchName),
+      );
+
+      if (matched.length === 0) {
+        return twiml(`I couldn't find a candidate named "${parsed.candidate_name}". Try the full name or search by role/skill.`);
+      }
+
+      const top = matched[0] as any;
+      if (queryType === "advisory") {
+        const advice = await askAi([
+          {
+            role: "system",
+            content: "You are Owl, a practical recruiter advisor. Use only the provided candidate context. Answer in the same language as the recruiter, under 900 characters.",
+          },
+          {
+            role: "user",
+            content: `Recruiter question: ${body}\n\nCandidate context:\nName: ${top.full_name}\nRole: ${top.role || top.headline || "N/A"}\nLocation: ${top.location || "N/A"}\nExperience: ${top.years_experience ?? 0} years\nCurrent salary: ${formatSalary(top.current_salary)}\nExpected salary: ${formatSalary(top.expected_salary)}\nSkills: ${(top.skills || []).join(", ") || "N/A"}\nSummary: ${top.professional_summary || "N/A"}`,
+          },
+        ], 0.5);
+        return twiml(advice);
+      }
+
+      return twiml([
+        `👤 ${top.full_name}`,
+        `Role: ${top.role || top.headline || "N/A"}`,
+        `University: ${top.university || "N/A"}`,
+        `Location: ${top.location || "N/A"}`,
+        `Experience: ${top.years_experience ?? 0} yrs`,
+        `Salary: ${formatSalary(top.current_salary)} current · ${formatSalary(top.expected_salary)} expected`,
+        `Skills: ${(top.skills || []).slice(0, 8).join(", ") || "N/A"}`,
+        top.email ? `Email: ${top.email}` : "",
+      ].filter(Boolean).join("\n"));
+    }
+
+    // Paid candidate search
     let q = supabase
       .from("candidate_directory")
       .select("full_name, role, headline, university, location, years_experience, current_salary, expected_salary, skills, email")
       .limit(50);
 
-    const roleTerm = (criteria.role || "").toString().trim();
-    if (roleTerm) q = q.or(`role.ilike.%${roleTerm}%,headline.ilike.%${roleTerm}%`);
-    if (typeof criteria.min_experience === "number") q = q.gte("years_experience", criteria.min_experience);
-    if (criteria.location) q = q.ilike("location", `%${criteria.location}%`);
+    const roleTerm = (parsed.role || parsed.department || "").toString().trim();
+    const safeRoleTerm = roleTerm.replace(/[,%]/g, " ").trim();
+    if (safeRoleTerm) q = q.or(`role.ilike.%${safeRoleTerm}%,headline.ilike.%${safeRoleTerm}%`);
+    if (typeof parsed.min_experience === "number") q = q.gte("years_experience", parsed.min_experience);
+    if (parsed.location) q = q.ilike("location", `%${String(parsed.location).replace(/[%]/g, "")}%`);
 
     const { data: candidates } = await q;
 
     let results = candidates || [];
     // Skills filter (client side, since skills is array)
-    const skills: string[] = Array.isArray(criteria.skills) ? criteria.skills.filter(Boolean) : [];
+    const skills: string[] = Array.isArray(parsed.skills) ? parsed.skills.filter(Boolean) : [];
     if (skills.length) {
       results = results.filter((c: any) =>
         (c.skills || []).some((s: string) => skills.some((k) => s.toLowerCase().includes(k.toLowerCase()))),
