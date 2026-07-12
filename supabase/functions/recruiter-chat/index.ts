@@ -104,7 +104,7 @@ serve(async (req) => {
     const callerId = claimsData.claims.sub as string;
     const { data: profile } = await anonClient
       .from("profiles")
-      .select("user_type, approval_status")
+      .select("user_type, subscription_plan")
       .eq("id", callerId)
       .single();
 
@@ -115,12 +115,8 @@ serve(async (req) => {
       );
     }
 
-    if (profile.approval_status !== "approved") {
-      return new Response(
-        JSON.stringify({ error: "Forbidden: account pending admin approval" }),
-        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
+    const plan = (profile.subscription_plan || "free").toLowerCase();
+    const isPaid = plan !== "free" && plan !== "";
 
     const { message, showMore, previousCandidateIds, conversationHistory } = await req.json();
     
@@ -135,6 +131,14 @@ serve(async (req) => {
     if (!LOVABLE_API_KEY) {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
+
+    const upgradeResponse = () => new Response(
+      JSON.stringify({
+        type: "upgrade",
+        message: "🔒 **Candidate search is a paid feature.**\n\nUpgrade your plan to unlock unlimited candidate search, contact details, and AI recruiting advice.\n\n**Available Plans:**\n\n💼 **Starter** — ₹2,999/mo\n• 50 candidate searches per month\n• Basic filters & email access\n\n🚀 **Pro** — ₹7,999/mo  ⭐ *Recommended*\n• Unlimited candidate searches\n• Advanced AI matching & advisor\n• WhatsApp assistant included\n\n🏢 **Enterprise** — Custom\n• Everything in Pro\n• Team seats, SLA, priority support\n\n👉 Head to **Dashboard → Upgrade Plan** to activate a plan and start searching.",
+      }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
 
     // Use AI to extract requirements - supports Hindi and English
     const extractionResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {

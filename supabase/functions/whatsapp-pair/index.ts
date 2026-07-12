@@ -45,8 +45,8 @@ serve(async (req) => {
     );
 
     const { data: profile } = await admin
-      .from("profiles").select("user_type, approval_status").eq("id", userId).maybeSingle();
-    if (!profile || profile.user_type !== "recruiter" || profile.approval_status !== "approved") {
+      .from("profiles").select("user_type").eq("id", userId).maybeSingle();
+    if (!profile || profile.user_type !== "recruiter") {
       return new Response(JSON.stringify({ error: "Recruiter access only" }), {
         status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
