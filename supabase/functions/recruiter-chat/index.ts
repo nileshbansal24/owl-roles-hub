@@ -228,15 +228,40 @@ IMPORTANT RULES:
       );
     }
 
-    // Handle greeting
+    // Handle greeting / general Q&A — free for everyone. Uses AI to answer any general question.
     if (parsed.query_type === "greeting" || (!parsed.query_type && !parsed.is_search)) {
-      return new Response(
-        JSON.stringify({
-          type: "text",
-          message: parsed.greeting_response || "Hello! I'm here to help you find candidates. You can speak in Hindi or English! 👋\n\nTry:\n• 'Find me a manager for HR'\n• 'Poonam ki salary kitni hai?'\n• 'Get email of John'",
+      // Ask the AI to answer as a friendly recruiting assistant (any general question)
+      const generalAi = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "google/gemini-2.5-flash",
+          messages: [
+            {
+              role: "system",
+              content: `You are Owl, a friendly recruiting assistant chatbot. Answer any general question the recruiter asks — hiring tips, HR advice, market trends, greetings, small talk, definitions, anything. Reply in the same language they use (Hindi/English/Hinglish). Keep it concise (2-5 sentences). If they ask you to find/search candidates or get someone's contact details or profile info, DO NOT answer that — instead reply exactly: "__NEEDS_SEARCH__" (nothing else).`
+            },
+            ...(conversationHistory || []).slice(-6).map((m: any) => ({ role: m.role, content: m.content })),
+            { role: "user", content: message }
+          ],
+          temperature: 0.6,
         }),
+      });
+      let reply = parsed.greeting_response || "Hello! 👋 I'm Owl — ask me anything about hiring, or say 'find me a Professor of NLP' to search candidates.";
+      if (generalAi.ok) {
+        const gj = await generalAi.json();
+        const t = gj.choices?.[0]?.message?.content?.trim();
+        if (t && !t.includes("__NEEDS_SEARCH__")) reply = t;
+      }
+      return new Response(
+        JSON.stringify({ type: "text", message: reply }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
+    }
+
+    // Everything below (candidate search, info, advisory, email) requires a paid plan
+    if (!isPaid) {
+      return upgradeResponse();
     }
 
     // Initialize Supabase client
