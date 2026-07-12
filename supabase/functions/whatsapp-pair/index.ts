@@ -14,6 +14,25 @@ function genCode() {
   return s;
 }
 
+const senderNumber = Deno.env.get("TWILIO_WHATSAPP_NUMBER") || "+1 415 523 8886";
+const sandboxJoinPhrase = Deno.env.get("TWILIO_WHATSAPP_SANDBOX_JOIN_PHRASE") || null;
+
+function pairPayload(row: {
+  pairing_code: string;
+  phone_number: string | null;
+  linked: boolean;
+  linked_at: string | null;
+}) {
+  return {
+    pairing_code: row.pairing_code,
+    phone_number: row.phone_number,
+    linked: row.linked,
+    linked_at: row.linked_at,
+    sender_number: senderNumber,
+    sandbox_join_phrase: sandboxJoinPhrase,
+  };
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -67,12 +86,9 @@ serve(async (req) => {
       .maybeSingle();
 
     if (existing && !regenerate) {
-      return new Response(JSON.stringify({
-        pairing_code: existing.pairing_code,
-        phone_number: existing.phone_number,
-        linked: existing.linked,
-        linked_at: existing.linked_at,
-      }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      return new Response(JSON.stringify(pairPayload(existing)), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     // Generate unique code
@@ -94,9 +110,9 @@ serve(async (req) => {
       });
     }
 
-    return new Response(JSON.stringify({
+    return new Response(JSON.stringify(pairPayload({
       pairing_code: code, phone_number: null, linked: false, linked_at: null,
-    }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    })), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e) {
     console.error("whatsapp-pair error:", e);
     return new Response(JSON.stringify({ error: String(e) }), {
