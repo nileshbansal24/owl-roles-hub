@@ -24,9 +24,9 @@ const WhatsAppAssistantCard = () => {
 
   const load = async () => {
     const { data, error } = await supabase.functions.invoke("whatsapp-pair", {
-      method: "GET",
+      body: { action: "get" },
     });
-    if (error) {
+    if (error || !data || (data as any).error) {
       toast.error("Couldn't load WhatsApp status");
       setLoading(false);
       return;
@@ -40,11 +40,10 @@ const WhatsAppAssistantCard = () => {
   const regenerate = async () => {
     setRegenerating(true);
     const { data, error } = await supabase.functions.invoke("whatsapp-pair", {
-      method: "POST",
-      body: {},
+      body: { action: "regenerate" },
     });
     setRegenerating(false);
-    if (error) return toast.error("Failed to regenerate code");
+    if (error || !data || (data as any).error) return toast.error("Failed to regenerate code");
     setState(data as PairState);
     toast.success("New pairing code generated");
   };
