@@ -5,17 +5,52 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Copy, MessageCircle, RefreshCw, CheckCircle2, ExternalLink } from "lucide-react";
+import { Copy, MessageCircle, RefreshCw, CheckCircle2, ExternalLink, AlertTriangle } from "lucide-react";
 
 interface PairState {
   pairing_code: string;
   phone_number: string | null;
   linked: boolean;
   linked_at: string | null;
+  sender_number?: string;
+  sandbox_join_phrase?: string | null;
 }
 
 // Twilio's public WhatsApp sandbox number. Replace once you provision a production sender.
 const OWL_WHATSAPP_NUMBER = "+1 415 523 8886";
+
+async function callPairFunction(action: "get" | "regenerate") {
+  const { data: sessionData } = await supabase.auth.getSession();
+  const accessToken = sessionData.session?.access_token;
+
+  if (!accessToken) {
+    throw new Error("Please sign in again to load WhatsApp pairing.");
+  }
+
+  const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/whatsapp-pair`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+      apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string,
+    },
+    body: JSON.stringify({ action }),
+  });
+
+  const text = await response.text();
+  let data: unknown = null;
+  try {
+    data = text ? JSON.parse(text) : null;
+  } catch {
+    data = { error: text };
+  }
+
+  if (!response.ok || !data || (data as { error?: string }).error) {
+    throw new Error((data as { error?: string })?.error || `WhatsApp pairing failed (${response.status})`);
+  }
+
+  return data as PairState;
+}
 
 const WhatsAppAssistantCard = () => {
   const [state, setState] = useState<PairState | null>(null);
@@ -23,15 +58,14 @@ const WhatsAppAssistantCard = () => {
   const [regenerating, setRegenerating] = useState(false);
 
   const load = async () => {
-    const { data, error } = await supabase.functions.invoke("whatsapp-pair", {
-      body: { action: "get" },
-    });
-    if (error || !data || (data as any).error) {
-      toast.error("Couldn't load WhatsApp status");
+    try {
+      const data = await callPairFunction("get");
+      setState(data);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Couldn't load WhatsApp status");
       setLoading(false);
       return;
     }
-    setState(data as PairState);
     setLoading(false);
   };
 
@@ -39,13 +73,15 @@ const WhatsAppAssistantCard = () => {
 
   const regenerate = async () => {
     setRegenerating(true);
-    const { data, error } = await supabase.functions.invoke("whatsapp-pair", {
-      body: { action: "regenerate" },
-    });
-    setRegenerating(false);
-    if (error || !data || (data as any).error) return toast.error("Failed to regenerate code");
-    setState(data as PairState);
-    toast.success("New pairing code generated");
+    try {
+      const data = await callPairFunction("regenerate");
+      setState(data);
+      toast.success("New pairing code generated");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to regenerate code");
+    } finally {
+      setRegenerating(false);
+    }
   };
 
   const copy = (v: string) => {
@@ -62,8 +98,13 @@ const WhatsAppAssistantCard = () => {
     );
   }
 
+  const senderNumber = state?.sender_number || OWL_WHATSAPP_NUMBER;
   const linkMessage = state ? `LINK ${state.pairing_code}` : "";
-  const waLink = `https://wa.me/${OWL_WHATSAPP_NUMBER.replace(/[^\d]/g, "")}?text=${encodeURIComponent(linkMessage)}`;
+  const joinMessage = state?.sandbox_join_phrase || "join <sandbox-name>";
+  const joinWaLink = state?.sandbox_join_phrase
+    ? `https://wa.me/${senderNumber.replace(/[^\d]/g, "")}?text=${encodeURIComponent(state.sandbox_join_phrase)}`
+    : null;
+  const waLink = `https://wa.me/${senderNumber.replace(/[^\d]/g, "")}?text=${encodeURIComponent(linkMessage)}`;
 
   return (
     <Card className="border-primary/20">
@@ -85,7 +126,7 @@ const WhatsAppAssistantCard = () => {
                 )}
               </CardTitle>
               <CardDescription>
-                Chat with Owl on WhatsApp to search candidates — "Hey Owl! I need a HR manager"
+                Chat with Owl on WhatsApp for hiring help and paid candidate search.
               </CardDescription>
             </div>
           </div>
@@ -98,9 +139,14 @@ const WhatsAppAssistantCard = () => {
               Linked to <span className="font-mono font-medium">{state.phone_number}</span>
             </p>
             <p className="text-xs text-muted-foreground">
-              Send Owl a WhatsApp on <span className="font-medium">{OWL_WHATSAPP_NUMBER}</span> — try things like
+              Send Owl a WhatsApp on <span className="font-medium">{senderNumber}</span> — try things like
               <em> "I need a senior HR manager in Delhi"</em> or <em>"Find me a Professor with 10+ years in NLP"</em>.
             </p>
+            {!state.sandbox_join_phrase && (
+              <p className="text-xs text-muted-foreground">
+                If Twilio says the sandbox is not connected, send the sandbox join phrase from Twilio first. Sandbox membership expires after 72 hours.
+              </p>
+            )}
             <div className="flex gap-2 pt-2">
               <Button size="sm" variant="outline" onClick={regenerate} disabled={regenerating}>
                 <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${regenerating ? "animate-spin" : ""}`} />
@@ -111,9 +157,35 @@ const WhatsAppAssistantCard = () => {
         ) : (
           <div className="space-y-3">
             <ol className="text-sm space-y-2 list-decimal list-inside text-muted-foreground">
-              <li>Save Owl's WhatsApp number: <span className="font-mono font-medium text-foreground">{OWL_WHATSAPP_NUMBER}</span></li>
-              <li>Send this exact message to activate:</li>
+              <li>Save Owl's WhatsApp number: <span className="font-mono font-medium text-foreground">{senderNumber}</span></li>
+              <li>Join the Twilio sandbox first, then send your Owl pairing code.</li>
             </ol>
+
+            <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 space-y-2">
+              <div className="flex items-start gap-2 text-sm font-medium text-amber-800">
+                <AlertTriangle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                <span>Twilio sandbox requires a one-time join before Owl can receive your messages.</span>
+              </div>
+              <div className="flex items-center gap-2 rounded-md border bg-background p-2">
+                <code className="flex-1 font-mono text-sm">{joinMessage}</code>
+                <Button size="sm" variant="ghost" onClick={() => copy(joinMessage)}>
+                  <Copy className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Use the exact <span className="font-mono">join ...</span> phrase shown in Twilio Console. Once Twilio confirms, send the Owl code below.
+              </p>
+              {joinWaLink && (
+                <Button size="sm" variant="outline" asChild>
+                  <a href={joinWaLink} target="_blank" rel="noreferrer">
+                    <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
+                    Join sandbox
+                  </a>
+                </Button>
+              )}
+            </div>
+
+            <p className="text-sm text-muted-foreground">After sandbox confirmation, send this exact message to activate Owl:</p>
 
             <div className="flex items-center gap-2 rounded-lg border bg-background p-3">
               <code className="flex-1 font-mono text-sm">{linkMessage}</code>
@@ -126,7 +198,7 @@ const WhatsAppAssistantCard = () => {
               <Button size="sm" asChild>
                 <a href={waLink} target="_blank" rel="noreferrer">
                   <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
-                  Open in WhatsApp
+                  Send pairing code
                 </a>
               </Button>
               <Button size="sm" variant="outline" onClick={regenerate} disabled={regenerating}>
