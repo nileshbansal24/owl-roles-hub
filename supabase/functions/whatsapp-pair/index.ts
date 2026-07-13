@@ -15,7 +15,8 @@ function genCode() {
 }
 
 const senderNumber = Deno.env.get("TWILIO_WHATSAPP_NUMBER") || "+1 415 523 8886";
-const sandboxJoinPhrase = Deno.env.get("TWILIO_WHATSAPP_SANDBOX_JOIN_PHRASE") || null;
+const sandboxJoinPhrase = (Deno.env.get("TWILIO_WHATSAPP_SANDBOX_JOIN_PHRASE") || "").trim() || null;
+const webhookUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/whatsapp-webhook`;
 
 function pairPayload(row: {
   pairing_code: string;
@@ -30,6 +31,8 @@ function pairPayload(row: {
     linked_at: row.linked_at,
     sender_number: senderNumber,
     sandbox_join_phrase: sandboxJoinPhrase,
+    sandbox_configured: Boolean(sandboxJoinPhrase),
+    webhook_url: webhookUrl,
   };
 }
 
