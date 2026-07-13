@@ -14,6 +14,8 @@ interface PairState {
   linked_at: string | null;
   sender_number?: string;
   sandbox_join_phrase?: string | null;
+  sandbox_configured?: boolean;
+  webhook_url?: string;
 }
 
 // Twilio's public WhatsApp sandbox number. Replace once you provision a production sender.
@@ -100,9 +102,10 @@ const WhatsAppAssistantCard = () => {
 
   const senderNumber = state?.sender_number || OWL_WHATSAPP_NUMBER;
   const linkMessage = state ? `LINK ${state.pairing_code}` : "";
-  const joinMessage = state?.sandbox_join_phrase || "join <sandbox-name>";
-  const joinWaLink = state?.sandbox_join_phrase
-    ? `https://wa.me/${senderNumber.replace(/[^\d]/g, "")}?text=${encodeURIComponent(state.sandbox_join_phrase)}`
+  const joinMessage = state?.sandbox_join_phrase?.trim() || "";
+  const sandboxReady = Boolean(state?.sandbox_configured && joinMessage);
+  const joinWaLink = sandboxReady
+    ? `https://wa.me/${senderNumber.replace(/[^\d]/g, "")}?text=${encodeURIComponent(joinMessage)}`
     : null;
   const waLink = `https://wa.me/${senderNumber.replace(/[^\d]/g, "")}?text=${encodeURIComponent(linkMessage)}`;
 
@@ -142,9 +145,9 @@ const WhatsAppAssistantCard = () => {
               Send Owl a WhatsApp on <span className="font-medium">{senderNumber}</span> — try things like
               <em> "I need a senior HR manager in Delhi"</em> or <em>"Find me a Professor with 10+ years in NLP"</em>.
             </p>
-            {!state.sandbox_join_phrase && (
+            {!sandboxReady && (
               <p className="text-xs text-muted-foreground">
-                If Twilio says the sandbox is not connected, send the sandbox join phrase from Twilio first. Sandbox membership expires after 72 hours.
+                If Twilio says the sandbox is not connected, ask your admin to configure the real Twilio join phrase first. Sandbox membership expires after 72 hours.
               </p>
             )}
             <div className="flex gap-2 pt-2">
@@ -158,23 +161,44 @@ const WhatsAppAssistantCard = () => {
           <div className="space-y-3">
             <ol className="text-sm space-y-2 list-decimal list-inside text-muted-foreground">
               <li>Save Owl's WhatsApp number: <span className="font-mono font-medium text-foreground">{senderNumber}</span></li>
-              <li>Join the Twilio sandbox first, then send your Owl pairing code.</li>
+              <li>{sandboxReady ? "Join the Twilio sandbox first, then send your Owl pairing code." : "Wait for the real Twilio sandbox join phrase to be configured, then pair your number."}</li>
             </ol>
 
             <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 space-y-2">
               <div className="flex items-start gap-2 text-sm font-medium text-amber-800">
                 <AlertTriangle className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                <span>Twilio sandbox requires a one-time join before Owl can receive your messages.</span>
+                <span>{sandboxReady ? "Twilio sandbox requires a one-time join before Owl can receive your messages." : "Twilio sandbox setup is incomplete, so Owl cannot receive your WhatsApp messages yet."}</span>
               </div>
-              <div className="flex items-center gap-2 rounded-md border bg-background p-2">
-                <code className="flex-1 font-mono text-sm">{joinMessage}</code>
-                <Button size="sm" variant="ghost" onClick={() => copy(joinMessage)}>
-                  <Copy className="h-3.5 w-3.5" />
-                </Button>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Use the exact <span className="font-mono">join ...</span> phrase shown in Twilio Console. Once Twilio confirms, send the Owl code below.
-              </p>
+              {sandboxReady ? (
+                <>
+                  <div className="flex items-center gap-2 rounded-md border bg-background p-2">
+                    <code className="flex-1 font-mono text-sm">{joinMessage}</code>
+                    <Button size="sm" variant="ghost" onClick={() => copy(joinMessage)}>
+                      <Copy className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Use the exact <span className="font-mono">join ...</span> phrase shown here. Once Twilio confirms, send the Owl code below.
+                  </p>
+                </>
+              ) : (
+                <div className="space-y-2">
+                  <p className="text-xs text-muted-foreground">
+                    Do not send <span className="font-mono">join &lt;sandbox-name&gt;</span>. That is only a placeholder and Twilio will reject it.
+                  </p>
+                  {state?.webhook_url && (
+                    <div className="flex items-center gap-2 rounded-md border bg-background p-2">
+                      <code className="flex-1 break-all font-mono text-xs">{state.webhook_url}</code>
+                      <Button size="sm" variant="ghost" onClick={() => copy(state.webhook_url!)}>
+                        <Copy className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  )}
+                  <p className="text-xs text-muted-foreground">
+                    Admin setup needed: add the real Twilio sandbox join phrase and set Twilio's incoming message webhook to the URL above.
+                  </p>
+                </div>
+              )}
               {joinWaLink && (
                 <Button size="sm" variant="outline" asChild>
                   <a href={joinWaLink} target="_blank" rel="noreferrer">
