@@ -19,7 +19,10 @@ interface UploadResult {
   tier?: string;
 }
 
-const CHUNK_SIZE = 40; // files per edge function request
+const CHUNK_SIZE = 20; // files per edge function request
+const PARALLEL_REQUESTS = 4; // chunks processed simultaneously
+const MAX_VISIBLE_RESULTS = 200; // keep the results list light for huge batches
+
 
 
 interface AdminMassUploadProps {
@@ -160,18 +163,39 @@ const AdminMassUpload = ({ loading }: AdminMassUploadProps) => {
         setProgress(Math.round((collected.length / total) * 100));
       };
 
-      for (let i = 0; i < chunks.length; i++) {
-        try {
-          await processChunk(chunks[i], session.access_token, onResult);
-        } catch (chunkErr) {
-          console.error(`Chunk ${i} failed:`, chunkErr);
-          chunks[i].forEach(f => onResult({
-            filename: f.name,
-            success: false,
-            error: chunkErr instanceof Error ? chunkErr.message : "Chunk failed",
-          }));
+      // Run several chunks at once so uploads finish far faster on big batches.
+      let nextChunk = 0;
+      const worker = async () => {
+        while (nextChunk < chunks.length) {
+          const i = nextChunk++;
+          const chunk = chunks[i];
+          const seen = new Set<string>();
+          const track = (r: UploadResult) => { seen.add(r.filename); onResult(r); };
+          try {
+            await processChunk(chunk, session.access_token, track);
+          } catch (chunkErr) {
+            console.error(`Chunk ${i} failed, retrying once:`, chunkErr);
+            const remaining = chunk.filter(f => !seen.has(f.name));
+            try {
+              await new Promise(res => setTimeout(res, 2000));
+              await processChunk(remaining, session.access_token, track);
+            } catch (retryErr) {
+              chunk
+                .filter(f => !seen.has(f.name))
+                .forEach(f => onResult({
+                  filename: f.name,
+                  success: false,
+                  error: retryErr instanceof Error ? retryErr.message : "Chunk failed",
+                }));
+            }
+          }
         }
-      }
+      };
+
+      await Promise.all(
+        Array.from({ length: Math.min(PARALLEL_REQUESTS, chunks.length) }, () => worker())
+      );
+
 
       const successCount = collected.filter(r => r.success).length;
       const failCount = collected.length - successCount;
@@ -292,7 +316,7 @@ const AdminMassUpload = ({ loading }: AdminMassUploadProps) => {
             <div className="text-sm">
               <p className="font-medium">How it works:</p>
               <ul className="list-disc list-inside text-muted-foreground mt-1 space-y-1">
-                <li>Upload up to several thousand PDF / DOC / DOCX resumes at once — processed in batches of {CHUNK_SIZE} with live progress.</li>
+                <li>Upload up to several thousand PDF / DOC / DOCX resumes at once — processed in batches of {CHUNK_SIZE}, {PARALLEL_REQUESTS} batches in parallel, with live progress.</li>
                 <li>AI parses even messy or incomplete resumes and infers missing fields where possible.</li>
                 <li>Years of experience are computed from job dates (e.g. since 2010 = 16 years) and the candidate is auto-tiered: <strong>Gold</strong> (10+), <strong>Silver</strong> (5–9), <strong>Bronze</strong> (1–4), <strong>Black</strong> (fresher).</li>
                 <li>Account password is <strong>NAME1234</strong> (first 4 letters of first name uppercase + 1234, e.g. Mayank → MAYA1234).</li>
@@ -448,8 +472,14 @@ const AdminMassUpload = ({ loading }: AdminMassUploadProps) => {
             </CardTitle>
           </CardHeader>
           <CardContent>
+            {results.length > MAX_VISIBLE_RESULTS && (
+              <p className="text-xs text-muted-foreground mb-2">
+                Showing the latest {MAX_VISIBLE_RESULTS} of {results.length} results — download the CSV for the full report.
+              </p>
+            )}
             <div className="space-y-2 max-h-64 overflow-y-auto">
-              {results.map((result, index) => (
+              {results.slice(-MAX_VISIBLE_RESULTS).map((result, index) => (
+
                 <div 
                   key={index}
                   className={cn(

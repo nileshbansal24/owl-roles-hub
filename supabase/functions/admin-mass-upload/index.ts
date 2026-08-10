@@ -44,7 +44,19 @@ interface UploadResult {
   tier?: string;
 }
 
-const CONCURRENCY = 3; // parallel resumes per request — lower to dodge AI gateway rate limits on big runs
+const CONCURRENCY = 8; // parallel resumes per request
+
+// Global adaptive throttle: when the AI gateway rate-limits us, every worker
+// pauses until the cooldown expires instead of hammering it independently.
+let rateLimitedUntil = 0;
+async function respectGlobalCooldown() {
+  const wait = rateLimitedUntil - Date.now();
+  if (wait > 0) await new Promise(r => setTimeout(r, wait));
+}
+function triggerCooldown(ms: number) {
+  rateLimitedUntil = Math.max(rateLimitedUntil, Date.now() + ms);
+}
+
 
 function makeNamePassword(fullName: string | undefined, email: string): string {
   const source = (fullName?.trim() || email.split("@")[0] || "user").replace(/[^a-zA-Z]/g, "");
@@ -242,6 +254,7 @@ async function callGemini(
   retries = 5,
 ): Promise<ParsedResume | null> {
   try {
+    await respectGlobalCooldown();
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -266,9 +279,11 @@ async function callGemini(
       const backoff = retryAfter > 0
         ? retryAfter * 1000
         : Math.min(30000, 1500 * Math.pow(2, 5 - retries)) + Math.floor(Math.random() * 750);
+      if (aiResponse.status === 429) triggerCooldown(Math.min(backoff, 15000));
       await new Promise(r => setTimeout(r, backoff));
       return callGemini(userContent, lovableApiKey, model, retries - 1);
     }
+
     if (!aiResponse.ok) {
       console.error("AI error", model, aiResponse.status, (await aiResponse.text()).slice(0, 300));
       return null;
@@ -305,6 +320,33 @@ function isUsableParse(p: ParsedResume | null): boolean {
   return !!(p && p.full_name && p.email);
 }
 
+const EMAIL_RE = /[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}/g;
+
+// Salvage an email straight from the raw resume text when the model missed it.
+function salvageEmail(text: string): string | undefined {
+  const matches = text.match(EMAIL_RE);
+  if (!matches) return undefined;
+  const clean = matches
+    .map(m => m.replace(/[.,;:)\]]+$/, "").toLowerCase())
+    .filter(m => !/(example|noreply|no-reply|donotreply|sample|test@)/.test(m));
+  return clean[0];
+}
+
+// Salvage a plausible full name from the top of the resume.
+function salvageName(text: string): string | undefined {
+  const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean).slice(0, 12);
+  for (const line of lines) {
+    if (line.length < 3 || line.length > 60) continue;
+    if (/[@\d]|http|resume|curriculum|vitae|\bcv\b/i.test(line)) continue;
+    const words = line.split(/\s+/);
+    if (words.length < 2 || words.length > 5) continue;
+    if (!words.every(w => /^[A-Za-z][A-Za-z.'-]*$/.test(w))) continue;
+    return words
+      .map(w => w[0].toUpperCase() + w.slice(1).toLowerCase())
+      .join(" ");
+  }
+  return undefined;
+}
 
 async function parseResumeWithAI(file: File, lovableApiKey: string): Promise<ParsedResume | null> {
   const fileExt = (file.name.split(".").pop() || "pdf").toLowerCase();
@@ -322,50 +364,74 @@ async function parseResumeWithAI(file: File, lovableApiKey: string): Promise<Par
     if (score(p) > score(best)) best = p;
   };
 
-  // Strategy 1: native binary parse (PDF / DOCX) with flash.
+  // Strategy 1: local text extraction → flash. Far cheaper and much faster than
+  // shipping the whole binary, so it handles the vast majority of resumes.
+  let extracted = "";
+  try {
+    extracted = await extractTextByFormat(file, fileExt);
+  } catch (e) {
+    console.error("text extraction failed", file.name, e);
+  }
+
+  if (extracted && extracted.length > 30) {
+    const truncated = extracted.length > 60000 ? extracted.slice(0, 60000) : extracted;
+    const p1 = await callGemini([
+      { type: "text", text: `Text extracted from a ${fileExt.toUpperCase()} resume (formatting may be degraded). Parse it thoroughly and return structured data via the tool. Infer fields from context where possible. The email is critical — scan the full text.\n\n---RESUME TEXT START---\n${truncated}\n---RESUME TEXT END---` },
+    ], lovableApiKey, "google/gemini-2.5-flash");
+    keep(p1);
+    if (best?.email && best?.full_name) return best;
+  }
+
+  // Strategy 2: native binary parse (PDF / DOCX) — handles scans and exotic layouts.
   if (fileExt === "pdf" || fileExt === "docx") {
     try {
       const bytes = new Uint8Array(await file.arrayBuffer());
       const base64Content = bytesToBase64(bytes);
-      const p1 = await callGemini([
+      const p2 = await callGemini([
         { type: "text", text: "Parse this resume thoroughly and return structured data via the tool. Include every job, every education entry, every paper. Calculate dates carefully. The email is critical — search the entire document for it." },
         { type: "file", file: { filename: `resume.${fileExt}`, file_data: `data:${mimeType};base64,${base64Content}` } },
       ], lovableApiKey, "google/gemini-2.5-flash");
-      keep(p1);
+      keep(p2);
       if (best?.email && best?.full_name) return best;
     } catch (e) {
       console.error("binary strategy failed", file.name, e);
     }
   }
 
-  // Strategy 2: format-specific text extraction → flash.
-  const extracted = await extractTextByFormat(file, fileExt);
-  if (extracted && extracted.length > 30) {
-    const truncated = extracted.length > 60000 ? extracted.slice(0, 60000) : extracted;
-    const p2 = await callGemini([
-      { type: "text", text: `Text extracted from a ${fileExt.toUpperCase()} resume (formatting may be degraded). Parse it thoroughly and return structured data via the tool. Infer fields from context where possible. The email is critical — scan the full text.\n\n---RESUME TEXT START---\n${truncated}\n---RESUME TEXT END---` },
-    ], lovableApiKey, "google/gemini-2.5-flash");
-    keep(p2);
+  // Strategy 3: regex salvage from raw text before burning a Pro call.
+  if (extracted) {
+    if (best && !best.email) best.email = salvageEmail(extracted);
+    if (best && !best.full_name) best.full_name = salvageName(extracted);
+    if (!best) {
+      const email = salvageEmail(extracted);
+      const full_name = salvageName(extracted);
+      if (email && full_name) keep({ email, full_name });
+    }
     if (best?.email && best?.full_name) return best;
   }
 
-  // Strategy 3: escalate to Gemini 2.5 Pro for stubborn resumes (scanned PDFs, weird layouts).
+  // Strategy 4: escalate to Gemini 2.5 Pro for stubborn resumes (scanned PDFs, weird layouts).
   if (!best?.email || !best?.full_name) {
     try {
       if (fileExt === "pdf" || fileExt === "docx") {
         const bytes = new Uint8Array(await file.arrayBuffer());
         const base64Content = bytesToBase64(bytes);
-        const p3 = await callGemini([
+        const p4 = await callGemini([
           { type: "text", text: "Parse this resume thoroughly. Use OCR-like reasoning if the document looks scanned. Find the email even if it's an image or oddly formatted." },
           { type: "file", file: { filename: `resume.${fileExt}`, file_data: `data:${mimeType};base64,${base64Content}` } },
         ], lovableApiKey, "google/gemini-2.5-pro", 3);
-        keep(p3);
+        keep(p4);
       } else if (extracted && extracted.length > 30) {
         const truncated = extracted.length > 60000 ? extracted.slice(0, 60000) : extracted;
-        const p3 = await callGemini([
+        const p4 = await callGemini([
           { type: "text", text: `Parse this ${fileExt.toUpperCase()} resume text carefully and extract structured data via the tool.\n\n${truncated}` },
         ], lovableApiKey, "google/gemini-2.5-pro", 3);
-        keep(p3);
+        keep(p4);
+      }
+      // Final salvage pass after the Pro attempt.
+      if (extracted && best) {
+        if (!best.email) best.email = salvageEmail(extracted);
+        if (!best.full_name) best.full_name = salvageName(extracted);
       }
     } catch (e) {
       console.error("pro fallback failed", file.name, e);
@@ -374,6 +440,7 @@ async function parseResumeWithAI(file: File, lovableApiKey: string): Promise<Par
 
   return best;
 }
+
 
 
 
@@ -523,19 +590,23 @@ Deno.serve(async (req) => {
       { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 
-  // Pre-fetch existing emails to avoid per-file listUsers() calls
+  // Pre-fetch existing emails from profiles (one paged query, far faster than listUsers)
   const existingEmails = new Set<string>();
   try {
-    let page = 1;
-    while (true) {
-      const { data } = await serviceClient.auth.admin.listUsers({ page, perPage: 1000 });
-      const users = data?.users || [];
-      users.forEach(u => u.email && existingEmails.add(u.email.toLowerCase()));
-      if (users.length < 1000) break;
-      page++;
-      if (page > 20) break; // safety: max 20k users
+    const pageSize = 1000;
+    for (let from = 0; from < 50000; from += pageSize) {
+      const { data, error } = await serviceClient
+        .from("profiles")
+        .select("email")
+        .not("email", "is", null)
+        .range(from, from + pageSize - 1);
+      if (error) throw error;
+      const rows = data || [];
+      rows.forEach((r: { email: string | null }) => r.email && existingEmails.add(r.email.toLowerCase()));
+      if (rows.length < pageSize) break;
     }
   } catch (e) {
+
     console.error("listUsers failed", e);
   }
 
