@@ -590,19 +590,23 @@ Deno.serve(async (req) => {
       { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 
-  // Pre-fetch existing emails to avoid per-file listUsers() calls
+  // Pre-fetch existing emails from profiles (one paged query, far faster than listUsers)
   const existingEmails = new Set<string>();
   try {
-    let page = 1;
-    while (true) {
-      const { data } = await serviceClient.auth.admin.listUsers({ page, perPage: 1000 });
-      const users = data?.users || [];
-      users.forEach(u => u.email && existingEmails.add(u.email.toLowerCase()));
-      if (users.length < 1000) break;
-      page++;
-      if (page > 20) break; // safety: max 20k users
+    const pageSize = 1000;
+    for (let from = 0; from < 50000; from += pageSize) {
+      const { data, error } = await serviceClient
+        .from("profiles")
+        .select("email")
+        .not("email", "is", null)
+        .range(from, from + pageSize - 1);
+      if (error) throw error;
+      const rows = data || [];
+      rows.forEach((r: { email: string | null }) => r.email && existingEmails.add(r.email.toLowerCase()));
+      if (rows.length < pageSize) break;
     }
   } catch (e) {
+
     console.error("listUsers failed", e);
   }
 
