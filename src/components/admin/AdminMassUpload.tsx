@@ -472,8 +472,14 @@ const AdminMassUpload = ({ loading }: AdminMassUploadProps) => {
             </CardTitle>
           </CardHeader>
           <CardContent>
+            {results.length > MAX_VISIBLE_RESULTS && (
+              <p className="text-xs text-muted-foreground mb-2">
+                Showing the latest {MAX_VISIBLE_RESULTS} of {results.length} results — download the CSV for the full report.
+              </p>
+            )}
             <div className="space-y-2 max-h-64 overflow-y-auto">
-              {results.map((result, index) => (
+              {results.slice(-MAX_VISIBLE_RESULTS).map((result, index) => (
+
                 <div 
                   key={index}
                   className={cn(
