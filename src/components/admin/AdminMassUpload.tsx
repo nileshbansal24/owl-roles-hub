@@ -163,18 +163,39 @@ const AdminMassUpload = ({ loading }: AdminMassUploadProps) => {
         setProgress(Math.round((collected.length / total) * 100));
       };
 
-      for (let i = 0; i < chunks.length; i++) {
-        try {
-          await processChunk(chunks[i], session.access_token, onResult);
-        } catch (chunkErr) {
-          console.error(`Chunk ${i} failed:`, chunkErr);
-          chunks[i].forEach(f => onResult({
-            filename: f.name,
-            success: false,
-            error: chunkErr instanceof Error ? chunkErr.message : "Chunk failed",
-          }));
+      // Run several chunks at once so uploads finish far faster on big batches.
+      let nextChunk = 0;
+      const worker = async () => {
+        while (nextChunk < chunks.length) {
+          const i = nextChunk++;
+          const chunk = chunks[i];
+          const seen = new Set<string>();
+          const track = (r: UploadResult) => { seen.add(r.filename); onResult(r); };
+          try {
+            await processChunk(chunk, session.access_token, track);
+          } catch (chunkErr) {
+            console.error(`Chunk ${i} failed, retrying once:`, chunkErr);
+            const remaining = chunk.filter(f => !seen.has(f.name));
+            try {
+              await new Promise(res => setTimeout(res, 2000));
+              await processChunk(remaining, session.access_token, track);
+            } catch (retryErr) {
+              chunk
+                .filter(f => !seen.has(f.name))
+                .forEach(f => onResult({
+                  filename: f.name,
+                  success: false,
+                  error: retryErr instanceof Error ? retryErr.message : "Chunk failed",
+                }));
+            }
+          }
         }
-      }
+      };
+
+      await Promise.all(
+        Array.from({ length: Math.min(PARALLEL_REQUESTS, chunks.length) }, () => worker())
+      );
+
 
       const successCount = collected.filter(r => r.success).length;
       const failCount = collected.length - successCount;
