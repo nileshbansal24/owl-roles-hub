@@ -254,6 +254,7 @@ async function callGemini(
   retries = 5,
 ): Promise<ParsedResume | null> {
   try {
+    await respectGlobalCooldown();
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -278,9 +279,11 @@ async function callGemini(
       const backoff = retryAfter > 0
         ? retryAfter * 1000
         : Math.min(30000, 1500 * Math.pow(2, 5 - retries)) + Math.floor(Math.random() * 750);
+      if (aiResponse.status === 429) triggerCooldown(Math.min(backoff, 15000));
       await new Promise(r => setTimeout(r, backoff));
       return callGemini(userContent, lovableApiKey, model, retries - 1);
     }
+
     if (!aiResponse.ok) {
       console.error("AI error", model, aiResponse.status, (await aiResponse.text()).slice(0, 300));
       return null;
