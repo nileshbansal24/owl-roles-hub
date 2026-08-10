@@ -44,7 +44,19 @@ interface UploadResult {
   tier?: string;
 }
 
-const CONCURRENCY = 3; // parallel resumes per request — lower to dodge AI gateway rate limits on big runs
+const CONCURRENCY = 8; // parallel resumes per request
+
+// Global adaptive throttle: when the AI gateway rate-limits us, every worker
+// pauses until the cooldown expires instead of hammering it independently.
+let rateLimitedUntil = 0;
+async function respectGlobalCooldown() {
+  const wait = rateLimitedUntil - Date.now();
+  if (wait > 0) await new Promise(r => setTimeout(r, wait));
+}
+function triggerCooldown(ms: number) {
+  rateLimitedUntil = Math.max(rateLimitedUntil, Date.now() + ms);
+}
+
 
 function makeNamePassword(fullName: string | undefined, email: string): string {
   const source = (fullName?.trim() || email.split("@")[0] || "user").replace(/[^a-zA-Z]/g, "");
