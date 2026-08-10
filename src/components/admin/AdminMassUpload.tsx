@@ -19,7 +19,10 @@ interface UploadResult {
   tier?: string;
 }
 
-const CHUNK_SIZE = 40; // files per edge function request
+const CHUNK_SIZE = 20; // files per edge function request
+const PARALLEL_REQUESTS = 4; // chunks processed simultaneously
+const MAX_VISIBLE_RESULTS = 200; // keep the results list light for huge batches
+
 
 
 interface AdminMassUploadProps {
