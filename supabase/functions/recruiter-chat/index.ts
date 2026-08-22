@@ -135,7 +135,7 @@ serve(async (req) => {
     const upgradeResponse = () => new Response(
       JSON.stringify({
         type: "upgrade",
-        message: "🔒 **Candidate search is a paid feature.**\n\nUpgrade your plan to unlock unlimited candidate search, contact details, and AI recruiting advice.\n\n**Available Plans:**\n\n💼 **Starter** — ₹2,999/mo\n• 50 candidate searches per month\n• Basic filters & email access\n\n🚀 **Pro** — ₹7,999/mo  ⭐ *Recommended*\n• Unlimited candidate searches\n• Advanced AI matching & advisor\n• WhatsApp assistant included\n\n🏢 **Enterprise** — Custom\n• Everything in Pro\n• Team seats, SLA, priority support\n\n👉 Head to **Dashboard → Upgrade Plan** to activate a plan and start searching.",
+        message: "🔒 **Candidate search is a paid feature.**\n\nUpgrade your plan to unlock unlimited candidate search, contact details, and AI recruiting advice.\n\n**Available Plans:**\n\n💼 **Starter** — ₹2,999/mo\n• 50 candidate searches per month\n• Basic filters & email access\n\n🚀 **Pro** — ₹7,999/mo  ⭐ *Recommended*\n• Unlimited candidate searches\n• Advanced AI matching & advisor\n• Priority AI advisor access\n\n🏢 **Enterprise** — Custom\n• Everything in Pro\n• Team seats, SLA, priority support\n\n👉 Head to **Dashboard → Upgrade Plan** to activate a plan and start searching.",
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
