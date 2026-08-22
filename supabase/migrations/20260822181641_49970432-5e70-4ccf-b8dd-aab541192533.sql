@@ -1,0 +1,1 @@
+DROP TABLE IF EXISTS public.recruiter_whatsapp_links;
