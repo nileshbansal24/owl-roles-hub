@@ -17,7 +17,7 @@ import CandidateComparisonModal from "@/components/CandidateComparisonModal";
 import InterviewScheduleModal from "@/components/InterviewScheduleModal";
 import InterviewDetailsModal from "@/components/InterviewDetailsModal";
 import RecruiterChatbot from "@/components/recruiter/RecruiterChatbot";
-import WhatsAppAssistantCard from "@/components/recruiter/WhatsAppAssistantCard";
+
 
 
 // Dashboard components
@@ -379,7 +379,7 @@ const RecruiterDashboard = () => {
 
           {/* Messages Tab */}
           <TabsContent value="messages" className="space-y-4">
-            <WhatsAppAssistantCard />
+            
             <MessageHistoryTab />
           </TabsContent>
 
