@@ -1,55 +1,39 @@
-# Job Collaboration for Post a Job
+# Website UX, Dynamics, and SEO Improvements
 
-Let recruiters tick "Collaborate with colleagues" while posting a job and pick other verified recruiters from the **same institution**. Collaborators get full access to that job and its applications/interviews, exactly as if they had posted it themselves.
+## What will improve
 
-## UX
+- Refine the homepage and `/jobs` page into a more consistent, professional visual system with clearer hierarchy, tighter spacing, and better content density.
+- Fix text overflow and overlap across narrow mobile screens, tablets, and desktop layouts, including the `/jobs` filter bar currently sitting beneath the fixed header incorrectly.
+- Improve interactive feedback with restrained entrance transitions, clearer selected states, stable card dimensions, and reduced-motion support—without scroll or parallax effects.
+- Make search and navigation actions behave reliably, including the homepage search flow, category selection, institution selection, bookmarks, and mobile navigation.
+- Standardize buttons, cards, section spacing, headings, and empty/loading states while preserving the existing OWL ROLES brand and professional owl artwork.
 
-**PostJob page** — new section "Team & Collaboration":
-- Checkbox: ☑ *Enable collaboration on this posting*
-- When enabled, a searchable multi-select appears listing other recruiters whose verified `university` matches the current recruiter's locked institution. Each row shows avatar, name, designation.
-- Helper text: "Selected teammates will be able to view applications, schedule interviews, and update statuses for this job."
-- After submit, all selected recruiters are added as collaborators.
+## Homepage
 
-**Manage Jobs → My Jobs**:
-- Jobs the recruiter owns *or* collaborates on appear in the same list.
-- A small "Shared with N" / "Shared by <name>" badge identifies collaborative postings.
-- Collaborators see the same Applications, Interviews, and candidate cards (no change to the unified `CandidateProfileCard`).
+- Rebalance the first screen so the OWL ROLES offer, search actions, and artwork fit cleanly at common viewport sizes without oversized or clipped text.
+- Remove the prohibited Chandigarh reference from the visible trust list and any remaining public partner data.
+- Improve category, process, institution, testimonial, and signup sections for consistent spacing and responsive text fitting.
+- Correct copy issues and improve controls for accessibility, including labels for carousel navigation and semantic navigation links.
+- Keep motion purposeful and subtle, with no continuous floating or scroll-driven effects.
 
-**Job detail / edit**: owner can add/remove collaborators later from the job's action menu. Collaborators can manage applications but cannot delete the job or remove other collaborators.
+## Jobs Page
 
-## Data model
+- Place the sticky search controls below the fixed navigation bar so they never overlap.
+- Improve mobile wrapping for the greeting, action buttons, statistics, filters, result count, job cards, and final profile prompt.
+- Make job-type selection and save controls use the shared control styles with clear active, keyboard-focus, and touch states.
+- Preserve the full job feed, sorting, filtering, job details, and assistant behavior.
 
-New table `public.job_collaborators`:
+## SEO
 
-```text
-id              uuid pk
-job_id          uuid  (the job)
-recruiter_id    uuid  (collaborator)
-added_by        uuid  (who invited them)
-created_at      timestamptz
-UNIQUE (job_id, recruiter_id)
-```
+- Add a sitemap containing only public, indexable pages and reference it from the existing crawler rules.
+- Improve semantic internal links and section landmarks so crawlers and assistive technology can follow the public experience.
+- Correct the social preview setup by removing the favicon-sized share image; hosting can supply a valid preview until a proper 1200×630 image exists.
+- Keep the existing title, description, canonical URL, structured data, favicon, and crawler access that already pass the SEO scan.
+- Keep authenticated dashboards, account pages, and admin pages out of the sitemap.
 
-RLS:
-- Owner (`jobs.created_by`) can insert/delete rows for their jobs.
-- Any party in the row can SELECT it.
-- Collaborators get read/update access to the parent `jobs` row, its `job_applications`, and `interviews`, via new policies that check `EXISTS (SELECT 1 FROM job_collaborators WHERE job_id = … AND recruiter_id = auth.uid())`.
-- A `SECURITY DEFINER` helper `is_job_collaborator(_job_id, _user_id)` keeps policy expressions simple and recursion-free.
+## Technical details
 
-The existing "same institution" rule is enforced **in the UI + a trigger**: on insert, the trigger verifies both recruiters share a non-null `profiles.university` (case-insensitive). Cross-institution invites are rejected.
-
-## Code changes
-
-1. **Migration** — create table, grants, RLS, trigger, helper function, plus additive policies on `jobs`, `job_applications`, `interviews` so collaborators inherit access.
-2. **`src/pages/PostJob.tsx`** — add the Team & Collaboration card with checkbox + recruiter multi-select. On submit, after the `jobs` insert succeeds, bulk-insert into `job_collaborators`.
-3. **`src/hooks/useRecruiterDashboard.ts`** — change the jobs fetch to include jobs where the user is a collaborator (single query via `or(`created_by.eq.${uid},id.in.(${collab_ids})`)` after fetching collaborator job IDs).
-4. **`src/components/recruiter/dashboard/MyJobsTab.tsx`** — show "Shared with N" / "Shared by …" badge.
-5. **New `JobCollaboratorsModal`** (lightweight) reachable from a job's "···" menu so the owner can add/remove collaborators after posting.
-
-## Technical notes
-
-- The institution match uses `lower(trim(university))` in both UI filter and trigger.
-- Recruiter picker queries `profiles` filtered by `user_type='recruiter'`, matching university, excluding self and already-added collaborators. RLS already lets a recruiter view other recruiter profiles when they share rows (we'll add a narrow policy: recruiters may read minimal fields — `id, full_name, avatar_url, designation, university` — of other recruiters from the same `university`).
-- No change to `CandidateProfileCard` or the Applications UI — collaborator access flows entirely through the new RLS policies, so the same components render for owners and collaborators.
-
-Approve and I'll ship it.
+- Update shared global typography rules to prevent aggressive balanced wrapping and negative letter spacing from causing narrow-screen collisions.
+- Use the existing semantic color tokens and shared controls; avoid hardcoded component colors and raw interactive buttons.
+- Add `public/sitemap.xml` for `/`, `/privacy-policy`, `/terms-of-service`, and `/cookie-policy`, using the project’s configured canonical domain and no artificial `lastmod` dates.
+- Verify the finished pages at desktop and mobile sizes, test primary interactions, check console/runtime output, and confirm the build is clean.
