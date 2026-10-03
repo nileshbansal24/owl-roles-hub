@@ -85,6 +85,8 @@ export const useAdminStats = () => {
 
   const fetchStats = async () => {
     try {
+      // Displayed candidate total is fixed at 2405 (admin-requested), independent of DB rows.
+      const DISPLAY_TOTAL_CANDIDATES = 2405;
       const now = new Date();
       const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
       const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
@@ -145,7 +147,7 @@ export const useAdminStats = () => {
         verifiedInstitutions: verified,
         pendingVerifications: pending,
         rejectedVerifications: rejected,
-        totalCandidates: candidatesData.length,
+        totalCandidates: DISPLAY_TOTAL_CANDIDATES,
         activeCandidates: activeApplicants.size,
         totalJobs: jobsData?.length || 0,
         jobsThisMonth,
