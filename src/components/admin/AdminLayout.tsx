@@ -8,6 +8,7 @@ import {
   Menu,
   X,
   RefreshCw,
+  Activity,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -38,6 +39,7 @@ const navItems = [
   { id: "institutions", label: "Institutions", icon: owlInstitutions },
   { id: "candidates", label: "Candidates", icon: owlCandidates },
   { id: "jobs", label: "Jobs", icon: owlAdminJobs },
+  { id: "simulation", label: "Demo Simulation", icon: Activity },
   { id: "mass-upload", label: "Mass Upload", icon: owlUpload },
   { id: "danger-zone", label: "Danger Zone", icon: owlDanger },
 ];
@@ -138,7 +140,7 @@ const AdminLayout = ({ children, activeTab, onTabChange, onRefresh, isRefreshing
                       : "text-muted-foreground hover:text-foreground hover:bg-muted"
                   )}
                 >
-                  <img src={item.icon} alt="" aria-hidden="true" loading="lazy" width={28} height={28} className="h-7 w-7 shrink-0 object-contain" />
+                  {typeof item.icon === "string" ? <img src={item.icon} alt="" aria-hidden="true" loading="lazy" width={28} height={28} className="h-7 w-7 shrink-0 object-contain" /> : <item.icon className="h-5 w-5 shrink-0" aria-hidden="true" />}
                   {item.label}
                 </button>
               ))}
