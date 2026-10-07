@@ -1,0 +1,1 @@
+Keep demonstration candidates, jobs, and activity in a separate admin-only simulation store; never insert them into live marketplace tables or trigger real notifications, so demo data cannot be mistaken for production activity.
