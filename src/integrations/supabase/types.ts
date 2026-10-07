@@ -232,6 +232,33 @@ export type Database = {
         }
         Relationships: []
       }
+      demo_simulation_state: {
+        Row: {
+          activity: Json
+          candidates: Json
+          enabled: boolean
+          id: string
+          jobs: Json
+          updated_at: string
+        }
+        Insert: {
+          activity?: Json
+          candidates?: Json
+          enabled?: boolean
+          id?: string
+          jobs?: Json
+          updated_at?: string
+        }
+        Update: {
+          activity?: Json
+          candidates?: Json
+          enabled?: boolean
+          id?: string
+          jobs?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
       event_questions: {
         Row: {
           correct_answer: string | null
