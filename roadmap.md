@@ -1,2 +1,0 @@
-- [ ] Add an admin-only, isolated demo simulation with generated candidates, jobs, activity, controls, and live demo metrics.
-- [ ] Verify the preview and review this roadmap before reporting completion.
