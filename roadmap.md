@@ -1,0 +1,4 @@
+- [ ] Finish the isolated admin demo simulation and show its metrics only in the simulation area.
+- [ ] Improve homepage and `/jobs` layout, text fitting, sticky search, and primary interactions.
+- [ ] Add the public-page sitemap and verify existing crawler/social metadata remains correct.
+- [ ] Verify the preview, build, and this roadmap before reporting completion.
