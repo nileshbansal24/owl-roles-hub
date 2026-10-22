@@ -83,7 +83,7 @@ const parseJobDescription = (raw: string): DescriptionSection[] => {
 
   for (const chunk of chunks) {
     const lines = chunk.split("\n").map((l) => l.trim()).filter(Boolean);
-    const section: DescriptionSection = { heading: null, paragraphs: [], bullets: [] };
+    let section: DescriptionSection = { heading: null, paragraphs: [], bullets: [] };
 
     if (lines.length > 1) {
       const first = lines[0];
@@ -425,10 +425,14 @@ const JobDetailModal = ({ job, open, onOpenChange }: JobDetailModalProps) => {
 
           {/* Description */}
           <div>
-            <h4 className="font-heading font-semibold text-foreground mb-2">About this position</h4>
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              {job.description || "Join our prestigious institution and contribute to academic excellence. We offer competitive compensation, professional development opportunities, and a collaborative work environment."}
-            </p>
+            <h4 className="font-heading font-semibold text-foreground mb-3">About this position</h4>
+            {job.description ? (
+              <JobDescriptionBlock text={job.description} />
+            ) : (
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Join our prestigious institution and contribute to academic excellence. We offer competitive compensation, professional development opportunities, and a collaborative work environment.
+              </p>
+            )}
           </div>
 
           {/* Apply Section */}
