@@ -56,6 +56,137 @@ interface RecruiterInfo {
   isVerified: boolean;
 }
 
+interface DescriptionSection {
+  heading: string | null;
+  paragraphs: string[];
+  bullets: string[];
+}
+
+const isBulletLine = (line: string) => /^[-•*]\s+/.test(line);
+const cleanHeading = (text: string) =>
+  text
+    .replace(/^\*\*(.+?)\*\*:?.*$/, "$1")
+    .replace(/[:*]+$/, "")
+    .trim();
+
+const parseJobDescription = (raw: string): DescriptionSection[] => {
+  const cleaned = raw.replace(/\r\n/g, "\n").trim();
+  if (!cleaned) return [];
+
+  // "## Heading" markers may sit inline (no newlines) or on their own lines
+  const chunks = cleaned
+    .split(/#{1,4}\s+/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+  const sections: DescriptionSection[] = [];
+
+  for (const chunk of chunks) {
+    const lines = chunk.split("\n").map((l) => l.trim()).filter(Boolean);
+    const section: DescriptionSection = { heading: null, paragraphs: [], bullets: [] };
+
+    if (lines.length > 1) {
+      const first = lines[0];
+      if (!isBulletLine(first) && first.length <= 80 && !/^\*\*.+\*\*\s+\S/.test(first)) {
+        section.heading = cleanHeading(first);
+        lines.shift();
+      }
+      for (const line of lines) {
+        if (/^\*\*[^*]+\*\*:?$/.test(line)) {
+          // flush current section content when a bold-only heading appears
+          if (section.heading || section.paragraphs.length || section.bullets.length) {
+            sections.push(section);
+          }
+          section = { heading: cleanHeading(line), paragraphs: [], bullets: [] };
+        } else if (isBulletLine(line)) {
+          section.bullets.push(line.replace(/^[-•*]\s+/, ""));
+        } else {
+          section.paragraphs.push(line);
+        }
+      }
+    } else {
+      const single = lines[0] || "";
+      const parts = single.split(/\s[-•]\s+/);
+      if (parts.length >= 2 && parts[0].length <= 60) {
+        section.heading = cleanHeading(parts[0]);
+        section.bullets = parts.slice(1).map((b) => b.replace(/^[-•*]\s+/, ""));
+      } else if (/^\*\*[^*]+\*\*:?$/.test(single)) {
+        section.heading = cleanHeading(single);
+      } else {
+        section.paragraphs.push(single);
+      }
+    }
+
+    if (section.heading || section.paragraphs.length || section.bullets.length) {
+      sections.push(section);
+    }
+  }
+
+  return sections;
+};
+
+/** Renders **bold** inline spans inside a text fragment. */
+const renderInline = (text: string) => {
+  const parts = text.split(/\*\*(.+?)\*\*/g);
+  if (parts.length === 1) return text;
+  return parts.map((part, i) =>
+    i % 2 === 1 ? (
+      <strong key={i} className="font-semibold text-foreground">
+        {part}
+      </strong>
+    ) : (
+      part
+    )
+  );
+};
+
+const JobDescriptionBlock = ({ text }: { text: string }) => {
+  const sections = useMemo(() => parseJobDescription(text), [text]);
+  // Hide the generic wrapper title when the description brings its own headings
+  const showTitle = !sections[0]?.heading;
+
+  if (!sections.length) {
+    return <p className="text-sm text-muted-foreground leading-relaxed">{text}</p>;
+  }
+
+  return (
+    <div className="rounded-2xl border border-border/70 bg-secondary/20 p-4 sm:p-5">
+      {showTitle && (
+        <h4 className="font-heading font-semibold text-foreground">About this position</h4>
+      )}
+      <div className="space-y-4">
+        {sections.map((section, i) => (
+          <div key={i} className={i === 0 && showTitle ? "mt-3 space-y-2.5" : "space-y-2.5"}>
+            {section.heading && (
+              <div className="flex items-center gap-2.5">
+                <span className="h-4 w-1 shrink-0 rounded-full bg-primary/60" aria-hidden="true" />
+                <h5 className="font-heading text-sm font-semibold tracking-tight text-foreground">
+                  {section.heading}
+                </h5>
+              </div>
+            )}
+            {section.paragraphs.map((paragraph, j) => (
+              <p key={j} className="text-sm leading-relaxed text-muted-foreground">
+                {renderInline(paragraph)}
+              </p>
+            ))}
+            {section.bullets.length > 0 && (
+              <ul className="space-y-1.5">
+                {section.bullets.map((bullet, j) => (
+                  <li key={j} className="flex gap-2.5 text-sm leading-relaxed text-muted-foreground">
+                    <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" aria-hidden="true" />
+                    <span>{renderInline(bullet)}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 interface JobDetailModalProps {
   job: Job | null;
   open: boolean;
