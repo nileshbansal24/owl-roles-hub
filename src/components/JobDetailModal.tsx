@@ -69,6 +69,25 @@ const cleanHeading = (text: string) =>
     .replace(/[:*]+$/, "")
     .trim();
 
+// Common section labels that get glued to body text when line breaks are lost
+const KEY_HEADINGS = [
+  "about the role", "about the position", "about the institute", "about the company",
+  "about us", "role overview", "job description", "key responsibilities",
+  "responsibilities", "requirements", "qualifications", "what you'll do",
+  "skills required", "skills", "benefits", "perks", "overview", "education",
+  "experience", "how to apply", "selection process",
+];
+
+/** Splits a paragraph like "About the Role Drive the growth..." into heading + body. */
+const promoteKeywordHeading = (text: string) => {
+  const lower = text.toLowerCase();
+  const kw = KEY_HEADINGS.find((k) => lower.startsWith(k));
+  if (!kw) return null;
+  const heading = text.slice(0, kw.length).replace(/\b\w/g, (c, i) => (i === 0 ? c.toUpperCase() : c)).trim();
+  const rest = text.slice(kw.length).trim().replace(/^[:\-–—•]\s*/, "");
+  return { heading, rest };
+};
+
 const parseJobDescription = (raw: string): DescriptionSection[] => {
   const cleaned = raw.replace(/\r\n/g, "\n").trim();
   if (!cleaned) return [];
@@ -101,7 +120,17 @@ const parseJobDescription = (raw: string): DescriptionSection[] => {
         } else if (isBulletLine(line)) {
           section.bullets.push(line.replace(/^[-•*]\s+/, ""));
         } else {
-          section.paragraphs.push(line);
+          const promoted = promoteKeywordHeading(line);
+          if (promoted) {
+            if (section.heading || section.paragraphs.length || section.bullets.length) {
+              sections.push(section);
+              section = { heading: null, paragraphs: [], bullets: [] };
+            }
+            section.heading = promoted.heading;
+            if (promoted.rest) section.paragraphs.push(promoted.rest);
+          } else {
+            section.paragraphs.push(line);
+          }
         }
       }
     } else {
@@ -113,7 +142,13 @@ const parseJobDescription = (raw: string): DescriptionSection[] => {
       } else if (/^\*\*[^*]+\*\*:?$/.test(single)) {
         section.heading = cleanHeading(single);
       } else {
-        section.paragraphs.push(single);
+        const promoted = promoteKeywordHeading(single);
+        if (promoted) {
+          section.heading = promoted.heading;
+          if (promoted.rest) section.paragraphs.push(promoted.rest);
+        } else {
+          section.paragraphs.push(single);
+        }
       }
     }
 
