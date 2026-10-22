@@ -424,16 +424,16 @@ const JobDetailModal = ({ job, open, onOpenChange }: JobDetailModalProps) => {
           )}
 
           {/* Description */}
-          <div>
-            <h4 className="font-heading font-semibold text-foreground mb-3">About this position</h4>
-            {job.description ? (
-              <JobDescriptionBlock text={job.description} />
-            ) : (
+          {job.description ? (
+            <JobDescriptionBlock text={job.description} />
+          ) : (
+            <div>
+              <h4 className="font-heading font-semibold text-foreground mb-3">About this position</h4>
               <p className="text-sm text-muted-foreground leading-relaxed">
                 Join our prestigious institution and contribute to academic excellence. We offer competitive compensation, professional development opportunities, and a collaborative work environment.
               </p>
-            )}
-          </div>
+            </div>
+          )}
 
           {/* Apply Section */}
           <AnimatePresence mode="wait">
