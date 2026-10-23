@@ -226,9 +226,11 @@ interface JobDetailModalProps {
   job: Job | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** Opens the login/signup prompt for guests who tap a gated job. */
+  onAuthRequired?: () => void;
 }
 
-const JobDetailModal = ({ job, open, onOpenChange }: JobDetailModalProps) => {
+const JobDetailModal = ({ job, open, onOpenChange, onAuthRequired }: JobDetailModalProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
