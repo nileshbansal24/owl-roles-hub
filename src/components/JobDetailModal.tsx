@@ -21,6 +21,7 @@ import {
   DollarSign,
   Building2,
   Send,
+  Lock,
   CheckCircle2,
   Loader2,
   X,
@@ -309,6 +310,7 @@ const JobDetailModal = ({ job, open, onOpenChange, onAuthRequired }: JobDetailMo
 
   if (!job) return null;
 
+  const isGuest = !user;
   const timeAgo = formatDistanceToNow(new Date(job.created_at), { addSuffix: true });
 
   const handleApply = async () => {
@@ -460,6 +462,20 @@ const JobDetailModal = ({ job, open, onOpenChange, onAuthRequired }: JobDetailMo
             </div>
           )}
 
+          {/* Guests: locked gate instead of description + apply */}
+          {isGuest ? (
+            <div className="rounded-2xl border border-primary/20 bg-primary/5 p-6 text-center">
+              <Lock className="mx-auto h-5 w-5 text-primary mb-2" aria-hidden="true" />
+              <p className="font-heading font-semibold text-foreground">Log in to view this job</p>
+              <p className="mt-1 text-sm text-muted-foreground max-w-sm mx-auto">
+                The full job description and the option to apply are available to signed-in members only.
+              </p>
+              <Button onClick={onAuthRequired} size="lg" className="mt-4 w-full gap-2">
+                Log in to view &amp; apply
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-6">
           {/* Description */}
           {job.description ? (
             <JobDescriptionBlock text={job.description} />
@@ -534,6 +550,8 @@ const JobDetailModal = ({ job, open, onOpenChange, onAuthRequired }: JobDetailMo
               </motion.div>
             )}
           </AnimatePresence>
+            </div>
+          )}
         </motion.div>
       </DialogContent>
     </Dialog>
