@@ -158,6 +158,10 @@ const Index = () => {
         job={selectedJob}
         open={jobModalOpen}
         onOpenChange={setJobModalOpen}
+        onAuthRequired={() => {
+          setJobModalOpen(false);
+          openAuthModal("login", "candidate");
+        }}
       />
 
       <AuthModal
