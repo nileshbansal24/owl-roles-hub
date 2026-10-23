@@ -470,7 +470,7 @@ const JobDetailModal = ({ job, open, onOpenChange, onAuthRequired }: JobDetailMo
               <p className="mt-1 text-sm text-muted-foreground max-w-sm mx-auto">
                 The full job description and the option to apply are available to signed-in members only.
               </p>
-              <Button onClick={onAuthRequired} size="lg" className="mt-4 w-full gap-2">
+              <Button onClick={() => (onAuthRequired ? onAuthRequired() : navigate("/auth"))} size="lg" className="mt-4 w-full gap-2">
                 Log in to view &amp; apply
               </Button>
             </div>
